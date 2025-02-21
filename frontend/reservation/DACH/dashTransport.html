@@ -1,0 +1,322 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Plateforme de Réservation de Voyage</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="stylesT.css">
+    <style>
+        /* Basic styling for the modal */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="#" class="logo">
+        <img src="image/logo1.png" alt="" style="float: left;">
+    </a>
+    <h1>Dashboard - YUDING</h1>
+    <nav>
+        <ul>
+            <li><a href="dashHebergements.html">Hebergements</a></li>
+            <li><a href="dashTransport.html">Moyen de transport</a></li>
+            <li><a href="dashActivitee.html">Activitees</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <!-- Button to open the add transport modal -->
+    <button type="button" class="add-button" onclick="showAddTransportModal();">Ajouter Transport</button>
+
+    <section class="reservation-table">
+        <div class="table-container ">
+        <table>
+            <thead>
+            <tr>
+                <th>idt_transport</th>
+                <th>compagnie</th>
+                <th>desc_transport</th>
+                <th>lieu_arr</th>
+                <th>lieu_depp</th>
+                <th>marque</th>
+                <th>nom_fournisseur</th>
+                <th>pays</th>
+                <th>prix_transport</th>
+                <th>tele_fournisseur</th>
+                <th>type_transport</th>
+                <th>ville</th>
+                <th>adresse</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody id="transport-table-body">
+            <!-- Rows will be filled with data from the backend -->
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <!-- Modal for adding transport -->
+    <div id="addTransportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddTransportModal();">&times;</span>
+            <h2>Ajouter Transport</h2>
+            <form id="addTransportForm">
+                <input type="text" id="compagnie" placeholder="Compagnie" required />
+                <input type="text" id="desc_transport" placeholder="Description" required />
+                <input type="text" id="lieuarr" placeholder="Lieu d'arrivée" required />
+                <input type="text" id="lieudepp" placeholder="Lieu de départ" required />
+                <input type="text" id="marque" placeholder="Marque" required />
+                <input type="text" id="nom_fournisseur" placeholder="Nom fournisseur" required />
+                <input type="text" id="pays" placeholder="Pays" required />
+                <input type="number" id="prix_transport" placeholder="Prix transport" required />
+                <input type="text" id="tele_fournisseur" placeholder="Téléphone fournisseur" required />
+                <input type="text" id="type_transport" placeholder="Type transport" required />
+                <input type="text" id="ville" placeholder="Ville" required />
+                <input type="text" id="adresse" placeholder="Adresse" required />
+                <button type="submit">Ajouter Transport</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for editing transport -->
+    <div id="editTransportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditTransportModal();">&times;</span>
+            <h2>Modifier Transport</h2>
+            <form id="editTransportForm">
+                <input type="hidden" id="edit_transport_idt" />
+                <input type="text" id="edit_compagnie" placeholder="Compagnie" required />
+                <input type="text" id="edit_desc_transport" placeholder="Description" required />
+                <input type="text" id="edit_lieuarr" placeholder="Lieu d'arrivée" required />
+                <input type="text" id="edit_lieudepp" placeholder="Lieu de départ" required />
+                <input type="text" id="edit_marque" placeholder="Marque" required />
+                <input type="text" id="edit_nom_fournisseur" placeholder="Nom fournisseur" required />
+                <input type="text" id="edit_pays" placeholder="Pays" required />
+                <input type="number" id="edit_prix_transport" placeholder="Prix transport" required />
+                <input type="text" id="edit_tele_fournisseur" placeholder="Téléphone fournisseur" required />
+                <input type="text" id="edit_type_transport" placeholder="Type transport" required />
+                <input type="text" id="edit_ville" placeholder="Ville" required />
+                <input type="text" id="edit_adresse" placeholder="Adresse" required />
+                <button type="submit">Modifier Transport</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const BASE_URL = 'http://localhost:8888'
+    // Show the add transport modal
+    function showAddTransportModal() {
+        document.getElementById('addTransportModal').style.display = 'block';
+    }
+
+    // Close the add transport modal
+    function closeAddTransportModal() {
+        document.getElementById('addTransportModal').style.display = 'none';
+    }
+
+    // Show the edit transport modal with data
+    function showEditTransportModal(transportIdt) {
+        $.ajax({
+            url: `${BASE_URL}/apir/transports/${transportIdt}`,
+            type: 'GET',
+            success: function(data) {
+                // Prefill the form with data
+                document.getElementById('edit_transport_idt').value = data.idt;
+                document.getElementById('edit_compagnie').value = data.compagnie;
+                document.getElementById('edit_desc_transport').value = data.desc_transport;
+                document.getElementById('edit_lieuarr').value = data.lieuarr;
+                document.getElementById('edit_lieudepp').value = data.lieudepp;
+                document.getElementById('edit_marque').value = data.marque;
+                document.getElementById('edit_nom_fournisseur').value = data.nom_fournisseur;
+                document.getElementById('edit_pays').value = data.pays;
+                document.getElementById('edit_prix_transport').value = data.prix_transport;
+                document.getElementById('edit_tele_fournisseur').value = data.tele_fournisseur;
+                document.getElementById('edit_type_transport').value = data.type_transport;
+                document.getElementById('edit_ville').value = data.ville;
+                document.getElementById('edit_adresse').value = data.adresse;
+                // Show the modal
+                document.getElementById('editTransportModal').style.display = 'block';
+            },
+            error: function() {
+                alert('Erreur lors de la récupération du transport');
+            }
+        });
+    }
+
+    // Close the edit transport modal
+    function closeEditTransportModal() {
+        document.getElementById('editTransportModal').style.display = 'none';
+    }
+
+    // Handle form submission for adding a transport
+    $('#addTransportForm').submit(function(e) {
+        e.preventDefault();
+        var transportData = {
+            compagnie: $('#compagnie').val(),
+            desc_transport: $('#desc_transport').val(),
+            lieuarr: $('#lieuarr').val(),
+            lieudepp: $('#lieudepp').val(),
+            marque: $('#marque').val(),
+            nom_fournisseur: $('#nom_fournisseur').val(),
+            pays: $('#pays').val(),
+            prix_transport: $('#prix_transport').val(),
+            tele_fournisseur: $('#tele_fournisseur').val(),
+            type_transport: $('#type_transport').val(),
+            ville: $('#ville').val(),
+            adresse: $('#adresse').val()
+        };
+
+        $.ajax({
+            url: `${BASE_URL}/apir/transports/create`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(transportData),
+            success: function(response) {
+                alert('Transport ajouté avec succès');
+                closeAddTransportModal();
+                loadTransports(); // Refresh the transport table
+            },
+            error: function(xhr, status, error) {
+                alert('Erreur lors de l\'ajout du transport');
+            }
+        });
+    });
+
+    // Handle form submission for editing a transport
+    $('#editTransportForm').submit(function(e) {
+        e.preventDefault();
+        var transportData = {
+            idt: $('#edit_transport_idt').val(),
+            compagnie: $('#edit_compagnie').val(),
+            desc_transport: $('#edit_desc_transport').val(),
+            lieuarr: $('#edit_lieuarr').val(),
+            lieudepp: $('#edit_lieudepp').val(),
+            marque: $('#edit_marque').val(),
+            nom_fournisseur: $('#edit_nom_fournisseur').val(),
+            pays: $('#edit_pays').val(),
+            prix_transport: $('#edit_prix_transport').val(),
+            tele_fournisseur: $('#edit_tele_fournisseur').val(),
+            type_transport: $('#edit_type_transport').val(),
+            ville: $('#edit_ville').val(),
+            adresse: $('#edit_adresse').val()
+        };
+
+        // Remplacez l'URL par celle qui inclut l'id
+        $.ajax({
+            url: `${BASE_URL}/apir/transports/update/${$('#edit_transport_idt').val()}`, // Ajout de l'id dans l'URL
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(transportData),
+            success: function(response) {
+                alert('Transport modifié avec succès');
+                closeEditTransportModal();
+                loadTransports(); // Rafraîchir le tableau des transports
+            },
+            error: function(xhr, status, error) {
+                alert('Erreur lors de la modification du transport');
+            }
+        });
+    });
+
+    // Handle deletion of a transport
+    function deleteTransport(transportIdt) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce transport ?')) {
+            $.ajax({
+                url: `${BASE_URL}/apir/transports/delete/${transportIdt}`,
+                type: 'DELETE',
+                success: function(response) {
+                    alert('Transport supprimé avec succès');
+                    loadTransports(); // Refresh the transport table
+                },
+                error: function(xhr, status, error) {
+                    alert('Erreur lors de la suppression du transport');
+                }
+            });
+        }
+    }
+
+    // Function to load transports into the table
+    function loadTransports() {
+        $.ajax({
+            url: `${BASE_URL}/apir/transports/all`,
+            type: 'GET',
+            success: function(data) {
+                let tableBody = $('#transport-table-body');
+                tableBody.empty(); // Clear the table before adding new data
+                data.forEach(function(transport) {
+                    tableBody.append(`
+                        <tr>
+                            <td>${transport.idt}</td>
+                            <td>${transport.compagnie}</td>
+                            <td>${transport.desc_transport}</td>
+                            <td>${transport.lieuarr}</td>
+                            <td>${transport.lieudepp}</td>
+                            <td>${transport.marque}</td>
+                            <td>${transport.nom_fournisseur}</td>
+                            <td>${transport.pays}</td>
+                            <td>${transport.prix_transport}</td>
+                            <td>${transport.tele_fournisseur}</td>
+                            <td>${transport.type_transport}</td>
+                            <td>${transport.ville}</td>
+                            <td>${transport.adresse}</td>
+                            <td>
+                                <button onclick="showEditTransportModal(${transport.idt})">Modifier</button>
+                                <button onclick="deleteTransport(${transport.idt})">Supprimer</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function() {
+                alert('Erreur lors du chargement des transports');
+            }
+        });
+    }
+
+    // Initial load of transports when the page is ready
+    $(document).ready(function() {
+        loadTransports();
+    });
+</script>
+</body>
+</html>

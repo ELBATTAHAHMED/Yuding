@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de paiement</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        :root {
+            --primary-color: #218a87;
+            --primary-hover: #1e7673;
+            --background-color: #f9f9f9;
+            --container-bg: #fff;
+            --text-color: #333;
+            --font-family: 'Arial', sans-serif;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animation d'apparition */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Style global */
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header fixé en haut avec bordure inférieure arrondie */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-color);
+            padding: 20px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+            animation: fadeIn 0.5s ease-in-out;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        /* Logo avec filtre pour le contraste */
+        .logo {
+            max-width: 150px;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        /* Container principal */
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out 0.3s both;
+            margin: 120px auto 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-size: 2rem;
+        }
+
+        p {
+            color: var(--text-color);
+            font-size: 1.2rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        /* Bouton Retour à l'accueil */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: var(--container-bg);
+            text-decoration: none;
+            font-size: 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s, transform 0.3s;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 100px auto 20px;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+            .btn {
+                font-size: 0.9rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <img src="image/logo1.png" alt="Logo" class="logo">
+</header>
+
+<div class="container">
+    <h1>Paiement réussi !</h1>
+    <p>Merci pour votre réservation. Votre paiement a été effectué avec succès.</p>
+    <p>Nous vous remercions pour votre confiance et nous sommes impatients de vous accueillir lors de votre séjour.</p>
+    <a href="index.html" class="btn">Retour à l'accueil</a>
+</div>
+</body>
+</html>

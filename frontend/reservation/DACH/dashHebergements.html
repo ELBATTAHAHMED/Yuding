@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <title>Dashboard - YUDING</title>
+    <link rel="stylesheet" href="styles1.css">
+</head>
+<body>
+<header>
+    <a href="#" class="logo">
+        <img src="image/logo1.png" alt="" style="float: left;">
+    </a>
+    <h1>Dashboard - YUDING</h1>
+
+    <nav>
+        <ul>
+            <li><a href="dashHebergements.html">Hébergements</a></li>
+            <li><a href="dashTransport.html">Moyen de transport</a></li>
+            <li><a href="dashActivitee.html">Activités</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <button type="button" class="add-button" onclick="showAddModal();">Ajouter Hébergement</button>
+    <section class="reservation-table">
+        <div class="table-container">
+        <table id="activitiesTable">
+            <thead>
+            <tr>
+                <th>id_hebergement</th>
+                <th>adresse_hebergement</th>
+                <th>capacite_hebergement</th>
+                <th>desc_hebergement</th>
+                <th>nom_fournisseur</th>
+                <th>nom_hebergement</th>
+                <th>pays</th>
+                <th>prix_hebergement</th>
+                <th>tele_fournisseur</th>
+                <th>type_hebergement</th>
+                <th>ville</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody id="hebergementsBody">
+            <!-- Rows will be added dynamically here -->
+            </tbody>
+        </table>
+        </div>
+    </section>
+</main>
+
+<!-- Modal for Adding Hebergement -->
+<div id="addHebergementModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-button" onclick="hideAddModal();">&times;</span>
+        <h2 id="formTitle">Ajouter un nouveau hébergement</h2>
+        <form id="addHebergementsForm">
+            <label for="desc_hebergement">Description:</label>
+            <input type="text" id="desc_hebergement" name="desc_hebergement"><br>
+            <label for="capacite_hebergement">Capacité :</label>
+            <input type="number" id="capacite_hebergement" name="capacite_hebergement"><br>
+            <label for="nom_fournisseur">Nom du fournisseur:</label>
+            <input type="text" id="nom_fournisseur" name="nom_fournisseur"><br>
+            <label for="prix_hebergement">Prix :</label>
+            <input type="number" id="prix_hebergement" name="prix_hebergement"><br>
+            <label for="tele_fournisseur">Téléphone du fournisseur:</label>
+            <input type="text" id="tele_fournisseur" name="tele_fournisseur"><br>
+            <label for="ville">Ville:</label>
+            <input type="text" id="ville" name="ville"><br>
+            <label for="type_hebergement">Type d'hébergement:</label>
+            <textarea id="type_hebergement" name="type_hebergement"></textarea><br>
+            <label for="pays">Pays:</label>
+            <input type="text" id="pays" name="pays"><br>
+            <label for="adresseHebergement">Adresse d'hébergement:</label>
+            <input type="text" id="adresseHebergement" name="adresseHebergement"><br>
+            <label for="nom_hebergement">Nom d'hébergement:</label>
+            <input type="text" id="nom_hebergement" name="nom_hebergement"><br>
+            <button type="submit" id="submitButton">Ajouter Hébergement</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Modifying Hebergement -->
+<div id="modifyHebergementModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-button" onclick="hideModifyModal();">&times;</span>
+        <h2 id="modifyFormTitle">Modifier l'hébergement</h2>
+        <form id="modifyHebergementsForm">
+            <label for="desc_hebergement">Description:</label>
+            <input type="text" id="desc_hebergement" name="desc_hebergement"><br>
+            <label for="capacite_hebergement">Capacité :</label>
+            <input type="number" id="capacite_hebergement" name="capacite_hebergement"><br>
+            <label for="nom_fournisseur">Nom du fournisseur:</label>
+            <input type="text" id="nom_fournisseur" name="nom_fournisseur"><br>
+            <label for="prix_hebergement">Prix :</label>
+            <input type="number" id="prix_hebergement" name="prix_hebergement"><br>
+            <label for="tele_fournisseur">Téléphone du fournisseur:</label>
+            <input type="text" id="tele_fournisseur" name="tele_fournisseur"><br>
+            <label for="ville">Ville:</label>
+            <input type="text" id="ville" name="ville"><br>
+            <label for="type_hebergement">Type d'hébergement:</label>
+            <textarea id="type_hebergement" name="type_hebergement"></textarea><br>
+            <label for="pays">Pays:</label>
+            <input type="text" id="pays" name="pays"><br>
+            <label for="adresseHebergement">Adresse d'hébergement:</label>
+            <input type="text" id="adresseHebergement" name="adresseHebergement"><br>
+            <label for="nom_hebergement">Nom d'hébergement:</label>
+            <input type="text" id="nom_hebergement" name="nom_hebergement"><br>
+            <button type="submit" id="modifyButton">Mettre à jour Hébergement</button>
+        </form>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const BASE_URL = 'http://localhost:8888';
+    let editingHebergementId = null;
+
+    function showAddModal() {
+        // Reset form before showing it
+        document.getElementById('addHebergementModal').style.display = 'block';
+        document.getElementById('addHebergementsForm').reset();
+        document.getElementById('formTitle').textContent = 'Ajouter un nouveau hébergement';
+        document.getElementById('submitButton').textContent = 'Ajouter Hébergement';
+        editingHebergementId = null; // Reset editing state
+    }
+
+    function hideAddModal() {
+        document.getElementById('addHebergementModal').style.display = 'none';
+    }
+
+    function showModifyModal(id) {
+        fetch(`${BASE_URL}/apir/hebergements/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modifyFormTitle').textContent = 'Modifier l\'hébergement';
+                document.getElementById('desc_hebergement').value = data.desc_hebergement;
+                document.getElementById('capacite_hebergement').value = data.capacite_hebergement;
+                document.getElementById('nom_fournisseur').value = data.nom_fournisseur;
+                document.getElementById('prix_hebergement').value = data.prix_hebergement;
+                document.getElementById('tele_fournisseur').value = data.tele_fournisseur;
+                document.getElementById('ville').value = data.ville;
+                document.getElementById('type_hebergement').value = data.type_hebergement;
+                document.getElementById('pays').value = data.pays;
+                document.getElementById('adresseHebergement').value = data.adresseHebergement;
+                document.getElementById('nom_hebergement').value = data.nom_hebergement;
+
+                editingHebergementId = id;
+                document.getElementById('modifyHebergementModal').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function hideModifyModal() {
+        document.getElementById('modifyHebergementModal').style.display = 'none';
+    }
+
+    function handleAddFormSubmit(event) {
+        event.preventDefault();
+        let formData = new FormData(document.getElementById('addHebergementsForm'));
+
+        let data = {
+            desc_hebergement: formData.get('desc_hebergement'),
+            capacite_hebergement: formData.get('capacite_hebergement'),
+            nom_fournisseur: formData.get('nom_fournisseur'),
+            prix_hebergement: formData.get('prix_hebergement'),
+            tele_fournisseur: formData.get('tele_fournisseur'),
+            ville: formData.get('ville'),
+            type_hebergement: formData.get('type_hebergement'),
+            pays: formData.get('pays'),
+            adresseHebergement: formData.get('adresseHebergement'),
+            nom_hebergement: formData.get('nom_hebergement')
+        };
+
+        fetch(`${BASE_URL}/apir/hebergements/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                hideAddModal();
+                loadHebergements();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function handleModifyFormSubmit(event) {
+        event.preventDefault();
+        let formData = new FormData(document.getElementById('modifyHebergementsForm'));
+
+        let data = {
+            id: editingHebergementId,
+            desc_hebergement: formData.get('desc_hebergement'),
+            capacite_hebergement: formData.get('capacite_hebergement'),
+            nom_fournisseur: formData.get('nom_fournisseur'),
+            prix_hebergement: formData.get('prix_hebergement'),
+            tele_fournisseur: formData.get('tele_fournisseur'),
+            ville: formData.get('ville'),
+            type_hebergement: formData.get('type_hebergement'),
+            pays: formData.get('pays'),
+            adresseHebergement: formData.get('adresseHebergement'),
+            nom_hebergement: formData.get('nom_hebergement')
+        };
+
+        fetch(`${BASE_URL}/apir/hebergements/update/${editingHebergementId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                hideModifyModal();
+                loadHebergements();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function handleDelete(id) {
+        fetch(`${BASE_URL}/apir/hebergements/delete/${id}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete the hebergement');
+                }
+                // Pas besoin d'analyser la réponse si elle est vide
+                loadHebergements(); // Recharger la liste des hébergements après la suppression
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting the hebergement');
+            });
+    }
+
+
+    function loadHebergements() {
+        fetch(`${BASE_URL}/apir/hebergements/all`)
+            .then(response => response.json())
+            .then(data => {
+                let tbody = document.getElementById('hebergementsBody');
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    let row = `<tr>
+                    <td>${item.id_hebergement}</td>
+                    <td>${item.adresseHebergement}</td>
+                    <td>${item.capacite_hebergement}</td>
+                    <td>${item.desc_hebergement}</td>
+                    <td>${item.nom_fournisseur}</td>
+                    <td>${item.nom_hebergement}</td>
+                    <td>${item.pays}</td>
+                    <td>${item.prix_hebergement}</td>
+                    <td>${item.tele_fournisseur}</td>
+                    <td>${item.type_hebergement}</td>
+                    <td>${item.ville}</td>
+                    <td>
+                        <button onclick="showModifyModal(${item.id_hebergement});">Modifier</button>
+                        <button onclick="handleDelete(${item.id_hebergement});">Supprimer</button>
+                    </td>
+                </tr>`;
+                    tbody.innerHTML += row;
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Initialize table on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadHebergements();
+
+        document.getElementById('addHebergementsForm').addEventListener('submit', handleAddFormSubmit);
+        document.getElementById('modifyHebergementsForm').addEventListener('submit', handleModifyFormSubmit);
+    });
+</script>
+
+</body>
+</html>

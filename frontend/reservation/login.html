@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<!-- Basé sur le code original de CodingNepal, adapté au thème vert et avec le formulaire Signup complet -->
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Login & Registration Form (Flip) - Thème Vert</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/loginStyle.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+</head>
+<header class="header">
+    <div class="header-top">
+        <div class="container1">
+            <a href="#" class="logo">
+                <img src="image/logo1.png">
+
+            </a>
+
+        </div>
+    </div>
+</header>
+<body>
+
+<section class="home" id="home">
+    <video src="image/video1.mp4" autoplay muted loop class="video"></video>
+</section>
+
+<div class="container">
+    <!-- Checkbox pour l'effet flip -->
+    <input type="checkbox" id="flip" />
+
+    <!-- Couverture (images + textes) -->
+    <div class="cover">
+        <div class="front">
+            <img src="image/pic1.jpg" alt="Image Front">
+            <div class="text">
+                <span class="text-1">WELCOME TO<br> YUDDING</span>
+                <span class="text-2">Let's get connected</span>
+            </div>
+        </div>
+        <div class="back">
+            <img class="backImg" src="image/img.png" alt="Image Back">
+            <div class="text">
+                <span class="text-1">WELCOME TO<br>YUDDING</span>
+                <span class="text-2">Signup Now</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone des formulaires -->
+    <div class="forms">
+        <div class="form-content">
+            <!-- =========== LOGIN FORM =========== -->
+            <div class="login-form">
+                <div class="title">Login</div>
+                <form id="login-form">
+                    <div class="input-boxes">
+                        <div class="input-box">
+                            <i class="fas fa-user-circle"></i>
+                            <input type="text" id="username" placeholder="Username" required>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" placeholder="Enter your password" required>
+                        </div>
+                        <div class="button input-box">
+                            <input type="submit" value="Submit" class="btn">
+                        </div>
+                        <div class="text sign-up-text">
+                            Don't have an account?
+                            <label for="flip">Signup now</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- =========== SIGNUP FORM (COMPLET) =========== -->
+            <div class="signup-form">
+                <div class="title">Signup</div>
+                <form id="signup-form">
+                    <div class="input-boxes">
+                        <!-- Nom -->
+                        <div class="input-box">
+                            <i class="fas fa-user"></i>
+                            <input type="text" name="nom_utilisateur" placeholder="Nom" required>
+                        </div>
+                        <!-- Prénom -->
+                        <div class="input-box">
+                            <i class="fas fa-user"></i>
+                            <input type="text"  name="prenom_utilisateur" placeholder="Prénom" required>
+                        </div>
+                        <!-- Email -->
+                        <div class="input-box">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" name="email_utilisateur" placeholder="Email" required>
+                        </div>
+                        <!-- Date de naissance -->
+                        <div class="input-box">
+                            <i class="fas fa-calendar"></i>
+                            <input type="date" name="date_naissance"required>
+                        </div>
+                        <!-- Pays -->
+                        <div class="input-box">
+                            <i class="fas fa-flag"></i>
+                            <input type="text" name="pays" placeholder="Pays" required>
+                        </div>
+                        <!-- Genre -->
+                        <div class="input-box">
+                            <i class="fas fa-venus-mars"></i>
+                            <select name="genre" required>
+                                <option value="">Sélectionnez votre genre</option>
+                                <option value="Homme">Homme</option>
+                                <option value="Femme">Femme</option>
+                            </select>
+                        </div>
+                        <!-- Username -->
+                        <div class="input-box">
+                            <i class="fas fa-user-circle"></i>
+                            <input type="text" name="username" placeholder="Username" required>
+                        </div>
+                        <!-- Password -->
+                        <div class="input-box">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" name="password" placeholder="Password" required>
+                        </div>
+                        <!-- Téléphone -->
+                        <div class="input-box">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" name="num_tele" placeholder="Téléphone" required>
+                        </div>
+                        <!-- Bouton Submit -->
+                        <div class="button input-box">
+                            <input type="submit" value="Submit">
+                        </div>
+                        <div class="text sign-up-text">
+                            Already have an account?
+                            <label for="flip">Login now</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- /signup-form -->
+        </div><!-- /form-content -->
+    </div><!-- /forms -->
+</div><!-- /container -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#signup-form").submit(function (event) {
+            event.preventDefault();
+            var formData = $(this).serializeArray().reduce(function (obj, item) {
+                obj[item.name] = item.value;
+                return obj;
+            }, {});
+
+            $.ajax({
+                url: "http://localhost:8888/apiu/utilisateurs/create",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(formData),
+                success: function () {
+                    alert("Inscription réussie! Bienvenue!");
+                    window.location.href = "login.html";
+                },
+                error: function (xhr) {
+                    alert("Échec de l'inscription. Veuillez réessayer.\n" + xhr.responseText);
+                },
+            });
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $("#login-form").submit(function (event) {
+            event.preventDefault();
+
+            var username = $('#username').val();
+            var password = $('#password').val();
+
+            $.ajax({
+                url: 'http://localhost:8888/apiu/utilisateurs/search',
+                type: 'POST',
+                data: {
+                    username: username,
+                    password: password
+                },
+                success: function(response) {
+                    console.log("Réponse complète du serveur:", response);  // Affiche toute la réponse
+                    if (response && response.idu) {
+                        console.log("User ID:", response.idu);  // Affiche l'ID utilisateur
+                        sessionStorage.setItem('isLoggedIn', 'true');
+                        sessionStorage.setItem('userId', response.idu);  // Sauvegarde l'ID dans sessionStorage
+                        alert("Salut ! Content(e) de t'accueillir sur YUDING !");
+                        window.location.href = 'index.html';
+                    } else {
+                        alert("Erreur : L'ID de l'utilisateur n'a pas été renvoyé.");
+                    }
+                },
+                error: function(xhr) {
+                    alert("Échec de la connexion. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.");
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

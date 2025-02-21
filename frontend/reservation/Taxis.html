@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxis</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="css/TaxiStyle.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+</head>
+
+<body>
+    
+
+    <header class="header">
+        <div class="header-top">
+            <div class="container">
+
+                <a href="#" class="logo">
+                    <img src="image/logo1.png" alt="" >
+                </a>
+            </div>
+            <div class="home-btns">
+                <button class="btn-booking"> <a href="index.html" style="color:white">Hébergements</a></button>
+                <button class="btn-booking"><a href="vols.html" style="color:white">Vols</a></button>
+                <button class="btn-booking"><a href="Taxis.html" style="color:white">Taxi</a></button>
+                <button class="btn-booking"><a href="location.html" style="color:white">location de Voiture</a></button>
+                <button class="btn-booking"><a href="activitees.html" style="color:white">Activites</a></button>
+                <button class="btn-booking"><a href="Trains.html" style="color:white">Trains</a></button>
+            </div>
+            <div class="publicite" style=" color:aliceblue; margin-top: 30px;">
+                <h1 style=" color:aliceblue; margin-top: 30px;  text-align: center;"> Réservez simplement</h1>
+                <p style=" color:aliceblue; margin-top: 30px;  text-align: center;">"Réservez votre taxi en toute simplicité - Disponible 24/7".</p>
+            </div>
+        </div>
+
+    </header>
+
+    <main>
+        <section class="home" id="home" style="background: url(image/images.jpg)no-repeat; margin-top: 280px; background-position: center; background-size: cover;">
+            <div class="touch-search">
+                <div class="container">
+                    <form action="http://localhost:8888/apir/transports/search2" method="POST" class="form" id="searchTaxi">
+                        <div class="input-line">
+                            <label for="pax" class="input-label">Pays</label>
+                            <input type="text" name="pays" id="pays" class="input-field" placeholder="Entrer votre pays" style="color: rgba(0, 27, 26, 0.75);">
+                        </div>
+                        <div class="input-line">
+                            <label for="destination" class="input-label" >Ville</label>
+                            <input type="text" name="ville" id="ville" class="input-field" placeholder="Entrer votre ville" style="color: rgba(0, 27, 26, 0.75);">
+                        </div>
+                        <div class="input-line">
+                            <label for="pax" class="input-label">Nombre de personnes</label>
+                            <input type="number" name="pax" id="pax" class="input-field" placeholder="entrer votre destination" style="color: rgba(0, 27, 26, 0.75);">
+                        </div>
+                       
+
+                        <div class="btns-line">
+                            <button type="submit" class="btn-booking">Rechercher</button>
+
+                        </div>
+                    </form>
+                      
+
+                </div>
+            </div>
+        </section>
+          <!-- Section pour les résultats de la recherche -->
+    <section id="search-results" class="search-results">
+        <div class="container">
+            <h2>Résultats de recherche</h2>
+
+            <div id="results-container">
+                <!-- Les résultats seront injectés ici -->
+            </div>
+        </div>
+    </section>
+        <!-- Chatbot Container -->
+        <div class="chatbot-container" id="chatbotContainer">
+            <div class="chatbot-header">
+                <!-- Logo en haut à gauche -->
+                <svg class="chatbot-logo" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 1024 1024">
+                    <path
+                            d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+                    />
+                </svg>
+                <span class="logo-text">AI Assistant</span>
+                <button id="close-chatbot" class="close-btn" onclick="toggleChatbot()">×</button>
+            </div>
+            <div class="chatbot-body" id="chatbotBody">
+                <!-- Les messages seront ajoutés ici par JavaScript -->
+            </div>
+            <div class="chatbot-footer">
+                <input type="text" id="userInput" placeholder="Posez une question..." />
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chatbot Toggle Button -->
+        <button class="chatbot-toggle" onclick="toggleChatbot()">
+            <img src="a1.png" alt="Chatbot">
+        </button>
+
+        <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $("#searchTaxi").submit(function (event) {
+                    event.preventDefault();
+                    console.log("Form submitted");
+
+
+                    var pays = $('#pays').val();
+                    var ville = $('#ville').val();
+
+                    console.log("pays: ", pays);
+                    console.log("Ville: ", ville);
+            
+                    $.ajax({
+                        url: 'http://localhost:8888/apir/transports/search2',
+                        type: 'POST',
+                        data: { pays: pays , ville: ville },
+                        success: function (data) {
+                            console.log("Réponse reçue: ", data);
+                            var html = '';
+                            if (data.length > 0) {
+                                data.forEach(function (transport) {
+                                    html += '<div class="hebergement-result">';
+                                    html += '<strong>Ville: </strong><span>' + transport.ville + '</span><br>';
+                                    html += '<strong>Description: </strong><span>' + transport.desc_transport + '</span><br>';
+                                    html += '<strong>Compagnie: </strong><span>' + transport.compagnie + '</span><br>';
+                                    html += '<strong>Lieu de depart: </strong><span>' + transport.lieudepp + '</span><br>';
+                                    html += '<strong>Lieu d\'arrivee: </strong><span>' + transport.lieuarr + '</span><br>';
+                                    html += '<strong>Prix: </strong><span>' + transport.prix_transport + '$'+'</span><br>';
+                                    html += '<strong>Pays: </strong><span>' + transport.pays + '</span><br>';
+                                    var isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+                                    if (isLoggedIn) {
+                                        html += '<button class="btn-booking" style="background-color:#218a87" onclick="window.location.href=\'reservationTransport.html?transportId=' + transport.idt + '&userId=\' + sessionStorage.getItem(\'userId\')">Réserver</button>';
+                                    } else {
+                                        html += '<button class="btn-booking" style="background-color:#218a87" onclick="alert(\'Veuillez vous connecter pour réserver.\'); window.location.href=\'login.html\';">Réserver</button>';
+                                    }
+                                    html += '</div>';
+                                });
+                            } else {
+                                html = '<p>Aucun taxi trouvé pour votre recherche.</p>';
+                            }
+                            $('#results-container').html(html);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Erreur: ", status, error);
+                            $('#results-container').html('<p>Erreur lors de la recherche. Veuillez réessayer plus tard.</p>');
+                        }
+                    });
+                });
+            });
+            </script>
+        <script>
+            var conversationHistory = [];
+
+            function toggleChatbot() {
+                const chatbotContainer = document.getElementById("chatbotContainer");
+                chatbotContainer.classList.toggle("show");
+            }
+
+            function sendMessage() {
+                const userInputElement = document.getElementById("userInput");
+                const userInput = userInputElement.value.trim();
+                if (!userInput) return;
+
+                const chatbotBody = document.getElementById("chatbotBody");
+
+                // 1) Afficher message utilisateur
+                showUserMessage(chatbotBody, userInput);
+
+                // 2) Mettre à jour l'historique
+                conversationHistory.push("User: " + userInput);
+
+                // 3) Construire le prompt
+                var promptContext = conversationHistory.join("\n") + "\nAssistant:";
+
+                // 4) Vider le champ
+                userInputElement.value = '';
+
+                // 5) Afficher l'indicateur "assistant réfléchit"
+                const thinkingMessageDiv = showAssistantThinking(chatbotBody);
+
+                // 6) Appeler votre backend
+                $.get(`http://localhost:8888/ai/${encodeURIComponent(promptContext)}`, function (data) {
+                    // Supprimer l'indicateur
+                    thinkingMessageDiv.remove();
+
+                    // Afficher la réponse finale
+                    showAssistantMessage(chatbotBody, data);
+
+                    // Ajouter la réponse de l'assistant dans l'historique
+                    conversationHistory.push("Assistant: " + data);
+
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    thinkingMessageDiv.remove();
+                    showAssistantMessage(chatbotBody, "Désolé, une erreur s'est produite. Veuillez réessayer.");
+                });
+            }
+
+            // ---------- Fonctions utilitaires ----------
+
+            function showUserMessage(chatbotBody, userInput) {
+                const userMessageDiv = document.createElement("div");
+                userMessageDiv.classList.add("chat-message", "user");
+                userMessageDiv.innerHTML = `
+            <div class="user-bubble">
+                <span class="message-text">${userInput}</span>
+            </div>
+        `;
+                chatbotBody.appendChild(userMessageDiv);
+                chatbotBody.scrollTop = chatbotBody.scrollHeight;
+            }
+
+            function showAssistantThinking(chatbotBody) {
+                const thinkingMessageDiv = document.createElement("div");
+                thinkingMessageDiv.classList.add("chat-message", "assistant");
+                thinkingMessageDiv.id = "thinkingIndicator";
+
+                thinkingMessageDiv.innerHTML = `
+            <div class="assistant-avatar-circle">
+                <svg class="assistant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                    <path
+                            d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+                    />
+                </svg>
+            </div>
+            <div class="assistant-bubble">
+                <span class="dot-typing">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </span>
+            </div>
+        `;
+                chatbotBody.appendChild(thinkingMessageDiv);
+                chatbotBody.scrollTop = chatbotBody.scrollHeight;
+                return thinkingMessageDiv;
+            }
+
+            function showAssistantMessage(chatbotBody, text) {
+                const assistantMessageDiv = document.createElement("div");
+                assistantMessageDiv.classList.add("chat-message", "assistant");
+                assistantMessageDiv.innerHTML = `
+            <div class="assistant-avatar-circle">
+                <svg class="assistant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                    <path
+                            d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+                    />
+                </svg>
+            </div>
+            <div class="assistant-bubble">
+                <span class="message-text">${text}</span>
+            </div>
+        `;
+                chatbotBody.appendChild(assistantMessageDiv);
+                chatbotBody.scrollTop = chatbotBody.scrollHeight;
+            }
+        </script>
+
+
+
+
+</body >
+
+</html >

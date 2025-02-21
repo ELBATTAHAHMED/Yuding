@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - YUDING</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="styleA.css">
+</head>
+<body>
+<header>
+    <a href="#" class="logo">
+        <img src="image/logo1.png" alt="Logo" style="float: left;">
+    </a>
+    <h1>Dashboard - YUDING</h1>
+    <nav>
+        <ul>
+            <li><a href="dashHebergements.html">Hébergements</a></li>
+            <li><a href="dashTransport.html">Moyens de transport</a></li>
+            <li><a href="dashActivitee.html">Activités</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <button type="button" class="add-button" onclick="showModal();">Ajouter Activité</button>
+    <section class="reservation-table">
+        <div class="table-container">
+        <table id="activitiesTable" class="tablee">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Description Activité</th>
+                <th>Durée</th>
+                <th>Nom Fournisseur</th>
+                <th>Prix</th>
+                <th>Téléphone Fournisseur</th>
+                <th>Ville</th>
+                <th>Pays</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <div id="addActivityModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-button" onclick="hideModal();">&times;</span>
+            <h2>Ajouter une nouvelle activité</h2>
+            <form id="addActivityForm">
+                <label for="desc_activitee">Description:</label>
+                <input type="text" id="desc_activitee" name="desc_activitee"><br>
+                <label for="duree">Durée (en heures):</label>
+                <input type="number" id="duree" name="duree"><br>
+                <label for="nom_fournisseur">Nom du fournisseur:</label>
+                <input type="text" id="nom_fournisseur" name="nom_fournisseur"><br>
+                <label for="prix_activitee">Prix (en MAD):</label>
+                <input type="number" id="prix_activitee" name="prix_activitee"><br>
+                <label for="tele_fournisseur">Téléphone du fournisseur:</label>
+                <input type="text" id="tele_fournisseur" name="tele_fournisseur"><br>
+                <label for="ville">Ville:</label>
+                <input type="text" id="ville" name="ville"><br>
+                <label for="pays">Pays:</label>
+                <input type="text" id="pays" name="pays"><br>
+                <button type="submit">Ajouter Activité</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    const BASE_URL = 'http://localhost:8888';
+    // Fonction pour charger les activités depuis l'API et les afficher dans le tableau
+    function loadActivities() {
+        fetch(`${BASE_URL}/apir/activities/all`)
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
+                table.innerHTML = ""; // On vide le tableau avant de l'actualiser
+                data.forEach(activity => {
+                    const row = table.insertRow();
+                    const keys = ['ida', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
+                    keys.forEach(key => {
+                        const cell = row.insertCell();
+                        cell.textContent = activity[key];
+                    });
+                    const actionCell = row.insertCell();
+                    actionCell.innerHTML = `<button type="button" onclick="supprimerActivitee(${activity.ida});">Supprimer</button>`;
+                    row.id = 'row-' + activity.ida; // Ajouter un id à la ligne pour la suppression
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Appel de la fonction pour charger les activités au démarrage de la page
+    window.onload = loadActivities;
+
+    // Ajouter une nouvelle activité
+    document.getElementById('addActivityForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(event.target);
+        var data = {};
+        formData.forEach(function(value, key) {
+            data[key] = value;
+        });
+
+        fetch(`${BASE_URL}/apir/activities/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                addToTable(data); // Met à jour le tableau après l'ajout
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    // Ajouter l'activité au tableau après l'ajout
+    function addToTable(activity) {
+        const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
+        const row = table.insertRow();
+        const keys = ['ida', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
+        keys.forEach(key => {
+            const cell = row.insertCell();
+            cell.textContent = activity[key];
+        });
+        const actionCell = row.insertCell();
+        actionCell.innerHTML = `<button type="button" onclick="supprimerActivitee(${activity.ida});">Supprimer</button>`;
+        row.id = 'row-' + activity.ida; // Ajouter un id à la ligne pour la suppression
+    }
+
+    // Supprimer une activité
+    function supprimerActivitee(ida) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette activité ?')) {
+            fetch(`${BASE_URL}/apir/activities/${ida}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if(response.ok) {
+                        document.getElementById('row-' + ida).remove(); // Retirer la ligne du tableau
+                        console.log('Activité supprimée avec succès!');
+                    } else {
+                        throw new Error('Une erreur est survenue');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
+
+    // Fonction pour afficher la modale
+    function showModal() {
+        document.getElementById('addActivityModal').style.display = 'block';
+    }
+
+    // Fonction pour cacher la modale
+    function hideModal() {
+        document.getElementById('addActivityModal').style.display = 'none';
+    }
+</script>
+</body>
+</html>

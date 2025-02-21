@@ -1,0 +1,305 @@
+/* ==================== Google Font déjà importée ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #01796F; /* Thème vert */
+    padding: 30px;
+}
+.container {
+    margin-top: 120px; /* Ajustez selon la hauteur du header */
+    position: relative;
+    max-width: 850px;
+    width: 100%;
+    border-radius: 20px;
+    min-height: 200px;
+    z-index: 1;
+    background: #fff;
+    padding: 40px 30px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    perspective: 2700px; /* Nécessaire pour l’effet flip */
+}
+/* ==================== Checkbox pour le flip ==================== */
+#flip {
+    display: none;
+}
+/* ==================== COVER (Images + Textes) ==================== */
+.cover {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 100%;
+    width: 50%;
+    z-index: 98;
+    transition: all 1s ease;
+    transform-origin: left;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+/* Quand on coche #flip, on retourne la couverture */
+#flip:checked ~ .cover {
+    transform: rotateY(-180deg);
+}
+/* Empêche de cliquer sur le login quand on est sur la face signup */
+#flip:checked ~ .forms .login-form {
+    pointer-events: none;
+}
+.cover .front,
+.cover .back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+.cover .back {
+    transform: rotateY(180deg);
+}
+.cover img {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    z-index: 10;
+}
+.cover .text {
+    position: absolute;
+    z-index: 10;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.cover .text::before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0.5;
+    background: #01796F; /* voile vert sur l’image */
+}
+.cover .text .text-1,
+.cover .text .text-2 {
+    z-index: 20;
+    font-size: 26px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+}
+.cover .text .text-2 {
+    font-size: 15px;
+    font-weight: 500;
+}
+/* ==================== FORMS (Login & Signup) ==================== */
+.forms {
+    height: 100%;
+    width: 100%;
+    background: #fff;
+}
+.form-content {
+    display: flex;
+    justify-content: space-between;
+    overflow-y: auto;
+    max-height: 350px;
+    align-items: flex-start;
+
+}
+.logo-top {
+    position: absolute;
+    top: 10px;
+    width: 200px;
+    left: 10px;
+    z-index: 100;
+}
+.logo-top img {
+    max-width: 150px;
+    height: auto;
+    border-radius: 10px; /* Optionnel : arrondir légèrement le logo */
+}
+.login-form,
+.signup-form {
+    width: calc(100% / 2 - 25px);
+}
+/* Titres */
+.title {
+    position: relative;
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 20px;
+}
+.title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 25px;
+    background: #01796F; /* soulignement du titre */
+}
+.signup-form .title::before {
+    width: 20px;
+}
+/* Zone de champs */
+.input-boxes {
+    margin-top: 30px;
+}
+.input-box {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    width: 100%;
+    margin: 10px 0;
+    position: relative;
+}
+.input-box input,
+.input-box select {
+    height: 100%;
+    width: 100%;
+    outline: none;
+    border: none;
+    padding: 0 30px;
+    font-size: 16px;
+    font-weight: 500;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+.input-box input:focus,
+.input-box select:focus,
+.input-box input:valid {
+    border-color: #01796F;
+}
+.input-box i {
+    position: absolute;
+    color: #01796F;
+    font-size: 17px;
+}
+.text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+.text a {
+    text-decoration: none;
+}
+.text a:hover {
+    text-decoration: underline;
+}
+.button.input-box input {
+    color: #fff;
+    background: #01796F;
+    border-radius: 6px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border: none;
+    width: 100%;
+    height: 45px;
+}
+.button.input-box input:hover {
+    background: #015f57;
+}
+label {
+    color: #015f57;
+    cursor: pointer;
+}
+label:hover {
+    text-decoration: underline;
+}
+.login-text,
+.sign-up-text {
+    text-align: center;
+    margin-top: 25px;
+}
+/* Checkbox masquée */
+#flip {
+    display: none;
+}
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 730px) {
+    .cover {
+        display: none;
+    }
+    .login-form,
+    .signup-form {
+        width: 100%;
+    }
+    .signup-form {
+        display: none;
+    }
+    /* Quand #flip est coché, on affiche la signup-form, on masque la login-form */
+    #flip:checked ~ .forms .signup-form {
+        display: block;
+    }
+    #flip:checked ~ .forms .login-form {
+        display: none;
+    }
+}
+.home {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    z-index: -1;
+}
+.video {
+    min-height: 100%;
+    min-width: 100%;
+    object-fit: cover;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+}
+
+.header {
+    position: fixed; /* Changez de absolute à fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100px; /* Hauteur fixe */
+    z-index: 100;
+    background: rgba(1, 95, 87, 1);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.header .header-top {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.header .header-top .container1 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    align-items: center;
+}
+.header .header-top .container1 .logo {
+    height: 80px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.header .header-top .container1 .logo img {
+    height: 100%;
+    width: fit-content;
+    object-fit: cover;
+}
