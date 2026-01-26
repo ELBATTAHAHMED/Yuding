@@ -60,11 +60,12 @@ public class ActiviteesController {
     }
 
 
-    /*@PutMapping("/update")
-    public ResponseEntity<Activitees> updateActivite(@RequestBody Activitees activitees) {
-        Activitees updatedActivite = activityService.updateActivite(activitees);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Activitees> updateActivite(@PathVariable Long id, @RequestBody Activitees activitees)
+            throws ResourceNotFoundException {
+        Activitees updatedActivite = activityService.updateActivite(id, activitees);
         return ResponseEntity.ok(updatedActivite);
-    }*/
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteActivite(@PathVariable Long id) {

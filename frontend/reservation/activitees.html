@@ -328,45 +328,54 @@
                     var html = '';
                     if (data.length > 0) {
                         data.forEach(function (activitee) {
-                            html += '<div class="activity-result-card">';
-                            html += '  <div class="activity-card-header">';
-                            html += '    <h3 class="activity-title">' + activitee.nom_activitee + '</h3>';
-                            html += '    <div class="activity-price">' + activitee.prix_activitee + '$</div>';
+                            html += '<div class="accommodation-result-card">';
+                            html += '  <div class="accommodation-card-header">';
+                            html += '    <h3 class="accommodation-title">' + (activitee.nom_activitee || 'Activité') + '</h3>';
+                            html += '    <div class="accommodation-price">' + (activitee.prix_activitee ?? '-') + '$<span class="price-period">/activité</span></div>';
                             html += '  </div>';
-                            html += '  <div class="activity-card-body">';
-                            html += '    <div class="activity-info-grid">';
-                            html += '      <div class="activity-info-item">';
-                            html += '        <span class="activity-label"><i class="fas fa-map-marker-alt"></i> Ville:</span>';
-                            html += '        <span class="activity-value">' + activitee.ville + '</span>';
+                            html += '  <div class="accommodation-card-body">';
+                            html += '    <div class="accommodation-location">';
+                            html += '      <div class="location-info">';
+                            html += '        <i class="fas fa-map-marker-alt"></i>';
+                            html += '        <span>' + (activitee.ville || 'Ville') + '</span>';
                             html += '      </div>';
-                            html += '      <div class="activity-info-item">';
-                            html += '        <span class="activity-label"><i class="fas fa-clock"></i> Durée:</span>';
-                            html += '        <span class="activity-value">' + activitee.duree + ' jours</span>';
-                            html += '      </div>';
-                            html += '      <div class="activity-info-item">';
-                            html += '        <span class="activity-label"><i class="fas fa-globe"></i> Pays:</span>';
-                            html += '        <span class="activity-value">' + activitee.pays + '</span>';
-                            html += '      </div>';
-                            html += '      <div class="activity-info-item">';
-                            html += '        <span class="activity-label"><i class="fas fa-user"></i> Responsable:</span>';
-                            html += '        <span class="activity-value">' + activitee.nom_fournisseur + '</span>';
-                            html += '      </div>';
-                            html += '      <div class="activity-info-item">';
-                            html += '        <span class="activity-label"><i class="fas fa-phone"></i> Téléphone:</span>';
-                            html += '        <span class="activity-value">' + activitee.tele_fournisseur + '</span>';
+                            html += '      <div class="accommodation-type">';
+                            html += '        <i class="fas fa-globe"></i>';
+                            html += '        <span>' + (activitee.pays || 'Pays') + '</span>';
                             html += '      </div>';
                             html += '    </div>';
-                            html += '    <div class="activity-description">';
-                            html += '      <span class="activity-label"><i class="fas fa-info-circle"></i> Description:</span>';
-                            html += '      <p class="activity-desc-text">' + activitee.desc_activitee + '</p>';
+                            html += '    <div class="accommodation-features">';
+                            html += '      <div class="feature-item">';
+                            html += '        <i class="fas fa-clock"></i>';
+                            html += '        <span>' + (activitee.duree || 'Durée non spécifiée') + '</span>';
+                            html += '      </div>';
+                            html += '      <div class="feature-item">';
+                            html += '        <i class="fas fa-calendar-alt"></i>';
+                            html += '        <span>' + (activitee.date || 'Date flexible') + '</span>';
+                            html += '      </div>';
+                            html += '    </div>';
+                            html += '    <div class="accommodation-description">';
+                            html += '      <h4><i class="fas fa-info-circle"></i> Description</h4>';
+                            html += '      <p class="description-text">' + (activitee.desc_activitee || '') + '</p>';
+                            html += '      <button class="description-toggle" type="button">Voir plus...</button>';
+                            html += '    </div>';
+                            html += '    <div class="accommodation-contact">';
+                            html += '      <div class="contact-item">';
+                            html += '        <span class="contact-label"><i class="fas fa-user"></i> Responsable:</span>';
+                            html += '        <span class="contact-value">' + (activitee.nom_fournisseur || 'Non spécifié') + '</span>';
+                            html += '      </div>';
+                            html += '      <div class="contact-item">';
+                            html += '        <span class="contact-label"><i class="fas fa-phone"></i> Contact:</span>';
+                            html += '        <span class="contact-value">' + (activitee.tele_fournisseur || 'Non spécifié') + '</span>';
+                            html += '      </div>';
                             html += '    </div>';
                             html += '  </div>';
-                            html += '  <div class="activity-card-footer">';
+                            html += '  <div class="accommodation-card-footer">';
                             var isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
                             if (isLoggedIn) {
-                                html += '<button class="activity-booking-btn" onclick="window.location.href=\'reservationTransport.html?activiteeId=' + activitee.ida + '&userId=\' + sessionStorage.getItem(\'userId\')"><i class="fas fa-calendar-check"></i> Réserver maintenant</button>';
+                                html += '<button class="accommodation-booking-btn" onclick="window.location.href=\'reservationTransport.html?activiteeId=' + activitee.ida + '&userId=\' + sessionStorage.getItem(\'userId\')"><i class="fas fa-calendar-check"></i> Réserver maintenant</button>';
                             } else {
-                                html += '<button class="activity-booking-btn" onclick="sessionStorage.setItem(\'postLoginRedirect\', \'reservationTransport.html?activiteeId=' + activitee.ida + '\'); showLoginRequiredPopup();"><i class="fas fa-sign-in-alt"></i> Se connecter pour réserver</button>';
+                                html += '<button class="accommodation-booking-btn" onclick="sessionStorage.setItem(\'postLoginRedirect\', \'reservationTransport.html?activiteeId=' + activitee.ida + '\'); showLoginRequiredPopup();"><i class="fas fa-sign-in-alt"></i> Se connecter pour réserver</button>';
                             }
                             html += '  </div>';
                             html += '</div>';
@@ -379,10 +388,18 @@
                         html += '</div>';
                     }
                     $('#results-container').html(html);
+
+                    document.querySelectorAll('.description-toggle').forEach((button) => {
+                        button.addEventListener('click', () => {
+                            const container = button.closest('.accommodation-description');
+                            container.classList.toggle('expanded');
+                            button.textContent = container.classList.contains('expanded') ? 'Voir moins' : 'Voir plus...';
+                        });
+                    });
                     
                     // Animer les nouveaux éléments
                     setTimeout(() => {
-                        document.querySelectorAll('.activity-result-card').forEach((el, index) => {
+                        document.querySelectorAll('.accommodation-result-card').forEach((el, index) => {
                             setTimeout(() => {
                                 el.style.opacity = '1';
                                 el.style.transform = 'translateY(0)';

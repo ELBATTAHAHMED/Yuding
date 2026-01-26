@@ -852,6 +852,48 @@ main {
     line-height: 1.5;
 }
 
+/* Description clamp dans le tableau transports */
+.reservation-table .desc-header,
+.reservation-table .desc-cell {
+    min-width: 260px;
+    max-width: 360px;
+}
+
+.reservation-table .desc-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.reservation-table .desc-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.reservation-table .desc-cell.expanded .desc-text {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+.reservation-table .desc-toggle {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+    line-height: 1;
+}
+
+[data-theme="dark"] .reservation-table .desc-toggle {
+    color: var(--bg-accent);
+}
+
 .reservation-table tbody tr td:first-child {
     border-left: 1px solid var(--border-strong);
     border-top-left-radius: 14px;

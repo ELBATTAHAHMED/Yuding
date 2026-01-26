@@ -15,7 +15,9 @@ public interface ActiviteesServices {
 
 	    Activitees getActivityById(Long id) throws ResourceNotFoundException;
 
-	     Activitees createActivite(Activitees activitees);
+	    Activitees createActivite(Activitees activitees);
+
+	    Activitees updateActivite(Long id, Activitees activitees) throws ResourceNotFoundException;
 
 
 	     void deleteActivite(Long id);
