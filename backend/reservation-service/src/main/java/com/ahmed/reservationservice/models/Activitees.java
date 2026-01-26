@@ -22,6 +22,8 @@ public class Activitees {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ida", nullable=false)
 	private Long ida;
+	@Column(name = "nom_activitee")
+	private String nom_activitee;
 	@Column(name = "prix_activitee" )
 	private Double prix_activitee;
 	@Column(name = "ville" )

@@ -119,7 +119,8 @@
             <thead>
             <tr>
                 <th class="sortable" data-sort="ida">ID <span class="sort-indicator">▲</span></th>
-                <th class="sortable" data-sort="desc_activitee">Description Activité</th>
+                <th class="sortable" data-sort="nom_activitee">Nom Activité</th>
+                <th class="sortable desc-header" data-sort="desc_activitee">Description Activité</th>
                 <th class="sortable" data-sort="duree">Durée</th>
                 <th class="sortable" data-sort="nom_fournisseur">Nom Fournisseur</th>
                 <th class="sortable" data-sort="prix_activitee">Prix</th>
@@ -144,6 +145,10 @@
             </div>
             <div class="modal-body">
                 <form id="addActivityForm" class="form-grid">
+                    <div class="form-group">
+                        <label for="nom_activitee"><i class="fas fa-tag"></i> Nom activité</label>
+                        <input type="text" id="nom_activitee" name="nom_activitee" placeholder="Nom de l'activité" required />
+                    </div>
                     <div class="form-group full-width">
                         <label for="desc_activitee"><i class="fas fa-align-left"></i> Description</label>
                         <textarea id="desc_activitee" name="desc_activitee" placeholder="Description de l'activité" required></textarea>
@@ -193,6 +198,10 @@
             <div class="modal-body">
                 <form id="editActivityForm" class="form-grid">
                     <input type="hidden" id="edit_ida" />
+                    <div class="form-group">
+                        <label for="edit_nom_activitee"><i class="fas fa-tag"></i> Nom activité</label>
+                        <input type="text" id="edit_nom_activitee" name="nom_activitee" placeholder="Nom de l'activité" required />
+                    </div>
                     <div class="form-group full-width">
                         <label for="edit_desc_activitee"><i class="fas fa-align-left"></i> Description</label>
                         <textarea id="edit_desc_activitee" name="desc_activitee" placeholder="Description de l'activité" required></textarea>
@@ -296,15 +305,33 @@
         const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
         table.innerHTML = '';
         if (!rows.length) {
-            table.innerHTML = '<tr><td colspan="9" class="table-empty">Aucune activité trouvée.</td></tr>';
+            table.innerHTML = '<tr><td colspan="10" class="table-empty">Aucune activité trouvée.</td></tr>';
             return;
         }
         rows.forEach(activity => {
             const row = table.insertRow();
-            const keys = ['ida', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
+            const keys = ['ida', 'nom_activitee', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
             keys.forEach(key => {
                 const cell = row.insertCell();
-                cell.textContent = activity[key];
+                if (key === 'desc_activitee') {
+                    cell.className = 'desc-cell';
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'desc-wrapper';
+                    const text = document.createElement('span');
+                    text.className = 'desc-text';
+                    text.textContent = activity[key] ?? '';
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'desc-toggle';
+                    toggle.setAttribute('aria-expanded', 'false');
+                    toggle.setAttribute('aria-label', 'Afficher la description complète');
+                    toggle.textContent = '...';
+                    wrapper.appendChild(text);
+                    wrapper.appendChild(toggle);
+                    cell.appendChild(wrapper);
+                } else {
+                    cell.textContent = activity[key] ?? '';
+                }
             });
             const actionCell = row.insertCell();
             actionCell.innerHTML = `
@@ -373,10 +400,28 @@
     function addToTable(activity) {
         const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
         const row = table.insertRow();
-        const keys = ['ida', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
+        const keys = ['ida', 'nom_activitee', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
         keys.forEach(key => {
             const cell = row.insertCell();
-            cell.textContent = activity[key];
+            if (key === 'desc_activitee') {
+                cell.className = 'desc-cell';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'desc-wrapper';
+                const text = document.createElement('span');
+                text.className = 'desc-text';
+                text.textContent = activity[key] ?? '';
+                const toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'desc-toggle';
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', 'Afficher la description complète');
+                toggle.textContent = '...';
+                wrapper.appendChild(text);
+                wrapper.appendChild(toggle);
+                cell.appendChild(wrapper);
+            } else {
+                cell.textContent = activity[key] ?? '';
+            }
         });
         const actionCell = row.insertCell();
         actionCell.innerHTML = `
@@ -499,6 +544,7 @@
                 const activity = data.find(a => a.ida == ida);
                 if (activity) {
                     document.getElementById('edit_ida').value = activity.ida;
+                    document.getElementById('edit_nom_activitee').value = activity.nom_activitee ?? '';
                     document.getElementById('edit_desc_activitee').value = activity.desc_activitee;
                     document.getElementById('edit_duree').value = activity.duree;
                     document.getElementById('edit_prix_activitee').value = activity.prix_activitee;
@@ -705,6 +751,16 @@
             }
             applyActivityFilters();
         });
+    });
+
+    $(document).on('click', '.desc-toggle', function(event) {
+        event.preventDefault();
+        const $cell = $(this).closest('.desc-cell');
+        const isExpanded = $cell.toggleClass('expanded').hasClass('expanded');
+        $(this)
+            .attr('aria-expanded', isExpanded)
+            .attr('aria-label', isExpanded ? 'Réduire la description' : 'Afficher la description complète')
+            .text(isExpanded ? 'Réduire' : '...');
     });
 </script>
 </body>

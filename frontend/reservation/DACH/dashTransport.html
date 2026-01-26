@@ -125,7 +125,7 @@
             <tr>
                 <th class="sortable" data-sort="idt">ID <span class="sort-indicator">▲</span></th>
                 <th class="sortable" data-sort="compagnie">compagnie</th>
-                <th class="sortable" data-sort="desc_transport">desc_transport</th>
+                <th class="sortable desc-header" data-sort="desc_transport">desc_transport</th>
                 <th class="sortable" data-sort="lieuarr">lieu_arr</th>
                 <th class="sortable" data-sort="lieudepp">lieu_depp</th>
                 <th class="sortable" data-sort="marque">marque</th>
@@ -531,7 +531,12 @@
                 <tr>
                     <td>${transport.idt}</td>
                     <td>${transport.compagnie}</td>
-                    <td>${transport.desc_transport}</td>
+                    <td class="desc-cell">
+                        <div class="desc-wrapper">
+                            <span class="desc-text">${transport.desc_transport || ''}</span>
+                            <button type="button" class="desc-toggle" aria-expanded="false" aria-label="Afficher la description complète">...</button>
+                        </div>
+                    </td>
                     <td>${transport.lieuarr}</td>
                     <td>${transport.lieudepp}</td>
                     <td>${transport.marque}</td>
@@ -798,6 +803,16 @@
             }
             applyTransportFilters();
         });
+    });
+
+    $(document).on('click', '.desc-toggle', function(event) {
+        event.preventDefault();
+        const $cell = $(this).closest('.desc-cell');
+        const isExpanded = $cell.toggleClass('expanded').hasClass('expanded');
+        $(this)
+            .attr('aria-expanded', isExpanded)
+            .attr('aria-label', isExpanded ? 'Réduire la description' : 'Afficher la description complète')
+            .text(isExpanded ? 'Réduire' : '...');
     });
 </script>
 </body>

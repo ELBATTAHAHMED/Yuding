@@ -306,6 +306,11 @@ body {
     font-size: 14px;
     background: rgba(248, 250, 252, 0.95);
     outline: none;
+    color: rgba(15, 23, 42, 0.85);
+}
+
+.chatbot-footer input::placeholder {
+    color: rgba(15, 23, 42, 0.45);
 }
 
 .chatbot-footer input:focus {

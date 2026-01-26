@@ -30,8 +30,8 @@ public class DataInitializer {
         return args -> {
             if (activiteesRepo.count() == 0) {
                 activiteesRepo.saveAll(List.of(
-                        new Activitees(null, 150.0, "Marrakech", "Excursion dans les montagnes, une aventure inoubliable à travers les magnifiques montagnes marocaines. Cette activité vous emmène sur des sentiers pittoresques, où vous pourrez admirer des paysages époustouflants, respirer l'air frais de la montagne et découvrir la faune et la flore locales.", "2 heures", "Voyage Maroc", "Maroc", Date.valueOf("2025-05-01"), "0667894561", "url_photo"),
-                        new Activitees(null, 200.0, "Fès", "Visite culturelle, une immersion dans l’histoire et la richesse culturelle de la ville de Fès à travers une visite guidée exceptionnelle. Découvrez les trésors architecturaux, les médersas anciennes, les souks animés et les secrets de l’artisanat local tout en écoutant des récits fascinants sur l’héritage de cette ville impériale.", "3 heures", "Explore Maroc", "Maroc", Date.valueOf("2025-06-15"), "0671234567", "url_photo")
+                        new Activitees(null, "Excursion Montagnes", 150.0, "Marrakech", "Excursion dans les montagnes, une aventure inoubliable à travers les magnifiques montagnes marocaines. Cette activité vous emmène sur des sentiers pittoresques, où vous pourrez admirer des paysages époustouflants, respirer l'air frais de la montagne et découvrir la faune et la flore locales.", "2 heures", "Voyage Maroc", "Maroc", Date.valueOf("2025-05-01"), "0667894561", "url_photo"),
+                        new Activitees(null, "Visite Culturelle", 200.0, "Fès", "Visite culturelle, une immersion dans l’histoire et la richesse culturelle de la ville de Fès à travers une visite guidée exceptionnelle. Découvrez les trésors architecturaux, les médersas anciennes, les souks animés et les secrets de l’artisanat local tout en écoutant des récits fascinants sur l’héritage de cette ville impériale.", "3 heures", "Explore Maroc", "Maroc", Date.valueOf("2025-06-15"), "0671234567", "url_photo")
                 ));
             }
 

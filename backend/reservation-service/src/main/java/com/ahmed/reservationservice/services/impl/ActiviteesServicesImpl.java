@@ -42,22 +42,23 @@ public class ActiviteesServicesImpl implements ActiviteesServices{
         return activityRepo.save(activitees);
     }
 
-	/* @Override
-	    public Activitees updateActivite(Activitees activitees) {
-	        // Check if activity exists before update
-	        Optional<Activitees> existingActivite = activiteesRepository.findById(activitees.getId_activitee());
-	        if (existingActivite.isPresent()) {
-	            return activiteesRepository.save(activitees);
-	        } else {
-	            // Throw an exception or handle the case where activity doesn't exist
-	            throw new RuntimeException("Activite with ID " + activitees.getId_activitee() + " not found");
-	        }
-	    }
+	@Override
+	public Activitees updateActivite(Long id, Activitees activitees) throws ResourceNotFoundException {
+		Activitees existingActivite = activityRepo.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Activité introuvable pour l'ID : " + id));
+		existingActivite.setNom_activitee(activitees.getNom_activitee());
+		existingActivite.setPrix_activitee(activitees.getPrix_activitee());
+		existingActivite.setVille(activitees.getVille());
+		existingActivite.setDesc_activitee(activitees.getDesc_activitee());
+		existingActivite.setDuree(activitees.getDuree());
+		existingActivite.setNom_fournisseur(activitees.getNom_fournisseur());
+		existingActivite.setPays(activitees.getPays());
+		existingActivite.setDate(activitees.getDate());
+		existingActivite.setTele_fournisseur(activitees.getTele_fournisseur());
+		existingActivite.setPhoto(activitees.getPhoto());
+		return activityRepo.save(existingActivite);
+	}
 
-	    @Override
-	    public void deleteActivite(Long id) {
-	        activiteesRepository.deleteById(id);
-	    }*/
 
 	
 
