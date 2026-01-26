@@ -77,3 +77,8 @@ Services Spring Boot disponibles:
 - `backend/gateway-service`
 
 Ensuite demarrer les jars generes ou utiliser votre IDE pour run les services.
+
+
+## Authors
+
+- **EL BATTAH Ahmed**
