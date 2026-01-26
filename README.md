@@ -47,14 +47,27 @@ Plateforme de reservation de voyages avec frontend statique (HTML/CSS/JS) et bac
 - ` /apic/** ` -> Commentaire Service
 - ` /ai/** ` -> AI Service
 
-## Demarrage local (simplifie)
-1. Lancer Eureka (`backend/discovery-service`)
-2. Lancer Config Server (`backend/config-service`)
-3. Lancer les services (reservation, user, commentaire, ai)
-4. Lancer Gateway (`backend/gateway-service`)
-5. Ouvrir `frontend/reservation/DACH/loginN.html`
+## Demarrage local
 
-Commandes typiques (dans chaque service):
+### Option 1: Docker (recommande)
+Le fichier `docker-compose.yml` est a la racine du repo.
 ```
-mvn spring-boot:run
+docker-compose up -d
 ```
+
+### Option 2: Build manuel (chaque service)
+Dans chaque dossier de service, lancer la commande suivante:
+```
+./mvnw.cmd -DskipTests clean package
+```
+
+Services Spring Boot disponibles:
+- `backend/discovery-service`
+- `backend/config-service`
+- `backend/user-service`
+- `backend/reservation-service`
+- `backend/commentaire-service`
+- `backend/ai-service`
+- `backend/gateway-service`
+
+Ensuite demarrer les jars generes ou utiliser votre IDE pour run les services.
