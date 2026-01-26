@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Admin Dashboard</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
+</head>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Settings</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <main>
+            <div class="overview-grid">
+                <div class="form-card">
+                    <h3>Profil administrateur</h3>
+                    <form id="profileForm" class="form-grid">
+                        <div class="form-group">
+                            <label for="profileNom"><i class="fas fa-user"></i> Nom</label>
+                            <input type="text" id="profileNom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profilePrenom"><i class="fas fa-user"></i> Prénom</label>
+                            <input type="text" id="profilePrenom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileEmail"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="profileEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileTele"><i class="fas fa-phone"></i> Téléphone</label>
+                            <input type="text" id="profileTele" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profilePays"><i class="fas fa-globe"></i> Pays</label>
+                            <input type="text" id="profilePays" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileGenre"><i class="fas fa-venus-mars"></i> Genre</label>
+                            <input type="text" id="profileGenre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileNaissance"><i class="fas fa-calendar"></i> Naissance</label>
+                            <input type="date" id="profileNaissance" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profilePassword"><i class="fas fa-lock"></i> Nouveau mot de passe</label>
+                            <input type="password" id="profilePassword" placeholder="Laisser vide pour conserver">
+                        </div>
+                        <div class="submit-button-container">
+                            <button type="submit">
+                                <i class="fas fa-save"></i>
+                                Mettre à jour
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-card">
+                    <h3>Paramètres de l'application</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="themeSelect"><i class="fas fa-moon"></i> Thème</label>
+                            <select id="themeSelect">
+                                <option value="dark">Dark (par défaut)</option>
+                                <option value="light">Light</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-bell"></i> Notifications</label>
+                            <input type="text" value="Activées" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="admin-layout.js"></script>
+<script>
+    const BASE_URL = 'http://localhost:8888';
+    let cachedAdmin = null;
+
+    const loadProfile = () => {
+        try {
+            cachedAdmin = JSON.parse(localStorage.getItem('adminUser'));
+        } catch (e) {
+            cachedAdmin = null;
+        }
+
+        if (!cachedAdmin) {
+            return;
+        }
+
+        document.getElementById('profileNom').value = cachedAdmin.nom || '';
+        document.getElementById('profilePrenom').value = cachedAdmin.prenom || '';
+        document.getElementById('profileEmail').value = cachedAdmin.email || '';
+        document.getElementById('profileTele').value = cachedAdmin.tele || '';
+        document.getElementById('profilePays').value = cachedAdmin.pays || '';
+        document.getElementById('profileGenre').value = cachedAdmin.genre || '';
+        if (cachedAdmin.naissance) {
+            document.getElementById('profileNaissance').value = cachedAdmin.naissance.split('T')[0];
+        }
+
+        const themeSelect = document.getElementById('themeSelect');
+        themeSelect.value = localStorage.getItem('theme') || 'dark';
+    };
+
+    document.getElementById('profileForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!cachedAdmin) {
+            showErrorPopup('Erreur', 'Impossible de charger le profil administrateur.');
+            return;
+        }
+
+        const passwordInput = document.getElementById('profilePassword').value;
+        const payload = {
+            nom: document.getElementById('profileNom').value,
+            prenom: document.getElementById('profilePrenom').value,
+            email: document.getElementById('profileEmail').value,
+            tele: document.getElementById('profileTele').value,
+            pays: document.getElementById('profilePays').value,
+            genre: document.getElementById('profileGenre').value,
+            naissance: document.getElementById('profileNaissance').value,
+            password: passwordInput || cachedAdmin.password
+        };
+
+        fetch(`${BASE_URL}/apiu/admin/update/${cachedAdmin.id_admin}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(updated => {
+                cachedAdmin = updated;
+                localStorage.setItem('adminUser', JSON.stringify(updated));
+                showToast('success', 'Profil mis à jour.');
+                document.getElementById('profilePassword').value = '';
+            })
+            .catch(() => showErrorPopup('Erreur', 'Impossible de mettre à jour le profil.'));
+    });
+
+    document.getElementById('themeSelect').addEventListener('change', (event) => {
+        const theme = event.target.value;
+        localStorage.setItem('theme', theme);
+        if (window.AdminLayout && window.AdminLayout.setTheme) {
+            window.AdminLayout.setTheme(theme);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -56,30 +57,38 @@ public class DataInitializer {
             }
 
             if (paiementsRepo.count() == 0) {
-                // Récupérer les réservations existantes
-                Reservations reservation1 = reservationsRepo.findById(1L).orElseThrow();
-                Reservations reservation2 = reservationsRepo.findById(2L).orElseThrow();
+                List<Reservations> reservations = reservationsRepo.findAll();
+                List<Paiements> paiements = new ArrayList<>();
 
-                paiementsRepo.saveAll(List.of(
-                        new Paiements(
-                                null,
-                                reservation1.getIdr(), // ID réservation
-                                reservation1.getPrixtot(), // Montant
-                                "credit card",
-                                "1234567812345678",
-                                Date.valueOf("2025-05-01"),
-                                123L
-                        ),
-                        new Paiements(
-                                null,
-                                reservation2.getIdr(),
-                                reservation2.getPrixtot(),
-                                "PayPal",
-                                "pending",
-                                Date.valueOf("2025-06-15"),
-                                456L
-                        )
-                ));
+                if (!reservations.isEmpty()) {
+                    Reservations reservation1 = reservations.get(0);
+                    paiements.add(new Paiements(
+                            null,
+                            reservation1.getIdr(),
+                            reservation1.getPrixtot(),
+                            "credit card",
+                            "1234567812345678",
+                            Date.valueOf("2025-05-01"),
+                            123L
+                    ));
+                }
+
+                if (reservations.size() > 1) {
+                    Reservations reservation2 = reservations.get(1);
+                    paiements.add(new Paiements(
+                            null,
+                            reservation2.getIdr(),
+                            reservation2.getPrixtot(),
+                            "PayPal",
+                            "pending",
+                            Date.valueOf("2025-06-15"),
+                            456L
+                    ));
+                }
+
+                if (!paiements.isEmpty()) {
+                    paiementsRepo.saveAll(paiements);
+                }
             }
         };
     }

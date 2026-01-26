@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrators - Admin Dashboard</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
+</head>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Administrators</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <main>
+            <div class="add-button-container">
+                <button type="button" class="add-button" onclick="openAdminModal();">
+                    <i class="fas fa-plus"></i>
+                    Ajouter Admin
+                </button>
+            </div>
+
+            <section class="reservation-table">
+                <div class="table-header">
+                    <h2><i class="fas fa-user-shield"></i> Gestion des administrateurs</h2>
+                    <p>Gérez les comptes administrateurs et leurs informations.</p>
+                </div>
+                <div class="table-toolbar">
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input type="search" id="adminSearch" placeholder="Rechercher un admin...">
+                    </div>
+                    <div class="table-filters">
+                        <select id="adminPageSize">
+                            <option value="10">10 lignes</option>
+                            <option value="20">20 lignes</option>
+                            <option value="50">50 lignes</option>
+                        </select>
+                        <div class="table-pagination" id="adminPagination">
+                            <button class="pagination-btn" id="adminPrev">Précédent</button>
+                            <span id="adminPageInfo">Page 1 / 1</span>
+                            <button class="pagination-btn" id="adminNext">Suivant</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="adminsTable">
+                        <thead>
+                        <tr>
+                            <th class="sortable" data-sort="id_admin">ID <span class="sort-indicator">▲</span></th>
+                            <th class="sortable" data-sort="nom">Nom</th>
+                            <th class="sortable" data-sort="prenom">Prénom</th>
+                            <th class="sortable" data-sort="email">Email</th>
+                            <th class="sortable" data-sort="tele">Téléphone</th>
+                            <th class="sortable" data-sort="pays">Pays</th>
+                            <th class="sortable" data-sort="genre">Genre</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="adminsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<div id="adminModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-shield"></i> <span id="adminModalTitle">Ajouter Admin</span></h2>
+            <button class="close" onclick="closeAdminModal();">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="adminForm" class="form-grid">
+                <input type="hidden" id="adminId">
+                <div class="form-group">
+                    <label for="adminNom"><i class="fas fa-user"></i> Nom</label>
+                    <input type="text" id="adminNom" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPrenom"><i class="fas fa-user"></i> Prénom</label>
+                    <input type="text" id="adminPrenom" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminEmail"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminTele"><i class="fas fa-phone"></i> Téléphone</label>
+                    <input type="text" id="adminTele" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPays"><i class="fas fa-globe"></i> Pays</label>
+                    <input type="text" id="adminPays" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminGenre"><i class="fas fa-venus-mars"></i> Genre</label>
+                    <select id="adminGenre" required>
+                        <option value="">Sélectionner</option>
+                        <option value="Homme">Homme</option>
+                        <option value="Femme">Femme</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="adminNaissance"><i class="fas fa-calendar"></i> Naissance</label>
+                    <input type="date" id="adminNaissance" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword"><i class="fas fa-lock"></i> Mot de passe</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <div class="submit-button-container">
+                    <button type="submit">
+                        <i class="fas fa-save"></i>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="admin-layout.js"></script>
+<script>
+    const BASE_URL = 'http://localhost:8888';
+    const currentAdmin = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('adminUser'));
+        } catch (e) {
+            return null;
+        }
+    })();
+
+    let adminState = {
+        data: [],
+        search: '',
+        page: 1,
+        pageSize: 10,
+        sortKey: 'id_admin',
+        sortDir: 'asc'
+    };
+
+    const loadAdmins = () => {
+        fetch(`${BASE_URL}/apiu/admin/all`)
+            .then(response => response.json())
+            .then(data => {
+                adminState.data = data || [];
+                applyAdminFilters();
+            })
+            .catch(() => showErrorPopup('Erreur', 'Impossible de charger les administrateurs.'));
+    };
+
+    const applyAdminFilters = () => {
+        const query = adminState.search.trim().toLowerCase();
+        let filtered = adminState.data.filter(admin => {
+            if (!query) return true;
+            return Object.values(admin || {}).some(value =>
+                String(value || '').toLowerCase().includes(query)
+            );
+        });
+
+        if (adminState.sortKey) {
+            const key = adminState.sortKey;
+            const dir = adminState.sortDir === 'asc' ? 1 : -1;
+            filtered = filtered.sort((a, b) => {
+                const valueA = a && a[key] !== undefined ? a[key] : '';
+                const valueB = b && b[key] !== undefined ? b[key] : '';
+                if (valueA === valueB) return 0;
+                return valueA > valueB ? dir : -dir;
+            });
+        }
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / adminState.pageSize));
+        adminState.page = Math.min(adminState.page, totalPages);
+        const start = (adminState.page - 1) * adminState.pageSize;
+        const paged = filtered.slice(start, start + adminState.pageSize);
+        renderAdmins(paged);
+        updateAdminPagination(totalPages);
+    };
+
+    const renderAdmins = (admins) => {
+        const body = document.getElementById('adminsBody');
+        body.innerHTML = '';
+        if (!admins.length) {
+            body.innerHTML = '<tr><td colspan="8" class="table-empty">Aucun administrateur trouvé.</td></tr>';
+            return;
+        }
+        admins.forEach(admin => {
+            const isSelf = currentAdmin && admin.id_admin === currentAdmin.id_admin;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${admin.id_admin ?? '-'}</td>
+                <td>${admin.nom ?? '-'}</td>
+                <td>${admin.prenom ?? '-'}</td>
+                <td>${admin.email ?? '-'}</td>
+                <td>${admin.tele ?? '-'}</td>
+                <td>${admin.pays ?? '-'}</td>
+                <td>${admin.genre ?? '-'}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-edit" onclick="editAdmin(${admin.id_admin});">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn-delete" ${isSelf ? 'disabled title="Impossible de se supprimer"' : ''} onclick="deleteAdmin(${admin.id_admin});">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </td>
+            `;
+            body.appendChild(row);
+        });
+    };
+
+    const updateAdminPagination = (totalPages) => {
+        document.getElementById('adminPageInfo').textContent = `Page ${adminState.page} / ${totalPages}`;
+        document.getElementById('adminPrev').disabled = adminState.page === 1;
+        document.getElementById('adminNext').disabled = adminState.page === totalPages;
+    };
+
+    function openAdminModal() {
+        document.getElementById('adminModalTitle').textContent = 'Ajouter Admin';
+        document.getElementById('adminForm').reset();
+        document.getElementById('adminId').value = '';
+        const modal = document.getElementById('adminModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    function editAdmin(adminId) {
+        const admin = adminState.data.find(item => item.id_admin === adminId);
+        if (!admin) return;
+        document.getElementById('adminModalTitle').textContent = 'Modifier Admin';
+        document.getElementById('adminId').value = admin.id_admin;
+        document.getElementById('adminNom').value = admin.nom ?? '';
+        document.getElementById('adminPrenom').value = admin.prenom ?? '';
+        document.getElementById('adminEmail').value = admin.email ?? '';
+        document.getElementById('adminTele').value = admin.tele ?? '';
+        document.getElementById('adminPays').value = admin.pays ?? '';
+        document.getElementById('adminGenre').value = admin.genre ?? '';
+        document.getElementById('adminNaissance').value = admin.naissance ? admin.naissance.split('T')[0] : '';
+        document.getElementById('adminPassword').value = admin.password ?? '';
+
+        const modal = document.getElementById('adminModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    function closeAdminModal() {
+        const modal = document.getElementById('adminModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+
+    function deleteAdmin(adminId) {
+        if (currentAdmin && adminId === currentAdmin.id_admin) {
+            showErrorPopup('Action refusée', 'Vous ne pouvez pas supprimer votre propre compte.');
+            return;
+        }
+        showConfirmPopup(
+            'Suppression admin',
+            'Êtes-vous sûr de vouloir supprimer cet administrateur ?',
+            () => {
+                fetch(`${BASE_URL}/apiu/admin/delete/${adminId}`, { method: 'DELETE' })
+                    .then(() => {
+                        showToast('success', 'Administrateur supprimé.');
+                        loadAdmins();
+                    })
+                    .catch(() => showErrorPopup('Erreur', 'Impossible de supprimer cet administrateur.'));
+            }
+        );
+    }
+
+    document.getElementById('adminForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const adminId = document.getElementById('adminId').value;
+        const payload = {
+            nom: document.getElementById('adminNom').value,
+            prenom: document.getElementById('adminPrenom').value,
+            email: document.getElementById('adminEmail').value,
+            tele: document.getElementById('adminTele').value,
+            pays: document.getElementById('adminPays').value,
+            genre: document.getElementById('adminGenre').value,
+            naissance: document.getElementById('adminNaissance').value,
+            password: document.getElementById('adminPassword').value
+        };
+
+        const url = adminId ? `${BASE_URL}/apiu/admin/update/${adminId}` : `${BASE_URL}/apiu/admin/create`;
+        const method = adminId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(() => {
+                showToast('success', adminId ? 'Admin mis à jour.' : 'Admin ajouté.');
+                closeAdminModal();
+                loadAdmins();
+            })
+            .catch(() => showErrorPopup('Erreur', 'Impossible de sauvegarder cet administrateur.'));
+    });
+
+    document.getElementById('adminSearch').addEventListener('input', (event) => {
+        adminState.search = event.target.value || '';
+        adminState.page = 1;
+        applyAdminFilters();
+    });
+
+    document.getElementById('adminPageSize').addEventListener('change', (event) => {
+        adminState.pageSize = parseInt(event.target.value, 10) || 10;
+        adminState.page = 1;
+        applyAdminFilters();
+    });
+
+    document.getElementById('adminPrev').addEventListener('click', () => {
+        if (adminState.page > 1) {
+            adminState.page -= 1;
+            applyAdminFilters();
+        }
+    });
+
+    document.getElementById('adminNext').addEventListener('click', () => {
+        adminState.page += 1;
+        applyAdminFilters();
+    });
+
+    document.querySelectorAll('.sortable').forEach((header) => {
+        header.addEventListener('click', () => {
+            const key = header.getAttribute('data-sort');
+            if (!key) return;
+            const isSameKey = adminState.sortKey === key;
+            adminState.sortKey = key;
+            adminState.sortDir = isSameKey && adminState.sortDir === 'asc' ? 'desc' : 'asc';
+            document.querySelectorAll('.sortable .sort-indicator').forEach(indicator => {
+                indicator.textContent = '';
+            });
+            const indicator = header.querySelector('.sort-indicator');
+            if (indicator) {
+                indicator.textContent = adminState.sortDir === 'asc' ? '▲' : '▼';
+            }
+            applyAdminFilters();
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            closeAdminModal();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadAdmins);
+</script>
+</body>
+</html>

@@ -1,0 +1,1051 @@
+/* ==================== STYLE MODERNE POUR LOGIN ADMIN ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ==================== VARIABLES CSS ==================== */
+:root {
+    /* Variables pour le light mode */
+    --bg-primary: #f4f7fb;
+    --bg-secondary: #e5eef4;
+    --bg-tertiary: #d6e3ea;
+    --bg-accent: #0f766e;
+    --text-primary: #1f2937;
+    --text-secondary: #64748b;
+    --text-white: #ffffff;
+    --container-bg: rgba(255, 255, 255, 0.9);
+    --form-bg: rgba(15, 118, 110, 0.06);
+    --input-bg: #f8fafc;
+    --border-color: rgba(15, 23, 42, 0.08);
+    --shadow-light: 0 12px 28px rgba(15, 23, 42, 0.08);
+    --shadow-medium: 0 24px 50px rgba(15, 23, 42, 0.12);
+    --shadow-strong: 0 18px 36px rgba(15, 23, 42, 0.2);
+    --transition: all 0.3s ease;
+    --dark: #000000;
+}
+
+/* Variables pour le dark mode */
+[data-theme="dark"] {
+    --bg-primary: #0b1220;
+    --bg-secondary: #111b2e;
+    --bg-tertiary: #1c273b;
+    --bg-accent: #00d4aa;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-white: #ffffff;
+    --container-bg: rgba(17, 24, 39, 0.9);
+    --form-bg: rgba(17, 24, 39, 0.45);
+    --input-bg: rgba(30, 41, 59, 0.85);
+    --border-color: rgba(148, 163, 184, 0.2);
+    --shadow-light: 0 12px 30px rgba(0, 0, 0, 0.45);
+    --shadow-medium: 0 24px 50px rgba(0, 0, 0, 0.6);
+    --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.55);
+    --transition: all 0.3s ease;
+}
+
+/* Réinitialisation */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Space Grotesk", sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, var(--bg-primary) 0%, var(--bg-secondary) 55%, var(--bg-tertiary) 100%);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+/* Arrière-plan animé */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 15% 20%, rgba(15, 118, 110, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 85% 15%, rgba(14, 116, 144, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 30% 75%, rgba(100, 116, 139, 0.2) 0%, transparent 50%);
+    animation: none;
+    z-index: -1;
+}
+
+/* Arrière-plan animé pour le dark mode */
+[data-theme="dark"] body::before {
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 212, 170, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(15, 118, 110, 0.12) 0%, transparent 55%);
+}
+
+@keyframes backgroundMove {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(-20px) translateY(-20px); }
+    50% { transform: translateX(20px) translateY(-10px); }
+    75% { transform: translateX(-10px) translateY(20px); }
+}
+
+/* Container principal avec glassmorphisme */
+.container {
+    position: relative;
+    max-width: 900px;
+    width: 100%;
+    background: var(--container-bg);
+    backdrop-filter: blur(18px);
+    padding: 48px 44px;
+    box-shadow: var(--shadow-medium);
+    perspective: 2400px;
+    border-radius: 28px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    animation: containerFadeIn 1s ease-out;
+    transition: var(--transition);
+}
+
+.container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 26px 60px rgba(15, 23, 42, 0.2);
+}
+
+@keyframes containerFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==================== BOUTON DARK MODE ==================== */
+.dark-mode-toggle {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+}
+
+.dark-mode-toggle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.dark-mode-toggle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(0, 212, 170, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.4s ease;
+    z-index: 0;
+}
+
+.dark-mode-toggle:hover::before {
+    opacity: 1;
+}
+
+.dark-mode-toggle:hover::after {
+    width: 100px;
+    height: 100px;
+}
+
+.dark-mode-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 12px 25px rgba(15, 23, 42, 0.18);
+}
+
+.dark-mode-toggle.active {
+    background: rgba(0, 212, 170, 0.18);
+    border-color: var(--bg-accent);
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 170, 0.5), 0 0 60px rgba(0, 212, 170, 0.2); }
+    50% { box-shadow: 0 0 40px rgba(0, 212, 170, 0.7), 0 0 80px rgba(0, 212, 170, 0.3); }
+}
+
+.dark-mode-toggle i {
+    font-size: 1.1rem;
+    color: var(--dark);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+    position: relative;
+}
+
+.dark-mode-toggle:hover i {
+    transform: rotate(20deg) scale(1.1);
+    color: var(--bg-accent);
+}
+
+.dark-mode-toggle.active i {
+    color: var(--bg-accent);
+    text-shadow: 
+        0 0 10px rgba(0, 212, 170, 0.8),
+        0 0 20px rgba(0, 212, 170, 0.4);
+    animation: iconGlow 2s infinite alternate;
+}
+
+@keyframes iconGlow {
+    0% { text-shadow: 0 0 10px rgba(0, 212, 170, 0.8), 0 0 20px rgba(0, 212, 170, 0.4); }
+    100% { text-shadow: 0 0 15px rgba(0, 212, 170, 1), 0 0 30px rgba(0, 212, 170, 0.6); }
+}
+
+/* Logo en haut à gauche amélioré */
+.logo-top {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 100;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.logo-top:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.logo-top img {
+    max-width: 135px;
+    height: auto;
+    border-radius: 15px;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+    transition: all 0.3s ease;
+}
+
+.logo-top:hover img {
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3)) brightness(1.1);
+}
+
+/* Cover avec effets 3D améliorés */
+.container .cover {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 100%;
+    width: 50%;
+    z-index: 98;
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+.container #flip:checked ~ .cover {
+    transform: rotateY(-180deg);
+}
+
+.container #flip:checked ~ .forms .login-form {
+    pointer-events: none;
+}
+
+.container .cover .front,
+.container .cover .back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+.cover .back {
+    transform: rotateY(180deg);
+}
+
+.container .cover img {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    z-index: 10;
+    transition: all 0.4s ease;
+    border-radius: 28px;
+}
+
+.container .cover:hover img {
+    transform: scale(1.03);
+    filter: brightness(1.05);
+}
+
+.container .cover .text {
+    position: absolute;
+    z-index: 20;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 25px;
+}
+
+.container .cover .text::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0.85;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(14, 116, 144, 0.35) 100%);
+    border-radius: 28px;
+    backdrop-filter: blur(3px);
+}
+
+[data-theme="dark"] .container .cover .text::before {
+    opacity: 0.8;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 118, 110, 0.55) 100%);
+    backdrop-filter: blur(3px);
+}
+
+.cover .text .text-1,
+.cover .text .text-2 {
+    z-index: 30;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    animation: textSlideIn 1s ease-out 0.5s both;
+}
+
+.cover .text .text-1 {
+    font-size: 30px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.cover .text .text-2 {
+    font-size: 15px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+@keyframes textSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Formulaires avec design moderne */
+.container .forms {
+    height: 100%;
+    width: 100%;
+    background: transparent;
+}
+
+.container .form-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 420px;
+}
+
+.form-content .login-form,
+.form-content .signup-form {
+    width: calc(100% / 2 - 25px);
+    padding: 28px 24px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    backdrop-filter: blur(12px);
+    transition: var(--transition);
+}
+
+[data-theme="dark"] .form-content .login-form,
+[data-theme="dark"] .form-content .signup-form {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.form-content .login-form:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
+/* Titre avec effet moderne */
+.forms .form-content .title {
+    position: relative;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 40px;
+    text-align: center;
+    letter-spacing: 0.4px;
+    animation: titleFadeIn 0.8s ease-out 0.3s both;
+}
+
+.forms .form-content .title::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -10px;
+    height: 3px;
+    width: 54px;
+    background: linear-gradient(90deg, #0f766e, #14b8a6);
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(1, 121, 111, 0.3);
+}
+
+@keyframes titleFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Input boxes avec design glassmorphisme */
+.forms .form-content .input-boxes {
+    margin-top: 24px;
+}
+
+.forms .form-content .input-box {
+    display: flex;
+    align-items: center;
+    height: 54px;
+    width: 100%;
+    margin: 16px 0;
+    position: relative;
+    background: var(--input-bg);
+    border-radius: 14px;
+    box-shadow: none;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    transition: var(--transition);
+    opacity: 0;
+    animation: inputSlideIn 0.6s ease-out forwards;
+}
+
+[data-theme="dark"] .forms .form-content .input-box {
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+.forms .form-content .input-box:nth-child(1) { animation-delay: 0.1s; }
+.forms .form-content .input-box:nth-child(2) { animation-delay: 0.2s; }
+.forms .form-content .input-box:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes inputSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.forms .form-content .input-box:hover {
+    transform: translateY(-1px);
+    border-color: rgba(15, 118, 110, 0.35);
+}
+
+.form-content .input-box input {
+    height: 100%;
+    width: 100%;
+    outline: none;
+    border: 1px solid transparent;
+    padding: 0 48px;
+    font-size: 15px;
+    font-weight: 500;
+    background: transparent;
+    border-radius: 15px;
+    transition: var(--transition);
+    color: var(--text-primary);
+}
+
+.form-content .input-box input:focus {
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    background: rgba(15, 118, 110, 0.04);
+}
+
+[data-theme="dark"] .form-content .input-box input:focus {
+    background: rgba(15, 118, 110, 0.12);
+}
+
+.form-content .input-box input::placeholder {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.form-content .input-box i {
+    position: absolute;
+    left: 20px;
+    color: #0f766e;
+    font-size: 16px;
+    z-index: 2;
+    transition: var(--transition);
+}
+
+[data-theme="dark"] .form-content .input-box i {
+    color: #2dd4bf;
+}
+
+.form-content .input-box:hover i {
+    color: #14b8a6;
+    transform: scale(1.05);
+}
+
+/* Bouton avec effets modernes */
+.forms .form-content .button {
+    margin-top: 32px;
+    height: 52px;
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+    border-radius: 14px;
+    box-shadow: 0 12px 24px rgba(15, 118, 110, 0.25);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.forms .form-content .button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(15, 118, 110, 0.3);
+}
+
+.forms .form-content .button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.forms .form-content .button:hover::before {
+    left: 100%;
+}
+
+.forms .form-content .button input {
+    color: var(--text-white);
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    padding: 0;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    height: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: none;
+}
+
+/* Messages d'erreur et de succès */
+#errorMessage {
+    color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    text-align: center;
+    font-weight: 500;
+    border-left: 4px solid #e74c3c;
+    animation: messageSlideIn 0.3s ease;
+}
+
+#welcomeMessage {
+    color: #27ae60 !important;
+    background: rgba(39, 174, 96, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    text-align: center;
+    font-weight: 500;
+    border-left: 4px solid #27ae60;
+    animation: messageSlideIn 0.3s ease;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Styles pour les textes et liens */
+.forms .form-content .text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 20px;
+}
+
+.forms .form-content .text a {
+    text-decoration: none;
+    color: var(--bg-accent);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.forms .form-content .text a:hover {
+    color: var(--bg-accent);
+    text-decoration: underline;
+}
+
+.forms .form-content label {
+    color: var(--bg-accent);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.forms .form-content label:hover {
+    color: var(--bg-accent);
+    text-decoration: underline;
+}
+
+/* Checkbox caché pour l'effet flip */
+.container #flip {
+    display: none;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+    body {
+        padding: 20px;
+    }
+    
+    .container {
+        padding: 30px 25px;
+    }
+    
+    .logo-top {
+        top: 15px;
+        left: 15px;
+    }
+    
+    .logo-top img {
+        max-width: 120px;
+    }
+    
+    .forms .form-content .title {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 730px) {
+    .container .cover {
+        display: none;
+    }
+    
+    .form-content .login-form,
+    .form-content .signup-form {
+        width: 100%;
+    }
+    
+    .form-content .signup-form {
+        display: none;
+    }
+    
+    .container #flip:checked ~ .forms .signup-form {
+        display: block;
+    }
+    
+    .container #flip:checked ~ .forms .login-form {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 25px 20px;
+        margin-top: 20px;
+    }
+    
+    .forms .form-content .input-box {
+        height: 55px;
+        margin: 15px 0;
+    }
+    
+    .form-content .input-box input {
+        padding: 0 40px;
+        font-size: 15px;
+    }
+    
+    .form-content .input-box i {
+        left: 15px;
+        font-size: 16px;
+    }
+    
+    .forms .form-content .title {
+        font-size: 24px;
+        margin-bottom: 30px;
+    }
+}
+
+/* Effet de particules flottantes */
+.container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(1, 121, 111, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 80% 80%, rgba(38, 208, 206, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: none;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes particleFloat {
+    0%, 100% { 
+        transform: translateX(0) translateY(0); 
+        opacity: 0.3;
+    }
+    25% { 
+        transform: translateX(-10px) translateY(-10px); 
+        opacity: 0.5;
+    }
+    50% { 
+        transform: translateX(10px) translateY(-5px); 
+        opacity: 0.3;
+    }
+    75% { 
+        transform: translateX(-5px) translateY(10px); 
+        opacity: 0.4;
+    }
+}
+
+/* ==================== POPUP MODERNE STYLES ==================== */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.popup-overlay.popup-show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup-overlay.popup-hide {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.popup-container {
+    background: var(--container-bg);
+    backdrop-filter: blur(25px);
+    border-radius: 20px;
+    border: 2px solid var(--border-color);
+    box-shadow: 
+        var(--shadow-strong),
+        0 0 50px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    min-width: 400px;
+    max-width: 500px;
+    padding: 30px;
+    position: relative;
+    transform: scale(0.8) translateY(30px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: popupSlideIn 0.3s ease-out forwards;
+}
+
+.popup-overlay.popup-show .popup-container {
+    transform: scale(1) translateY(0);
+}
+
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.popup-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+}
+
+.popup-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.popup-icon {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.popup-icon i {
+    font-size: 3.5rem;
+    transition: all 0.3s ease;
+}
+
+.popup-content {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.popup-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+}
+
+.popup-message {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.popup-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.popup-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.popup-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.popup-btn:hover::before {
+    left: 100%;
+}
+
+.popup-btn-primary {
+    background: linear-gradient(135deg, #0f766e, var(--bg-accent));
+    color: var(--text-white);
+    box-shadow: 0 5px 15px rgba(1, 121, 111, 0.3);
+}
+
+.popup-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(1, 121, 111, 0.4);
+}
+
+.popup-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.popup-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Types de popup */
+.popup-success .popup-icon i {
+    color: #27ae60;
+    text-shadow: 0 0 20px rgba(39, 174, 96, 0.5);
+    animation: successPulse 2s infinite;
+}
+
+.popup-error .popup-icon i {
+    color: #e74c3c;
+    text-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+    animation: errorShake 0.5s ease-in-out;
+}
+
+.popup-warning .popup-icon i {
+    color: #f39c12;
+    text-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+    animation: warningBounce 1s infinite;
+}
+
+.popup-info .popup-icon i {
+    color: #3498db;
+    text-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+    animation: infoRotate 2s linear infinite;
+}
+
+@keyframes successPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes warningBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes infoRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Dark mode pour les popups */
+[data-theme="dark"] .popup-container {
+    background: var(--container-bg);
+    border-color: rgba(0, 212, 170, 0.3);
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(0, 212, 170, 0.2),
+        inset 0 1px 0 rgba(0, 212, 170, 0.1);
+}
+
+[data-theme="dark"] .popup-close {
+    background: rgba(0, 212, 170, 0.1);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .popup-close:hover {
+    background: rgba(0, 212, 170, 0.2);
+    color: var(--bg-accent);
+}
+
+[data-theme="dark"] .popup-btn-secondary {
+    background: rgba(0, 212, 170, 0.1);
+    border-color: rgba(0, 212, 170, 0.3);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .popup-btn-secondary:hover {
+    background: rgba(0, 212, 170, 0.2);
+    border-color: var(--bg-accent);
+}
+
+/* Responsive design pour les popups */
+@media (max-width: 480px) {
+    .popup-container {
+        min-width: 90%;
+        max-width: 90%;
+        padding: 25px 20px;
+        margin: 20px;
+    }
+    
+    .popup-title {
+        font-size: 1.5rem;
+    }
+    
+    .popup-message {
+        font-size: 0.9rem;
+    }
+    
+    .popup-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .popup-btn {
+        width: 100%;
+        padding: 15px;
+    }
+}

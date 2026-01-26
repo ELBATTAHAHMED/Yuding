@@ -41,12 +41,17 @@ public class userController {
 	        return utilisateurServices.updateUtilisateur(id, utilisateur);
 	    }
 
-	    // Delete a user
-	    @DeleteMapping("/delete/{id}")
-	    public ResponseEntity<Void> deleteUtilisateur(@PathVariable Long id) {
-	        return utilisateurServices.deleteUtilisateur(id);
+	// Delete a user
+	@DeleteMapping("/delete/{id}")
+	public ResponseEntity<Void> deleteUtilisateur(@PathVariable Long id) {
+	    return utilisateurServices.deleteUtilisateur(id);
 	    
 	}
+
+    @PutMapping("/status/{id}")
+    public ResponseEntity<Utilisateurs> updateUtilisateurStatus(@PathVariable Long id, @RequestParam String status) {
+        return utilisateurServices.updateUtilisateurStatus(id, status);
+    }
 
 	@PostMapping("/search")
 	public ResponseEntity<Utilisateurs> getUtilisateurByUsernameAndPassword(@RequestParam String username, @RequestParam String password) {

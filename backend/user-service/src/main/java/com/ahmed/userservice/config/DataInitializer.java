@@ -27,8 +27,8 @@ public class DataInitializer {
 
             if (userRepo.count() == 0) {
                 userRepo.saveAll(List.of(
-                        new Utilisateurs(null, "User1", "Test", "user1@example.com", LocalDate.of(2000, 3, 15), "Maroc", "Femme", "userpass", "user1", "0612345678"),
-                        new Utilisateurs(null, "User2", "Example", "user2@example.com", LocalDate.of(1995, 7, 20), "Tunisie", "Homme", "pass123", "user2", "0698765432")
+                        new Utilisateurs(null, "User1", "Test", "user1@example.com", LocalDate.of(2000, 3, 15), "Maroc", "Femme", "userpass", "user1", "0612345678", "ACTIVE", LocalDate.now()),
+                        new Utilisateurs(null, "User2", "Example", "user2@example.com", LocalDate.of(1995, 7, 20), "Tunisie", "Homme", "pass123", "user2", "0698765432", "ACTIVE", LocalDate.now())
                 ));
             }
         };

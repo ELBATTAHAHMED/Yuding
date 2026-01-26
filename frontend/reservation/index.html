@@ -12,7 +12,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <script src="DACH/popup-system.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+
+    <!-- Script pour éviter le flash de thème au chargement -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 
 </head>
 
@@ -22,8 +36,8 @@
     <div class="header-top">
         <div class="container">
 
-            <a href="#" class="logo">
-                <img src="image/logo1.png">
+            <a href="#" class="logo" onclick="scrollToTop(event)">
+                <img src="image/logo1.png" id="headerLogo">
             </a>
 
 
@@ -31,10 +45,10 @@
                 <div class="booking">
                     <button class="btn btn-booking" id="loginButton" style="display: none;"><a href="login.html" style="color:white;"> log-in</a></button>
                     <button class="btn btn-booking" id="logoutButton" style="display: none;">Log_Out</button>
-
-
                 </div>
-                <label class="h-btn" for="bars"><a href="#" style="color:white;"> <i class="fa fa-bars"></i></a></label>
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre" aria-label="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -101,9 +115,11 @@
     <!-- Section pour les résultats de la recherche -->
     <section id="search-results" class="search-results">
         <div class="container">
-            <h2 >Résultats de recherche</h2>
-
-            <div id="results-container">
+            <div class="results-header">
+                <h2 class="results-title">Résultats de recherche</h2>
+                <p class="results-subtitle">Trouvez l'hébergement parfait pour votre séjour</p>
+            </div>
+            <div id="results-container" class="results-grid">
                 <!-- Les résultats seront injectés ici -->
             </div>
         </div>
@@ -308,7 +324,7 @@
                 <label for="commentaire">Votre commentaire :</label>
                 <textarea id="commentaire" name="commentaire" required></textarea>
 
-                <button type="submit" style="font-size: 20px;">Envoyer</button>
+                <button type="submit">Envoyer</button>
             </form>
         </div>
     </section>
@@ -354,6 +370,9 @@
                 var pays = $('#destination').val();
                 var ville = $('#pax').val();
 
+                // Afficher un loader
+                $('#results-container').html('<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #01796F;"></i><p style="margin-top: 1rem; color: #6c757d;">Recherche en cours...</p></div>');
+
                 // Requête AJAX
                 $.ajax({
                     url: `${BASE_URL}/apir/hebergements/search`,
@@ -363,31 +382,96 @@
                         var html = '';
                         if (data.length > 0) {
                             data.forEach(function (hebergement) {
-                                html += '<div class="hebergement-result">';
-                                html += '<strong>Nom hébergement: </strong><span>' + hebergement.nom_hebergement + '</span><br>';
-                                html += '<strong>Adresse hébergement: </strong><span>' + hebergement.adresseHebergement + '</span><br>';
-                                html += '<strong>Prix hébergement: </strong><span>' + hebergement.prix_hebergement + '$' + ' </span><br>';
-                                html += '<strong>Capacité hébergement: </strong><span>' + hebergement.capacite_hebergement + ' personnes</span><br>';
-                                html += '<strong>Description: </strong><span>' + hebergement.desc_hebergement + '</span><br>';
-
-                                // Passer l'ID utilisateur et l'ID hébergement dans l'URL
+                                html += '<div class="accommodation-result-card">';
+                                html += '  <div class="accommodation-card-header">';
+                                html += '    <h3 class="accommodation-title">' + hebergement.nom_hebergement + '</h3>';
+                                html += '    <div class="accommodation-price">' + hebergement.prix_hebergement + '$<span class="price-period">/nuit</span></div>';
+                                html += '  </div>';
+                                html += '  <div class="accommodation-card-body">';
+                                html += '    <div class="accommodation-location">';
+                                html += '      <div class="location-info">';
+                                html += '        <i class="fas fa-map-marker-alt"></i>';
+                                html += '        <span>' + hebergement.adresseHebergement + '</span>';
+                                html += '      </div>';
+                                html += '      <div class="accommodation-type">';
+                                html += '        <i class="fas fa-building"></i>';
+                                html += '        <span>' + (hebergement.type_hebergement || 'Hébergement') + '</span>';
+                                html += '      </div>';
+                                html += '    </div>';
+                                html += '    <div class="accommodation-features">';
+                                html += '      <div class="feature-item">';
+                                html += '        <i class="fas fa-users"></i>';
+                                html += '        <span>' + hebergement.capacite_hebergement + ' personnes</span>';
+                                html += '      </div>';
+                                html += '      <div class="feature-item">';
+                                html += '        <i class="fas fa-star"></i>';
+                                html += '        <span>' + (hebergement.rating || '4.5') + '/5</span>';
+                                html += '      </div>';
+                                html += '      <div class="feature-item">';
+                                html += '        <i class="fas fa-wifi"></i>';
+                                html += '        <span>WiFi gratuit</span>';
+                                html += '      </div>';
+                                html += '      <div class="feature-item">';
+                                html += '        <i class="fas fa-parking"></i>';
+                                html += '        <span>Parking</span>';
+                                html += '      </div>';
+                                html += '    </div>';
+                                html += '    <div class="accommodation-description">';
+                                html += '      <h4><i class="fas fa-info-circle"></i> Description</h4>';
+                                html += '      <p class="description-text">' + hebergement.desc_hebergement + '</p>';
+                                html += '      <button class="description-toggle" type="button">Voir plus...</button>';
+                                html += '    </div>';
+                                html += '    <div class="accommodation-contact">';
+                                html += '      <div class="contact-item">';
+                                html += '        <span class="contact-label"><i class="fas fa-user"></i> Propriétaire:</span>';
+                                html += '        <span class="contact-value">' + (hebergement.nom_fournisseur || 'Propriétaire') + '</span>';
+                                html += '      </div>';
+                                html += '      <div class="contact-item">';
+                                html += '        <span class="contact-label"><i class="fas fa-phone"></i> Contact:</span>';
+                                html += '        <span class="contact-value">' + (hebergement.tele_fournisseur || 'Non spécifié') + '</span>';
+                                html += '      </div>';
+                                html += '    </div>';
+                                html += '  </div>';
+                                html += '  <div class="accommodation-card-footer">';
                                 var userId = sessionStorage.getItem('userId');
-                                console.log("User ID for reservation button:", userId); // Vérifier l'ID de l'utilisateur
                                 var isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
                                 if (isLoggedIn) {
-                                    html += '<button class="btn-booking" style="background-color:#218a87" onclick="window.location.href=\'reservationTransport.html?hebergementId=' + hebergement.id_hebergement + '&userId=' + sessionStorage.getItem('userId') + '\'">Réserver</button>';
+                                    html += '<button class="accommodation-booking-btn" onclick="window.location.href=\'reservationTransport.html?hebergementId=' + hebergement.id_hebergement + '&userId=' + userId + '\'"><i class="fas fa-bed"></i> Réserver maintenant</button>';
                                 } else {
-                                    html += '<button class="btn-booking" style="background-color:#218a87" onclick="alert(\'Veuillez vous connecter pour réserver.\'); window.location.href=\'login.html\';">Réserver</button>';
+                                    html += '<button class="accommodation-booking-btn" onclick="sessionStorage.setItem(\'postLoginRedirect\', \'reservationTransport.html?hebergementId=' + hebergement.id_hebergement + '\'); showLoginRequiredPopup();"><i class="fas fa-sign-in-alt"></i> Se connecter pour réserver</button>';
                                 }
+                                html += '  </div>';
                                 html += '</div>';
                             });
                         } else {
-                            html = '<p>Aucun hébergement trouvé pour votre recherche.</p>';
+                            html = '<div class="no-results-container">';
+                            html += '  <div class="no-results-icon"><i class="fas fa-bed"></i></div>';
+                            html += '  <h3 class="no-results-title">Aucun hébergement trouvé</h3>';
+                            html += '  <p class="no-results-text">Essayez de modifier vos critères de recherche pour découvrir d\'autres hébergements disponibles.</p>';
+                            html += '</div>';
                         }
                         $('#results-container').html(html);
+
+                        document.querySelectorAll('.description-toggle').forEach((button) => {
+                            button.addEventListener('click', () => {
+                                const container = button.closest('.accommodation-description');
+                                container.classList.toggle('expanded');
+                                button.textContent = container.classList.contains('expanded') ? 'Voir moins' : 'Voir plus...';
+                            });
+                        });
+                        
+                        // Animer les nouveaux éléments
+                        setTimeout(() => {
+                            document.querySelectorAll('.accommodation-result-card').forEach((el, index) => {
+                                setTimeout(() => {
+                                    el.style.opacity = '1';
+                                    el.style.transform = 'translateY(0)';
+                                }, index * 100);
+                            });
+                        }, 100);
                     },
                     error: function () {
-                        $('#results-container').html('<p>Erreur lors de la recherche. Veuillez réessayer plus tard.</p>');
+                        $('#results-container').html('<div style="text-align: center; padding: 2rem; color: #dc3545;"><i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i><p style="margin-top: 1rem;">Erreur lors de la recherche. Veuillez réessayer plus tard.</p></div>');
                     }
                 });
             });
@@ -415,7 +499,13 @@
 
             document.getElementById('logoutButton').onclick = function() {
                 sessionStorage.setItem('isLoggedIn', 'false'); // Update login status
-                alert("Vous êtes maintenant déconnecté."); // Show logout message
+                // Utiliser un toast pour la déconnexion (plus discret)
+                showToast('info', 'Vous êtes maintenant déconnecté. À bientôt sur YUDING !', 3000);
+                
+                // Recharger automatiquement la page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
                 updateLoginStatus(); // Update buttons after logging out
                 window.location.href = 'index.html'; // Optional: Redirect to index.html
             };
@@ -451,13 +541,19 @@
                     dataType: 'json',
                     success: function(data) {
                         // Gérer la réponse du serveur
-                        alert("Commentaire créé avec succès !");
+                        // Utiliser un toast pour le commentaire publié (plus fluide)
+                        showToast('success', 'Commentaire publié ! Merci pour votre avis.', 3000);
+                        
+                        // Recharger automatiquement pour voir le nouveau commentaire
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
                         window.location.href = "index.html";
                         // Vous pouvez ajouter ici d'autres actions comme vider le formulaire ou recharger la page
                     },
                     error: function() {
                         // Gérer les erreurs éventuelles
-                        alert("Une erreur s'est produite lors de la création du commentaire.");
+                        showErrorPopup('Erreur', 'Impossible de publier votre commentaire. Veuillez réessayer.');
                     }
                 });
             });
@@ -484,8 +580,6 @@
             // 2) Mettre à jour l'historique
             conversationHistory.push("User: " + userInput);
 
-            // 3) Construire le prompt
-            var promptContext = conversationHistory.join("\n") + "\nAssistant:";
 
             // 4) Vider le champ
             userInputElement.value = '';
@@ -494,7 +588,7 @@
             const thinkingMessageDiv = showAssistantThinking(chatbotBody);
 
             // 6) Appeler votre backend
-            $.get(`http://localhost:8888/ai/${encodeURIComponent(promptContext)}`, function (data) {
+                    $.get(`http://localhost:8888/ai/${encodeURIComponent(userInput)}`, function (data) {
                 // Supprimer l'indicateur
                 thinkingMessageDiv.remove();
 
@@ -576,6 +670,152 @@
 
 
 
+
+    <!-- Script pour les améliorations d'animation et interactions -->
+    <script>
+        // Header scrollable avec effet de transparence
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Amélioration du chatbot avec une animation d'ouverture/fermeture
+        function toggleChatbot() {
+            const chatbotContainer = document.getElementById("chatbotContainer");
+            const isVisible = chatbotContainer.style.display === "block";
+            
+            if (isVisible) {
+                chatbotContainer.classList.remove("show");
+                setTimeout(() => {
+                    chatbotContainer.style.display = "none";
+                }, 400);
+            } else {
+                chatbotContainer.style.display = "block";
+                setTimeout(() => {
+                    chatbotContainer.classList.add("show");
+                }, 10);
+            }
+        }
+
+        // Animation fluide au scroll vers les sections
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        function setHeaderLogo(isDark) {
+            const logo = document.getElementById('headerLogo');
+            if (!logo) {
+                return;
+            }
+            logo.src = isDark ? 'image/logo1.png' : 'image/logodark.png';
+        }
+
+        // ==================== DARK MODE FUNCTIONALITY ====================
+        function initDarkMode() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const darkModeIcon = document.getElementById('darkModeIcon');
+            const html = document.documentElement;
+            
+            // Vérifier le thème sauvegardé ou utiliser la préférence système
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+            
+            // Appliquer le thème initial
+            if (isDark) {
+                html.classList.add('dark');
+                darkModeIcon.className = 'fas fa-sun';
+                darkModeToggle.classList.add('active');
+            } else {
+                html.classList.remove('dark');
+                darkModeIcon.className = 'fas fa-moon';
+                darkModeToggle.classList.remove('active');
+            }
+            setHeaderLogo(isDark);
+            
+            // Gérer le clic sur le bouton
+            darkModeToggle.addEventListener('click', function() {
+                const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                // Appliquer le nouveau thème
+                if (newTheme === 'dark') {
+                    html.classList.add('dark');
+                    darkModeIcon.className = 'fas fa-sun';
+                    darkModeToggle.classList.add('active');
+                } else {
+                    html.classList.remove('dark');
+                    darkModeIcon.className = 'fas fa-moon';
+                    darkModeToggle.classList.remove('active');
+                }
+                setHeaderLogo(newTheme === 'dark');
+                
+                // Sauvegarder la préférence
+                localStorage.setItem('theme', newTheme);
+                
+                // Animation de transition
+                html.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    html.style.transition = '';
+                }, 300);
+            });
+            
+            // Écouter les changements de préférence système
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    if (newTheme === 'dark') {
+                        html.classList.add('dark');
+                        darkModeIcon.className = 'fas fa-sun';
+                        darkModeToggle.classList.add('active');
+                    } else {
+                        html.classList.remove('dark');
+                        darkModeIcon.className = 'fas fa-moon';
+                        darkModeToggle.classList.remove('active');
+                    }
+                    setHeaderLogo(newTheme === 'dark');
+                }
+            });
+        }
+        
+        // Initialiser le dark mode au chargement
+        document.addEventListener('DOMContentLoaded', initDarkMode);
+        
+        // Fonction pour retourner au début de la page
+        function scrollToTop(event) {
+            event.preventDefault(); // Empêcher le comportement par défaut du lien
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Animation fluide
+            });
+        }
+        
+        // Fonction pour afficher popup de connexion requise
+        function showLoginRequiredPopup() {
+            showConfirmPopup(
+                'Connexion requise',
+                'Vous devez être connecté pour faire une réservation. Souhaitez-vous vous connecter maintenant ?',
+                function() { // onConfirm - aller à la page de connexion
+                    window.location.href = 'login.html';
+                },
+                null, // onCancel
+                { confirmText: 'Se connecter', cancelText: 'Annuler' }
+            );
+        }
+    </script>
 
 </body >
 

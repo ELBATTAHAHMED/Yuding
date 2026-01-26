@@ -36,4 +36,8 @@ public class Utilisateurs {
     private String username;
     @Column(name = "num_tele" , nullable=false)
     private String num_tele;
+    @Column(name = "status")
+    private String status;
+    @Column(name = "created_at")
+    private LocalDate createdAt;
 }

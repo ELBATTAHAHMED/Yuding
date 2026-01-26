@@ -3,130 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmation de paiement</title>
+    <title>Confirmation de Réservation - Yuding</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <style>
-        :root {
-            --primary-color: #218a87;
-            --primary-hover: #1e7673;
-            --background-color: #f9f9f9;
-            --container-bg: #fff;
-            --text-color: #333;
-            --font-family: 'Arial', sans-serif;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Animation d'apparition */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Style global */
-        body {
-            font-family: var(--font-family);
-            background-color: var(--background-color);
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Header fixé en haut avec bordure inférieure arrondie */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: var(--primary-color);
-            padding: 20px;
-            text-align: center;
-            z-index: 1000;
-            box-shadow: var(--box-shadow);
-            animation: fadeIn 0.5s ease-in-out;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
-        }
-
-        /* Logo avec filtre pour le contraste */
-        .logo {
-            max-width: 150px;
-            width: 100%;
-            height: auto;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
-        }
-
-        /* Container principal */
-        .container {
-            max-width: 600px;
-            width: 100%;
-            padding: 40px;
-            background-color: var(--container-bg);
-            border-radius: 8px;
-            box-shadow: var(--box-shadow);
-            text-align: center;
-            animation: fadeIn 0.5s ease-in-out 0.3s both;
-            margin: 120px auto 20px;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-            color: var(--primary-color);
-            font-size: 2rem;
-        }
-
-        p {
-            color: var(--text-color);
-            font-size: 1.2rem;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-
-        /* Bouton Retour à l'accueil */
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background-color: var(--primary-color);
-            color: var(--container-bg);
-            text-decoration: none;
-            font-size: 1rem;
-            border-radius: 4px;
-            transition: background-color 0.3s, transform 0.3s;
-            margin-top: 20px;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-            transform: scale(1.05);
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 100px auto 20px;
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="css/confirmationStyle.css">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+            
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
             }
-            h1 {
-                font-size: 1.75rem;
-            }
-            p {
-                font-size: 1rem;
-            }
-            .btn {
-                font-size: 0.9rem;
-                padding: 10px 20px;
-            }
-        }
-    </style>
+        })();
+    </script>
 </head>
 <body>
 <header>
     <img src="image/logo1.png" alt="Logo" class="logo">
+    <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre" aria-label="Basculer le mode sombre">
+        <i class="fas fa-moon" id="darkModeIcon"></i>
+    </button>
 </header>
 
 <div class="container">
-    <h1>Paiement réussi !</h1>
-    <p>Merci pour votre réservation. Votre paiement a été effectué avec succès.</p>
-    <p>Nous vous remercions pour votre confiance et nous sommes impatients de vous accueillir lors de votre séjour.</p>
-    <a href="index.html" class="btn">Retour à l'accueil</a>
+    <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h1>Réservation Confirmée !</h1>
+    <p>Félicitations ! Votre réservation a été effectuée avec succès. Votre paiement a été traité et vous recevrez bientôt un email de confirmation avec tous les détails.</p>
+    <p>Nous vous remercions pour votre confiance et nous sommes impatients de vous accueillir lors de votre voyage avec <strong>Yuding</strong>.</p>
+    <a href="index.html" class="btn">
+        <i class="fas fa-home"></i>
+        Retour à l'accueil
+    </a>
 </div>
+
+<script>
+function initDarkMode() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    const html = document.documentElement;
+    
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+    
+    if (isDark) {
+        html.setAttribute('data-theme', 'dark');
+        darkModeIcon.className = 'fas fa-sun';
+        darkModeToggle.classList.add('active');
+    } else {
+        html.removeAttribute('data-theme');
+        darkModeIcon.className = 'fas fa-moon';
+        darkModeToggle.classList.remove('active');
+    }
+    
+    darkModeToggle.addEventListener('click', function() {
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        if (newTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            darkModeIcon.className = 'fas fa-sun';
+            darkModeToggle.classList.add('active');
+        } else {
+            html.removeAttribute('data-theme');
+            darkModeIcon.className = 'fas fa-moon';
+            darkModeToggle.classList.remove('active');
+        }
+        
+        localStorage.setItem('theme', newTheme);
+        
+        html.style.transition = 'all 0.3s ease';
+        setTimeout(() => {
+            html.style.transition = '';
+        }, 300);
+    });
+    
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+            const newTheme = e.matches ? 'dark' : 'light';
+            if (newTheme === 'dark') {
+                html.setAttribute('data-theme', 'dark');
+                darkModeIcon.className = 'fas fa-sun';
+                darkModeToggle.classList.add('active');
+            } else {
+                html.removeAttribute('data-theme');
+                darkModeIcon.className = 'fas fa-moon';
+                darkModeToggle.classList.remove('active');
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initDarkMode);
+</script>
 </body>
 </html>

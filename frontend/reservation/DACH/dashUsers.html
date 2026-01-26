@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - Admin Dashboard</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
+</head>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Users</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <main>
+            <section class="reservation-table">
+                <div class="table-header">
+                    <h2><i class="fas fa-users"></i> Gestion des utilisateurs</h2>
+                    <p>Consultez les utilisateurs, filtrez par statut et gérez les accès.</p>
+                </div>
+                <div class="table-toolbar">
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input type="search" id="userSearch" placeholder="Rechercher un utilisateur...">
+                    </div>
+                    <div class="table-filters">
+                        <select id="userRoleFilter">
+                            <option value="all">Tous les rôles</option>
+                            <option value="user">User</option>
+                        </select>
+                        <select id="userPageSize">
+                            <option value="10">10 lignes</option>
+                            <option value="20">20 lignes</option>
+                            <option value="50">50 lignes</option>
+                        </select>
+                        <div class="table-pagination" id="userPagination">
+                            <button class="pagination-btn" id="userPrev">Précédent</button>
+                            <span id="userPageInfo">Page 1 / 1</span>
+                            <button class="pagination-btn" id="userNext">Suivant</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                        <tr>
+                            <th class="sortable" data-sort="idu">ID <span class="sort-indicator">▲</span></th>
+                            <th class="sortable" data-sort="nom_utilisateur">Nom</th>
+                            <th class="sortable" data-sort="prenom_utilisateur">Prénom</th>
+                            <th class="sortable" data-sort="email_utilisateur">Email</th>
+                            <th>Role</th>
+                            <th class="sortable" data-sort="num_tele">Téléphone</th>
+                            <th class="sortable" data-sort="username">Username</th>
+                            <th class="sortable" data-sort="pays">Pays</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="usersBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<div id="userDetailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user"></i> Détails utilisateur</h2>
+            <button class="close" onclick="closeUserDetailModal();">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Nom</span>
+                    <span id="detailNom"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prénom</span>
+                    <span id="detailPrenom"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span id="detailEmail"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Role</span>
+                    <span id="detailRole">USER</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Téléphone</span>
+                    <span id="detailPhone"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Username</span>
+                    <span id="detailUsername"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Pays</span>
+                    <span id="detailPays"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Genre</span>
+                    <span id="detailGenre"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Date de naissance</span>
+                    <span id="detailBirth"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="admin-layout.js"></script>
+<script>
+    const BASE_URL = 'http://localhost:8888';
+    let userState = {
+        data: [],
+        search: '',
+        role: 'all',
+        page: 1,
+        pageSize: 10,
+        sortKey: 'idu',
+        sortDir: 'asc'
+    };
+
+    const formatDate = (value) => {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return date.toLocaleDateString('fr-FR');
+    };
+
+    const loadUsers = () => {
+        fetch(`${BASE_URL}/apiu/utilisateurs/all`)
+            .then(response => response.json())
+            .then(data => {
+                userState.data = data || [];
+                applyUserFilters();
+            })
+            .catch(() => {
+                showErrorPopup('Erreur', 'Impossible de charger la liste des utilisateurs.');
+            });
+    };
+
+    const applyUserFilters = () => {
+        const query = userState.search.trim().toLowerCase();
+        let filtered = userState.data.filter(user => {
+            if (userState.role !== 'all' && userState.role !== 'user') {
+                return false;
+            }
+            if (!query) return true;
+            return Object.values(user || {}).some(value =>
+                String(value || '').toLowerCase().includes(query)
+            );
+        });
+
+        if (userState.sortKey) {
+            const key = userState.sortKey;
+            const dir = userState.sortDir === 'asc' ? 1 : -1;
+            filtered = filtered.sort((a, b) => {
+                const valueA = a && a[key] !== undefined ? a[key] : '';
+                const valueB = b && b[key] !== undefined ? b[key] : '';
+                if (valueA === valueB) return 0;
+                return valueA > valueB ? dir : -dir;
+            });
+        }
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / userState.pageSize));
+        userState.page = Math.min(userState.page, totalPages);
+        const start = (userState.page - 1) * userState.pageSize;
+        const paged = filtered.slice(start, start + userState.pageSize);
+        renderUsers(paged);
+        updateUserPagination(totalPages);
+    };
+
+    const renderUsers = (users) => {
+        const body = document.getElementById('usersBody');
+        body.innerHTML = '';
+        if (!users.length) {
+            body.innerHTML = '<tr><td colspan="9" class="table-empty">Aucun utilisateur trouvé.</td></tr>';
+            return;
+        }
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.idu ?? '-'}</td>
+                <td>${user.nom_utilisateur ?? '-'}</td>
+                <td>${user.prenom_utilisateur ?? '-'}</td>
+                <td>${user.email_utilisateur ?? '-'}</td>
+                <td>USER</td>
+                <td>${user.num_tele ?? '-'}</td>
+                <td>${user.username ?? '-'}</td>
+                <td>${user.pays ?? '-'}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-edit" onclick="openUserDetail(${user.idu});">
+                            <i class="fas fa-eye"></i> Voir
+                        </button>
+                        <button class="btn-delete" onclick="deleteUser(${user.idu});">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </td>
+            `;
+            body.appendChild(row);
+        });
+    };
+
+    const updateUserPagination = (totalPages) => {
+        document.getElementById('userPageInfo').textContent = `Page ${userState.page} / ${totalPages}`;
+        document.getElementById('userPrev').disabled = userState.page === 1;
+        document.getElementById('userNext').disabled = userState.page === totalPages;
+    };
+
+    function openUserDetail(userId) {
+        const user = userState.data.find(item => item.idu === userId);
+        if (!user) return;
+        document.getElementById('detailNom').textContent = user.nom_utilisateur ?? '-';
+        document.getElementById('detailPrenom').textContent = user.prenom_utilisateur ?? '-';
+        document.getElementById('detailEmail').textContent = user.email_utilisateur ?? '-';
+        document.getElementById('detailRole').textContent = 'USER';
+        document.getElementById('detailPhone').textContent = user.num_tele ?? '-';
+        document.getElementById('detailUsername').textContent = user.username ?? '-';
+        document.getElementById('detailPays').textContent = user.pays ?? '-';
+        document.getElementById('detailGenre').textContent = user.genre ?? '-';
+        document.getElementById('detailBirth').textContent = formatDate(user.date_naissance);
+
+        const modal = document.getElementById('userDetailModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    function closeUserDetailModal() {
+        const modal = document.getElementById('userDetailModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+
+
+    function deleteUser(userId) {
+        showConfirmPopup(
+            'Suppression utilisateur',
+            'Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.',
+            () => {
+                fetch(`${BASE_URL}/apiu/utilisateurs/delete/${userId}`, {
+                    method: 'DELETE'
+                })
+                    .then(() => {
+                        showToast('success', 'Utilisateur supprimé.');
+                        loadUsers();
+                    })
+                    .catch(() => {
+                        showErrorPopup('Erreur', 'Impossible de supprimer cet utilisateur.');
+                    });
+            }
+        );
+    }
+
+    document.getElementById('userSearch').addEventListener('input', (event) => {
+        userState.search = event.target.value || '';
+        userState.page = 1;
+        applyUserFilters();
+    });
+
+    document.getElementById('userRoleFilter').addEventListener('change', (event) => {
+        userState.role = event.target.value;
+        userState.page = 1;
+        applyUserFilters();
+    });
+
+
+    document.getElementById('userPageSize').addEventListener('change', (event) => {
+        userState.pageSize = parseInt(event.target.value, 10) || 10;
+        userState.page = 1;
+        applyUserFilters();
+    });
+
+    document.getElementById('userPrev').addEventListener('click', () => {
+        if (userState.page > 1) {
+            userState.page -= 1;
+            applyUserFilters();
+        }
+    });
+
+    document.getElementById('userNext').addEventListener('click', () => {
+        userState.page += 1;
+        applyUserFilters();
+    });
+
+    document.querySelectorAll('.sortable').forEach((header) => {
+        header.addEventListener('click', () => {
+            const key = header.getAttribute('data-sort');
+            if (!key) return;
+            const isSameKey = userState.sortKey === key;
+            userState.sortKey = key;
+            userState.sortDir = isSameKey && userState.sortDir === 'asc' ? 'desc' : 'asc';
+            document.querySelectorAll('.sortable .sort-indicator').forEach(indicator => {
+                indicator.textContent = '';
+            });
+            const indicator = header.querySelector('.sort-indicator');
+            if (indicator) {
+                indicator.textContent = userState.sortDir === 'asc' ? '▲' : '▼';
+            }
+            applyUserFilters();
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            closeUserDetailModal();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+</body>
+</html>

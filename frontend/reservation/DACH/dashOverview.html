@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview - Admin Dashboard</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
+</head>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Overview</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <main>
+            <div class="stats-container">
+                <div class="stat-card fade-in">
+                    <i class="fas fa-ticket"></i>
+                    <h3 id="total-reservations">0</h3>
+                    <p>Total réservations</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <i class="fas fa-credit-card"></i>
+                    <h3 id="total-payments">0</h3>
+                    <p>Total paiements</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <i class="fas fa-coins"></i>
+                    <h3 id="total-revenue">0</h3>
+                    <p>Revenu total</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <i class="fas fa-bed"></i>
+                    <h3 id="total-hebergements">0</h3>
+                    <p>Hébergements</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <i class="fas fa-bus"></i>
+                    <h3 id="total-transports">0</h3>
+                    <p>Transports</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3 id="total-activites">0</h3>
+                    <p>Activités</p>
+                </div>
+            </div>
+
+            <div class="overview-grid">
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <h3>Dernières réservations</h3>
+                        <span class="badge" id="recentReservationsCount">0</span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Personnes</th>
+                                <th>Total</th>
+                            </tr>
+                            </thead>
+                            <tbody id="recentReservationsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="data-card">
+                    <div class="data-card-header">
+                        <h3>Derniers paiements</h3>
+                        <span class="badge" id="recentPaymentsCount">0</span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Mode</th>
+                                <th>Réservation</th>
+                                <th>Montant</th>
+                            </tr>
+                            </thead>
+                            <tbody id="recentPaymentsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="admin-layout.js"></script>
+<script>
+    const BASE_URL = 'http://localhost:8888';
+
+    const formatCurrency = (value) => {
+        const amount = Number(value || 0);
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+    };
+
+    const formatDate = (value) => {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return value;
+        }
+        return date.toLocaleDateString('fr-FR');
+    };
+
+    const resolveReservationType = (reservation) => {
+        if (reservation.hebergement) return 'Hébergement';
+        if (reservation.transport) return 'Transport';
+        if (reservation.activitee) return 'Activité';
+        return 'Autre';
+    };
+
+    const getReservationTagClass = (type) => {
+        const value = (type || '').toLowerCase();
+        if (value.includes('hébergement')) return 'tag-hebergement';
+        if (value.includes('transport')) return 'tag-transport';
+        if (value.includes('activité')) return 'tag-activite';
+        return 'tag-default';
+    };
+
+    const getPaymentTagClass = (mode) => {
+        const value = (mode || '').toLowerCase();
+        if (value.includes('carte') || value.includes('card')) return 'tag-payment';
+        if (value.includes('paypal')) return 'tag-payment-alt';
+        return 'tag-default';
+    };
+
+    const updateStats = (stats) => {
+        document.getElementById('total-reservations').textContent = stats.totalReservations ?? 0;
+        document.getElementById('total-payments').textContent = stats.totalPayments ?? 0;
+        document.getElementById('total-revenue').textContent = formatCurrency(stats.totalRevenue ?? 0);
+        document.getElementById('total-hebergements').textContent = stats.totalHebergements ?? 0;
+        document.getElementById('total-transports').textContent = stats.totalTransports ?? 0;
+        document.getElementById('total-activites').textContent = stats.totalActivites ?? 0;
+    };
+
+    const renderRecentReservations = (reservations) => {
+        const body = document.getElementById('recentReservationsBody');
+        body.innerHTML = '';
+        document.getElementById('recentReservationsCount').textContent = reservations.length;
+        if (!reservations.length) {
+            body.innerHTML = '<tr><td colspan="5" class="table-empty">Aucune réservation récente.</td></tr>';
+            return;
+        }
+        reservations.forEach(reservation => {
+            const row = document.createElement('tr');
+            const type = resolveReservationType(reservation);
+            row.innerHTML = `
+                <td class="cell-id">${reservation.idr ?? '-'}</td>
+                <td class="cell-date">${formatDate(reservation.date)}</td>
+                <td class="cell-type"><span class="tag ${getReservationTagClass(type)}">${type}</span></td>
+                <td class="cell-people">${reservation.nombrepersonne ?? '-'}</td>
+                <td class="cell-amount">${formatCurrency(reservation.prixtot)}</td>
+            `;
+            body.appendChild(row);
+        });
+    };
+
+    const renderRecentPayments = (payments) => {
+        const body = document.getElementById('recentPaymentsBody');
+        body.innerHTML = '';
+        document.getElementById('recentPaymentsCount').textContent = payments.length;
+        if (!payments.length) {
+            body.innerHTML = '<tr><td colspan="5" class="table-empty">Aucun paiement récent.</td></tr>';
+            return;
+        }
+        payments.forEach(payment => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="cell-id">${payment.id_paiement ?? '-'}</td>
+                <td class="cell-date">${formatDate(payment.date)}</td>
+                <td class="cell-type"><span class="tag ${getPaymentTagClass(payment.modepaiement)}">${payment.modepaiement ?? 'Standard'}</span></td>
+                <td class="cell-id">${payment.idr ?? '-'}</td>
+                <td class="cell-amount">${formatCurrency(payment.prixtot)}</td>
+            `;
+            body.appendChild(row);
+        });
+    };
+
+    const loadOverview = () => {
+        fetch(`${BASE_URL}/apir/admin/stats`)
+            .then(response => response.json())
+            .then(updateStats)
+            .catch(() => showErrorPopup('Erreur', 'Impossible de charger les statistiques globales.'));
+
+        fetch(`${BASE_URL}/apir/admin/recent-reservations?limit=10`)
+            .then(response => response.json())
+            .then(renderRecentReservations)
+            .catch(() => renderRecentReservations([]));
+
+        fetch(`${BASE_URL}/apir/admin/recent-payments?limit=10`)
+            .then(response => response.json())
+            .then(renderRecentPayments)
+            .catch(() => renderRecentPayments([]));
+    };
+
+    document.addEventListener('DOMContentLoaded', loadOverview);
+</script>
+</body>
+</html>

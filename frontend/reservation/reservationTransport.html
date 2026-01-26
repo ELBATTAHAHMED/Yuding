@@ -3,263 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réservation de voiture à Dakhla</title>
+    <title>Réservation - Yuding</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <style>
-        :root {
-            --primary-color: #218a87;
-            --primary-hover: #1e7673;
-            --secondary-color: rgba(2, 224, 213, 0.5);
-            --text-color: rgba(0, 27, 26, 0.95);
-            --light-bg: rgba(255, 255, 255, 0.85);
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Réinitialisation et font */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Poppins", sans-serif;
-        }
-
-        /* Style général du body avec fond en dégradé et centrage en flex */
-        body {
-            background: linear-gradient(135deg, #e0f7fa, #fff);
-            background-size: cover;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        /* Conteneur principal */
-        .wrapper {
-            width: 420px;
-            background: var(--light-bg);
-            border: 2px solid var(--primary-color);
-            backdrop-filter: blur(9px);
-            color: var(--text-color);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--shadow);
-        }
-
-        /* Conteneur pour le logo blanc avec fond contrasté */
-        .logo-container {
-            background-color: #1e7673;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        /* Style du logo */
-        .logo {
-            max-width: 150px;
-            height: auto;
-            /* Si nécessaire, vous pouvez ajouter un drop-shadow pour renforcer le contraste */
-            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2rem;
-        }
-
-        /* Formulaire commun */
-        form {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: var(--light-bg);
-            box-shadow: var(--shadow);
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        /* Champs de saisie généraux */
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="date"],
-        input[type="number"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            transition: border 0.3s;
-        }
-
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="tel"]:focus,
-        input[type="date"]:focus,
-        input[type="number"]:focus,
-        select:focus,
-        textarea:focus {
-            border-color: var(--primary-color);
-            outline: none;
-        }
-
-        /* Style spécifique aux zones avec design arrondi */
-        .input-box {
-            position: relative;
-            width: 100%;
-            height: 50px;
-            margin: 30px 0;
-        }
-
-        .input-box input {
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            border: 2px solid var(--secondary-color);
-            border-radius: 40px;
-            font-size: 16px;
-            color: var(--text-color);
-            padding: 0 20px;
-            transition: border-color 0.3s;
-        }
-
-        .input-box input:focus {
-            border-color: var(--primary-color);
-        }
-
-        /* Bouton principal */
-        .btn {
-            width: 100%;
-            height: 45px;
-            background: var(--primary-color);
-            border: none;
-            border-radius: 40px;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            font-size: 16px;
-            color: #fff;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Section Paiement */
-        .payment-section {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-        }
-
-        .payment-section h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .payment-section p {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .payment-section form {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        .payment-section label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .payment-section input[type="text"],
-        .payment-section input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            transition: border 0.3s;
-        }
-
-        .payment-section input[type="text"]:focus,
-        .payment-section input[type="date"]:focus {
-            border-color: var(--primary-color);
-            outline: none;
-        }
-
-        .payment-section input[type="submit"] {
-            width: 100%;
-            height: 45px;
-            background: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: 40px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-
-        .payment-section input[type="submit"]:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Réactivité sur petits écrans */
-        @media (max-width: 480px) {
-            .wrapper {
-                width: 100%;
-                padding: 15px;
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="css/reservationStyle.css">
+    <script src="DACH/popup-system.js"></script>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+            
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
             }
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+        })();
+    </script>
 </head>
 <body>
 <div class="wrapper">
     <!-- Conteneur du logo avec fond sombre pour garantir le contraste du logo blanc -->
     <div class="logo-container">
         <img src="image/logo1.png" alt="Logo" class="logo">
+        <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre" aria-label="Basculer le mode sombre">
+            <i class="fas fa-moon" id="darkModeIcon"></i>
+        </button>
     </div>
 
     <form id="reservationForm">
         <h1>Réservation</h1>
         <div class="input-box">
-            <label for="date">Date de début de réservation :</label>
+            <label for="date">
+                <i class="fas fa-calendar-alt"></i>
+                Date de début de réservation
+            </label>
             <input type="date" id="date" name="date" required>
         </div>
         <div class="input-box">
-            <label for="username">Nom d'utilisateur :</label>
+            <label for="username">
+                <i class="fas fa-user"></i>
+                Nom d'utilisateur
+            </label>
             <input type="text" id="username" name="username" required>
         </div>
         <div class="input-box">
-            <label for="email">Email :</label>
+            <label for="email">
+                <i class="fas fa-envelope"></i>
+                Email
+            </label>
             <input type="email" id="email" name="email" required>
         </div>
         <div class="input-box">
-            <label for="duree">Durée de réservation :</label>
-            <input type="number" id="duree" name="duree" required>
+            <label for="duree">
+                <i class="fas fa-clock"></i>
+                Durée de réservation (jours)
+            </label>
+            <input type="number" id="duree" name="duree" required min="1">
         </div>
         <div class="input-box">
-            <label for="nombrepersonne">Nombre de personnes :</label>
-            <input type="number" id="nombrepersonne" name="nombrepersonne" required>
+            <label for="nombrepersonne">
+                <i class="fas fa-users"></i>
+                Nombre de personnes
+            </label>
+            <input type="number" id="nombrepersonne" name="nombrepersonne" required min="1">
         </div>
         <button type="submit" class="btn">Réserver</button>
     </form>
@@ -268,29 +75,53 @@
         <h2>Paiement</h2>
         <p>Montant total à payer: <span id="montant-total"></span> €</p>
         <form id="paymentForm">
-            <label for="mode_paiement">Mode de paiement :</label>
-            <select id="mode_paiement" name="mode_paiement" required>
-                <option value="">Sélectionnez un mode de paiement</option>
-                <option value="carte_credit">Carte de crédit</option>
-                <option value="carte_debit">Carte de débit</option>
-                <option value="paypal">PayPal</option>
-                <option value="apple_pay">Apple Pay</option>
-                <option value="google_pay">Google Pay</option>
-            </select><br><br>
-            <label for="card-number">Numéro de carte :</label>
-            <input type="text" id="card-number" name="card-number" required><br><br>
-            <label for="expiry-date">Date d'expiration :</label>
-            <input type="date" id="expiry-date" name="expiry-date" placeholder="MM/YY" required><br><br>
-            <label for="cvv">CVV :</label>
-            <input type="text" id="cvv" name="cvv" required><br><br>
-            <input type="submit" value="Payer" id="payment-btn" style="width: 100%; height: 45px; background: #218a87; border: none; outline: none; border-radius: 40px; box-shadow: 0 0 10px rgba(0, 0, 0, .1); cursor: pointer; font-size: 16px; color: white; font-weight: 600;">
+            <div class="input-box">
+                <label for="mode_paiement">
+                    <i class="fas fa-credit-card"></i>
+                    Mode de paiement
+                </label>
+                <select id="mode_paiement" name="mode_paiement" required>
+                    <option value="">Sélectionnez un mode de paiement</option>
+                    <option value="carte_credit">💳 Carte de crédit</option>
+                    <option value="carte_debit">💳 Carte de débit</option>
+                    <option value="paypal">🅿️ PayPal</option>
+                    <option value="apple_pay">🍎 Apple Pay</option>
+                    <option value="google_pay">🌐 Google Pay</option>
+                </select>
+            </div>
+            <div class="input-box">
+                <label for="card-number">
+                    <i class="fas fa-credit-card"></i>
+                    Numéro de carte
+                </label>
+                <input type="text" id="card-number" name="card-number" required placeholder="1234 5678 9012 3456">
+            </div>
+            <div class="input-box">
+                <label for="expiry-date">
+                    <i class="fas fa-calendar"></i>
+                    Date d'expiration
+                </label>
+                <input type="date" id="expiry-date" name="expiry-date" required>
+            </div>
+            <div class="input-box">
+                <label for="cvv">
+                    <i class="fas fa-lock"></i>
+                    CVV
+                </label>
+                <input type="text" id="cvv" name="cvv" required placeholder="123" maxlength="4">
+            </div>
+            <button type="submit" class="btn" id="payment-btn">
+                <i class="fas fa-check-circle"></i>
+                Confirmer le paiement
+            </button>
         </form>
     </div>
 
     <!-- Message de confirmation -->
     <div id="confirmation-message" style="display: none;">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: #27ae60; margin-bottom: 1rem;"></i>
         <h2>Paiement réussi !</h2>
-        <p>Merci pour votre réservation.</p>
+        <p>Merci pour votre réservation. Vous allez être redirigé vers la page de confirmation.</p>
     </div>
 </div>
 
@@ -310,7 +141,9 @@
         console.log("User ID in reservationTransport page:", userId);
 
         if (!userId) {
-            alert("Erreur: L'utilisateur n'est pas connecté.");
+            showErrorPopup('Erreur de connexion', 'Vous devez être connecté pour faire une réservation.', function() {
+                window.location.href = 'login.html';
+            });
             return;
         }
         var idHebergement = getUrlParameter('hebergementId');
@@ -329,7 +162,7 @@
                 $('#email').val(user.email_utilisateur);
             },
             error: function() {
-                alert('Erreur lors de la récupération des informations utilisateur.');
+                showErrorPopup('Erreur', 'Impossible de récupérer vos informations utilisateur. Veuillez vous reconnecter.');
             }
         });
 
@@ -354,7 +187,9 @@
             var prixTotal = reservationData.duree * reservationData.nombrepersonne * prixUnitaire;
             reservationData.prixtot = prixTotal.toFixed(2);
 
-            alert('Le prix total de la réservation est de ' + prixTotal.toFixed(2) + ' €. Veuillez procéder au paiement.');
+            showInfoPopup('Confirmation de réservation', 'Le prix total de la réservation est de ' + prixTotal.toFixed(2) + ' €. Cliquez sur Continuer pour procéder au paiement.', function() {
+                // Continuer vers le paiement
+            });
 
             // Afficher la section de paiement
             $('#montant-total').text(prixTotal.toFixed(2));
@@ -370,10 +205,10 @@
                 success: function(response) {
                     reservationId = response.idr;
                     sessionStorage.setItem('currentReservationId', reservationId);
-                    alert('Réservation réussie! Veuillez procéder au paiement.');
+                    showSuccessPopup('Réservation réussie !', 'Votre réservation a été enregistrée avec succès. Procédez maintenant au paiement.');
                 },
                 error: function() {
-                    alert('Erreur lors de la création de la réservation. Veuillez réessayer.');
+                    showErrorPopup('Erreur de réservation', 'Impossible de créer votre réservation. Veuillez vérifier vos informations et réessayer.');
                 }
             });
         });
@@ -400,17 +235,86 @@
                 contentType: 'application/json',
                 data: JSON.stringify(paymentData),
                 success: function(response) {
-                    alert('Paiement effectué avec succès!');
+                    // Utiliser un toast pour le paiement réussi (plus fluide)
+                    showToast('success', 'Paiement réussi ! Merci pour votre réservation.', 3000);
+                    
+                    // Rediriger automatiquement vers la page de confirmation
+                    setTimeout(() => {
+                        window.location.href = 'confimation.html';
+                    }, 2500);
                     $('#payment-section').hide();
                     $('#confirmation-message').show();
                     $('#reservationForm').show().trigger('reset');
                     window.location.href = 'confimation.html';
                 },
                 error: function() {
-                    alert('Erreur lors du paiement. Veuillez vérifier les informations fournies et réessayer.');
+                    showErrorPopup('Erreur de paiement', 'Votre paiement n\'a pas pu être traité. Veuillez vérifier vos informations bancaires et réessayer.');
                 }
             });
         });
+    });
+
+    // Dark Mode Functionality
+    function initDarkMode() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        const html = document.documentElement;
+        
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+        
+        if (isDark) {
+            html.setAttribute('data-theme', 'dark');
+            darkModeIcon.className = 'fas fa-sun';
+            darkModeToggle.classList.add('active');
+        } else {
+            html.removeAttribute('data-theme');
+            darkModeIcon.className = 'fas fa-moon';
+            darkModeToggle.classList.remove('active');
+        }
+        
+        darkModeToggle.addEventListener('click', function() {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            if (newTheme === 'dark') {
+                html.setAttribute('data-theme', 'dark');
+                darkModeIcon.className = 'fas fa-sun';
+                darkModeToggle.classList.add('active');
+            } else {
+                html.removeAttribute('data-theme');
+                darkModeIcon.className = 'fas fa-moon';
+                darkModeToggle.classList.remove('active');
+            }
+            
+            localStorage.setItem('theme', newTheme);
+            
+            html.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                html.style.transition = '';
+            }, 300);
+        });
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                if (newTheme === 'dark') {
+                    html.setAttribute('data-theme', 'dark');
+                    darkModeIcon.className = 'fas fa-sun';
+                    darkModeToggle.classList.add('active');
+                } else {
+                    html.removeAttribute('data-theme');
+                    darkModeIcon.className = 'fas fa-moon';
+                    darkModeToggle.classList.remove('active');
+                }
+            }
+        });
+    }
+
+    // Initialize dark mode when DOM is loaded
+    $(document).ready(function() {
+        initDarkMode();
     });
 </script>
 </body>

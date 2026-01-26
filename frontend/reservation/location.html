@@ -1,220 +1,303 @@
 ﻿<!DOCTYPE html>
-
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>Location de voiture</title>
+    <title>Location de Voiture - Yuding</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/VoitureStyle.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <script src="DACH/popup-system.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+
 </head>
 <body>
-    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 
-
-    <header class="header">
-        <div class="header-top">
-            <div class="container">
-                <a href="#" class="logo">
-                    <img src="image/logo1.png" alt="" >
-                </a>
-            </div>
-            <div class="home-btns">
-                <button class="btn-booking"> <a href="index.html" style="color:white">Hébergements</a></button>
-                <button class="btn-booking"><a href="Vols.html" style="color:white">Vols</a></button>
-                <button class="btn-booking"><a href="Taxis.html" style="color:white">Taxi</a></button>
-                <button class="btn-booking"><a href="location.html" style="color:white">location de Voiture</a></button>
-                <button class="btn-booking"><a href="activitees.html" style="color:white">Activites</a></button>
-                <button class="btn-booking"><a href="Trains.html" style="color:white">Trains</a></button>
-            </div>
-            <div class="publicite" style=" color:aliceblue; margin-top: 30px;">
-                <h1 style=" color:aliceblue; margin-top: 30px;  text-align: center;"> Oubliez les files d'attente et les tracas !</h1>
-                <p style=" color:aliceblue; margin-top: 30px;  text-align: center;">"Louez votre voiture en quelques clics avec notre plateforme simple et intuitive.".</p>
-            </div>
-        </div>
-    </header>
-    <main>
-        <section class="home" id="home" style="background: url(image/voiture.jpg)no-repeat; margin-top: 280px; background-position: center; background-size: cover; ">
-            <div class="touch-search">
+        <header class="header">
+            <div class="header-top">
                 <div class="container">
-                    <form action="" class="form" id="searchVoiture" action="http://localhost:8888/apir/transports/search/ville" method="POST">
+                    <a href="index.html" class="logo">
+                        <img src="image/logo1.png" alt="Yuding" id="headerLogo">
+                    </a>
+                    
+                    <div class="header-btns">
+                        <div class="navigation">
+                            <a href="index.html" class="nav-link">Hébergements</a>
+                            <a href="Vols.html" class="nav-link">Vols</a>
+                            <a href="Taxis.html" class="nav-link">Taxi</a>
+                            <a href="location.html" class="nav-link active">Location</a>
+                            <a href="activitees.html" class="nav-link">Activités</a>
+                            <a href="Trains.html" class="nav-link">Trains</a>
+                        </div>
                         
-                        <div class="input-line">
-                            <label for="destination" class="input-label">Pays</label>
-                            <input type="text" name="destination" id="destination" class="input-field" placeholder="Pays" style="color: rgba(0, 27, 26, 0.75);">
-                        </div>
-                        <div class="input-line">
-                            <label for="destination" class="input-label">Ville</label>
-                            <input type="text" name="ville" id="ville" class="input-field" placeholder="Ville" style="color: rgba(0, 27, 26, 0.75);">
-                        </div>
-                        <div class="input-line">
-                            <label for="pax" class="input-label">Marques</label>
-                            <input type="text" name="pax" id="pax" class="input-field" placeholder="Marque" style="color: rgba(0, 27, 26, 0.75);">
-                        </div>
-
-                     
-                      
-                        <div class="btns-line">
-                            <button type="submit" class="btn-booking">Rechercher</button>
-
-                        </div>
-                    </form>
+                        <!-- Bouton Dark Mode -->
+                        <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                            <i class="fas fa-moon" id="darkModeIcon"></i>
+                        </button>
+                    </div>
                 </div>
-            </div></section>
-            <!-- Section pour les résultats de la recherche -->
-    <section id="search-results" class="search-results">
-        <div class="container">
-            <h2>Résultats de recherche</h2>
+            </div>
+        </header>
+        <main>
+            <section class="home location-hero" id="home">
+                <div class="hero-background">
+                    <div class="hero-overlay"></div>
+                </div>
+                
+                <div class="touch-search">
+                    <div class="container">
+                        <div class="search-header">
+                            <h2 class="search-title">Louez votre Voiture</h2>
+                            <p class="search-subtitle">Liberté et confort pour tous vos déplacements</p>
+                        </div>
+                        
+                        <form action="http://localhost:8888/apir/transports/search/ville" method="POST" class="form" id="searchVoiture">
+                            <div class="form-grid">
+                                <div class="input-line">
+                                    <label for="destination" class="input-label">
+                                        <i class="fas fa-globe"></i>
+                                        Pays
+                                    </label>
+                                    <input type="text" name="destination" id="destination" class="input-field" placeholder="Entrez le pays">
+                                </div>
+                                
+                                <div class="input-line">
+                                    <label for="ville" class="input-label">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        Ville
+                                    </label>
+                                    <input type="text" name="ville" id="ville" class="input-field" placeholder="Entrez la ville">
+                                </div>
+                                
+                                <div class="input-line">
+                                    <label for="type_voiture" class="input-label">
+                                        <i class="fas fa-car"></i>
+                                        Type de voiture
+                                    </label>
+                                    <input type="text" name="type_voiture" id="type_voiture" class="input-field" placeholder="Ex: Économique, SUV">
+                                </div>
+                            </div>
 
-            <div id="results-container">
-                <!-- Les résultats seront injectés ici -->
+                            <div class="btns-line">
+                                <button type="submit" class="btn-booking search-btn">
+                                    <i class="fas fa-search"></i>
+                                    Rechercher des Voitures
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="search-results" class="search-results">
+                <div class="container">
+                    <div class="results-header">
+                        <h2 class="results-title">Résultats de recherche</h2>
+                        <p class="results-subtitle">Trouvez la voiture parfaite pour votre voyage</p>
+                    </div>
+                    <div id="results-container" class="results-grid">
+                        <!-- Les résultats seront injectés ici -->
+                    </div>
+                </div>
+            </section>
+            <!-- Chatbot Container -->
+            <div class="chatbot-container" id="chatbotContainer">
+                <div class="chatbot-header">
+                    <!-- Logo en haut à gauche -->
+                    <svg class="chatbot-logo" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 1024 1024">
+                        <path
+                                d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+                        />
+                    </svg>
+                    <span class="logo-text">AI Assistant</span>
+                    <button id="close-chatbot" class="close-btn" onclick="toggleChatbot()">×</button>
+                </div>
+                <div class="chatbot-body" id="chatbotBody">
+                    <!-- Les messages seront ajoutés ici par JavaScript -->
+                </div>
+                <div class="chatbot-footer">
+                    <input type="text" id="userInput" placeholder="Posez une question..." />
+                    <button class="send-btn" onclick="sendMessage()">
+                        <i class="fa fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
-        </div>
-    </section>
-        <!-- Chatbot Container -->
-        <div class="chatbot-container" id="chatbotContainer">
-            <div class="chatbot-header">
-                <!-- Logo en haut à gauche -->
-                <svg class="chatbot-logo" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 1024 1024">
-                    <path
-                            d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
-                    />
-                </svg>
-                <span class="logo-text">AI Assistant</span>
-                <button id="close-chatbot" class="close-btn" onclick="toggleChatbot()">×</button>
-            </div>
-            <div class="chatbot-body" id="chatbotBody">
-                <!-- Les messages seront ajoutés ici par JavaScript -->
-            </div>
-            <div class="chatbot-footer">
-                <input type="text" id="userInput" placeholder="Posez une question..." />
-                <button class="send-btn" onclick="sendMessage()">
-                    <i class="fa fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
 
-        <!-- Chatbot Toggle Button -->
-        <button class="chatbot-toggle" onclick="toggleChatbot()">
-            <img src="a1.png" alt="Chatbot">
-        </button>
+            <!-- Chatbot Toggle Button -->
+            <button class="chatbot-toggle" onclick="toggleChatbot()">
+                <img src="a1.png" alt="Chatbot">
+            </button>
 
-        <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
-            </main>
+            <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script>
+                const BASE_URL = 'http://localhost:8888'
                 $(document).ready(function () {
-                    $("#searchVoiture").submit(function (event) {
+                    $('#searchVoiture').submit(function (event) {
                         event.preventDefault();
+                        var destination = $('#destination').val();
                         var ville = $('#ville').val();
-                        console.log("Ville: ", ville);
-                
+                        var type_voiture = $('#type_voiture').val();
+
+                        // Afficher un loader
+                        $('#results-container').html('<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i><p style="margin-top: 1rem; color: var(--gray-medium);">Recherche en cours...</p></div>');
+
                         $.ajax({
-                            url: 'http://localhost:8888/apir/transports/search/ville',
+                            url: `${BASE_URL}/apir/transports/search/ville`,
                             type: 'POST',
                             data: { ville: ville },
                             success: function (data) {
+                                console.log(data);
                                 var html = '';
                                 if (data.length > 0) {
-                                    data.forEach(function (transport) {
-                                        html += '<div class="hebergement-result">';
-                                        html += '<strong>Ville: </strong><span>' + transport.ville + '</span><br>';
-                                        html += '<strong>Description: </strong><span>' + transport.desc_transport + '</span><br>';
-                                        html += '<strong>Compagnie: </strong><span>' + transport.compagnie + '</span><br>';
-                                        html += '<strong>Adresse: </strong><span>' + transport.adresse + '</span><br>';
-                                        html += '<strong>Marque: </strong><span>' + transport.marque + '</span><br>';
-                                        html += '<strong>Prix: </strong><span>' + transport.prix_transport +'$'+'</span><br>';
-                                        html += '<strong>Pays: </strong><span>' + transport.pays + '</span><br>';
-                                        html += '<strong>Contact: </strong><span>' + transport.tele_fournisseur + '</span><br>';
+                                    data.forEach(function (voiture) {
+                                        html += '<div class="car-result-card">';
+                                        html += '  <div class="car-card-header">';
+                                        html += '    <h3 class="car-title">' + voiture.type_voiture + ' - ' + voiture.marque + '</h3>';
+                                        html += '    <div class="car-price">' + voiture.prix_transport + '$<span class="price-period">/jour</span></div>';
+                                        html += '  </div>';
+                                        html += '  <div class="car-card-body">';
+                                        html += '    <div class="car-location-info">';
+                                        html += '      <div class="location-point">';
+                                        html += '        <div class="location-label">Agence</div>';
+                                        html += '        <div class="location-detail"><i class="fas fa-map-marker-alt"></i> ' + voiture.ville + ', ' + voiture.destination + '</div>';
+                                        html += '      </div>';
+                                        html += '      <div class="availability-badge">';
+                                        html += '        <i class="fas fa-check-circle"></i> Disponible';
+                                        html += '      </div>';
+                                        html += '    </div>';
+                                        html += '    <div class="car-features">';
+                                        html += '      <div class="feature-item">';
+                                        html += '        <i class="fas fa-car"></i>';
+                                        html += '        <span>' + voiture.type_voiture + '</span>';
+                                        html += '      </div>';
+                                        html += '      <div class="feature-item">';
+                                        html += '        <i class="fas fa-cog"></i>';
+                                        html += '        <span>' + (voiture.transmission || 'Automatique') + '</span>';
+                                        html += '      </div>';
+                                        html += '      <div class="feature-item">';
+                                        html += '        <i class="fas fa-users"></i>';
+                                        html += '        <span>' + (voiture.passagers || '4') + ' places</span>';
+                                        html += '      </div>';
+                                        html += '      <div class="feature-item">';
+                                        html += '        <i class="fas fa-gas-pump"></i>';
+                                        html += '        <span>' + (voiture.carburant || 'Essence') + '</span>';
+                                        html += '      </div>';
+                                        html += '    </div>';
+                                        html += '    <div class="car-info-grid">';
+                                        html += '      <div class="car-info-item">';
+                                        html += '        <span class="car-label"><i class="fas fa-building"></i> Agence:</span>';
+                                        html += '        <span class="car-value">' + voiture.nom_fournisseur + '</span>';
+                                        html += '      </div>';
+                                        html += '      <div class="car-info-item">';
+                                        html += '        <span class="car-label"><i class="fas fa-phone"></i> Contact:</span>';
+                                        html += '        <span class="car-value">' + voiture.tele_fournisseur + '</span>';
+                                        html += '      </div>';
+                                        html += '    </div>';
+                                        html += '  </div>';
+                                        html += '  <div class="car-card-footer">';
                                         var isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
                                         if (isLoggedIn) {
-                                            html += '<button class="btn-booking" style="background-color:#218a87" onclick="window.location.href=\'reservationTransport.html?transportId=' + transport.idt + '&userId=\' + sessionStorage.getItem(\'userId\')">Réserver</button>';
+                                            html += '<button class="car-booking-btn" onclick="window.location.href=\'reservationTransport.html?transportId=' + voiture.idt + '&userId=\' + sessionStorage.getItem(\'userId\')"><i class="fas fa-car"></i> Louer maintenant</button>';
                                         } else {
-                                            html += '<button class="btn-booking" style="background-color:#218a87" onclick="alert(\'Veuillez vous connecter pour réserver.\'); window.location.href=\'login.html\';">Réserver</button>';
+                                            html += '<button class="car-booking-btn" onclick="sessionStorage.setItem(\'postLoginRedirect\', \'reservationTransport.html?transportId=' + voiture.idt + '\'); showLoginRequiredPopup();"><i class="fas fa-sign-in-alt"></i> Se connecter pour louer</button>';
                                         }
+                                        html += '  </div>';
                                         html += '</div>';
                                     });
                                 } else {
-                                    html = '<p>Aucune voiture de location trouvée pour les critères donnés.</p>';
+                                    html = '<div class="no-results-container">';
+                                    html += '  <div class="no-results-icon"><i class="fas fa-car"></i></div>';
+                                    html += '  <h3 class="no-results-title">Aucune voiture trouvée</h3>';
+                                    html += '  <p class="no-results-text">Essayez de modifier vos critères de recherche pour découvrir d\'autres véhicules disponibles.</p>';
+                                    html += '</div>';
                                 }
-                                $('#search-results').html(html);
+                                $('#results-container').html(html);
+                                
+                                // Animer les nouveaux éléments
+                                setTimeout(() => {
+                                    document.querySelectorAll('.car-result-card').forEach((el, index) => {
+                                        setTimeout(() => {
+                                            el.style.opacity = '1';
+                                            el.style.transform = 'translateY(0)';
+                                        }, index * 100);
+                                    });
+                                }, 100);
                             },
                             error: function () {
-                                $('#search-results').html('<p>Erreur lors de la recherche. Veuillez réessayer plus tard.</p>');
+                                $('#results-container').html('<div style="text-align: center; padding: 2rem; color: #dc3545;"><i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i><p style="margin-top: 1rem;">Erreur lors de la recherche. Veuillez réessayer plus tard.</p></div>');
                             }
                         });
                     });
                 });
-                </script>
-    <script>
-        var conversationHistory = [];
+            </script>
+            <script>
+                var conversationHistory = [];
 
-        function toggleChatbot() {
-            const chatbotContainer = document.getElementById("chatbotContainer");
-            chatbotContainer.classList.toggle("show");
-        }
+                function toggleChatbot() {
+                    const chatbotContainer = document.getElementById("chatbotContainer");
+                    chatbotContainer.classList.toggle("show");
+                }
 
-        function sendMessage() {
-            const userInputElement = document.getElementById("userInput");
-            const userInput = userInputElement.value.trim();
-            if (!userInput) return;
+                function sendMessage() {
+                    const userInputElement = document.getElementById("userInput");
+                    const userInput = userInputElement.value.trim();
+                    if (!userInput) return;
 
-            const chatbotBody = document.getElementById("chatbotBody");
+                    const chatbotBody = document.getElementById("chatbotBody");
 
-            // 1) Afficher message utilisateur
-            showUserMessage(chatbotBody, userInput);
+                    // 1) Afficher message utilisateur
+                    showUserMessage(chatbotBody, userInput);
 
-            // 2) Mettre à jour l'historique
-            conversationHistory.push("User: " + userInput);
+                    // 2) Mettre à jour l'historique
+                    conversationHistory.push("User: " + userInput);
 
-            // 3) Construire le prompt
-            var promptContext = conversationHistory.join("\n") + "\nAssistant:";
+                    // 3) Construire le prompt
 
-            // 4) Vider le champ
-            userInputElement.value = '';
+                    // 4) Vider le champ
+                    userInputElement.value = '';
 
-            // 5) Afficher l'indicateur "assistant réfléchit"
-            const thinkingMessageDiv = showAssistantThinking(chatbotBody);
+                    // 5) Afficher l'indicateur "assistant réfléchit"
+                    const thinkingMessageDiv = showAssistantThinking(chatbotBody);
 
-            // 6) Appeler votre backend
-            $.get(`http://localhost:8888/ai/${encodeURIComponent(promptContext)}`, function (data) {
-                // Supprimer l'indicateur
-                thinkingMessageDiv.remove();
+                    // 6) Appeler votre backend
+                    $.get(`http://localhost:8888/ai/${encodeURIComponent(userInput)}`, function (data) {
+                        // Supprimer l'indicateur
+                        thinkingMessageDiv.remove();
 
-                // Afficher la réponse finale
-                showAssistantMessage(chatbotBody, data);
+                        // Afficher la réponse finale
+                        showAssistantMessage(chatbotBody, data);
 
-                // Ajouter la réponse de l'assistant dans l'historique
-                conversationHistory.push("Assistant: " + data);
+                        // Ajouter la réponse de l'assistant dans l'historique
+                        conversationHistory.push("Assistant: " + data);
 
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                thinkingMessageDiv.remove();
-                showAssistantMessage(chatbotBody, "Désolé, une erreur s'est produite. Veuillez réessayer.");
-            });
-        }
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        thinkingMessageDiv.remove();
+                        showAssistantMessage(chatbotBody, "Désolé, une erreur s'est produite. Veuillez réessayer.");
+                    });
+                }
 
-        // ---------- Fonctions utilitaires ----------
+                // ---------- Fonctions utilitaires ----------
 
-        function showUserMessage(chatbotBody, userInput) {
-            const userMessageDiv = document.createElement("div");
-            userMessageDiv.classList.add("chat-message", "user");
-            userMessageDiv.innerHTML = `
+                function showUserMessage(chatbotBody, userInput) {
+                    const userMessageDiv = document.createElement("div");
+                    userMessageDiv.classList.add("chat-message", "user");
+                    userMessageDiv.innerHTML = `
             <div class="user-bubble">
                 <span class="message-text">${userInput}</span>
             </div>
         `;
-            chatbotBody.appendChild(userMessageDiv);
-            chatbotBody.scrollTop = chatbotBody.scrollHeight;
-        }
+                    chatbotBody.appendChild(userMessageDiv);
+                    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+                }
 
-        function showAssistantThinking(chatbotBody) {
-            const thinkingMessageDiv = document.createElement("div");
-            thinkingMessageDiv.classList.add("chat-message", "assistant");
-            thinkingMessageDiv.id = "thinkingIndicator";
+                function showAssistantThinking(chatbotBody) {
+                    const thinkingMessageDiv = document.createElement("div");
+                    thinkingMessageDiv.classList.add("chat-message", "assistant");
+                    thinkingMessageDiv.id = "thinkingIndicator";
 
-            thinkingMessageDiv.innerHTML = `
+                    thinkingMessageDiv.innerHTML = `
             <div class="assistant-avatar-circle">
                 <svg class="assistant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
                     <path
@@ -230,15 +313,15 @@
                 </span>
             </div>
         `;
-            chatbotBody.appendChild(thinkingMessageDiv);
-            chatbotBody.scrollTop = chatbotBody.scrollHeight;
-            return thinkingMessageDiv;
-        }
+                    chatbotBody.appendChild(thinkingMessageDiv);
+                    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+                    return thinkingMessageDiv;
+                }
 
-        function showAssistantMessage(chatbotBody, text) {
-            const assistantMessageDiv = document.createElement("div");
-            assistantMessageDiv.classList.add("chat-message", "assistant");
-            assistantMessageDiv.innerHTML = `
+                function showAssistantMessage(chatbotBody, text) {
+                    const assistantMessageDiv = document.createElement("div");
+                    assistantMessageDiv.classList.add("chat-message", "assistant");
+                    assistantMessageDiv.innerHTML = `
             <div class="assistant-avatar-circle">
                 <svg class="assistant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
                     <path
@@ -250,11 +333,123 @@
                 <span class="message-text">${text}</span>
             </div>
         `;
-            chatbotBody.appendChild(assistantMessageDiv);
-            chatbotBody.scrollTop = chatbotBody.scrollHeight;
-        }
-    </script>
+                    chatbotBody.appendChild(assistantMessageDiv);
+                    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+                }
+            </script>
 
+            <script>
+                // Smooth scrolling for navigation links
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        if (this.getAttribute('href').startsWith('#')) {
+                            e.preventDefault();
+                            const target = document.querySelector(this.getAttribute('href'));
+                            if (target) {
+                                target.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'start'
+                                });
+                            }
+                        }
+                    });
+                });
+            </script>
+
+            <!-- ==================== DARK MODE FUNCTIONALITY ==================== -->
+            <script>
+            function setHeaderLogo(isDark) {
+                const logo = document.getElementById('headerLogo');
+                if (!logo) {
+                    return;
+                }
+                logo.src = isDark ? 'image/logo1.png' : 'image/logodark.png';
+            }
+
+            function initDarkMode() {
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                const darkModeIcon = document.getElementById('darkModeIcon');
+                const body = document.body;
+                
+                // Vérifier le thème sauvegardé ou utiliser la préférence système
+                const savedTheme = localStorage.getItem('theme');
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+                
+                // Appliquer le thème initial
+                if (isDark) {
+                    body.setAttribute('data-theme', 'dark');
+                    darkModeIcon.className = 'fas fa-sun';
+                    darkModeToggle.classList.add('active');
+                } else {
+                    body.setAttribute('data-theme', 'light');
+                    darkModeIcon.className = 'fas fa-moon';
+                    darkModeToggle.classList.remove('active');
+                }
+                setHeaderLogo(isDark);
+                
+                // Gérer le clic sur le bouton
+                darkModeToggle.addEventListener('click', function() {
+                    const currentTheme = body.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    // Appliquer le nouveau thème
+                    body.setAttribute('data-theme', newTheme);
+                    
+                    // Sauvegarder la préférence
+                    localStorage.setItem('theme', newTheme);
+                    
+                    // Mettre à jour l'icône avec animation
+                    if (newTheme === 'dark') {
+                        darkModeIcon.className = 'fas fa-sun';
+                        darkModeToggle.classList.add('active');
+                    } else {
+                        darkModeIcon.className = 'fas fa-moon';
+                        darkModeToggle.classList.remove('active');
+                    }
+                    setHeaderLogo(newTheme === 'dark');
+                    
+                    // Animation de transition
+                    body.style.transition = 'all 0.3s ease';
+                    setTimeout(() => {
+                        body.style.transition = '';
+                    }, 300);
+                });
+                
+                // Écouter les changements de préférence système
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    if (!localStorage.getItem('theme')) {
+                        const newTheme = e.matches ? 'dark' : 'light';
+                        body.setAttribute('data-theme', newTheme);
+                        
+                        if (newTheme === 'dark') {
+                            darkModeIcon.className = 'fas fa-sun';
+                            darkModeToggle.classList.add('active');
+                        } else {
+                            darkModeIcon.className = 'fas fa-moon';
+                            darkModeToggle.classList.remove('active');
+                        }
+                        setHeaderLogo(newTheme === 'dark');
+                    }
+                });
+            }
+
+            // Initialiser le dark mode au chargement
+            document.addEventListener('DOMContentLoaded', initDarkMode);
+            
+            // Fonction pour afficher popup de connexion requise
+            function showLoginRequiredPopup() {
+                showConfirmPopup(
+                    'Connexion requise',
+                    'Vous devez être connecté pour réserver une voiture. Souhaitez-vous vous connecter maintenant ?',
+                    function() { // onConfirm - aller à la page de connexion
+                        window.location.href = 'login.html';
+                    },
+                    null, // onCancel
+                    { confirmText: 'Se connecter', cancelText: 'Annuler' }
+                );
+            }
+            </script>
 
 </body>
-</html>
+        </html>

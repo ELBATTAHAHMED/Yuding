@@ -8,6 +8,7 @@ import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +46,12 @@ public class UtilisateurServicesImpl implements UtilisateurServices {
     
     @Override
     public Utilisateurs createUtilisateur(Utilisateurs utilisateur) {
+        if (utilisateur.getStatus() == null || utilisateur.getStatus().isEmpty()) {
+            utilisateur.setStatus("ACTIVE");
+        }
+        if (utilisateur.getCreatedAt() == null) {
+            utilisateur.setCreatedAt(LocalDate.now());
+        }
         return userRepository.save(utilisateur);
     }
 
@@ -61,11 +68,32 @@ public class UtilisateurServicesImpl implements UtilisateurServices {
             existingUser.setPassword(utilisateur.getPassword());
             existingUser.setNum_tele(utilisateur.getNum_tele());
             existingUser.setUsername(utilisateur.getUsername());
+            if (utilisateur.getStatus() != null) {
+                existingUser.setStatus(utilisateur.getStatus());
+            }
+            if (utilisateur.getCreatedAt() != null) {
+                existingUser.setCreatedAt(utilisateur.getCreatedAt());
+            }
             Utilisateurs updatedUtilisateur = userRepository.save(existingUser);
             return ResponseEntity.ok(updatedUtilisateur);
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @Override
+    public ResponseEntity<Utilisateurs> updateUtilisateurStatus(Long id, String status) {
+        Utilisateurs existingUser = userRepository.findById(id).orElse(null);
+        if (existingUser != null) {
+            if (status == null || status.isEmpty()) {
+                existingUser.setStatus("ACTIVE");
+            } else {
+                existingUser.setStatus(status);
+            }
+            Utilisateurs updatedUtilisateur = userRepository.save(existingUser);
+            return ResponseEntity.ok(updatedUtilisateur);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @Override

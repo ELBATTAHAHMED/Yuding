@@ -4,255 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <title>Login</title>
-    <style>
-
-        /* Réinitialisation */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Poppins", sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #01796F;
-            padding: 30px;
-        }
-
-        .container {
-            position: relative;
-            max-width: 850px;
-            width: 100%;
-            background: #fff;
-            padding: 40px 30px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-            perspective: 2700px;
-            border-radius: 15px; /* Bordure arrondie pour le container */
-            overflow: hidden;  /* Pour éviter que les éléments absolus ne débordent */
-        }
-
-        /* Logo en haut à gauche */
-        .logo-top {
-            position: absolute;
-            top: 10px;
-            width: 200px;
-            left: 10px;
-            z-index: 100;
-        }
-        .logo-top img {
-            max-width: 150px;
-            height: auto;
-            border-radius: 10px; /* Optionnel : arrondir légèrement le logo */
-        }
-
-        .container .cover {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            height: 100%;
-            width: 50%;
-            z-index: 98;
-            transition: all 1s ease;
-            transform-origin: left;
-            transform-style: preserve-3d;
-            backface-visibility: hidden;
-        }
-        .container #flip:checked ~ .cover {
-            transform: rotateY(-180deg);
-        }
-        .container #flip:checked ~ .forms .login-form {
-            pointer-events: none;
-        }
-        .container .cover .front,
-        .container .cover .back {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-        }
-        .cover .back {
-            transform: rotateY(180deg);
-        }
-        .container .cover img {
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            object-fit: cover;
-            z-index: 10;
-        }
-        .container .cover .text {
-            position: absolute;
-            z-index: 10;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .container .cover .text::before {
-            content: '';
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            opacity: 0.5;
-            background: #01796F;
-        }
-        .cover .text .text-1,
-        .cover .text .text-2 {
-            z-index: 20;
-            font-size: 26px;
-            font-weight: 600;
-            color: #fff;
-            text-align: center;
-        }
-        .cover .text .text-2 {
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .container .forms {
-            height: 100%;
-            width: 100%;
-            background: #fff;
-        }
-        .container .form-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .form-content .login-form,
-        .form-content .signup-form {
-            width: calc(100% / 2 - 25px);
-        }
-        .forms .form-content .title {
-            position: relative;
-            font-size: 24px;
-            font-weight: 500;
-            color: #333;
-        }
-        .forms .form-content .title:before {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            height: 3px;
-            width: 25px;
-            background: #01796F;
-        }
-        .forms .signup-form .title:before {
-            width: 20px;
-        }
-        .forms .form-content .input-boxes {
-            margin-top: 30px;
-        }
-        .forms .form-content .input-box {
-            display: flex;
-            align-items: center;
-            height: 50px;
-            width: 100%;
-            margin: 10px 0;
-            position: relative;
-        }
-        .form-content .input-box input {
-            height: 100%;
-            width: 100%;
-            outline: none;
-            border: none;
-            padding: 0 30px;
-            font-size: 16px;
-            font-weight: 500;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-        .form-content .input-box input:focus,
-        .form-content .input-box input:valid {
-            background: #01796F;
-        }
-        .form-content .input-box i {
-            position: absolute;
-            color: #01796F;
-            font-size: 17px;
-        }
-        .forms .form-content .text {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-        }
-        .forms .form-content .text a {
-            text-decoration: none;
-        }
-        .forms .form-content .text a:hover {
-            text-decoration: underline;
-        }
-        .forms .form-content .button {
-            color: #fff;
-            margin-top: 40px;
-        }
-        .forms .form-content .button input {
-            color: #fff;
-            background: #01796F;
-            border-radius: 6px;
-            padding: 0;
-            cursor: pointer;
-            transition: all 0.4s ease;
-        }
-        .forms .form-content .button input:hover {
-            background: #01796F;
-        }
-        .forms .form-content label {
-            color: #01796F;
-            cursor: pointer;
-        }
-        .forms .form-content label:hover {
-            text-decoration: underline;
-        }
-        .forms .form-content .login-text,
-        .forms .form-content .sign-up-text {
-            text-align: center;
-            margin-top: 25px;
-        }
-        .container #flip {
-            display: none;
-        }
-        @media (max-width: 730px) {
-            .container .cover {
-                display: none;
-            }
-            .form-content .login-form,
-            .form-content .signup-form {
-                width: 100%;
-            }
-            .form-content .signup-form {
-                display: none;
-            }
-            .container #flip:checked ~ .forms .signup-form {
-                display: block;
-            }
-            .container #flip:checked ~ .forms .login-form {
-                display: none;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="loginN-style.css">
+    <script src="popup-system.js"></script>
+    <title>Login Admin - Yuding</title>
 </head>
 <body>
 <!-- Logo positionné en haut à gauche -->
 <div class="logo-top">
-    <img src="image/logo1.png" alt="Logo">
+    <img src="image/logo1.png" alt="Yuding Logo - Admin Panel" id="headerLogo">
 </div>
+
+<!-- Bouton Dark Mode -->
+<button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+    <i class="fas fa-moon" id="darkModeIcon"></i>
+</button>
 <div class="container">
     <input type="checkbox" id="flip">
     <div class="cover">
         <div class="front">
-            <img src="image/img.png" alt="">
+            <img src="image/img.png" alt="" id="coverImage">
             <div class="text">
                 <span class="text-1">WELCOME TO<br> YUDDING</span>
                 <span class="text-2">Let's get connected</span>
@@ -285,6 +57,26 @@
     </div>
 </div>
 
+<!-- Popups modernes -->
+<div id="popup-overlay" class="popup-overlay">
+    <div class="popup-container">
+        <div class="popup-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="popup-content">
+            <h3 class="popup-title">Succès</h3>
+            <p class="popup-message">Message par défaut</p>
+        </div>
+        <div class="popup-actions">
+            <button class="popup-btn popup-btn-primary" id="popup-confirm">Confirmer</button>
+            <button class="popup-btn popup-btn-secondary" id="popup-cancel">Annuler</button>
+        </div>
+        <button class="popup-close" id="popup-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
@@ -299,19 +91,209 @@
                 contentType: 'application/x-www-form-urlencoded',
                 data: { email: email, password: password },
                 success: function(response) {
-                    if (confirm("Bienvenue " + response.nom + " " + response.prenom + ". Voulez-vous accéder au tableau de bord ?")) {
-                        $('#welcomeMessage').text('Bienvenue, ' + response.nom + ' ' + response.prenom).show();
-                        setTimeout(function() {
-                            window.location.href = 'dashActivitee.html';
-                        }, 2000);
+                    localStorage.setItem('adminUser', JSON.stringify(response));
+                    if (!localStorage.getItem('theme')) {
+                        localStorage.setItem('theme', 'dark');
                     }
+                    showToast('success', 'Connexion réussie ! Bienvenue ' + response.nom + ' ' + response.prenom, 3000);
+                    $('#welcomeMessage').text('Bienvenue, ' + response.nom + ' ' + response.prenom).show();
+                    
+                    setTimeout(function() {
+                        window.location.href = 'dashOverview.html';
+                    }, 2500);
                 },
                 error: function(xhr, status, error) {
+                    showErrorPopup('Erreur de connexion', 'Email ou mot de passe incorrect. Veuillez réessayer.');
                     $('#errorMessage').text('Email ou mot de passe incorrect').show();
                 }
             });
         });
     });
+
+    // ==================== POPUP MODERNE FUNCTIONALITY ====================
+    function showPopup(type, title, message, onConfirm, onCancel) {
+        const overlay = $('#popup-overlay');
+        const popup = $('.popup-container');
+        const icon = $('.popup-icon i');
+        const titleEl = $('.popup-title');
+        const messageEl = $('.popup-message');
+        const confirmBtn = $('#popup-confirm');
+        const cancelBtn = $('#popup-cancel');
+        const closeBtn = $('#popup-close');
+        
+        // Réinitialiser les classes
+        popup.removeClass('popup-success popup-error popup-warning popup-info');
+        
+        // Configurer selon le type
+        switch(type) {
+            case 'success':
+                popup.addClass('popup-success');
+                icon.removeClass().addClass('fas fa-check-circle');
+                confirmBtn.text('Accéder au dashboard');
+                cancelBtn.show();
+                break;
+            case 'error':
+                popup.addClass('popup-error');
+                icon.removeClass().addClass('fas fa-times-circle');
+                confirmBtn.text('Réessayer');
+                cancelBtn.hide();
+                break;
+            case 'warning':
+                popup.addClass('popup-warning');
+                icon.removeClass().addClass('fas fa-exclamation-triangle');
+                confirmBtn.text('Continuer');
+                cancelBtn.show();
+                break;
+            case 'info':
+                popup.addClass('popup-info');
+                icon.removeClass().addClass('fas fa-info-circle');
+                confirmBtn.text('OK');
+                cancelBtn.hide();
+                break;
+        }
+        
+        // Définir le contenu
+        titleEl.text(title);
+        messageEl.text(message);
+        
+        // Afficher le popup avec animation
+        overlay.removeClass('popup-hide').addClass('popup-show');
+        
+        // Gestionnaires d'événements
+        confirmBtn.off('click').on('click', function() {
+            hidePopup();
+            if (onConfirm) onConfirm();
+        });
+        
+        cancelBtn.off('click').on('click', function() {
+            hidePopup();
+            if (onCancel) onCancel();
+        });
+        
+        closeBtn.off('click').on('click', function() {
+            hidePopup();
+            if (onCancel) onCancel();
+        });
+        
+        // Fermer en cliquant sur l'overlay
+        overlay.off('click').on('click', function(e) {
+            if (e.target === overlay[0]) {
+                hidePopup();
+                if (onCancel) onCancel();
+            }
+        });
+        
+        // Fermer avec Escape
+        $(document).off('keyup.popup').on('keyup.popup', function(e) {
+            if (e.keyCode === 27) {
+                hidePopup();
+                if (onCancel) onCancel();
+            }
+        });
+    }
+    
+    function hidePopup() {
+        const overlay = $('#popup-overlay');
+        overlay.removeClass('popup-show').addClass('popup-hide');
+        
+        setTimeout(() => {
+            overlay.removeClass('popup-hide');
+        }, 300);
+        
+        $(document).off('keyup.popup');
+    }
+
+    function setHeaderLogo(isDark) {
+        const logo = document.getElementById('headerLogo');
+        if (!logo) {
+            return;
+        }
+        logo.src = isDark ? 'image/logo1.png' : 'image/logodark.png';
+    }
+
+    function setCoverImage(isDark) {
+        const coverImage = document.getElementById('coverImage');
+        if (!coverImage) {
+            return;
+        }
+        coverImage.src = isDark ? 'image/img1.png' : 'image/img.png';
+    }
+
+    // ==================== DARK MODE FUNCTIONALITY ====================
+    function initDarkMode() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        const body = document.body;
+        
+        // Vérifier le thème sauvegardé ou utiliser la préférence système
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+        
+        // Appliquer le thème initial
+        if (isDark) {
+            body.setAttribute('data-theme', 'dark');
+            darkModeIcon.className = 'fas fa-sun';
+            darkModeToggle.classList.add('active');
+        } else {
+            body.setAttribute('data-theme', 'light');
+            darkModeIcon.className = 'fas fa-moon';
+            darkModeToggle.classList.remove('active');
+        }
+        setHeaderLogo(isDark);
+        setCoverImage(isDark);
+        
+        // Gérer le clic sur le bouton
+        darkModeToggle.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Appliquer le nouveau thème
+            body.setAttribute('data-theme', newTheme);
+            
+            // Sauvegarder la préférence
+            localStorage.setItem('theme', newTheme);
+            
+            // Mettre à jour l'icône avec animation
+            if (newTheme === 'dark') {
+                darkModeIcon.className = 'fas fa-sun';
+                darkModeToggle.classList.add('active');
+            } else {
+                darkModeIcon.className = 'fas fa-moon';
+                darkModeToggle.classList.remove('active');
+            }
+
+            setHeaderLogo(newTheme === 'dark');
+            setCoverImage(newTheme === 'dark');
+            
+            // Animation de transition
+            body.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                body.style.transition = '';
+            }, 300);
+        });
+        
+        // Écouter les changements de préférence système
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                body.setAttribute('data-theme', newTheme);
+                
+                if (newTheme === 'dark') {
+                    darkModeIcon.className = 'fas fa-sun';
+                    darkModeToggle.classList.add('active');
+                } else {
+                    darkModeIcon.className = 'fas fa-moon';
+                    darkModeToggle.classList.remove('active');
+                }
+                setHeaderLogo(newTheme === 'dark');
+                setCoverImage(newTheme === 'dark');
+            }
+        });
+    }
+    
+    // Initialiser le dark mode au chargement
+    document.addEventListener('DOMContentLoaded', initDarkMode);
 </script>
 </body>
 </html>

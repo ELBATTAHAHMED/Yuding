@@ -5,84 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Plateforme de Réservation de Voyage</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="stylesT.css">
-    <style>
-        /* Basic styling for the modal */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
 </head>
-<body>
-<header>
-    <a href="#" class="logo">
-        <img src="image/logo1.png" alt="" style="float: left;">
-    </a>
-    <h1>Dashboard - YUDING</h1>
-    <nav>
-        <ul>
-            <li><a href="dashHebergements.html">Hebergements</a></li>
-            <li><a href="dashTransport.html">Moyen de transport</a></li>
-            <li><a href="dashActivitee.html">Activitees</a></li>
-        </ul>
-    </nav>
-</header>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Transports</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
 
-<main>
-    <!-- Button to open the add transport modal -->
-    <button type="button" class="add-button" onclick="showAddTransportModal();">Ajouter Transport</button>
+        <main>
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card fade-in">
+            <i class="fas fa-bus"></i>
+            <h3 id="total-transports">0</h3>
+            <p>Total Transports</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-plane"></i>
+            <h3 id="total-flights">0</h3>
+            <p>Vols Disponibles</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-car"></i>
+            <h3 id="total-cars">0</h3>
+            <p>Location Voiture</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-taxi"></i>
+            <h3 id="total-taxis">0</h3>
+            <p>Taxis</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-train"></i>
+            <h3 id="total-trains">0</h3>
+            <p>Trains</p>
+        </div>
+    </div>
+
+    <!-- Button to open the add transport modal - CENTRÉ -->
+    <div class="add-button-container">
+        <button type="button" class="add-button" onclick="showAddTransportModal();">
+            <i class="fas fa-plus"></i>
+            Ajouter Transport
+        </button>
+    </div>
 
     <section class="reservation-table">
-        <div class="table-container ">
+        <div class="table-header">
+            <h2><i class="fas fa-list"></i> Gestion des Transports</h2>
+            <p>Gérez tous vos moyens de transport depuis cette interface</p>
+        </div>
+        <div class="table-toolbar">
+            <div class="table-search">
+                <i class="fas fa-search"></i>
+                <input type="search" id="transportSearch" placeholder="Rechercher un transport...">
+            </div>
+            <div class="table-filters">
+                <select id="transportPageSize">
+                    <option value="10">10 lignes</option>
+                    <option value="20">20 lignes</option>
+                    <option value="50">50 lignes</option>
+                </select>
+                <div class="table-pagination" id="transportPagination">
+                    <button class="pagination-btn" id="transportPrev">Précédent</button>
+                    <span id="transportPageInfo">Page 1 / 1</span>
+                    <button class="pagination-btn" id="transportNext">Suivant</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
         <table>
             <thead>
             <tr>
-                <th>idt_transport</th>
-                <th>compagnie</th>
-                <th>desc_transport</th>
-                <th>lieu_arr</th>
-                <th>lieu_depp</th>
-                <th>marque</th>
-                <th>nom_fournisseur</th>
-                <th>pays</th>
-                <th>prix_transport</th>
-                <th>tele_fournisseur</th>
-                <th>type_transport</th>
-                <th>ville</th>
-                <th>adresse</th>
+                <th class="sortable" data-sort="idt">ID <span class="sort-indicator">▲</span></th>
+                <th class="sortable" data-sort="compagnie">compagnie</th>
+                <th class="sortable" data-sort="desc_transport">desc_transport</th>
+                <th class="sortable" data-sort="lieuarr">lieu_arr</th>
+                <th class="sortable" data-sort="lieudepp">lieu_depp</th>
+                <th class="sortable" data-sort="marque">marque</th>
+                <th class="sortable" data-sort="nom_fournisseur">nom_fournisseur</th>
+                <th class="sortable" data-sort="pays">pays</th>
+                <th class="sortable" data-sort="prix_transport">prix_transport</th>
+                <th class="sortable" data-sort="tele_fournisseur">tele_fournisseur</th>
+                <th class="sortable" data-sort="type_transport">type_transport</th>
+                <th class="sortable" data-sort="ville">ville</th>
+                <th class="sortable" data-sort="adresse">adresse</th>
                 <th>Action</th>
             </tr>
             </thead>
@@ -96,66 +149,176 @@
     <!-- Modal for adding transport -->
     <div id="addTransportModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeAddTransportModal();">&times;</span>
-            <h2>Ajouter Transport</h2>
-            <form id="addTransportForm">
-                <input type="text" id="compagnie" placeholder="Compagnie" required />
-                <input type="text" id="desc_transport" placeholder="Description" required />
-                <input type="text" id="lieuarr" placeholder="Lieu d'arrivée" required />
-                <input type="text" id="lieudepp" placeholder="Lieu de départ" required />
-                <input type="text" id="marque" placeholder="Marque" required />
-                <input type="text" id="nom_fournisseur" placeholder="Nom fournisseur" required />
-                <input type="text" id="pays" placeholder="Pays" required />
-                <input type="number" id="prix_transport" placeholder="Prix transport" required />
-                <input type="text" id="tele_fournisseur" placeholder="Téléphone fournisseur" required />
-                <input type="text" id="type_transport" placeholder="Type transport" required />
-                <input type="text" id="ville" placeholder="Ville" required />
-                <input type="text" id="adresse" placeholder="Adresse" required />
-                <button type="submit">Ajouter Transport</button>
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Ajouter Transport</h2>
+                <button class="close" onclick="closeAddTransportModal();">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addTransportForm" class="form-grid">
+                    <div class="form-group">
+                        <label for="compagnie"><i class="fas fa-building"></i> Compagnie</label>
+                        <input type="text" id="compagnie" placeholder="Nom de la compagnie" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="type_transport"><i class="fas fa-bus"></i> Type</label>
+                        <input type="text" id="type_transport" placeholder="Type de transport" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="marque"><i class="fas fa-tag"></i> Marque</label>
+                        <input type="text" id="marque" placeholder="Marque du véhicule" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="prix_transport"><i class="fas fa-euro-sign"></i> Prix</label>
+                        <input type="number" id="prix_transport" placeholder="Prix en €" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="lieudepp"><i class="fas fa-map-marker-alt"></i> Lieu de départ</label>
+                        <input type="text" id="lieudepp" placeholder="Point de départ" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="lieuarr"><i class="fas fa-map-marker-alt"></i> Lieu d'arrivée</label>
+                        <input type="text" id="lieuarr" placeholder="Point d'arrivée" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="pays"><i class="fas fa-globe"></i> Pays</label>
+                        <input type="text" id="pays" placeholder="Pays de destination" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="ville"><i class="fas fa-city"></i> Ville</label>
+                        <input type="text" id="ville" placeholder="Ville de destination" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="adresse"><i class="fas fa-home"></i> Adresse</label>
+                        <input type="text" id="adresse" placeholder="Adresse complète" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="nom_fournisseur"><i class="fas fa-user"></i> Nom fournisseur</label>
+                        <input type="text" id="nom_fournisseur" placeholder="Nom du fournisseur" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="tele_fournisseur"><i class="fas fa-phone"></i> Téléphone</label>
+                        <input type="text" id="tele_fournisseur" placeholder="Numéro de téléphone" required />
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="desc_transport"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="desc_transport" placeholder="Description du transport" required></textarea>
+                    </div>
+                    <div class="submit-button-container">
+                        <button type="submit">
+                            <i class="fas fa-save"></i>
+                            Ajouter Transport
+                        </button>
+                    </div>
             </form>
         </div>
+    </div>
     </div>
 
     <!-- Modal for editing transport -->
     <div id="editTransportModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeEditTransportModal();">&times;</span>
-            <h2>Modifier Transport</h2>
-            <form id="editTransportForm">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Modifier Transport</h2>
+                <button class="close" onclick="closeEditTransportModal();">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editTransportForm" class="form-grid">
                 <input type="hidden" id="edit_transport_idt" />
-                <input type="text" id="edit_compagnie" placeholder="Compagnie" required />
-                <input type="text" id="edit_desc_transport" placeholder="Description" required />
-                <input type="text" id="edit_lieuarr" placeholder="Lieu d'arrivée" required />
-                <input type="text" id="edit_lieudepp" placeholder="Lieu de départ" required />
-                <input type="text" id="edit_marque" placeholder="Marque" required />
-                <input type="text" id="edit_nom_fournisseur" placeholder="Nom fournisseur" required />
-                <input type="text" id="edit_pays" placeholder="Pays" required />
-                <input type="number" id="edit_prix_transport" placeholder="Prix transport" required />
-                <input type="text" id="edit_tele_fournisseur" placeholder="Téléphone fournisseur" required />
-                <input type="text" id="edit_type_transport" placeholder="Type transport" required />
-                <input type="text" id="edit_ville" placeholder="Ville" required />
-                <input type="text" id="edit_adresse" placeholder="Adresse" required />
-                <button type="submit">Modifier Transport</button>
+                    <div class="form-group">
+                        <label for="edit_compagnie"><i class="fas fa-building"></i> Compagnie</label>
+                        <input type="text" id="edit_compagnie" placeholder="Nom de la compagnie" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_type_transport"><i class="fas fa-bus"></i> Type</label>
+                        <input type="text" id="edit_type_transport" placeholder="Type de transport" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_marque"><i class="fas fa-tag"></i> Marque</label>
+                        <input type="text" id="edit_marque" placeholder="Marque du véhicule" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_prix_transport"><i class="fas fa-euro-sign"></i> Prix</label>
+                        <input type="number" id="edit_prix_transport" placeholder="Prix en €" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_lieudepp"><i class="fas fa-map-marker-alt"></i> Lieu de départ</label>
+                        <input type="text" id="edit_lieudepp" placeholder="Point de départ" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_lieuarr"><i class="fas fa-map-marker-alt"></i> Lieu d'arrivée</label>
+                        <input type="text" id="edit_lieuarr" placeholder="Point d'arrivée" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_pays"><i class="fas fa-globe"></i> Pays</label>
+                        <input type="text" id="edit_pays" placeholder="Pays de destination" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_ville"><i class="fas fa-city"></i> Ville</label>
+                        <input type="text" id="edit_ville" placeholder="Ville de destination" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_adresse"><i class="fas fa-home"></i> Adresse</label>
+                        <input type="text" id="edit_adresse" placeholder="Adresse complète" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_nom_fournisseur"><i class="fas fa-user"></i> Nom fournisseur</label>
+                        <input type="text" id="edit_nom_fournisseur" placeholder="Nom du fournisseur" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_tele_fournisseur"><i class="fas fa-phone"></i> Téléphone</label>
+                        <input type="text" id="edit_tele_fournisseur" placeholder="Numéro de téléphone" required />
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="edit_desc_transport"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="edit_desc_transport" placeholder="Description du transport" required></textarea>
+                    </div>
+                    <div class="submit-button-container">
+                        <button type="submit">
+                            <i class="fas fa-save"></i>
+                            Modifier Transport
+                        </button>
+                    </div>
             </form>
         </div>
     </div>
-</main>
+    </div>
+        </main>
+    </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="admin-layout.js"></script>
 <script>
     const BASE_URL = 'http://localhost:8888'
-    // Show the add transport modal
+    let transportState = {
+        data: [],
+        search: '',
+        page: 1,
+        pageSize: 10,
+        sortKey: 'idt',
+        sortDir: 'asc'
+    };
+    // Show the add transport modal with animation
     function showAddTransportModal() {
-        document.getElementById('addTransportModal').style.display = 'block';
+        const modal = document.getElementById('addTransportModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show'); // Immédiat, pas de délai
     }
 
-    // Close the add transport modal
+    // Close the add transport modal with animation
     function closeAddTransportModal() {
-        document.getElementById('addTransportModal').style.display = 'none';
+        const modal = document.getElementById('addTransportModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none'; // Immédiat
     }
 
     // Show the edit transport modal with data
     function showEditTransportModal(transportIdt) {
+        const modal = document.getElementById('editTransportModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+        document.getElementById('editTransportForm').reset();
+        document.getElementById('edit_transport_idt').value = transportIdt;
         $.ajax({
             url: `${BASE_URL}/apir/transports/${transportIdt}`,
             type: 'GET',
@@ -174,18 +337,19 @@
                 document.getElementById('edit_type_transport').value = data.type_transport;
                 document.getElementById('edit_ville').value = data.ville;
                 document.getElementById('edit_adresse').value = data.adresse;
-                // Show the modal
-                document.getElementById('editTransportModal').style.display = 'block';
+                // Modal déjà affichée
             },
             error: function() {
-                alert('Erreur lors de la récupération du transport');
+                showErrorPopup('Erreur lors de la récupération du transport', 'Impossible de charger les données du transport sélectionné.');
             }
         });
     }
 
-    // Close the edit transport modal
+    // Close the edit transport modal with animation
     function closeEditTransportModal() {
-        document.getElementById('editTransportModal').style.display = 'none';
+        const modal = document.getElementById('editTransportModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none'; // Immédiat
     }
 
     // Handle form submission for adding a transport
@@ -212,12 +376,17 @@
             contentType: 'application/json',
             data: JSON.stringify(transportData),
             success: function(response) {
-                alert('Transport ajouté avec succès');
+                showSuccessPopup('Succès', 'Transport ajouté avec succès !', function() {
+                    hideModal();
+                });
+                showToast('success', 'Transport ajouté.');
                 closeAddTransportModal();
                 loadTransports(); // Refresh the transport table
+                document.getElementById('addTransportForm').reset();
             },
             error: function(xhr, status, error) {
-                alert('Erreur lors de l\'ajout du transport');
+                showErrorPopup('Erreur lors de l\'ajout', 'Impossible d\'ajouter le transport. Vérifiez vos données et réessayez.');
+                showToast('error', 'Erreur lors de l\'ajout du transport.');
             }
         });
     });
@@ -248,31 +417,55 @@
             contentType: 'application/json',
             data: JSON.stringify(transportData),
             success: function(response) {
-                alert('Transport modifié avec succès');
+                showSuccessPopup('Succès', 'Transport modifié avec succès !', function() {
+                    hideEditModal();
+                });
+                showToast('success', 'Transport mis à jour.');
                 closeEditTransportModal();
                 loadTransports(); // Rafraîchir le tableau des transports
             },
             error: function(xhr, status, error) {
-                alert('Erreur lors de la modification du transport');
+                showErrorPopup('Erreur lors de la modification', 'Impossible de modifier le transport. Vérifiez vos données et réessayez.');
+                showToast('error', 'Erreur lors de la modification.');
             }
         });
     });
 
     // Handle deletion of a transport
     function deleteTransport(transportIdt) {
-        if (confirm('Êtes-vous sûr de vouloir supprimer ce transport ?')) {
-            $.ajax({
-                url: `${BASE_URL}/apir/transports/delete/${transportIdt}`,
-                type: 'DELETE',
-                success: function(response) {
-                    alert('Transport supprimé avec succès');
-                    loadTransports(); // Refresh the transport table
-                },
-                error: function(xhr, status, error) {
-                    alert('Erreur lors de la suppression du transport');
-                }
-            });
-        }
+        console.log('Tentative de suppression du transport ID:', transportIdt);
+        showConfirmPopup(
+            'Confirmation de suppression',
+            'Êtes-vous sûr de vouloir supprimer ce transport ? Cette action est irréversible.',
+            function() { // onConfirm
+                console.log('Confirmation de suppression, appel API pour transport ID:', transportIdt);
+                $.ajax({
+                    url: `${BASE_URL}/apir/transports/delete/${transportIdt}`,
+                    type: 'DELETE',
+                    success: function(response) {
+                        console.log('Transport supprimé avec succès:', response);
+                        showSuccessPopup('Succès', 'Transport supprimé avec succès !', function() {
+                            loadTransports();
+                        });
+                        showToast('success', 'Transport supprimé.');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Erreur suppression transport:', xhr.status, xhr.responseText);
+                        let errorMessage = xhr.responseText || error;
+                        
+                        // Gérer spécifiquement l'erreur 500 (contraintes de base de données)
+                        if (xhr.status === 500) {
+                            errorMessage = 'Ce transport ne peut pas être supprimé car il est lié à des réservations existantes. Supprimez d\'abord les réservations associées.';
+                        }
+                        
+                        showErrorPopup('Erreur de suppression', errorMessage);
+                        showToast('error', 'Erreur lors de la suppression.');
+                    }
+                });
+            }, // onConfirm
+            null, // onCancel
+            { confirmText: 'Supprimer', cancelText: 'Annuler' }
+        );
     }
 
     // Function to load transports into the table
@@ -281,41 +474,330 @@
             url: `${BASE_URL}/apir/transports/all`,
             type: 'GET',
             success: function(data) {
-                let tableBody = $('#transport-table-body');
-                tableBody.empty(); // Clear the table before adding new data
-                data.forEach(function(transport) {
-                    tableBody.append(`
-                        <tr>
-                            <td>${transport.idt}</td>
-                            <td>${transport.compagnie}</td>
-                            <td>${transport.desc_transport}</td>
-                            <td>${transport.lieuarr}</td>
-                            <td>${transport.lieudepp}</td>
-                            <td>${transport.marque}</td>
-                            <td>${transport.nom_fournisseur}</td>
-                            <td>${transport.pays}</td>
-                            <td>${transport.prix_transport}</td>
-                            <td>${transport.tele_fournisseur}</td>
-                            <td>${transport.type_transport}</td>
-                            <td>${transport.ville}</td>
-                            <td>${transport.adresse}</td>
-                            <td>
-                                <button onclick="showEditTransportModal(${transport.idt})">Modifier</button>
-                                <button onclick="deleteTransport(${transport.idt})">Supprimer</button>
-                            </td>
-                        </tr>
-                    `);
-                });
+                transportState.data = data || [];
+                // Update statistics
+                updateStatistics(transportState.data);
+                applyTransportFilters();
             },
             error: function() {
-                alert('Erreur lors du chargement des transports');
+                showErrorPopup('Erreur de chargement', 'Impossible de charger la liste des transports. Veuillez actualiser la page.');
             }
         });
     }
 
-    // Initial load of transports when the page is ready
+    function applyTransportFilters() {
+        const query = transportState.search.trim().toLowerCase();
+        let filtered = transportState.data.filter(item => {
+            if (!query) return true;
+            return Object.values(item || {}).some(value =>
+                String(value || '').toLowerCase().includes(query)
+            );
+        });
+
+        if (transportState.sortKey) {
+            const key = transportState.sortKey;
+            const dir = transportState.sortDir === 'asc' ? 1 : -1;
+            filtered = filtered.sort((a, b) => {
+                const valueA = a && a[key] !== undefined ? a[key] : '';
+                const valueB = b && b[key] !== undefined ? b[key] : '';
+                if (valueA === valueB) return 0;
+                return valueA > valueB ? dir : -dir;
+            });
+        }
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / transportState.pageSize));
+        transportState.page = Math.min(transportState.page, totalPages);
+        const start = (transportState.page - 1) * transportState.pageSize;
+        const paged = filtered.slice(start, start + transportState.pageSize);
+
+        renderTransportTable(paged);
+        updateTransportPagination(totalPages, filtered.length);
+    }
+
+    function renderTransportTable(rows) {
+        let tableBody = $('#transport-table-body');
+        tableBody.empty();
+        if (!rows.length) {
+            tableBody.append(`
+                <tr>
+                    <td colspan="14" class="table-empty">Aucun transport trouvé.</td>
+                </tr>
+            `);
+            return;
+        }
+
+        rows.forEach(function(transport) {
+            tableBody.append(`
+                <tr>
+                    <td>${transport.idt}</td>
+                    <td>${transport.compagnie}</td>
+                    <td>${transport.desc_transport}</td>
+                    <td>${transport.lieuarr}</td>
+                    <td>${transport.lieudepp}</td>
+                    <td>${transport.marque}</td>
+                    <td>${transport.nom_fournisseur}</td>
+                    <td>${transport.pays}</td>
+                    <td>${transport.prix_transport}</td>
+                    <td>${transport.tele_fournisseur}</td>
+                    <td>${transport.type_transport}</td>
+                    <td>${transport.ville}</td>
+                    <td>${transport.adresse}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="showEditTransportModal(${transport.idt})">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn-delete" onclick="deleteTransport(${transport.idt})">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function updateTransportPagination(totalPages, totalItems) {
+        $('#transportPageInfo').text(`Page ${transportState.page} / ${totalPages}`);
+        $('#transportPrev').prop('disabled', transportState.page === 1);
+        $('#transportNext').prop('disabled', transportState.page === totalPages);
+    }
+
+    // Update statistics based on transport data
+    function updateStatistics(transports) {
+        document.getElementById('total-transports').textContent = transports.length;
+        
+        // Classification précise des types de transport
+        let flights = transports.filter(t => {
+            const type = t.type_transport ? t.type_transport.toLowerCase() : '';
+            return type.includes('vol') || type.includes('avion') || type.includes('flight');
+        }).length;
+        
+        let cars = transports.filter(t => {
+            const type = t.type_transport ? t.type_transport.toLowerCase() : '';
+            return type.includes('voiture') || type.includes('location') || type.includes('car') || type.includes('rental');
+        }).length;
+        
+        let taxis = transports.filter(t => {
+            const type = t.type_transport ? t.type_transport.toLowerCase() : '';
+            return type.includes('taxi') || type.includes('cab');
+        }).length;
+        
+        let trains = transports.filter(t => {
+            const type = t.type_transport ? t.type_transport.toLowerCase() : '';
+            return type.includes('train') || type.includes('tgv') || type.includes('metro');
+        }).length;
+        
+        // Mise à jour des éléments
+        document.getElementById('total-flights').textContent = flights;
+        document.getElementById('total-cars').textContent = cars;
+        document.getElementById('total-taxis').textContent = taxis;
+        document.getElementById('total-trains').textContent = trains;
+        
+        // Animate the numbers
+        animateCounters();
+    }
+    
+    // Animate counter numbers - optimized
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-card h3');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent);
+            let current = 0;
+            const increment = target / 10; // Reduced steps for faster animation
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current);
+            }, 30); // Faster interval
+        });
+    }
+    
+    // Show notification
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            transform: translateX(100%);
+            transition: transform 0.2s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animation immédiate
+        notification.style.transform = 'translateX(0)';
+        
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 100);
+        }, 2000);
+    }
+    
+    // Show error message
+    function showErrorMessage(title, description) {
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'error-message';
+        errorMessage.innerHTML = `
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="error-content">
+                <div class="error-title">${title}</div>
+                <div class="error-text">${description}</div>
+            </div>
+            <button class="error-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
+        document.body.appendChild(errorMessage);
+        
+        setTimeout(() => {
+            errorMessage.style.animation = 'errorSlideOut 0.2s ease-in forwards';
+            setTimeout(() => errorMessage.remove(), 200);
+        }, 3500);
+    }
+    
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            if (e.target.id === 'addTransportModal') {
+                closeAddTransportModal();
+            } else if (e.target.id === 'editTransportModal') {
+                closeEditTransportModal();
+            }
+        }
+    });
+
+    // CRITIQUE: Interface immédiatement interactive
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Rendre tout immédiatement cliquable
+        enableImmediateInteractivity();
+        
+        // 2. Charger les données en arrière-plan SANS bloquer l'interface
+        setTimeout(loadTransports, 100); // Court délai pour laisser le DOM se finaliser
+    });
+    
+    // Fonction pour activer l'interactivité immédiate
+    function enableImmediateInteractivity() {
+        // Forcer l'interactivité de tous les éléments SAUF les modales
+        const style = document.createElement('style');
+        style.textContent = `
+            *, button, .btn, .add-button, .btn-edit, .btn-delete, a, .close, 
+            input, select, textarea, .stat-card, .form-group, table, tr, td, th {
+                pointer-events: auto !important;
+                cursor: auto !important;
+            }
+            button, .add-button, .btn-edit, .btn-delete, a, .close {
+                cursor: pointer !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            /* CRITIQUE: Modales cachées par défaut */
+            .modal {
+                display: none !important;
+                pointer-events: auto !important;
+            }
+            /* Visibles seulement avec la classe 'show' */
+            .modal.show {
+                display: flex !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Afficher les valeurs par défaut immédiatement
+        document.getElementById('total-transports').textContent = '0';
+        document.getElementById('total-flights').textContent = '0';
+        document.getElementById('total-cars').textContent = '0';
+        document.getElementById('total-taxis').textContent = '0';
+        document.getElementById('total-trains').textContent = '0';
+        
+        // S'assurer que les modales sont cachées
+        document.getElementById('addTransportModal').style.display = 'none';
+        document.getElementById('editTransportModal').style.display = 'none';
+        document.getElementById('addTransportModal').classList.remove('show');
+        document.getElementById('editTransportModal').classList.remove('show');
+        
+        console.log('✅ Interface immédiatement interactive - Modales cachées');
+    }
+    
+    // jQuery ready pour les événements
     $(document).ready(function() {
-        loadTransports();
+        // Gestion des formulaires sans délai de chargement
+        $('form').on('submit', function() {
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Traitement...').prop('disabled', true);
+            
+            setTimeout(() => {
+                submitBtn.html(originalText).prop('disabled', false);
+            }, 800); // Délai réduit
+        });
+    });
+
+    document.getElementById('transportSearch').addEventListener('input', (event) => {
+        transportState.search = event.target.value || '';
+        transportState.page = 1;
+        applyTransportFilters();
+    });
+
+    document.getElementById('transportPageSize').addEventListener('change', (event) => {
+        transportState.pageSize = parseInt(event.target.value, 10) || 10;
+        transportState.page = 1;
+        applyTransportFilters();
+    });
+
+    document.getElementById('transportPrev').addEventListener('click', () => {
+        if (transportState.page > 1) {
+            transportState.page -= 1;
+            applyTransportFilters();
+        }
+    });
+
+    document.getElementById('transportNext').addEventListener('click', () => {
+        transportState.page += 1;
+        applyTransportFilters();
+    });
+
+    document.querySelectorAll('.sortable').forEach((header) => {
+        header.addEventListener('click', () => {
+            const key = header.getAttribute('data-sort');
+            if (!key) {
+                return;
+            }
+            const isSameKey = transportState.sortKey === key;
+            transportState.sortKey = key;
+            transportState.sortDir = isSameKey && transportState.sortDir === 'asc' ? 'desc' : 'asc';
+            document.querySelectorAll('.sortable .sort-indicator').forEach(indicator => {
+                indicator.textContent = '';
+            });
+            const indicator = header.querySelector('.sort-indicator');
+            if (indicator) {
+                indicator.textContent = transportState.sortDir === 'asc' ? '▲' : '▼';
+            }
+            applyTransportFilters();
+        });
     });
 </script>
 </body>

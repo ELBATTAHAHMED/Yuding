@@ -4,43 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <title>Dashboard - YUDING</title>
-    <link rel="stylesheet" href="styles1.css">
+    <title>Dashboard Hébergements - YUDING</title>
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
 </head>
-<body>
-<header>
-    <a href="#" class="logo">
-        <img src="image/logo1.png" alt="" style="float: left;">
-    </a>
-    <h1>Dashboard - YUDING</h1>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Hébergements</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
 
-    <nav>
-        <ul>
-            <li><a href="dashHebergements.html">Hébergements</a></li>
-            <li><a href="dashTransport.html">Moyen de transport</a></li>
-            <li><a href="dashActivitee.html">Activités</a></li>
-        </ul>
-    </nav>
-</header>
+        <main>
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card fade-in">
+            <i class="fas fa-bed"></i>
+            <h3 id="total-hebergements">0</h3>
+            <p>Total Hébergements</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-hotel"></i>
+            <h3 id="total-hotels">0</h3>
+            <p>Hôtels</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-home"></i>
+            <h3 id="total-villas">0</h3>
+            <p>Villas/Maisons</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-building"></i>
+            <h3 id="total-appartements">0</h3>
+            <p>Appartements</p>
+        </div>
+    </div>
 
-<main>
-    <button type="button" class="add-button" onclick="showAddModal();">Ajouter Hébergement</button>
+    <!-- Button to open the add modal - CENTRÉ -->
+    <div class="add-button-container">
+        <button type="button" class="add-button" onclick="showAddModal();">
+            <i class="fas fa-plus"></i>
+            Ajouter Hébergement
+        </button>
+    </div>
+
     <section class="reservation-table">
+        <div class="table-header">
+            <h2><i class="fas fa-list"></i> Gestion des Hébergements</h2>
+            <p>Gérez tous vos hébergements depuis cette interface</p>
+        </div>
+        <div class="table-toolbar">
+            <div class="table-search">
+                <i class="fas fa-search"></i>
+                <input type="search" id="hebergementSearch" placeholder="Rechercher un hébergement...">
+            </div>
+            <div class="table-filters">
+                <select id="hebergementPageSize">
+                    <option value="10">10 lignes</option>
+                    <option value="20">20 lignes</option>
+                    <option value="50">50 lignes</option>
+                </select>
+                <div class="table-pagination" id="hebergementPagination">
+                    <button class="pagination-btn" id="hebergementPrev">Précédent</button>
+                    <span id="hebergementPageInfo">Page 1 / 1</span>
+                    <button class="pagination-btn" id="hebergementNext">Suivant</button>
+                </div>
+            </div>
+        </div>
         <div class="table-container">
         <table id="activitiesTable">
             <thead>
             <tr>
-                <th>id_hebergement</th>
-                <th>adresse_hebergement</th>
-                <th>capacite_hebergement</th>
-                <th>desc_hebergement</th>
-                <th>nom_fournisseur</th>
-                <th>nom_hebergement</th>
-                <th>pays</th>
-                <th>prix_hebergement</th>
-                <th>tele_fournisseur</th>
-                <th>type_hebergement</th>
-                <th>ville</th>
+                <th class="sortable" data-sort="id_hebergement">ID <span class="sort-indicator">▲</span></th>
+                <th class="sortable" data-sort="adresseHebergement">adresse_hebergement</th>
+                <th class="sortable" data-sort="capacite_hebergement">capacite_hebergement</th>
+                <th class="sortable" data-sort="desc_hebergement">desc_hebergement</th>
+                <th class="sortable" data-sort="nom_fournisseur">nom_fournisseur</th>
+                <th class="sortable" data-sort="nom_hebergement">nom_hebergement</th>
+                <th class="sortable" data-sort="pays">pays</th>
+                <th class="sortable" data-sort="prix_hebergement">prix_hebergement</th>
+                <th class="sortable" data-sort="tele_fournisseur">tele_fournisseur</th>
+                <th class="sortable" data-sort="type_hebergement">type_hebergement</th>
+                <th class="sortable" data-sort="ville">ville</th>
                 <th>Action</th>
             </tr>
             </thead>
@@ -50,113 +138,188 @@
         </table>
         </div>
     </section>
-</main>
+        </main>
+    </div>
+</div>
 
 <!-- Modal for Adding Hebergement -->
-<div id="addHebergementModal" class="modal" style="display:none;">
+<div id="addHebergementModal" class="modal">
     <div class="modal-content">
-        <span class="close-button" onclick="hideAddModal();">&times;</span>
-        <h2 id="formTitle">Ajouter un nouveau hébergement</h2>
-        <form id="addHebergementsForm">
-            <label for="desc_hebergement">Description:</label>
-            <input type="text" id="desc_hebergement" name="desc_hebergement"><br>
-            <label for="capacite_hebergement">Capacité :</label>
-            <input type="number" id="capacite_hebergement" name="capacite_hebergement"><br>
-            <label for="nom_fournisseur">Nom du fournisseur:</label>
-            <input type="text" id="nom_fournisseur" name="nom_fournisseur"><br>
-            <label for="prix_hebergement">Prix :</label>
-            <input type="number" id="prix_hebergement" name="prix_hebergement"><br>
-            <label for="tele_fournisseur">Téléphone du fournisseur:</label>
-            <input type="text" id="tele_fournisseur" name="tele_fournisseur"><br>
-            <label for="ville">Ville:</label>
-            <input type="text" id="ville" name="ville"><br>
-            <label for="type_hebergement">Type d'hébergement:</label>
-            <textarea id="type_hebergement" name="type_hebergement"></textarea><br>
-            <label for="pays">Pays:</label>
-            <input type="text" id="pays" name="pays"><br>
-            <label for="adresseHebergement">Adresse d'hébergement:</label>
-            <input type="text" id="adresseHebergement" name="adresseHebergement"><br>
-            <label for="nom_hebergement">Nom d'hébergement:</label>
-            <input type="text" id="nom_hebergement" name="nom_hebergement"><br>
-            <button type="submit" id="submitButton">Ajouter Hébergement</button>
+        <div class="modal-header">
+            <h2><i class="fas fa-plus-circle"></i> <span id="formTitle">Ajouter un nouveau hébergement</span></h2>
+            <button class="close" onclick="hideAddModal();">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="addHebergementsForm" class="form-grid">
+                <div class="form-group">
+                    <label for="nom_hebergement"><i class="fas fa-hotel"></i> Nom d'hébergement</label>
+                    <input type="text" id="nom_hebergement" name="nom_hebergement" placeholder="Nom de l'hébergement" required />
+                </div>
+                <div class="form-group">
+                    <label for="type_hebergement"><i class="fas fa-building"></i> Type d'hébergement</label>
+                    <input type="text" id="type_hebergement" name="type_hebergement" placeholder="Hôtel, Villa, Appartement..." required />
+                </div>
+                <div class="form-group full-width">
+                    <label for="desc_hebergement"><i class="fas fa-align-left"></i> Description</label>
+                    <textarea id="desc_hebergement" name="desc_hebergement" placeholder="Description de l'hébergement" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="capacite_hebergement"><i class="fas fa-users"></i> Capacité</label>
+                    <input type="number" id="capacite_hebergement" name="capacite_hebergement" placeholder="Nombre de personnes" required />
+                </div>
+                <div class="form-group">
+                    <label for="prix_hebergement"><i class="fas fa-euro-sign"></i> Prix par nuit</label>
+                    <input type="number" id="prix_hebergement" name="prix_hebergement" placeholder="Prix en €" required />
+                </div>
+                <div class="form-group">
+                    <label for="adresseHebergement"><i class="fas fa-map-marker-alt"></i> Adresse</label>
+                    <input type="text" id="adresseHebergement" name="adresseHebergement" placeholder="Adresse complète" required />
+                </div>
+                <div class="form-group">
+                    <label for="ville"><i class="fas fa-city"></i> Ville</label>
+                    <input type="text" id="ville" name="ville" placeholder="Ville" required />
+                </div>
+                <div class="form-group">
+                    <label for="pays"><i class="fas fa-globe"></i> Pays</label>
+                    <input type="text" id="pays" name="pays" placeholder="Pays" required />
+                </div>
+                <div class="form-group">
+                    <label for="nom_fournisseur"><i class="fas fa-user"></i> Nom du fournisseur</label>
+                    <input type="text" id="nom_fournisseur" name="nom_fournisseur" placeholder="Nom du fournisseur" required />
+                </div>
+                <div class="form-group">
+                    <label for="tele_fournisseur"><i class="fas fa-phone"></i> Téléphone fournisseur</label>
+                    <input type="text" id="tele_fournisseur" name="tele_fournisseur" placeholder="Numéro de téléphone" required />
+                </div>
+                <div class="submit-button-container">
+                    <button type="submit" id="submitButton">
+                        <i class="fas fa-save"></i>
+                        Ajouter Hébergement
+                    </button>
+                </div>
         </form>
+        </div>
     </div>
 </div>
 
 <!-- Modal for Modifying Hebergement -->
-<div id="modifyHebergementModal" class="modal" style="display:none;">
+<div id="modifyHebergementModal" class="modal">
     <div class="modal-content">
-        <span class="close-button" onclick="hideModifyModal();">&times;</span>
-        <h2 id="modifyFormTitle">Modifier l'hébergement</h2>
-        <form id="modifyHebergementsForm">
-            <label for="desc_hebergement">Description:</label>
-            <input type="text" id="desc_hebergement" name="desc_hebergement"><br>
-            <label for="capacite_hebergement">Capacité :</label>
-            <input type="number" id="capacite_hebergement" name="capacite_hebergement"><br>
-            <label for="nom_fournisseur">Nom du fournisseur:</label>
-            <input type="text" id="nom_fournisseur" name="nom_fournisseur"><br>
-            <label for="prix_hebergement">Prix :</label>
-            <input type="number" id="prix_hebergement" name="prix_hebergement"><br>
-            <label for="tele_fournisseur">Téléphone du fournisseur:</label>
-            <input type="text" id="tele_fournisseur" name="tele_fournisseur"><br>
-            <label for="ville">Ville:</label>
-            <input type="text" id="ville" name="ville"><br>
-            <label for="type_hebergement">Type d'hébergement:</label>
-            <textarea id="type_hebergement" name="type_hebergement"></textarea><br>
-            <label for="pays">Pays:</label>
-            <input type="text" id="pays" name="pays"><br>
-            <label for="adresseHebergement">Adresse d'hébergement:</label>
-            <input type="text" id="adresseHebergement" name="adresseHebergement"><br>
-            <label for="nom_hebergement">Nom d'hébergement:</label>
-            <input type="text" id="nom_hebergement" name="nom_hebergement"><br>
-            <button type="submit" id="modifyButton">Mettre à jour Hébergement</button>
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> <span id="modifyFormTitle">Modifier l'hébergement</span></h2>
+            <button class="close" onclick="hideModifyModal();">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="modifyHebergementsForm" class="form-grid">
+                <div class="form-group">
+                    <label for="edit_nom_hebergement"><i class="fas fa-hotel"></i> Nom d'hébergement</label>
+                    <input type="text" id="edit_nom_hebergement" name="nom_hebergement" placeholder="Nom de l'hébergement" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_type_hebergement"><i class="fas fa-building"></i> Type d'hébergement</label>
+                    <input type="text" id="edit_type_hebergement" name="type_hebergement" placeholder="Hôtel, Villa, Appartement..." required />
+                </div>
+                <div class="form-group full-width">
+                    <label for="edit_desc_hebergement"><i class="fas fa-align-left"></i> Description</label>
+                    <textarea id="edit_desc_hebergement" name="desc_hebergement" placeholder="Description de l'hébergement" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_capacite_hebergement"><i class="fas fa-users"></i> Capacité</label>
+                    <input type="number" id="edit_capacite_hebergement" name="capacite_hebergement" placeholder="Nombre de personnes" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_prix_hebergement"><i class="fas fa-euro-sign"></i> Prix par nuit</label>
+                    <input type="number" id="edit_prix_hebergement" name="prix_hebergement" placeholder="Prix en €" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_adresseHebergement"><i class="fas fa-map-marker-alt"></i> Adresse</label>
+                    <input type="text" id="edit_adresseHebergement" name="adresseHebergement" placeholder="Adresse complète" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_ville"><i class="fas fa-city"></i> Ville</label>
+                    <input type="text" id="edit_ville" name="ville" placeholder="Ville" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_pays"><i class="fas fa-globe"></i> Pays</label>
+                    <input type="text" id="edit_pays" name="pays" placeholder="Pays" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_nom_fournisseur"><i class="fas fa-user"></i> Nom du fournisseur</label>
+                    <input type="text" id="edit_nom_fournisseur" name="nom_fournisseur" placeholder="Nom du fournisseur" required />
+                </div>
+                <div class="form-group">
+                    <label for="edit_tele_fournisseur"><i class="fas fa-phone"></i> Téléphone fournisseur</label>
+                    <input type="text" id="edit_tele_fournisseur" name="tele_fournisseur" placeholder="Numéro de téléphone" required />
+                </div>
+                <div class="submit-button-container">
+                    <button type="submit" id="modifyButton">
+                        <i class="fas fa-save"></i>
+                        Mettre à jour Hébergement
+                    </button>
+                </div>
         </form>
+        </div>
     </div>
 </div>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="admin-layout.js"></script>
 <script>
     const BASE_URL = 'http://localhost:8888';
     let editingHebergementId = null;
+    let hebergementState = {
+        data: [],
+        search: '',
+        page: 1,
+        pageSize: 10,
+        sortKey: 'id_hebergement',
+        sortDir: 'asc'
+    };
 
     function showAddModal() {
-        // Reset form before showing it
-        document.getElementById('addHebergementModal').style.display = 'block';
+        const modal = document.getElementById('addHebergementModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
         document.getElementById('addHebergementsForm').reset();
-        document.getElementById('formTitle').textContent = 'Ajouter un nouveau hébergement';
-        document.getElementById('submitButton').textContent = 'Ajouter Hébergement';
-        editingHebergementId = null; // Reset editing state
+        editingHebergementId = null;
     }
 
     function hideAddModal() {
-        document.getElementById('addHebergementModal').style.display = 'none';
+        const modal = document.getElementById('addHebergementModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
     }
 
     function showModifyModal(id) {
         fetch(`${BASE_URL}/apir/hebergements/${id}`)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('modifyFormTitle').textContent = 'Modifier l\'hébergement';
-                document.getElementById('desc_hebergement').value = data.desc_hebergement;
-                document.getElementById('capacite_hebergement').value = data.capacite_hebergement;
-                document.getElementById('nom_fournisseur').value = data.nom_fournisseur;
-                document.getElementById('prix_hebergement').value = data.prix_hebergement;
-                document.getElementById('tele_fournisseur').value = data.tele_fournisseur;
-                document.getElementById('ville').value = data.ville;
-                document.getElementById('type_hebergement').value = data.type_hebergement;
-                document.getElementById('pays').value = data.pays;
-                document.getElementById('adresseHebergement').value = data.adresseHebergement;
-                document.getElementById('nom_hebergement').value = data.nom_hebergement;
+                document.getElementById('edit_desc_hebergement').value = data.desc_hebergement;
+                document.getElementById('edit_capacite_hebergement').value = data.capacite_hebergement;
+                document.getElementById('edit_nom_fournisseur').value = data.nom_fournisseur;
+                document.getElementById('edit_prix_hebergement').value = data.prix_hebergement;
+                document.getElementById('edit_tele_fournisseur').value = data.tele_fournisseur;
+                document.getElementById('edit_ville').value = data.ville;
+                document.getElementById('edit_type_hebergement').value = data.type_hebergement;
+                document.getElementById('edit_pays').value = data.pays;
+                document.getElementById('edit_adresseHebergement').value = data.adresseHebergement;
+                document.getElementById('edit_nom_hebergement').value = data.nom_hebergement;
 
                 editingHebergementId = id;
-                document.getElementById('modifyHebergementModal').style.display = 'block';
+                const modal = document.getElementById('modifyHebergementModal');
+                modal.style.display = 'flex';
+                modal.classList.add('show');
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                showErrorPopup('Erreur lors de la récupération', 'Impossible de charger les données de l\'hébergement sélectionné.');
+            });
     }
 
     function hideModifyModal() {
-        document.getElementById('modifyHebergementModal').style.display = 'none';
+        const modal = document.getElementById('modifyHebergementModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
     }
 
     function handleAddFormSubmit(event) {
@@ -185,11 +348,17 @@
         })
             .then(response => response.json())
             .then(result => {
-                console.log(result);
+                showSuccessPopup('Succès', 'Hébergement ajouté avec succès !', function() {
+                    hideModal();
+                });
+                showToast('success', 'Hébergement ajouté.');
                 hideAddModal();
                 loadHebergements();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                showErrorPopup('Erreur lors de l\'ajout', 'Impossible d\'ajouter l\'hébergement. Vérifiez vos données et réessayez.');
+                showToast('error', 'Erreur lors de l\'ajout.');
+            });
     }
 
     function handleModifyFormSubmit(event) {
@@ -219,28 +388,58 @@
         })
             .then(response => response.json())
             .then(result => {
-                console.log(result);
+                    showSuccessPopup('Succès', 'Hébergement modifié avec succès !', function() {
+                        hideEditModal();
+                    });
+                showToast('success', 'Hébergement modifié.');
                 hideModifyModal();
                 loadHebergements();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                    showErrorPopup('Erreur lors de la modification', 'Impossible de modifier l\'hébergement. Vérifiez vos données et réessayez.');
+                showToast('error', 'Erreur lors de la modification.');
+            });
     }
 
     function handleDelete(id) {
-        fetch(`${BASE_URL}/apir/hebergements/delete/${id}`, {
-            method: 'DELETE'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to delete the hebergement');
-                }
-                // Pas besoin d'analyser la réponse si elle est vide
-                loadHebergements(); // Recharger la liste des hébergements après la suppression
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting the hebergement');
-            });
+        console.log('Tentative de suppression de l\'hébergement ID:', id);
+        showConfirmPopup(
+            'Confirmation de suppression',
+            'Êtes-vous sûr de vouloir supprimer cet hébergement ? Cette action est irréversible.',
+            function() { // onConfirm
+                console.log('Confirmation de suppression, appel API pour hébergement ID:', id);
+                fetch(`${BASE_URL}/apir/hebergements/delete/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    console.log('Réponse serveur hébergement:', response.status, response.statusText);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Erreur serveur hébergement:', response.status, text);
+                            throw new Error(`Erreur ${response.status}: ${text}`);
+                        });
+                    }
+                    showSuccessPopup('Succès', 'Hébergement supprimé avec succès !', function() {
+                        loadHebergements();
+                    });
+                    showToast('success', 'Hébergement supprimé.');
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la suppression hébergement:', error);
+                    let errorMessage = error.message;
+                    
+                    // Gérer spécifiquement l'erreur 500 (contraintes de base de données)
+                    if (error.message.includes('Erreur 500')) {
+                        errorMessage = 'Cet hébergement ne peut pas être supprimé car il est lié à des réservations existantes. Supprimez d\'abord les réservations associées.';
+                    }
+                    
+                    showErrorPopup('Erreur de suppression', errorMessage);
+                    showToast('error', 'Erreur lors de la suppression.');
+                });
+            }, // onConfirm
+            null, // onCancel
+            { confirmText: 'Supprimer', cancelText: 'Annuler' }
+        );
     }
 
 
@@ -248,38 +447,301 @@
         fetch(`${BASE_URL}/apir/hebergements/all`)
             .then(response => response.json())
             .then(data => {
-                let tbody = document.getElementById('hebergementsBody');
-                tbody.innerHTML = '';
-                data.forEach(item => {
-                    let row = `<tr>
-                    <td>${item.id_hebergement}</td>
-                    <td>${item.adresseHebergement}</td>
-                    <td>${item.capacite_hebergement}</td>
-                    <td>${item.desc_hebergement}</td>
-                    <td>${item.nom_fournisseur}</td>
-                    <td>${item.nom_hebergement}</td>
-                    <td>${item.pays}</td>
-                    <td>${item.prix_hebergement}</td>
-                    <td>${item.tele_fournisseur}</td>
-                    <td>${item.type_hebergement}</td>
-                    <td>${item.ville}</td>
-                    <td>
-                        <button onclick="showModifyModal(${item.id_hebergement});">Modifier</button>
-                        <button onclick="handleDelete(${item.id_hebergement});">Supprimer</button>
-                    </td>
-                </tr>`;
-                    tbody.innerHTML += row;
-                });
+                hebergementState.data = data || [];
+                updateStatistics(hebergementState.data);
+                applyHebergementFilters();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                showErrorPopup('Erreur de chargement', 'Impossible de charger la liste des hébergements. Veuillez actualiser la page.');
+            });
     }
 
-    // Initialize table on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        loadHebergements();
+    function applyHebergementFilters() {
+        const query = hebergementState.search.trim().toLowerCase();
+        let filtered = hebergementState.data.filter(item => {
+            if (!query) return true;
+            return Object.values(item || {}).some(value =>
+                String(value || '').toLowerCase().includes(query)
+            );
+        });
 
+        if (hebergementState.sortKey) {
+            const key = hebergementState.sortKey;
+            const dir = hebergementState.sortDir === 'asc' ? 1 : -1;
+            filtered = filtered.sort((a, b) => {
+                const valueA = a && a[key] !== undefined ? a[key] : '';
+                const valueB = b && b[key] !== undefined ? b[key] : '';
+                if (valueA === valueB) return 0;
+                return valueA > valueB ? dir : -dir;
+            });
+        }
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / hebergementState.pageSize));
+        hebergementState.page = Math.min(hebergementState.page, totalPages);
+        const start = (hebergementState.page - 1) * hebergementState.pageSize;
+        const paged = filtered.slice(start, start + hebergementState.pageSize);
+        renderHebergementsTable(paged);
+        updateHebergementPagination(totalPages);
+    }
+
+    function renderHebergementsTable(rows) {
+        let tbody = document.getElementById('hebergementsBody');
+        tbody.innerHTML = '';
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="12" class="table-empty">Aucun hébergement trouvé.</td></tr>';
+            return;
+        }
+
+        rows.forEach(item => {
+            let row = `<tr>
+            <td>${item.id_hebergement}</td>
+            <td>${item.adresseHebergement}</td>
+            <td>${item.capacite_hebergement}</td>
+            <td>${item.desc_hebergement}</td>
+            <td>${item.nom_fournisseur}</td>
+            <td>${item.nom_hebergement}</td>
+            <td>${item.pays}</td>
+            <td>${item.prix_hebergement}</td>
+            <td>${item.tele_fournisseur}</td>
+            <td>${item.type_hebergement}</td>
+            <td>${item.ville}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-edit" onclick="showModifyModal(${item.id_hebergement});">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                    <button class="btn-delete" onclick="handleDelete(${item.id_hebergement});">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    function updateHebergementPagination(totalPages) {
+        document.getElementById('hebergementPageInfo').textContent = `Page ${hebergementState.page} / ${totalPages}`;
+        document.getElementById('hebergementPrev').disabled = hebergementState.page === 1;
+        document.getElementById('hebergementNext').disabled = hebergementState.page === totalPages;
+    }
+
+    // Update statistics based on hebergement data
+    function updateStatistics(hebergements) {
+        document.getElementById('total-hebergements').textContent = hebergements.length;
+        
+        // Classification par type d'hébergement
+        let hotels = hebergements.filter(h => {
+            const type = h.type_hebergement ? h.type_hebergement.toLowerCase() : '';
+            return type.includes('hôtel') || type.includes('hotel');
+        }).length;
+        
+        let villas = hebergements.filter(h => {
+            const type = h.type_hebergement ? h.type_hebergement.toLowerCase() : '';
+            return type.includes('villa') || type.includes('maison') || type.includes('house');
+        }).length;
+        
+        let appartements = hebergements.filter(h => {
+            const type = h.type_hebergement ? h.type_hebergement.toLowerCase() : '';
+            return type.includes('appartement') || type.includes('apartment') || type.includes('studio');
+        }).length;
+        
+        document.getElementById('total-hotels').textContent = hotels;
+        document.getElementById('total-villas').textContent = villas;
+        document.getElementById('total-appartements').textContent = appartements;
+        
+        animateCounters();
+    }
+    
+    // Animate counter numbers
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-card h3');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent);
+            let current = 0;
+            const increment = target / 10;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current);
+            }, 30);
+        });
+    }
+    
+    // Show notification
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            transform: translateX(100%);
+            transition: transform 0.2s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        notification.style.transform = 'translateX(0)';
+        
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 100);
+        }, 2000);
+    }
+    
+    // Show error message
+    function showErrorMessage(title, description) {
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'error-message';
+        errorMessage.innerHTML = `
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="error-content">
+                <div class="error-title">${title}</div>
+                <div class="error-text">${description}</div>
+            </div>
+            <button class="error-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
+        document.body.appendChild(errorMessage);
+        
+        setTimeout(() => {
+            errorMessage.style.animation = 'errorSlideOut 0.2s ease-in forwards';
+            setTimeout(() => errorMessage.remove(), 200);
+        }, 3500);
+    }
+    
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            if (e.target.id === 'addHebergementModal') {
+                hideAddModal();
+            } else if (e.target.id === 'modifyHebergementModal') {
+                hideModifyModal();
+            }
+        }
+    });
+
+    // CRITIQUE: Interface immédiatement interactive
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Rendre tout immédiatement cliquable
+        enableImmediateInteractivity();
+        
+        // 2. Charger les données en arrière-plan SANS bloquer l'interface
+        setTimeout(() => {
+            loadHebergements();
+        }, 100);
+    });
+    
+    // Fonction pour activer l'interactivité immédiate
+    function enableImmediateInteractivity() {
+        const style = document.createElement('style');
+        style.textContent = `
+            *, button, .btn, .add-button, .btn-edit, .btn-delete, a, .close, 
+            input, select, textarea, .stat-card, .form-group, table, tr, td, th {
+                pointer-events: auto !important;
+                cursor: auto !important;
+            }
+            button, .add-button, .btn-edit, .btn-delete, a, .close {
+                cursor: pointer !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            .modal {
+                display: none !important;
+                pointer-events: auto !important;
+            }
+            .modal.show {
+                display: flex !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Afficher les valeurs par défaut immédiatement
+        document.getElementById('total-hebergements').textContent = '0';
+        document.getElementById('total-hotels').textContent = '0';
+        document.getElementById('total-villas').textContent = '0';
+        document.getElementById('total-appartements').textContent = '0';
+        
+        // S'assurer que les modales sont cachées
+        document.getElementById('addHebergementModal').style.display = 'none';
+        document.getElementById('modifyHebergementModal').style.display = 'none';
+        document.getElementById('addHebergementModal').classList.remove('show');
+        document.getElementById('modifyHebergementModal').classList.remove('show');
+        
+        console.log('✅ Interface hébergements immédiatement interactive');
+    }
+
+    // Initialize form event listeners
+    document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('addHebergementsForm').addEventListener('submit', handleAddFormSubmit);
         document.getElementById('modifyHebergementsForm').addEventListener('submit', handleModifyFormSubmit);
+    });
+
+    document.getElementById('hebergementSearch').addEventListener('input', (event) => {
+        hebergementState.search = event.target.value || '';
+        hebergementState.page = 1;
+        applyHebergementFilters();
+    });
+
+    document.getElementById('hebergementPageSize').addEventListener('change', (event) => {
+        hebergementState.pageSize = parseInt(event.target.value, 10) || 10;
+        hebergementState.page = 1;
+        applyHebergementFilters();
+    });
+
+    document.getElementById('hebergementPrev').addEventListener('click', () => {
+        if (hebergementState.page > 1) {
+            hebergementState.page -= 1;
+            applyHebergementFilters();
+        }
+    });
+
+    document.getElementById('hebergementNext').addEventListener('click', () => {
+        hebergementState.page += 1;
+        applyHebergementFilters();
+    });
+
+    document.querySelectorAll('.sortable').forEach((header) => {
+        header.addEventListener('click', () => {
+            const key = header.getAttribute('data-sort');
+            if (!key) {
+                return;
+            }
+            const isSameKey = hebergementState.sortKey === key;
+            hebergementState.sortKey = key;
+            hebergementState.sortDir = isSameKey && hebergementState.sortDir === 'asc' ? 'desc' : 'asc';
+            document.querySelectorAll('.sortable .sort-indicator').forEach(indicator => {
+                indicator.textContent = '';
+            });
+            const indicator = header.querySelector('.sort-indicator');
+            if (indicator) {
+                indicator.textContent = hebergementState.sortDir === 'asc' ? '▲' : '▼';
+            }
+            applyHebergementFilters();
+        });
     });
 </script>
 

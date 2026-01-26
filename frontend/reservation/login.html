@@ -3,20 +3,37 @@
 <html lang="fr" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title>Login & Registration Form (Flip) - Thème Vert</title>
+    <title>Login & Registration</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/loginStyle.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="DACH/popup-system.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
 </head>
 <header class="header">
     <div class="header-top">
         <div class="container1">
-            <a href="#" class="logo">
-                <img src="image/logo1.png">
-
+            <a href="index.html" class="logo">
+                <img src="image/logo1.png" alt="Yuding Logo" id="headerLogo">
             </a>
+            
+            <nav class="header-nav">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i> Accueil
+                </a>
+                <a href="index.html#room" class="nav-item">
+                    <i class="fas fa-bed"></i> Hébergements
+                </a>
+                <a href="index.html#gallery" class="nav-item">
+                    <i class="fas fa-images"></i> Galerie
+                </a>
+            </nav>
+
+            <!-- Bouton Dark Mode -->
+            <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                <i class="fas fa-moon" id="darkModeIcon"></i>
+            </button>
 
         </div>
     </div>
@@ -34,14 +51,14 @@
     <!-- Couverture (images + textes) -->
     <div class="cover">
         <div class="front">
-            <img src="image/pic1.jpg" alt="Image Front">
+            <img src="image/pic1.jpg" alt="Image Front" id="coverFrontImage">
             <div class="text">
                 <span class="text-1">WELCOME TO<br> YUDDING</span>
                 <span class="text-2">Let's get connected</span>
             </div>
         </div>
         <div class="back">
-            <img class="backImg" src="image/img.png" alt="Image Back">
+            <img class="backImg" src="image/img.png" alt="Image Back" id="coverBackImage">
             <div class="text">
                 <span class="text-1">WELCOME TO<br>YUDDING</span>
                 <span class="text-2">Signup Now</span>
@@ -160,11 +177,16 @@
                 contentType: "application/json",
                 data: JSON.stringify(formData),
                 success: function () {
-                    alert("Inscription réussie! Bienvenue!");
-                    window.location.href = "login.html";
+                    // Utiliser un toast pour l'inscription réussie (plus fluide)
+                    showToast('success', 'Inscription réussie ! Bienvenue sur YUDING !', 3000);
+                    
+                    // Basculer automatiquement vers le formulaire de connexion après un délai
+                    setTimeout(() => {
+                        document.getElementById('flip').checked = false;
+                    }, 1500);
                 },
                 error: function (xhr) {
-                    alert("Échec de l'inscription. Veuillez réessayer.\n" + xhr.responseText);
+                    showErrorPopup('Échec de l\'inscription', 'Veuillez vérifier vos informations et réessayer.');
                 },
             });
         });
@@ -191,18 +213,126 @@
                         console.log("User ID:", response.idu);  // Affiche l'ID utilisateur
                         sessionStorage.setItem('isLoggedIn', 'true');
                         sessionStorage.setItem('userId', response.idu);  // Sauvegarde l'ID dans sessionStorage
-                        alert("Salut ! Content(e) de t'accueillir sur YUDING !");
-                        window.location.href = 'index.html';
+                        // Utiliser un toast pour la connexion réussie (plus fluide)
+                        showToast('success', 'Connexion réussie ! Salut et bienvenue sur YUDING !', 2500);
+                        
+                        // Rediriger automatiquement après un délai court
+                        setTimeout(() => {
+                            const redirectUrl = sessionStorage.getItem('postLoginRedirect');
+                            if (redirectUrl) {
+                                sessionStorage.removeItem('postLoginRedirect');
+                                window.location.href = redirectUrl;
+                            } else {
+                                window.location.href = 'index.html';
+                            }
+                        }, 2000);
                     } else {
-                        alert("Erreur : L'ID de l'utilisateur n'a pas été renvoyé.");
+                        showErrorPopup('Erreur de connexion', 'L\'ID de l\'utilisateur n\'a pas été renvoyé. Veuillez réessayer.');
                     }
                 },
                 error: function(xhr) {
-                    alert("Échec de la connexion. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.");
+                    showErrorPopup('Échec de la connexion', 'Veuillez vérifier votre nom d\'utilisateur et votre mot de passe et réessayer.');
                 }
             });
         });
     });
+</script>
+
+<!-- ==================== DARK MODE FUNCTIONALITY ==================== -->
+<script>
+function setHeaderLogo(isDark) {
+    const logo = document.getElementById('headerLogo');
+    if (!logo) {
+        return;
+    }
+    logo.src = isDark ? 'image/logo1.png' : 'image/logodark.png';
+}
+
+function setCoverImages(isDark) {
+    const frontImage = document.getElementById('coverFrontImage');
+    const backImage = document.getElementById('coverBackImage');
+
+    if (frontImage) {
+        frontImage.src = isDark ? 'image/pic2.jpg' : 'image/pic1.jpg';
+    }
+    if (backImage) {
+        backImage.src = isDark ? 'image/img1.png' : 'image/img.png';
+    }
+}
+
+function initDarkMode() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    const body = document.body;
+    
+    // Vérifier le thème sauvegardé ou utiliser la préférence système
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+    
+    // Appliquer le thème initial
+    if (isDark) {
+        body.setAttribute('data-theme', 'dark');
+        darkModeIcon.className = 'fas fa-sun';
+        darkModeToggle.classList.add('active');
+    } else {
+        body.setAttribute('data-theme', 'light');
+        darkModeIcon.className = 'fas fa-moon';
+        darkModeToggle.classList.remove('active');
+    }
+    setHeaderLogo(isDark);
+    setCoverImages(isDark);
+    
+    // Gérer le clic sur le bouton
+    darkModeToggle.addEventListener('click', function() {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        // Appliquer le nouveau thème
+        body.setAttribute('data-theme', newTheme);
+        
+        // Sauvegarder la préférence
+        localStorage.setItem('theme', newTheme);
+        
+        // Mettre à jour l'icône avec animation
+        if (newTheme === 'dark') {
+            darkModeIcon.className = 'fas fa-sun';
+            darkModeToggle.classList.add('active');
+        } else {
+            darkModeIcon.className = 'fas fa-moon';
+            darkModeToggle.classList.remove('active');
+        }
+        setHeaderLogo(newTheme === 'dark');
+        setCoverImages(newTheme === 'dark');
+        
+        // Animation de transition
+        body.style.transition = 'all 0.3s ease';
+        setTimeout(() => {
+            body.style.transition = '';
+        }, 300);
+    });
+    
+    // Écouter les changements de préférence système
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+            const newTheme = e.matches ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            
+            if (newTheme === 'dark') {
+                darkModeIcon.className = 'fas fa-sun';
+                darkModeToggle.classList.add('active');
+            } else {
+                darkModeIcon.className = 'fas fa-moon';
+                darkModeToggle.classList.remove('active');
+            }
+            setHeaderLogo(newTheme === 'dark');
+            setCoverImages(newTheme === 'dark');
+        }
+    });
+}
+
+// Initialiser le dark mode au chargement
+document.addEventListener('DOMContentLoaded', initDarkMode);
 </script>
 
 </body>

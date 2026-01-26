@@ -3,40 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - YUDING</title>
+    <title>Dashboard Activités - YUDING</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="styleA.css">
+    <link rel="stylesheet" href="stylesA-modern.css">
+    <script src="popup-system.js"></script>
 </head>
-<body>
-<header>
-    <a href="#" class="logo">
-        <img src="image/logo1.png" alt="Logo" style="float: left;">
-    </a>
-    <h1>Dashboard - YUDING</h1>
-    <nav>
-        <ul>
-            <li><a href="dashHebergements.html">Hébergements</a></li>
-            <li><a href="dashTransport.html">Moyens de transport</a></li>
-            <li><a href="dashActivitee.html">Activités</a></li>
-        </ul>
-    </nav>
-</header>
+<body data-theme="dark">
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="dashOverview.html" class="sidebar-brand">
+                <img src="image/logo1.png" alt="Yuding Logo" id="sidebarLogo">
+            </a>
+            <button class="sidebar-collapse" data-action="toggle-sidebar" aria-label="Basculer la barre latérale">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="dashOverview.html"><i class="fas fa-chart-line"></i><span class="link-text">Overview</span></a>
+                <a class="sidebar-link" href="dashTransport.html"><i class="fas fa-bus"></i><span class="link-text">Transport</span></a>
+                <a class="sidebar-link" href="dashActivitee.html"><i class="fas fa-calendar-alt"></i><span class="link-text">Activités</span></a>
+                <a class="sidebar-link" href="dashHebergements.html"><i class="fas fa-bed"></i><span class="link-text">Hébergements</span></a>
+                <a class="sidebar-link" href="dashUsers.html"><i class="fas fa-users"></i><span class="link-text">Users</span></a>
+                <a class="sidebar-link" href="dashAdmins.html"><i class="fas fa-user-shield"></i><span class="link-text">Administrators</span></a>
+                <a class="sidebar-link" href="dashSettings.html"><i class="fas fa-gear"></i><span class="link-text">Settings</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-meta">
+                    <div class="admin-avatar" id="adminInitials">A</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="sidebar-logout js-admin-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title"><i class="fas fa-list"></i> Dashboard Activités</div>
+            </div>
+            <div class="topbar-actions">
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Basculer le mode sombre">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+            </div>
+        </div>
 
-<main>
-    <button type="button" class="add-button" onclick="showModal();">Ajouter Activité</button>
+        <main>
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card fade-in">
+            <i class="fas fa-calendar-alt"></i>
+            <h3 id="total-activites">0</h3>
+            <p>Total Activités</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-walking"></i>
+            <h3 id="total-outdoor">0</h3>
+            <p>Activités Outdoor</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-building"></i>
+            <h3 id="total-indoor">0</h3>
+            <p>Activités Indoor</p>
+        </div>
+        <div class="stat-card fade-in">
+            <i class="fas fa-clock"></i>
+            <h3 id="avg-duration">0</h3>
+            <p>Durée Moyenne (h)</p>
+        </div>
+    </div>
+
+    <!-- Button to open the add modal - CENTRÉ -->
+    <div class="add-button-container">
+        <button type="button" class="add-button" onclick="showModal();">
+            <i class="fas fa-plus"></i>
+            Ajouter Activité
+        </button>
+    </div>
+
     <section class="reservation-table">
+        <div class="table-header">
+            <h2><i class="fas fa-list"></i> Gestion des Activités</h2>
+            <p>Gérez toutes vos activités depuis cette interface</p>
+        </div>
+        <div class="table-toolbar">
+            <div class="table-search">
+                <i class="fas fa-search"></i>
+                <input type="search" id="activitySearch" placeholder="Rechercher une activité...">
+            </div>
+            <div class="table-filters">
+                <select id="activityPageSize">
+                    <option value="10">10 lignes</option>
+                    <option value="20">20 lignes</option>
+                    <option value="50">50 lignes</option>
+                </select>
+                <div class="table-pagination" id="activityPagination">
+                    <button class="pagination-btn" id="activityPrev">Précédent</button>
+                    <span id="activityPageInfo">Page 1 / 1</span>
+                    <button class="pagination-btn" id="activityNext">Suivant</button>
+                </div>
+            </div>
+        </div>
         <div class="table-container">
         <table id="activitiesTable" class="tablee">
             <thead>
             <tr>
-                <th>ID</th>
-                <th>Description Activité</th>
-                <th>Durée</th>
-                <th>Nom Fournisseur</th>
-                <th>Prix</th>
-                <th>Téléphone Fournisseur</th>
-                <th>Ville</th>
-                <th>Pays</th>
+                <th class="sortable" data-sort="ida">ID <span class="sort-indicator">▲</span></th>
+                <th class="sortable" data-sort="desc_activitee">Description Activité</th>
+                <th class="sortable" data-sort="duree">Durée</th>
+                <th class="sortable" data-sort="nom_fournisseur">Nom Fournisseur</th>
+                <th class="sortable" data-sort="prix_activitee">Prix</th>
+                <th class="sortable" data-sort="tele_fournisseur">Téléphone Fournisseur</th>
+                <th class="sortable" data-sort="ville">Ville</th>
+                <th class="sortable" data-sort="pays">Pays</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -46,59 +135,208 @@
         </div>
     </section>
 
-    <div id="addActivityModal" class="modal" style="display:none;">
+    <!-- Modal for adding activity -->
+    <div id="addActivityModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" onclick="hideModal();">&times;</span>
-            <h2>Ajouter une nouvelle activité</h2>
-            <form id="addActivityForm">
-                <label for="desc_activitee">Description:</label>
-                <input type="text" id="desc_activitee" name="desc_activitee"><br>
-                <label for="duree">Durée (en heures):</label>
-                <input type="number" id="duree" name="duree"><br>
-                <label for="nom_fournisseur">Nom du fournisseur:</label>
-                <input type="text" id="nom_fournisseur" name="nom_fournisseur"><br>
-                <label for="prix_activitee">Prix (en MAD):</label>
-                <input type="number" id="prix_activitee" name="prix_activitee"><br>
-                <label for="tele_fournisseur">Téléphone du fournisseur:</label>
-                <input type="text" id="tele_fournisseur" name="tele_fournisseur"><br>
-                <label for="ville">Ville:</label>
-                <input type="text" id="ville" name="ville"><br>
-                <label for="pays">Pays:</label>
-                <input type="text" id="pays" name="pays"><br>
-                <button type="submit">Ajouter Activité</button>
-            </form>
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Ajouter une nouvelle activité</h2>
+                <button class="close" onclick="hideModal();">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addActivityForm" class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="desc_activitee"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="desc_activitee" name="desc_activitee" placeholder="Description de l'activité" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="duree"><i class="fas fa-clock"></i> Durée</label>
+                        <input type="number" id="duree" name="duree" placeholder="Durée en heures" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="prix_activitee"><i class="fas fa-euro-sign"></i> Prix</label>
+                        <input type="number" id="prix_activitee" name="prix_activitee" placeholder="Prix en €" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="nom_fournisseur"><i class="fas fa-user"></i> Nom du fournisseur</label>
+                        <input type="text" id="nom_fournisseur" name="nom_fournisseur" placeholder="Nom du fournisseur" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="tele_fournisseur"><i class="fas fa-phone"></i> Téléphone fournisseur</label>
+                        <input type="text" id="tele_fournisseur" name="tele_fournisseur" placeholder="Numéro de téléphone" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="ville"><i class="fas fa-city"></i> Ville</label>
+                        <input type="text" id="ville" name="ville" placeholder="Ville" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="pays"><i class="fas fa-globe"></i> Pays</label>
+                        <input type="text" id="pays" name="pays" placeholder="Pays" required />
+                    </div>
+                    <div class="submit-button-container">
+                        <button type="submit">
+                            <i class="fas fa-save"></i>
+                            Ajouter Activité
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</main>
+    
+    <!-- Modal for editing activity -->
+    <div id="editActivityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Modifier l'activité</h2>
+                <button class="close" onclick="hideEditModal();">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editActivityForm" class="form-grid">
+                    <input type="hidden" id="edit_ida" />
+                    <div class="form-group full-width">
+                        <label for="edit_desc_activitee"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="edit_desc_activitee" name="desc_activitee" placeholder="Description de l'activité" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_duree"><i class="fas fa-clock"></i> Durée</label>
+                        <input type="number" id="edit_duree" name="duree" placeholder="Durée en heures" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_prix_activitee"><i class="fas fa-euro-sign"></i> Prix</label>
+                        <input type="number" id="edit_prix_activitee" name="prix_activitee" placeholder="Prix en €" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_nom_fournisseur"><i class="fas fa-user"></i> Nom du fournisseur</label>
+                        <input type="text" id="edit_nom_fournisseur" name="nom_fournisseur" placeholder="Nom du fournisseur" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_tele_fournisseur"><i class="fas fa-phone"></i> Téléphone fournisseur</label>
+                        <input type="text" id="edit_tele_fournisseur" name="tele_fournisseur" placeholder="Numéro de téléphone" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_ville"><i class="fas fa-city"></i> Ville</label>
+                        <input type="text" id="edit_ville" name="ville" placeholder="Ville" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_pays"><i class="fas fa-globe"></i> Pays</label>
+                        <input type="text" id="edit_pays" name="pays" placeholder="Pays" required />
+                    </div>
+                    <div class="submit-button-container">
+                        <button type="submit">
+                            <i class="fas fa-save"></i>
+                            Modifier Activité
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+        </main>
+    </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<script src="admin-layout.js"></script>
 <script>
     const BASE_URL = 'http://localhost:8888';
+    let activityState = {
+        data: [],
+        search: '',
+        page: 1,
+        pageSize: 10,
+        sortKey: 'ida',
+        sortDir: 'asc'
+    };
     // Fonction pour charger les activités depuis l'API et les afficher dans le tableau
     function loadActivities() {
         fetch(`${BASE_URL}/apir/activities/all`)
             .then(response => response.json())
             .then(data => {
-                const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
-                table.innerHTML = ""; // On vide le tableau avant de l'actualiser
-                data.forEach(activity => {
-                    const row = table.insertRow();
-                    const keys = ['ida', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
-                    keys.forEach(key => {
-                        const cell = row.insertCell();
-                        cell.textContent = activity[key];
-                    });
-                    const actionCell = row.insertCell();
-                    actionCell.innerHTML = `<button type="button" onclick="supprimerActivitee(${activity.ida});">Supprimer</button>`;
-                    row.id = 'row-' + activity.ida; // Ajouter un id à la ligne pour la suppression
-                });
+                activityState.data = data || [];
+                // Update statistics
+                updateStatistics(activityState.data);
+                applyActivityFilters();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                showErrorPopup('Erreur de chargement', 'Impossible de charger la liste des activités. Veuillez actualiser la page.');
+            });
     }
 
-    // Appel de la fonction pour charger les activités au démarrage de la page
-    window.onload = loadActivities;
+    function applyActivityFilters() {
+        const query = activityState.search.trim().toLowerCase();
+        let filtered = activityState.data.filter(item => {
+            if (!query) return true;
+            return Object.values(item || {}).some(value =>
+                String(value || '').toLowerCase().includes(query)
+            );
+        });
+
+        if (activityState.sortKey) {
+            const key = activityState.sortKey;
+            const dir = activityState.sortDir === 'asc' ? 1 : -1;
+            filtered = filtered.sort((a, b) => {
+                const valueA = a && a[key] !== undefined ? a[key] : '';
+                const valueB = b && b[key] !== undefined ? b[key] : '';
+                if (valueA === valueB) return 0;
+                return valueA > valueB ? dir : -dir;
+            });
+        }
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / activityState.pageSize));
+        activityState.page = Math.min(activityState.page, totalPages);
+        const start = (activityState.page - 1) * activityState.pageSize;
+        const paged = filtered.slice(start, start + activityState.pageSize);
+
+        renderActivityTable(paged);
+        updateActivityPagination(totalPages);
+    }
+
+    function renderActivityTable(rows) {
+        const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
+        table.innerHTML = '';
+        if (!rows.length) {
+            table.innerHTML = '<tr><td colspan="9" class="table-empty">Aucune activité trouvée.</td></tr>';
+            return;
+        }
+        rows.forEach(activity => {
+            const row = table.insertRow();
+            const keys = ['ida', 'desc_activitee', 'duree', 'nom_fournisseur', 'prix_activitee', 'tele_fournisseur', 'ville', 'pays'];
+            keys.forEach(key => {
+                const cell = row.insertCell();
+                cell.textContent = activity[key];
+            });
+            const actionCell = row.insertCell();
+            actionCell.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn-edit" onclick="showEditModal(${activity.ida});">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                    <button class="btn-delete" onclick="supprimerActivitee(${activity.ida});">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            `;
+            row.id = 'row-' + activity.ida;
+        });
+    }
+
+    function updateActivityPagination(totalPages) {
+        document.getElementById('activityPageInfo').textContent = `Page ${activityState.page} / ${totalPages}`;
+        document.getElementById('activityPrev').disabled = activityState.page === 1;
+        document.getElementById('activityNext').disabled = activityState.page === totalPages;
+    }
+
+    // CRITIQUE: Interface immédiatement interactive
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Rendre tout immédiatement cliquable
+        enableImmediateInteractivity();
+        
+        // 2. Charger les données en arrière-plan SANS bloquer l'interface
+        setTimeout(() => {
+            loadActivities();
+        }, 100);
+    });
 
     // Ajouter une nouvelle activité
     document.getElementById('addActivityForm').addEventListener('submit', function(event) {
@@ -118,11 +356,16 @@
         })
             .then(response => response.json())
             .then(data => {
-                console.log('Success:', data);
-                addToTable(data); // Met à jour le tableau après l'ajout
+                showSuccessPopup('Succès', 'Activité ajoutée avec succès !', function() {
+                    hideModal();
+                });
+                showToast('success', 'Activité ajoutée.');
+                hideModal();
+                loadActivities(); // Recharger tout le tableau pour les stats
             })
             .catch(error => {
-                console.error('Error:', error);
+                showErrorPopup('Erreur lors de l\'ajout', 'Impossible d\'ajouter l\'activité. Vérifiez vos données et réessayez.');
+                showToast('error', 'Erreur lors de l\'ajout.');
             });
     });
 
@@ -136,37 +379,333 @@
             cell.textContent = activity[key];
         });
         const actionCell = row.insertCell();
-        actionCell.innerHTML = `<button type="button" onclick="supprimerActivitee(${activity.ida});">Supprimer</button>`;
+        actionCell.innerHTML = `
+            <div class="action-buttons">
+                <button class="btn-edit" onclick="showEditModal(${activity.ida});">
+                    <i class="fas fa-edit"></i> Modifier
+                </button>
+                <button class="btn-delete" onclick="supprimerActivitee(${activity.ida});">
+                    <i class="fas fa-trash"></i> Supprimer
+                </button>
+            </div>
+        `;
         row.id = 'row-' + activity.ida; // Ajouter un id à la ligne pour la suppression
+    }
+
+    // Vérifier les réservations liées à une activité
+    function checkReservationsForActivity(ida) {
+        fetch(`${BASE_URL}/apir/reservations/activitee/${ida}`)
+            .then(response => response.json())
+            .then(reservations => {
+                if (reservations && reservations.length > 0) {
+                    showWarningPopup(
+                        'Réservations existantes',
+                        `Cette activité a ${reservations.length} réservation(s) associée(s). Voulez-vous voir les détails et gérer ces réservations avant la suppression ?`,
+                        function() { // Afficher les réservations
+                            showReservationsModal(reservations, ida);
+                        },
+                        function() { // Annuler
+                            // Ne rien faire
+                        },
+                        { confirmText: 'Voir les réservations', cancelText: 'Annuler' }
+                    );
+                } else {
+                    // Pas de réservations, procéder à la suppression directe
+                    proceedWithDeletion(ida);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la vérification des réservations:', error);
+                // En cas d'erreur de vérification, essayer quand même de supprimer
+                proceedWithDeletion(ida);
+            });
+    }
+
+    // Procéder à la suppression directe
+    function proceedWithDeletion(ida) {
+        showConfirmPopup(
+            'Confirmation de suppression',
+            'Êtes-vous sûr de vouloir supprimer cette activité ? Cette action est irréversible.',
+            function() { // onConfirm
+                deleteActivityDirect(ida);
+            },
+            null,
+            { confirmText: 'Supprimer', cancelText: 'Annuler' }
+        );
     }
 
     // Supprimer une activité
     function supprimerActivitee(ida) {
-        if (confirm('Êtes-vous sûr de vouloir supprimer cette activité ?')) {
-            fetch(`${BASE_URL}/apir/activities/${ida}`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    if(response.ok) {
-                        document.getElementById('row-' + ida).remove(); // Retirer la ligne du tableau
-                        console.log('Activité supprimée avec succès!');
-                    } else {
-                        throw new Error('Une erreur est survenue');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+        console.log('Tentative de suppression de l\'activité ID:', ida);
+        // D'abord vérifier s'il y a des réservations liées
+        checkReservationsForActivity(ida);
     }
 
-    // Fonction pour afficher la modale
+    // Fonction de suppression directe
+    function deleteActivityDirect(ida) {
+        console.log('Confirmation de suppression, appel API pour ID:', ida);
+        fetch(`${BASE_URL}/apir/activities/${ida}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            console.log('Réponse du serveur:', response.status, response.statusText);
+            if(response.ok) {
+                showSuccessPopup('Succès', 'Activité supprimée avec succès !', function() {
+                    loadActivities(); // Recharger pour mettre à jour les stats
+                });
+                showToast('success', 'Activité supprimée.');
+            } else {
+                return response.text().then(text => {
+                    console.error('Erreur serveur:', response.status, text);
+                    throw new Error(`Erreur ${response.status}: ${text}`);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de la suppression:', error);
+            let errorMessage = error.message;
+            
+            // Gérer spécifiquement l'erreur 500 (contraintes de base de données)
+            if (error.message.includes('Erreur 500')) {
+                errorMessage = 'Cette activité ne peut pas être supprimée car elle est liée à des réservations existantes. Utilisez le système de gestion des réservations pour les supprimer d\'abord.';
+            }
+            
+            showErrorPopup('Erreur de suppression', errorMessage);
+            showToast('error', 'Erreur lors de la suppression.');
+        });
+    }
+
+    // Fonction pour afficher la modale d'ajout
     function showModal() {
-        document.getElementById('addActivityModal').style.display = 'block';
+        const modal = document.getElementById('addActivityModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+        document.getElementById('addActivityForm').reset();
     }
 
-    // Fonction pour cacher la modale
+    // Fonction pour cacher la modale d'ajout
     function hideModal() {
-        document.getElementById('addActivityModal').style.display = 'none';
+        const modal = document.getElementById('addActivityModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
     }
+
+    // Fonction pour afficher la modale de modification
+    function showEditModal(ida) {
+        // Chercher l'activité dans les données actuelles
+        fetch(`${BASE_URL}/apir/activities/all`)
+            .then(response => response.json())
+            .then(data => {
+                const activity = data.find(a => a.ida == ida);
+                if (activity) {
+                    document.getElementById('edit_ida').value = activity.ida;
+                    document.getElementById('edit_desc_activitee').value = activity.desc_activitee;
+                    document.getElementById('edit_duree').value = activity.duree;
+                    document.getElementById('edit_prix_activitee').value = activity.prix_activitee;
+                    document.getElementById('edit_nom_fournisseur').value = activity.nom_fournisseur;
+                    document.getElementById('edit_tele_fournisseur').value = activity.tele_fournisseur;
+                    document.getElementById('edit_ville').value = activity.ville;
+                    document.getElementById('edit_pays').value = activity.pays;
+                    
+                    const modal = document.getElementById('editActivityModal');
+                    modal.style.display = 'flex';
+                    modal.classList.add('show');
+                }
+            })
+            .catch(error => {
+                showErrorPopup('Erreur lors de la récupération', 'Impossible de charger les données de l\'activité sélectionnée.');
+            });
+    }
+
+    // Fonction pour cacher la modale de modification
+    function hideEditModal() {
+        const modal = document.getElementById('editActivityModal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+    
+    // Update statistics based on activity data
+    function updateStatistics(activities) {
+        document.getElementById('total-activites').textContent = activities.length;
+        
+        // Classification par type d'activité (basé sur la description)
+        let outdoor = activities.filter(a => {
+            const desc = a.desc_activitee ? a.desc_activitee.toLowerCase() : '';
+            return desc.includes('outdoor') || desc.includes('randonnée') || desc.includes('vélo') || 
+                   desc.includes('plage') || desc.includes('montagne') || desc.includes('nature');
+        }).length;
+        
+        let indoor = activities.filter(a => {
+            const desc = a.desc_activitee ? a.desc_activitee.toLowerCase() : '';
+            return desc.includes('indoor') || desc.includes('musée') || desc.includes('cinéma') || 
+                   desc.includes('théâtre') || desc.includes('spa') || desc.includes('restaurant');
+        }).length;
+        
+        // Durée moyenne
+        let avgDuration = 0;
+        if (activities.length > 0) {
+            const totalDuration = activities.reduce((sum, a) => sum + (parseInt(a.duree) || 0), 0);
+            avgDuration = Math.round(totalDuration / activities.length);
+        }
+        
+        document.getElementById('total-outdoor').textContent = outdoor;
+        document.getElementById('total-indoor').textContent = indoor;
+        document.getElementById('avg-duration').textContent = avgDuration;
+        
+        animateCounters();
+    }
+    
+    // Animate counter numbers
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-card h3');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent);
+            let current = 0;
+            const increment = target / 10;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current);
+            }, 30);
+        });
+    }
+    
+    // Notifications remplacées par le système de popup moderne
+    
+    // Anciennes fonctions remplacées par le système de popup moderne
+    
+    // Fonction pour activer l'interactivité immédiate
+    function enableImmediateInteractivity() {
+        const style = document.createElement('style');
+        style.textContent = `
+            *, button, .btn, .add-button, .btn-edit, .btn-delete, a, .close, 
+            input, select, textarea, .stat-card, .form-group, table, tr, td, th {
+                pointer-events: auto !important;
+                cursor: auto !important;
+            }
+            button, .add-button, .btn-edit, .btn-delete, a, .close {
+                cursor: pointer !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            .modal {
+                display: none !important;
+                pointer-events: auto !important;
+            }
+            .modal.show {
+                display: flex !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Afficher les valeurs par défaut immédiatement
+        document.getElementById('total-activites').textContent = '0';
+        document.getElementById('total-outdoor').textContent = '0';
+        document.getElementById('total-indoor').textContent = '0';
+        document.getElementById('avg-duration').textContent = '0';
+        
+        // S'assurer que les modales sont cachées
+        document.getElementById('addActivityModal').style.display = 'none';
+        document.getElementById('editActivityModal').style.display = 'none';
+        document.getElementById('addActivityModal').classList.remove('show');
+        document.getElementById('editActivityModal').classList.remove('show');
+        
+        console.log('✅ Interface activités immédiatement interactive');
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            if (e.target.id === 'addActivityModal') {
+                hideModal();
+            } else if (e.target.id === 'editActivityModal') {
+                hideEditModal();
+            }
+        }
+    });
+
+    // Handle edit form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('editActivityForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const ida = document.getElementById('edit_ida').value;
+            const formData = new FormData(event.target);
+            const data = {};
+            formData.forEach(function(value, key) {
+                data[key] = value;
+            });
+
+            fetch(`${BASE_URL}/apir/activities/update/${ida}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    showSuccessPopup('Succès', 'Activité modifiée avec succès !', function() {
+                        hideEditModal();
+                    });
+                    showToast('success', 'Activité modifiée.');
+                    hideEditModal();
+                    loadActivities();
+                })
+                .catch(error => {
+                    showErrorPopup('Erreur lors de la modification', 'Impossible de modifier l\'activité. Vérifiez vos données et réessayez.');
+                    showToast('error', 'Erreur lors de la modification.');
+                });
+        });
+    });
+
+    document.getElementById('activitySearch').addEventListener('input', (event) => {
+        activityState.search = event.target.value || '';
+        activityState.page = 1;
+        applyActivityFilters();
+    });
+
+    document.getElementById('activityPageSize').addEventListener('change', (event) => {
+        activityState.pageSize = parseInt(event.target.value, 10) || 10;
+        activityState.page = 1;
+        applyActivityFilters();
+    });
+
+    document.getElementById('activityPrev').addEventListener('click', () => {
+        if (activityState.page > 1) {
+            activityState.page -= 1;
+            applyActivityFilters();
+        }
+    });
+
+    document.getElementById('activityNext').addEventListener('click', () => {
+        activityState.page += 1;
+        applyActivityFilters();
+    });
+
+    document.querySelectorAll('.sortable').forEach((header) => {
+        header.addEventListener('click', () => {
+            const key = header.getAttribute('data-sort');
+            if (!key) {
+                return;
+            }
+            const isSameKey = activityState.sortKey === key;
+            activityState.sortKey = key;
+            activityState.sortDir = isSameKey && activityState.sortDir === 'asc' ? 'desc' : 'asc';
+            document.querySelectorAll('.sortable .sort-indicator').forEach(indicator => {
+                indicator.textContent = '';
+            });
+            const indicator = header.querySelector('.sort-indicator');
+            if (indicator) {
+                indicator.textContent = activityState.sortDir === 'asc' ? '▲' : '▼';
+            }
+            applyActivityFilters();
+        });
+    });
 </script>
 </body>
 </html>

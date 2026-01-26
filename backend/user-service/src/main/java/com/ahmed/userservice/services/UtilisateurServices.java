@@ -18,6 +18,8 @@ public interface UtilisateurServices {
     ResponseEntity<Utilisateurs> updateUtilisateur(Long id, Utilisateurs utilisateur);
 
     ResponseEntity<Void> deleteUtilisateur(Long id);
+
+    ResponseEntity<Utilisateurs> updateUtilisateurStatus(Long id, String status);
  
     Optional<Utilisateurs> findUtilisateurByUsernameAndPassword(String username, String password);
 
