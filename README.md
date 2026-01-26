@@ -1,6 +1,6 @@
-# Yuding - Plateforme de Reservation des Voyages
-
 ![image_alt](https://github.com/ELBATTAHAHMED/Yuding/blob/df6279fada049f76968f83e8f69f280616033040/Yuding.png)
+
+# Yuding - Plateforme de Reservation des Voyages
 
 ## Overview
 Plateforme de reservation de voyages avec frontend statique (HTML/CSS/JS) et backend en microservices Spring Boot (Gateway + Eureka + Config Server). Le dashboard admin est dans `frontend/reservation/DACH`.
