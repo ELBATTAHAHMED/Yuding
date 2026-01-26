@@ -8,7 +8,7 @@ Plateforme de reservation de voyages avec frontend statique (HTML/CSS/JS) et bac
 ## Tech Stack
 - Frontend: HTML/CSS/JS (jQuery + Font Awesome)
 - Backend: Spring Boot (REST), Spring Cloud Gateway, Eureka Discovery, Config Server
-- Data: JPA/Hibernate (config base de donnees via config-server)
+- Data: MySQL (principal) + JPA/Hibernate (config base de donnees via config-server)
 
 ## Structure
 - `frontend/reservation/` UI client
@@ -24,6 +24,10 @@ Plateforme de reservation de voyages avec frontend statique (HTML/CSS/JS) et bac
 - User Service: `backend/user-service` (port 8081)
 - Commentaire Service: `backend/commentaire-service` (port 8072)
 - AI Service: `backend/ai-service` (port 7777)
+
+## Database
+- MySQL (port 3306) utilise par les services applicatifs
+- Admin DB GUI via phpMyAdmin (port 8080)
 
 ## Admin Dashboard
 ### Pages
