@@ -1,3 +1,5 @@
+name: yuding
+
 services:
   # ====================================================================
   # Primary PostgreSQL 16 + pgvector Database
@@ -8,7 +10,7 @@ services:
     container_name: yuding-postgres
     restart: unless-stopped
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-5433}:5432"
     environment:
       POSTGRES_DB: ${DB_NAME:-yuding}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
@@ -40,6 +42,27 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  # ====================================================================
+  # Flyway Migration Runner
+  # Applies V1..V9 database migrations automatically on startup
+  # ====================================================================
+  flyway:
+    image: flyway/flyway:10-alpine
+    container_name: yuding-flyway
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-yuding}
+      FLYWAY_USER: ${DB_USERNAME:-postgres}
+      FLYWAY_PASSWORD: ${DB_PASSWORD:-postgres}
+      FLYWAY_DEFAULT_SCHEMA: public
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+    command: migrate
+    volumes:
+      - ./migrations:/flyway/sql:ro
 
 volumes:
   postgres-data:

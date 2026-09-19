@@ -24,21 +24,49 @@ All relational and vector data resides within the single `yuding` database, part
 | `ai` | `ai-service` | Document chunks, vector embeddings (`pgvector`), chat sessions, tool logs. |
 | `audit` | Cross-cutting | Tamper-evident security logs, login attempts, compliance records. |
 
-### Running the Infrastructure
+### Running the Infrastructure & Database Migrations
 
-To start the local PostgreSQL 16 (+ pgvector) and Redis containers:
+To start the local PostgreSQL 16 (+ pgvector) and Redis containers, and automatically apply Flyway migrations:
 
 ```bash
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-The initialization script (`infra/init-db/01-init-schemas.sql`) executes automatically on first container startup to enable `vector` and provision all 8 logical schemas.
+Flyway executes all migrations from `infra/migrations/` sequentially:
+- `V1__bootstrap_yuding_database.sql` — provisions 8 logical schemas and enables `pgvector` in schema `ai`.
+- `V2__create_identity.sql` — provisions user, role, and auth token tables.
+- `V3__create_travel.sql` — provisions destination, accommodation, flight, activity, and transport tables.
+- `V4__create_booking.sql` — provisions booking lifecycle, items, travelers, and snapshot tables.
+- `V5__create_payment.sql` — provisions payment ledger, webhooks, refunds, and idempotency tables.
+- `V6__create_notification.sql` — provisions notification dispatch queue, templates, and delivery logs.
+- `V7__create_engagement.sql` — provisions reviews, favorites, search history, and saved trips.
+- `V8__create_ai.sql` — provisions AI conversation sessions, RAG document chunks, and `pgvector` embeddings with HNSW indexing.
+- `V9__create_audit.sql` — provisions immutable compliance, security, and administrative audit tables.
+
+To inspect Flyway migration status manually:
+
+```bash
+docker compose -f infra/docker-compose.yml run --rm flyway info
+```
+
+To run migrations manually:
+
+```bash
+docker compose -f infra/docker-compose.yml run --rm flyway migrate
+```
 
 To inspect PostgreSQL schemas using `psql`:
 
 ```bash
 docker exec -it yuding-postgres psql -U postgres -d yuding -c "\dn"
 ```
+
+To connect from host tools (e.g. DBeaver, IDE, or host-run services):
+- **Host:** `localhost`
+- **Port:** `5433` *(dedicated to avoid conflicts with other local databases)*
+- **Database:** `yuding`
+- **Username:** `postgres`
+- **Password:** `postgres`
 
 To stop the containers:
 
