@@ -35,14 +35,6 @@ public class ReservationController {
 		this.utilisateurFeign = utilisateurFeign;
 	}
 
-	@GetMapping("/apiu/utilisateurs/id/{id}")
-	public ResponseEntity<UtilisateursFeign> getUtilisateurById(@PathVariable("id") Long id) {
-		System.out.println("➡ Appel Feign pour récupérer l'utilisateur avec ID : " + id);
-		UtilisateursFeign utilisateur = utilisateurFeign.getUtilisateurById(id);
-		System.out.println("✅ Utilisateur récupéré : " + utilisateur);
-		return ResponseEntity.ok(utilisateur);
-	}
-
 	// Get all reservations
 	@GetMapping("/all")
 	public ResponseEntity<List<Reservations>> getAllReservations() {

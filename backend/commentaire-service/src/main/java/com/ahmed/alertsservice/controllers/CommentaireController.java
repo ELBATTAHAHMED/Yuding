@@ -31,13 +31,6 @@ public class CommentaireController {
 	        commentairesService.deleteCommentaire(id);
 	        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	    }
-	        
-	    @PutMapping("/update/{id}")
-	    public ResponseEntity<Commentaires> updateCommentaire(@PathVariable Long id, @RequestBody Commentaires updateCommentaire) {
-	        updateCommentaire.setId_comment(id); // Ensure ID from path matches the object
-	        Commentaires updatedCommentaire = commentairesService.updateCommentaire(updateCommentaire);
-	        return new ResponseEntity<>(updatedCommentaire, HttpStatus.OK);
-	    }
 	    
 	    @PostMapping("/create")
 	    public ResponseEntity<Commentaires> creerCommentaire(@RequestBody Commentaires commentaire) {
