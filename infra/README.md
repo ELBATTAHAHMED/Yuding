@@ -1,17 +1,47 @@
 # Yuding Infrastructure
 
-This directory contains container definitions, orchestration manifests, and infrastructure configuration for the Yuding V2 platform.
+This directory contains container definitions, orchestration manifests, and database initialization scripts for the Yuding V2 platform.
 
-## Architecture Status (Phase 3 — Clean Repository)
+## Architecture Status (Phase 6 — PostgreSQL Only)
 
-As part of the V1 repository cleanup:
-- **Obsolete V1 services removed:**
-  - `discovery-service` (Netflix Eureka Server) — Replaced by container DNS and explicit service URLs.
-  - `config-service` (Spring Cloud Config Server) & `config-repo` (submodule) — Replaced by standard environment variables and `.env` profiles.
-  - `mysql:8` & `phpmyadmin` — Obsolete uncoordinated MySQL databases with blank passwords removed.
+- **Database Platform:** **PostgreSQL 16** with **pgvector** (`pgvector/pgvector:pg16`).
+- **Database Name:** `yuding`
+- **Cache & Rate Limiting:** **Redis 7** (`redis:7-alpine`).
+- **Legacy Removal:** MySQL 8, MariaDB drivers, and phpMyAdmin are completely eliminated.
 
-- **Upcoming V2 Infrastructure (Planned):**
-  - Consolidated **PostgreSQL 16** with **pgvector** extension for relational and semantic vector storage.
-  - **Redis** for distributed session management and rate limiting.
-  - Production-grade multi-stage container builds with Temurin JDK 21.
-  - Centralized environment variables (`.env.example`) and secrets management.
+### Logical Schemas Architecture
+
+All relational and vector data resides within the single `yuding` database, partitioned into 8 isolated logical schemas:
+
+| Schema | Owning Service | Purpose |
+|---|---|---|
+| `identity` | `identity-service` (currently `user-service`) | Users, roles, credentials, permissions, refresh tokens. |
+| `travel` | `travel-service` (target) | Destinations, accommodations, room types, activities, transports. |
+| `booking` | `booking-service` (currently `reservation-service`) | Bookings, booking items, travelers, status history, price snapshots. |
+| `payment` | `payment-service` (target) | Payment intents, financial ledger transactions, refund records. |
+| `notification` | `notification-service` (target) | Notification message queue, delivery dispatch logs, email templates. |
+| `engagement` | `travel-service` (currently `commentaire-service`) | Customer reviews, ratings, comments, likes, saved itineraries. |
+| `ai` | `ai-service` | Document chunks, vector embeddings (`pgvector`), chat sessions, tool logs. |
+| `audit` | Cross-cutting | Tamper-evident security logs, login attempts, compliance records. |
+
+### Running the Infrastructure
+
+To start the local PostgreSQL 16 (+ pgvector) and Redis containers:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+```
+
+The initialization script (`infra/init-db/01-init-schemas.sql`) executes automatically on first container startup to enable `vector` and provision all 8 logical schemas.
+
+To inspect PostgreSQL schemas using `psql`:
+
+```bash
+docker exec -it yuding-postgres psql -U postgres -d yuding -c "\dn"
+```
+
+To stop the containers:
+
+```bash
+docker compose -f infra/docker-compose.yml down
+```
