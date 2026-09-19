@@ -1,4 +1,4 @@
-package com.ahmed.alertsservice.dto;
+package com.ahmed.alertsservice.DTO;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

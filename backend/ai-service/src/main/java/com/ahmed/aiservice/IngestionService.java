@@ -44,10 +44,11 @@ public class IngestionService  implements CommandLineRunner
 
         log.info("Nonmbre de documents extraits {} ",liste2.size());
 
-        vectorStore.accept(liste2);
-
-        log.info("VectorStore chargé avec les données");
-
-
+        try {
+            vectorStore.accept(liste2);
+            log.info("VectorStore chargé avec les données");
+        } catch (Exception e) {
+            log.warn("VectorStore ingestion skipped or failed (external AI provider unreachable or credentials not configured): {}", e.getMessage());
+        }
     }
 }
