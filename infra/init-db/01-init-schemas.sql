@@ -4,10 +4,7 @@
 -- Target Database: yuding
 -- ====================================================================
 
--- 1. Enable pgvector extension for vector embeddings & similarity search
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- 2. Create the 8 distinct logical schemas for service ownership
+-- 1. Create the 8 distinct logical schemas for service ownership
 CREATE SCHEMA IF NOT EXISTS identity;
 CREATE SCHEMA IF NOT EXISTS travel;
 CREATE SCHEMA IF NOT EXISTS booking;
@@ -17,7 +14,7 @@ CREATE SCHEMA IF NOT EXISTS engagement;
 CREATE SCHEMA IF NOT EXISTS ai;
 CREATE SCHEMA IF NOT EXISTS audit;
 
--- 3. Enable vector extension explicitly within the ai schema
+-- 2. Enable pgvector extension once, configured consistently in the ai schema
 CREATE EXTENSION IF NOT EXISTS vector SCHEMA ai;
 
 -- Log confirmation
