@@ -11,20 +11,28 @@
 
 Yuding V2 is an enterprise-grade, cloud-native travel booking and exploration platform. Transitioning from the prototype architecture of V1, V2 adopts a hardened, event-driven microservices architecture built on **Spring Boot 3.4.x**, **Spring Cloud 2024.x**, **PostgreSQL 16** with **pgvector**, and a unified **Next.js (React 19 + TypeScript)** frontend.
 
-### 1.1 Core Architectural Principles
+### 1.1 Core Architectural Decisions
 
-1. **Zero-Trust Security & Stateless Auth:**  
-   Authentication is completely separated from application domains into a dedicated `identity-service`. All access uses digitally signed, short-lived JSON Web Tokens (JWT) with rotating refresh tokens. Passwords use BCrypt (strength 12). Client-side authentication state is never trusted.
-2. **Strict Domain Boundaries & Database-per-Service:**  
-   No two microservices share a database instance or schema. Cross-service data queries occur via explicit synchronous REST/Feign APIs or asynchronous event replication.
-3. **Unified Travel Domain via Provider Adapter Pattern:**  
-   Rather than creating fragmented microservices for each transportation and accommodation mode (e.g. separate hotel, flight, or taxi services), a single **`travel-service`** owns the unified catalog, search, and availability lifecycle, abstracting external travel providers (Amadeus, Booking.com, Viator, local transfer dispatchers) behind clean internal interfaces.
-4. **Resilient Booking & Payment Orchestration (Saga Pattern):**  
-   The booking lifecycle is strictly governed by `booking-service` using an orchestrated Saga pattern. Financial operations are delegated exclusively to `payment-service`, ensuring full PCI-DSS compliance through Stripe Elements and webhooks with zero sensitive cardholder data entering Yuding systems.
-5. **Conversational AI with Dynamic Tool Calling & RAG:**  
-   `ai-service` provides an intelligent travel concierge powered by OpenAI and Spring AI. The assistant leverages LLM function calling (tools) to execute real-time searches and booking queries across `travel-service` and `booking-service`, backed by vector similarity retrieval (pgvector) for curated destination guides.
-6. **Role-Based Admin Protection (No Separate Admin Service):**  
-   Administrative operations are not segmented into a separate backend service. Administrative capabilities are role-protected endpoints (`ROLE_ADMIN`) embedded directly in their respective domain services and enforced at both the API Gateway and service controller layers.
+1. **Retain Eureka for Service Discovery:**  
+   `discovery-service` (Spring Cloud Netflix Eureka Server) is maintained as the central registry. All microservices register dynamically, enabling client-side load balancing (`Spring Cloud LoadBalancer`) and dynamic Gateway route resolution (`lb://SERVICE-NAME`).
+2. **Retain Spring Cloud Config for Centralized Configuration:**  
+   `config-service` (Spring Cloud Config Server) is maintained to provide externalized environment configurations (`dev`, `stage`, `prod`). The broken V1 gitlink submodule is replaced by a clean native file search location or internal configuration repository.
+3. **Consolidate Travel Catalog into `travel-service` via Provider Adapters:**  
+   Flights, Hotels, Activities, Transfers, and Destinations are unified into a single domain service (**`travel-service`**). **No separate `hotel-service`, `flight-service`, `activity-service`, or `taxi-service` are created.** Third-party suppliers (Amadeus, Booking.com, Viator, local transfer dispatchers) are abstracted behind clean Provider Adapters.
+4. **Dedicated `identity-service` Replaces Legacy Auth:**  
+   The legacy `userController` and `adminController` from V1 are permanently superseded by `identity-service`. All authentication is stateless (JWT access tokens + secure httpOnly refresh tokens) with BCrypt password hashing (strength 12).
+5. **Admin Functionality is Role-Protected (No Separate Admin Service):**  
+   Admin access is managed through Role-Based Access Control (`ROLE_ADMIN`, `ROLE_SUPPORT`, `ROLE_USER`) embedded in domain services and enforced at the Gateway and Controller layers.
+6. **Dedicated `booking-service` Owns Booking Lifecycle:**  
+   `booking-service` manages reservations state machine ($\text{DRAFT} \rightarrow \text{PENDING} \rightarrow \text{CONFIRMED} \rightarrow \text{COMPLETED} / \text{CANCELLED}$), server-authoritative dynamic pricing, and distributed Saga orchestration.
+7. **Dedicated `payment-service` Owns Payment Orchestration:**  
+   Full PCI-DSS Level 1 compliance through Stripe PSP tokenization, idempotent ledger tracking, refund execution, and cryptographic webhook verification. Zero raw cardholder data (PAN/CVV) enters Yuding servers.
+8. **Dedicated `notification-service` Owns Communications:**  
+   Asynchronous event consumption for transactional HTML emails (booking vouchers, payment receipts, password resets) and SMS alerts via SendGrid/SMTP.
+9. **`ai-service` Owns Conversational AI, Tool Calling & RAG:**  
+   Integrated with OpenAI `gpt-4o-mini`, supporting LLM function/tool calling against `travel-service` and `booking-service`, and semantic RAG retrieval powered by `pgvector`.
+10. **Strict Database-per-Service Isolation:**  
+    Consolidated PostgreSQL 16 server hosting dedicated, isolated databases (`identity_db`, `travel_db`, `booking_db`, `payment_db`, `notification_db`, `ai_db`). Cross-database joins and shared schemas are strictly prohibited.
 
 ---
 
@@ -34,108 +42,113 @@ Yuding V2 consists of **9 core microservices**:
 
 | Service Name | Port | Primary Framework | Persistence | Core Responsibility |
 |---|---|---|---|---|
-| **`gateway-service`** | `8888` | Spring Cloud Gateway (Reactive) | Redis (Rate limiting & sessions) | Unified ingress, SSL termination, CORS, JWT claims propagation, path-based routing. |
+| **`gateway-service`** | `8888` | Spring Cloud Gateway (Reactive) | Redis (Rate limiting & sessions) | Unified ingress, SSL termination, CORS, JWT claims propagation, dynamic `lb://` routing. |
 | **`identity-service`** | `8081` | Spring Boot 3, Spring Security 6 | PostgreSQL (`identity_db`) | User registration, authentication, JWT issuance & verification, profile management, RBAC (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_SUPPORT`). |
 | **`travel-service`** | `8082` | Spring Boot 3, Spring Data JPA | PostgreSQL (`travel_db`), Redis (Catalog cache) | Consolidated travel catalog (Flights, Hotels, Activities, Transfers, Destinations) via Provider Adapters. |
-| **`booking-service`** | `8083` | Spring Boot 3, Spring Data JPA | PostgreSQL (`booking_db`) | Booking lifecycle, reservations state machine (`PENDING`, `CONFIRMED`, `CANCELLED`, `REFUNDED`), pricing calculations, Saga orchestration. |
+| **`booking-service`** | `8083` | Spring Boot 3, Spring Data JPA | PostgreSQL (`booking_db`) | Booking lifecycle, reservations state machine, server-authoritative pricing, Saga orchestration. |
 | **`payment-service`** | `8084` | Spring Boot 3, Spring Data JPA | PostgreSQL (`payment_db`) | Payment orchestration, Stripe integration, idempotency, webhook processing, refund execution, PCI-DSS compliance. |
 | **`notification-service`**| `8085` | Spring Boot 3, JavaMail, SendGrid | PostgreSQL (`notification_db`) | Transactional emails (confirmations, receipts, password resets, alerts), async event consumption. |
 | **`ai-service`** | `7777` | Spring AI / Spring Boot 3 | PostgreSQL + `pgvector` (`ai_db`) | Conversational assistant, LLM function calling (tools), vector embeddings, destination RAG knowledge base. |
-| **`discovery-service`**| `8761` | Spring Cloud Netflix Eureka | Memory | Service registry, health monitoring, instance heartbeat tracking, dynamic service discovery. |
-| **`config-service`** | `9091` | Spring Cloud Config Server | Git / Native File Repository | Centralized externalized configuration management, environment profiles (`dev`, `stage`, `prod`), secret injection. |
+| **`discovery-service`**| `8761` | Spring Cloud Netflix Eureka | Memory | Service registry, instance heartbeat tracking, health monitoring, dynamic service discovery. |
+| **`config-service`** | `9091` | Spring Cloud Config Server | Git / Native File Repository | Centralized externalized configuration management, environment profiles (`dev`, `stage`, `prod`), secret management. |
 
 ---
 
 ## 3. Detailed Service Responsibilities
 
-### 3.1 `gateway-service` (Port: 8888)
-- **Ingress Management:** Single public entry point for all frontend traffic (`https://api.yuding.com` or `http://localhost:8888`).
-- **Dynamic Service Routing:** Routes incoming requests to target services discovered through Eureka (`lb://IDENTITY-SERVICE`, `lb://TRAVEL-SERVICE`, etc.).
-- **Security Filter & Pre-Auth Validation:** Validates incoming JWT access tokens at the perimeter, verifies token expiration and signatures, extracts user identity and roles, and injects trusted downstream headers (`X-User-Id`, `X-User-Email`, `X-User-Roles`).
-- **CORS Enforcement:** Centralized Cross-Origin Resource Sharing policy allowing only authorized frontend origins (e.g., `http://localhost:3000` in dev, `https://yuding.com` in prod).
-- **Rate Limiting & Traffic Shaping:** Redis-backed Token Bucket filter protecting downstream endpoints against abuse, brute-force attacks, and DDoS.
+### 3.1 `gateway-service` (Port: 8888) — The Intelligent Ingress
+- **Unified API Gateway:** Sole public entrypoint for all frontend traffic (`http://localhost:8888` / `https://api.yuding.com`).
+- **Dynamic Route Resolution:** Interacts with `discovery-service` (Eureka) to route incoming requests using `lb://` scheme (`lb://IDENTITY-SERVICE`, `lb://TRAVEL-SERVICE`, `lb://BOOKING-SERVICE`, etc.), enabling zero-downtime scaling.
+- **Perimeter Security & JWT Validation:** Decodes and validates JWT access tokens, rejects expired/tampered tokens, extracts identity claims, and injects trusted internal headers (`X-User-Id`, `X-User-Email`, `X-User-Roles`).
+- **CORS Centralization:** Enforces allowed origins, headers, and HTTP methods across all API routes.
+- **Rate Limiting & DDoS Shield:** Redis-backed Token Bucket algorithm to protect downstream endpoints from credential stuffing and scraping.
 
-### 3.2 `identity-service` (Port: 8081)
-- **Authentication & Authorization:** Replaces legacy V1 `userController` and `adminController`. Issues cryptographically secure access tokens (RS256 signed, 15-minute lifespan) and refresh tokens (stored hashed in DB, 7-day lifespan).
-- **Credential Storage:** High-entropy password hashing using BCrypt with salt rounds $\ge 12$. Zero plaintext password storage.
-- **Account Lifecycle:** User registration, email verification flows, password reset tokens, account activation, profile updates.
-- **Role-Based Access Control (RBAC):** Manages user roles (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_SUPPORT`) and granular permissions.
-- **Audit Logging:** Records security events (login success/failure, privilege changes, account lockouts).
+### 3.2 `identity-service` (Port: 8081) — Authentication & Access Control
+- **User & Admin Authentication:** Replaces legacy V1 `user-service`. Handles user sign-up, sign-in, and administrative credential verification.
+- **Cryptographic Security:** High-entropy BCrypt password hashing (work factor 12). Generates RS256-signed JWT access tokens (15-minute validity) and rotating refresh tokens (7-day validity).
+- **Role-Based Access Control (RBAC):** Manages user roles (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_SUPPORT`) and associated domain permissions.
+- **Account Governance:** Email verification, secure password reset flows, profile management, and account status toggles (`ACTIVE`, `SUSPENDED`).
 
-### 3.3 `travel-service` (Port: 8082)
-- **Consolidated Catalog Ownership:** Replaces the fragmented and partially hardcoded V1 catalog. Owns all travel products:
-  - **Flights:** One-way, round-trip, multi-city route search, fare classes, cabin details.
-  - **Hotels / Accommodations:** Hotels, Riads, apartments, room categories, amenities, availability windows.
-  - **Activities:** Guided tours, excursions, cultural visits, tickets, scheduling.
-  - **Transfers:** Airport transfers, private chauffeurs, city taxis, inter-city train connections.
-  - **Destinations & Points of Interest:** City guides, destination highlights, climate, local guidelines.
-- **The Provider Adapter Pattern:** External suppliers and internal databases are accessed exclusively through provider adapters:
-  - `FlightProviderAdapter` $\rightarrow$ Amadeus Flight Offers API / Skyscanner.
-  - `HotelProviderAdapter` $\rightarrow$ Booking.com Rapid API / Hotelbeds / Internal inventory.
-  - `ActivityProviderAdapter` $\rightarrow$ Viator API / Internal catalog.
-  - `TransferProviderAdapter` $\rightarrow$ Local dispatch / ONCF train schedules / Internal fleet.
-- **Caching & Performance:** Caches search results and external supplier quotes in Redis with short TTL (5–15 minutes) to minimize third-party API costs and latency.
-- **Admin Catalog Management:** Role-protected (`ROLE_ADMIN`) REST endpoints for creating, updating, activating, and deactivating internal catalog entries.
+### 3.3 `travel-service` (Port: 8082) — Unified Travel Catalog
+- **Consolidated Catalog Domain:** Single authoritative owner of all travel items:
+  - **Flights:** Flight offers, cabin classes, airline itineraries, baggage allowances.
+  - **Hotels & Accommodations:** Hotels, riads, apartments, room tiers, amenities, availability windows.
+  - **Activities:** Local excursions, cultural visits, tickets, scheduling, guide languages.
+  - **Transfers:** Airport shuttles, private chauffeurs, city taxis, ONCF train connections.
+  - **Destinations:** Destination guides, climate, travel tips, cultural highlights.
+- **Provider Adapter Architecture:** Connects to external travel suppliers through clean adapter interfaces (`AmadeusFlightAdapter`, `BookingDotComAdapter`, `ViatorActivityAdapter`, `LocalTransferAdapter`, `InternalCatalogAdapter`).
+- **Catalog Caching:** High-throughput caching of supplier search results in Redis (TTL: 5–15 min).
+- **Admin Catalog Endpoints:** Role-protected (`ROLE_ADMIN`) REST endpoints for managing internal listings, base prices, and supplier configurations.
 
-### 3.4 `booking-service` (Port: 8083)
-- **Booking Lifecycle & State Machine:** Owns the complete state lifecycle of a customer reservation:
-  $$\text{DRAFT} \longrightarrow \text{PENDING} \longrightarrow \text{CONFIRMED} \longrightarrow \text{COMPLETED} \quad (\text{or } \text{CANCELLED} / \text{REFUNDED})$$
-- **Server-Authoritative Pricing:** Completely eliminates the V1 client-side pricing flaw (`100 * persons * days`). Calculates authoritative prices based on item units, dates, provider quotes, taxes, and service fees.
-- **Cart & Reservation Aggregation:** Allows booking multi-item itineraries (e.g., flight + hotel + excursion in a single booking).
-- **Saga Orchestrator:** Coordinates the distributed transaction between `booking-service`, `payment-service`, and `notification-service`. Holds inventory reservations temporarily (e.g. 15-minute lock) pending payment capture.
-- **Customer Booking Management:** Endpoints for users to list their bookings, retrieve receipts, and request cancellations.
-- **Admin Oversight:** Endpoints for `ROLE_ADMIN` and `ROLE_SUPPORT` to inspect platform-wide reservations, override statuses, and manage disputes.
+### 3.4 `booking-service` (Port: 8083) — Reservation Lifecycle & Saga
+- **State Machine Management:** Governs the end-to-end reservation lifecycle:
+  $$\text{DRAFT} \longrightarrow \text{PENDING\_PAYMENT} \longrightarrow \text{CONFIRMED} \longrightarrow \text{COMPLETED} \quad (\text{or } \text{CANCELLED} / \text{REFUNDED})$$
+- **Authoritative Server Pricing:** Eliminates V1 client-side pricing flaws. Authoritatively computes totals including taxes, fees, and provider costs.
+- **Multi-Item Itinerary Aggregator:** Supports combining flights, hotels, excursions, and transfers into a single unified booking reference.
+- **Saga Orchestrator:** Coordinates temporary inventory locks with `travel-service`, payment intent creation with `payment-service`, and confirmation dispatch with `notification-service`.
+- **Customer & Admin Booking APIs:** Endpoints for users to view bookings and for admins/support to review platform-wide reservations.
 
-### 3.5 `payment-service` (Port: 8084)
-- **PCI-DSS Level 1 Compliance:** Completely replaces the insecure V1 payment controller. Zero storage or handling of raw Primary Account Numbers (PAN), CVVs, or cardholder credentials.
-- **Stripe PSP Orchestration:**
-  - Creates Stripe `PaymentIntent` objects tied to authoritative booking totals.
-  - Delivers `client_secret` to the frontend for secure Stripe Elements / Apple Pay / Google Pay processing.
-  - Ingests and cryptographically verifies asynchronous Stripe Webhooks (`payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`).
-- **Idempotency & Double-Charge Protection:** All payment operations require unique idempotency keys (`booking_id` + transaction attempt) stored in `payment_db`.
-- **Refund & Reversal Processing:** Handles partial and full refunds triggered by booking cancellations or support interventions.
-- **Audit Ledger:** Maintains an immutable transaction ledger recording gateway transaction IDs, amounts, currencies, payment methods, and timestamps.
+### 3.5 `payment-service` (Port: 8084) — PCI-DSS Payment Orchestrator
+- **Stripe PSP Integration:** Creates and tracks Stripe `PaymentIntent` and `CheckoutSession` objects.
+- **Zero Cardholder Data Exposure:** Operates with Stripe Elements on the frontend. No raw credit card PAN or CVV touches backend memory or database.
+- **Webhook Processing:** Cryptographically validates Stripe webhooks (`payment_intent.succeeded`, `charge.refunded`) to trigger idempotent order confirmation.
+- **Double-Charge Protection:** Enforces unique idempotency keys per transaction attempt.
+- **Ledger & Refunds:** Maintains an immutable transaction audit log and orchestrates partial or full refunds.
 
-### 3.6 `notification-service` (Port: 8085)
-- **Asynchronous Event Processing:** Subscribes to platform domain events (`BookingConfirmedEvent`, `PaymentFailedEvent`, `UserRegisteredEvent`, `BookingCancelledEvent`).
-- **Templated Communications:** Renders responsive HTML emails and notifications using Thymeleaf templates:
-  - Welcome & email confirmation message.
-  - Complete booking voucher with QR code and breakdown.
-  - Payment receipt and invoice attachment.
-  - Cancellation notice and refund status updates.
-- **Multi-Channel Provider Abstraction:**
-  - Primary email delivery: SendGrid API / AWS SES / SMTP.
-  - SMS & WhatsApp alerts (optional/future phase): Twilio / MessageBird adapter.
-- **Delivery Tracking & Retry:** Tracks notification status (`QUEUED`, `SENT`, `FAILED`, `BOUNCED`) with exponential backoff retries.
+### 3.6 `notification-service` (Port: 8085) — Asynchronous Communications
+- **Domain Event Consumer:** Listens for platform events (`BookingConfirmedEvent`, `PaymentFailedEvent`, `UserRegisteredEvent`, `BookingCancelledEvent`).
+- **Responsive Email Engine:** Renders HTML emails using Thymeleaf templates (booking vouchers with QR codes, itemized payment invoices, password reset links).
+- **Provider Multi-Tenancy:** Abstraction over SendGrid API and SMTP relay with automated retries and dead-letter handling.
 
-### 3.7 `ai-service` (Port: 7777)
-- **Conversational Travel Concierge:** Spring AI / OpenAI integration replacing the vulnerable V1 prototype.
-- **Dynamic Tool Calling (Function Calling):** The model dynamically invokes registered microservice tools during conversations:
-  - `searchAccommodations(location, checkIn, checkOut, guests, maxPrice)`
-  - `searchFlights(origin, destination, departureDate, cabinClass)`
+### 3.7 `ai-service` (Port: 7777) — Travel Concierge, Tools & RAG
+- **Intelligent Assistant:** Spring AI integration powered by OpenAI `gpt-4o-mini`.
+- **Dynamic Tool Calling (Function Calling):** LLM dynamically invokes registered backend tools:
+  - `searchAccommodations(location, checkIn, checkOut, maxPrice)`
+  - `searchFlights(origin, destination, departureDate)`
   - `searchActivities(city, category, date)`
-  - `checkBookingStatus(bookingReference, userEmail)`
+  - `checkBookingStatus(bookingReference)`
 - **Retrieval-Augmented Generation (RAG):**
-  - Uses `pgvector` in PostgreSQL for vector similarity searches (cosine distance).
-  - Ingests markdown destination guides, cultural itineraries, local tips, and travel advisories.
-  - Prompts are augmented with retrieved context chunks before calling the LLM, grounding responses and eliminating hallucinations.
-- **Safety & Prompt Hardening:** Enforces strict boundary prompts restricting the assistant to travel assistance, input sanitization, and Markdown escaping to eliminate stored XSS.
+  - Uses `pgvector` in PostgreSQL for vector embeddings of travel guides, itineraries, and cultural advisories.
+  - Queries top-$k$ semantic chunks to ground assistant responses and eliminate hallucinations.
+- **Security & XSS Prevention:** Strict prompt engineering, topic whitelisting, and output sanitization.
 
-### 3.8 `discovery-service` (Port: 8761)
-- **Eureka Service Registry:** Maintained as the service discovery backbone for Spring Cloud.
-- **Dynamic Topology:** Enables zero-downtime rolling deployments, horizontal scaling of worker nodes, and automatic deregistration of unhealthy instances.
-- **Health Verification:** Integrates with Spring Boot Actuator health checks (`/actuator/health`).
+### 3.8 `discovery-service` (Port: 8761) — Service Registry
+- **Eureka Server Role:** Central directory where all microservices register their host, port, and health check URLs (`/actuator/health`).
+- **Client-Side Load Balancing:** Services resolve logical names (`http://TRAVEL-SERVICE`) via Spring Cloud LoadBalancer without hardcoded IP addresses.
+- **Failure Detection:** Automatically evicts crashed or unhealthy service instances based on heartbeat lease renewals.
 
-### 3.9 `config-service` (Port: 9091)
-- **Centralized Configuration Management:** Maintained to provide externalized configuration for all microservices across development, staging, and production environments.
-- **Clean Repository Architecture:** Resolves the broken V1 submodule issue. Configurations are stored in a dedicated configuration directory within the repository or an external Git/Vault repository, read natively or via environment profiles.
-- **Secret Encryption:** Integrates symmetric or asymmetric encryption for database passwords, API keys, and Stripe secrets (`{cipher}...`).
+### 3.9 `config-service` (Port: 9091) — Centralized Configuration
+- **Spring Cloud Config Role:** Serves externalized configuration properties to all microservices at startup.
+- **Environment Profiles:** Supplies environment-specific configurations (`dev`, `stage`, `prod`).
+- **Clean Architecture:** Operates with native file search locations or internal Git repositories, eliminating the V1 broken submodule gitlink.
+- **Secret Encryption:** Encrypts sensitive credentials (database passwords, Stripe keys, OpenAI keys) using symmetric or RSA keys.
 
 ---
 
-## 4. Architectural Topology & Dependency Map
+## 4. V1 to V2 Service Transition & Migration Matrix
 
-### 4.1 System Topology Diagram
+The following table details how every component from Yuding V1 transitions into the final V2 architecture:
+
+| Legacy V1 Component | V1 Port / Path | V2 Decision | V2 Target Service | Transition & Architectural Rationale |
+|---|---|---|---|---|
+| `discovery-service` | `8761` | **KEPT & RECONNECTED** | `discovery-service` | Eureka Server is retained as the standard service registry for Spring Cloud. |
+| `config-service` | `9091` | **KEPT & RECONNECTED** | `config-service` | Spring Cloud Config Server is retained; configuration source moved to clean native/internal repo. |
+| `config-repo` (submodule) | `backend/config-repo` | **REPLACED** | `config-service` internal repo | Broken Git submodule (mode 160000) permanently eliminated. |
+| `gateway-service` | `8888` | **REFACTORED** | `gateway-service` | Restored Eureka `lb://` routing, added perimeter JWT validation, Redis rate limiting, and CORS. |
+| `user-service` | `8081` | **REPLACED** | `identity-service` | Plaintext passwords, insecure search endpoints, and duplicated admin models replaced by Spring Security 6 + JWT + RBAC. |
+| `reservation-service` (Catalog) | `8090` | **EXTRACTED & CONSOLIDATED** | `travel-service` | Accommodations, activities, and transports extracted from the booking monolith into unified catalog. |
+| `reservation-service` (Bookings) | `8090` | **REFACTORED** | `booking-service` | Booking lifecycle, state machine, dynamic pricing, and Saga orchestration separated into dedicated service. |
+| `reservation-service` (Payments) | `8090` | **REPLACED** | `payment-service` | Insecure card storage (`numcarte`, `cvv`) replaced by PCI-DSS compliant Stripe integration. |
+| `commentaire-service` | `8072` | **ABSORBED** | `travel-service` & `booking-service` | Review entities linked directly to verified travel catalog items and verified customer bookings. |
+| `ai-service` | `7777` | **REFACTORED** | `ai-service` | Upgraded to Spring AI 1.0, added dynamic tool calling against travel/booking APIs, and pgvector RAG. |
+| *None (New in V2)* | `8085` | **NEW SERVICE** | `notification-service` | Dedicated service for asynchronous email, SMS, and voucher delivery. |
+| `docker-compose.yml` (V1 MySQL) | Root | **REPLACED** | `infra/docker-compose.yml` | MySQL 8 with blank passwords and phpMyAdmin replaced by PostgreSQL 16 (`pgvector`) and Redis. |
+
+---
+
+## 5. Architectural Topology & Dependency Map
+
+### 5.1 System Topology Diagram
 
 ```mermaid
 flowchart TD
@@ -170,15 +183,15 @@ flowchart TD
 
     subgraph External Providers & Third-Party APIs
         StripeAPI["Stripe Payments API<br/>(PCI-DSS Compliant)"]
-        TravelSuppliers["External Travel Providers<br/>(Amadeus, Booking.com, Viator)"]
+        TravelSuppliers["External Travel Suppliers<br/>(Amadeus, Booking.com, Viator)"]
         OpenAIAPI["OpenAI API<br/>(gpt-4o-mini / Embeddings)"]
         EmailProvider["Email Gateway<br/>(SendGrid / AWS SES)"]
     end
 
-    %% Client Ingress
+    %% Ingress
     Client -->|HTTPS / REST| Gateway
 
-    %% Infrastructure Dependencies
+    %% Discovery & Config
     Core Domain Services -.->|Register & Heartbeat| Eureka
     Core Domain Services -.->|Fetch Configuration| Config
     Gateway -.->|Route Discovery| Eureka
@@ -190,12 +203,13 @@ flowchart TD
     Gateway -->|/api/v1/payments/**| Payment
     Gateway -->|/api/v1/ai/**| AI
 
-    %% Inter-Service Feign / Internal Calls
-    Booking -->|Verify Catalog & Pricing| Travel
-    Booking -->|Initiate Payment| Payment
-    Booking -->|Dispatch Notifications| Notification
-    AI -->|Tool Call: Query Catalog| Travel
-    AI -->|Tool Call: Query Bookings| Booking
+    %% Inter-Service Feign Calls
+    Booking -->|Feign: Validate Catalog & Price| Travel
+    Booking -->|Feign: Create PaymentIntent| Payment
+    Booking -->|Async Event: Booking Confirmed| Notification
+    Payment -->|Async Event: Payment Succeeded| Booking
+    AI -->|Tool Call: Search Travel| Travel
+    AI -->|Tool Call: Lookup Booking| Booking
 
     %% Database Ownership
     Identity --- DB_Identity
@@ -205,88 +219,81 @@ flowchart TD
     Notification --- DB_Notification
     AI --- DB_Vector
 
-    %% External Connections
+    %% External APIs
     Payment -->|HTTPS| StripeAPI
     Travel -->|HTTPS / Adapters| TravelSuppliers
     AI -->|HTTPS| OpenAIAPI
     Notification -->|SMTP / API| EmailProvider
 ```
 
-### 4.2 Inter-Service Communication Matrix
+### 5.2 Inter-Service Communication Matrix ("Which Services Call Which")
 
-| Source Service | Target Service | Interaction Type | Protocol / Mechanism | Purpose | Resilience Strategy |
+| Caller Service | Callee Service | Protocol / Client | Call Nature | Purpose | Failure / Resilience Strategy |
 |---|---|---|---|---|---|
-| `gateway-service` | All Domain Services | Synchronous | HTTP/2 / Reactive WebClient | Forwarding public API requests. | Circuit Breaker, Gateway Timeout (5s), Retry (2x). |
-| `booking-service` | `travel-service` | Synchronous | REST via OpenFeign | Validate availability, fetch authoritative prices. | Circuit Breaker, Fallback to cached catalog quote. |
-| `booking-service` | `payment-service` | Synchronous / Async | REST / Event-Driven | Create PaymentIntent, capture or refund charge. | Idempotency Key, Saga compensation rollback. |
-| `booking-service` | `notification-service` | Asynchronous | Event / REST | Dispatch booking confirmations, ticket vouchers. | Retry queue, Dead Letter Queue (DLQ). |
-| `ai-service` | `travel-service` | Synchronous | REST via OpenFeign | Execute dynamic tool calling for real-time travel quotes. | Strict timeout (3s), fallback to general travel advice. |
-| `ai-service` | `booking-service` | Synchronous | REST via OpenFeign | Tool call to look up user reservation status. | User authentication token propagation, 3s timeout. |
-| `payment-service` | `notification-service` | Asynchronous | Event / REST | Send payment receipts or failure alerts. | Asynchronous fire-and-forget with retry. |
+| `gateway-service` | All Domain Services | HTTP/2 (Reactive) | Synchronous | Ingress routing via Eureka `lb://` | CircuitBreaker (5s timeout), 2x Retry. |
+| `booking-service` | `travel-service` | REST via OpenFeign | Synchronous | Validate item availability and lock authoritative pricing. | CircuitBreaker fallback; return inventory unavailable error if timeout. |
+| `booking-service` | `payment-service` | REST via OpenFeign | Synchronous | Create Stripe `PaymentIntent` and request client secret. | Idempotent retry with unique `bookingId` key. |
+| `booking-service` | `notification-service` | Event / REST | Asynchronous | Dispatch booking vouchers and confirmation emails. | Non-blocking fire-and-forget; persistent retry queue. |
+| `payment-service` | `booking-service` | REST / Internal Event | Synchronous | Confirm booking upon Stripe webhook verification. | Retry with exponential backoff on webhook delivery. |
+| `ai-service` | `travel-service` | REST via OpenFeign | Synchronous | Execute LLM tool calls (`searchHotels`, `searchFlights`). | 3s strict timeout; fallback to general guidance. |
+| `ai-service` | `booking-service` | REST via OpenFeign | Synchronous | Execute LLM tool call (`checkBookingStatus`). | Propagates `X-User-Id`; 3s strict timeout. |
+| All Services | `discovery-service` | Eureka Client | Heartbeat | Register hostname/port and fetch service instance table. | Local instance cache; survives temporary Eureka outages. |
+| All Services | `config-service` | HTTP Client | Startup Fetch | Retrieve environment configurations and secrets. | Fail-fast on initial bootstrap with configurable retries. |
 
 ---
 
-## 5. External Provider Boundaries & The Provider Adapter Pattern
+## 6. External Provider Boundaries & The Provider Adapter Pattern
 
-In Yuding V2, no external supplier's API data structures are permitted to leak into the internal domain model. The **`travel-service`** encapsulates all supplier interactions behind strict internal interfaces using the **Provider Adapter Pattern**.
+To safeguard the internal architecture against external schema breaking changes and supplier rate limits, `travel-service` abstracts suppliers through the **Provider Adapter Pattern**:
 
 ```
-                           +----------------------------------------+
-                           |             travel-service             |
-                           |                                        |
-                           |   +--------------------------------+   |
-                           |   |       Core Travel Domain       |   |
-                           |   |  - FlightOffer, HotelListing   |   |
-                           |   |  - Activity, Transfer          |   |
-                           |   +---------------+----------------+   |
-                           |                   |                    |
-                           |      [Provider Adapter SPI]            |
-                           |      +------------+------------+       |
-                           +------|------------|------------|-------+
-                                  |            |            |
-                                  v            v            v
-                           +------------+ +------------+ +------------+
-                           |  Amadeus   | | Booking.com| |  Internal  |
-                           |  Adapter   | |  Adapter   | |  Catalog   |
-                           +-----+------+ +-----+------+ +-----+------+
-                                 |              |              |
-                                 v              v              v
-                           [Amadeus API] [Booking API]   [travel_db]
+                         +----------------------------------------+
+                         |             travel-service             |
+                         |                                        |
+                         |   +--------------------------------+   |
+                         |   |       Core Travel Domain       |   |
+                         |   |  - FlightOffer, HotelListing   |   |
+                         |   |  - Activity, Transfer          |   |
+                         |   +---------------+----------------+   |
+                         |                   |                    |
+                         |      [Provider Adapter SPI]            |
+                         |      +------------+------------+       |
+                         +------|------------|------------|-------+
+                                |            |            |
+                                v            v            v
+                         +------------+ +------------+ +------------+
+                         |  Amadeus   | | Booking.com| |  Internal  |
+                         |  Adapter   | |  Adapter   | |  Catalog   |
+                         +-----+------+ +-----+------+ +-----+------+
+                               |              |              |
+                               v              v              v
+                         [Amadeus API] [Booking API]   [travel_db]
 ```
 
-### 5.1 Provider Adapters in `travel-service`
+### 6.1 Provider Adapters in `travel-service`
+1. **Flights (`FlightProviderAdapter`):**
+   - Implementations: `AmadeusFlightAdapter` (live flight search, cabin selection, pricing) and `MockFlightAdapter` (offline testing).
+2. **Hotels & Accommodations (`HotelProviderAdapter`):**
+   - Implementations: `BookingDotComAdapter` (live hotel inventory) and `InternalAccommodationAdapter` (local riads/hotels stored in `travel_db`).
+3. **Activities & Tours (`ActivityProviderAdapter`):**
+   - Implementations: `ViatorActivityAdapter` (commercial excursions) and `InternalActivityAdapter` (curated local cultural experiences).
+4. **Transfers & Transport (`TransferProviderAdapter`):**
+   - Implementations: `LocalTransferAdapter` (private airport shuttles, city taxis) and `OncfTrainAdapter` (Morocco high-speed rail schedules).
 
-1. **`FlightProviderAdapter` Interface:**
-   - Methods: `searchFlights(criteria)`, `validateFlightFare(flightId)`, `reserveFlightHold(flightId, passengerDetails)`.
-   - Implementations: `AmadeusFlightAdapter`, `MockFlightAdapter` (for local development/testing).
-2. **`HotelProviderAdapter` Interface:**
-   - Methods: `searchHotels(criteria)`, `getHotelDetails(hotelId)`, `checkRoomAvailability(roomId, dates)`.
-   - Implementations: `BookingDotComAdapter`, `InternalHotelCatalogAdapter`.
-3. **`ActivityProviderAdapter` Interface:**
-   - Methods: `searchActivities(criteria)`, `getActivityAvailability(activityId, date)`.
-   - Implementations: `ViatorActivityAdapter`, `InternalActivityCatalogAdapter`.
-4. **`TransferProviderAdapter` Interface:**
-   - Methods: `searchTransfers(pickup, dropoff, date, vehicleType)`, `quoteTransferPrice(...)`.
-   - Implementations: `LocalDispatcherTransferAdapter`, `OncfTrainAdapter`.
+### 6.2 Provider Adapters in `payment-service`
+- **`StripePaymentAdapter`:** Interacts with Stripe REST API. Ingests card payments via client-side Stripe Elements tokens and handles webhook signatures (`stripe-signature` header). Zero card numbers stored internally.
 
-### 5.2 Provider Adapters in `payment-service`
+### 6.3 Provider Adapters in `notification-service`
+- **`SendGridEmailAdapter` / `SmtpEmailAdapter`:** Dispatches transactional HTML emails and handles bounces and delivery receipts.
 
-- **`PaymentGatewayAdapter` Interface:**
-  - Methods: `createIntent(amount, currency, customerEmail, idempotencyKey)`, `capturePayment(intentId)`, `refundPayment(paymentId, amount, reason)`.
-  - Implementation: **`StripePaymentGatewayAdapter`** (uses official `stripe-java` SDK).
-  - Designed for zero raw card exposure: The frontend utilizes Stripe Elements to collect card details directly to Stripe's tokenization servers, returning a `paymentMethodId` or confirmation token to the backend.
-
-### 5.3 Provider Adapters in `notification-service`
-
-- **`EmailGatewayAdapter` Interface:**
-  - Methods: `sendHtmlEmail(recipient, subject, htmlContent, attachments)`.
-  - Implementations: `SendGridEmailAdapter` (production), `SmtpEmailAdapter` (development / MailHog).
+### 6.4 Provider Adapters in `ai-service`
+- **`OpenAiChatAdapter`:** Interacts with OpenAI API (`gpt-4o-mini`, `text-embedding-3-small`). Executes dynamic tool call orchestration.
 
 ---
 
-## 6. Database Ownership & Data Boundary Architecture
+## 7. Database Ownership & Data Boundary Architecture
 
-Yuding V2 enforces strict **Database-per-Service** isolation using dedicated databases inside a single managed **PostgreSQL 16** cluster. Cross-database foreign keys, joins, and shared schemas are strictly prohibited.
+Yuding V2 enforces strict **Database-per-Service** isolation on a managed **PostgreSQL 16** cluster. Each database is exclusively owned and accessed by its corresponding microservice:
 
 ```
 +----------------------------------------------------------------------------------------------------+
@@ -310,59 +317,33 @@ Yuding V2 enforces strict **Database-per-Service** isolation using dedicated dat
 +----------------------------------------------------------------------------------------------------+
 ```
 
-### 6.1 Database Boundaries & Schema Ownership
+### 7.1 Schema Ownership Boundaries
 
-| Database Name | Owning Service | Allowed Readers / Writers | Primary Tables | Consistency Strategy |
+| Database | Owning Service | Allowed Read/Write | Core Entities | Primary Isolation Rule |
 |---|---|---|---|---|
-| `identity_db` | `identity-service` | `identity-service` only | `users`, `roles`, `user_roles`, `refresh_tokens`, `login_audit` | ACID relational; user details referenced by UUID (`user_id`) downstream. |
-| `travel_db` | `travel-service` | `travel-service` only | `destinations`, `accommodations`, `room_types`, `activities`, `transfers`, `reviews`, `catalog_cache` | ACID relational; catalog products referenced by composite IDs (`item_type` + `item_id`). |
-| `booking_db` | `booking-service` | `booking-service` only | `bookings`, `booking_items`, `travelers`, `booking_status_log` | ACID local; eventual consistency across services via Saga. |
-| `payment_db` | `payment-service` | `payment-service` only | `payments`, `payment_intents`, `refunds`, `idempotency_keys` | Strict ACID with row-level locking for double-charge prevention. |
-| `notification_db` | `notification-service`| `notification-service` only | `notification_queue`, `dispatch_logs`, `templates` | Append-only audit logs and retry queues. |
-| `ai_db` | `ai-service` | `ai-service` only | `document_chunks`, `embeddings` (VECTOR 1536), `chat_sessions`, `chat_history` | Vector similarity indexing (HNSW) + session persistence. |
-
----
-
-## 7. Security, Authentication & Role-Based Access Architecture
-
-### 7.1 Zero-Trust Perimeter Security
-1. **Perimeter Authentication at `gateway-service`:**
-   - Public routes (`/api/v1/auth/login`, `/api/v1/auth/register`, `/api/v1/travel/search/**`) are accessible anonymously.
-   - Protected routes require an `Authorization: Bearer <JWT>` header.
-   - The Gateway decodes and validates the signature using `identity-service`'s public key (or shared secret), verifies expiration, and injects validated user attributes into downstream request headers:
-     - `X-User-Id: <UUID>`
-     - `X-User-Email: <email>`
-     - `X-User-Roles: ROLE_USER,ROLE_ADMIN`
-2. **Defense-in-Depth in Microservices:**
-   - Each internal microservice configures Spring Security with an internal filter validating the injected `X-User-*` headers or evaluating the JWT locally.
-   - Method-level security enforces granular privileges: `@PreAuthorize("hasRole('ADMIN')")`.
-
-### 7.2 Role-Based Access Control (RBAC) Specification
-
-Administrative capabilities are **not** an isolated microservice. Admin functionalities are protected domain operations within existing services:
-
-| Role | Target Areas | Permitted Actions |
-|---|---|---|
-| **`ROLE_USER`** | Customer Portal, Travel Catalog, Bookings, AI Concierge | - Search travel catalog.<br/>- Create and manage own bookings.<br/>- Pay for own reservations.<br/>- Manage own profile and passwords.<br/>- Chat with AI travel assistant.<br/>- Post reviews and ratings. |
-| **`ROLE_ADMIN`** | Admin Dashboard (`/admin/**`), Catalog Management, Analytics | - Full CRUD on internal travel catalog (hotels, activities, transfers).<br/>- View and search platform-wide bookings and transaction reports.<br/>- Manage user account statuses (suspend, activate).<br/>- Inspect system health metrics and audit logs.<br/>- Trigger manual refunds or override reservation states. |
-| **`ROLE_SUPPORT`** | Support Dashboard, Reservation Lookup | - Read-only access to customer profiles and booking details.<br/>- Assist customers with itinerary changes or cancellations.<br/>- Resend email vouchers and booking receipts. |
+| `identity_db` | `identity-service` | `identity-service` only | `users`, `roles`, `user_roles`, `refresh_tokens`, `login_audit` | Other services store only `user_id` (UUID); no foreign keys to `identity_db`. |
+| `travel_db` | `travel-service` | `travel-service` only | `destinations`, `accommodations`, `room_types`, `activities`, `transfers`, `reviews`, `catalog_cache` | Catalog items referenced downstream by composite IDs (`item_type` + `item_id`). |
+| `booking_db` | `booking-service` | `booking-service` only | `bookings`, `booking_items`, `travelers`, `booking_status_log` | Booking records link to `user_id` and item IDs without cross-database constraints. |
+| `payment_db` | `payment-service` | `payment-service` only | `payments`, `payment_intents`, `refunds`, `idempotency_keys` | Financial ledger is strictly isolated; links to `booking_id`. |
+| `notification_db`| `notification-service` | `notification-service` only | `notification_queue`, `dispatch_logs`, `templates` | Append-only notification logs. |
+| `ai_db` | `ai-service` | `ai-service` only | `document_chunks`, `embeddings` (VECTOR 1536), `chat_sessions`, `chat_history` | Embeddings and chat sessions isolated to AI operations. |
 
 ---
 
 ## 8. High-Level Request Flows
 
-### 8.1 User Authentication Flow (Registration & Login)
+### 8.1 User Authentication Flow (Login & Token Issuance)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as User / Client App
-    participant GW as gateway-service
-    participant IS as identity-service
+    actor User as User / Frontend App
+    participant GW as gateway-service (8888)
+    participant IS as identity-service (8081)
     participant DB as identity_db
 
     User->>GW: POST /api/v1/auth/login {email, password}
-    GW->>IS: Forward login request
+    GW->>IS: Forward login request (lb://IDENTITY-SERVICE)
     IS->>DB: Query user by email
     DB-->>IS: Return User entity with BCrypt hash
     IS->>IS: Verify password with BCrypt.matches()
@@ -370,7 +351,7 @@ sequenceDiagram
         IS-->>GW: 401 Unauthorized {message: "Invalid credentials"}
         GW-->>User: 401 Unauthorized
     else Password Valid
-        IS->>IS: Generate Access Token (JWT, 15m, roles)
+        IS->>IS: Generate Access Token (JWT, 15m, RS256, roles)
         IS->>IS: Generate Refresh Token (UUID, 7d)
         IS->>DB: Persist hashed Refresh Token
         IS-->>GW: 200 OK + Body {accessToken, user} + Set-Cookie: refreshToken (httpOnly, Secure)
@@ -386,14 +367,14 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor User as Client Browser
-    participant GW as gateway-service
-    participant TS as travel-service
+    participant GW as gateway-service (8888)
+    participant TS as travel-service (8082)
     participant Cache as Redis Cache
-    participant Ext as External Suppliers<br/>(Amadeus, Booking, Viator)
+    participant Ext as External Suppliers<br/>(Amadeus, Booking.com, Viator)
     participant DB as travel_db
 
-    User->>GW: GET /api/v1/travel/search?type=ALL&city=Marrakech&from=2026-10-01&to=2026-10-08
-    GW->>TS: Forward search request
+    User->>GW: GET /api/v1/travel/search?city=Marrakech&type=ALL&from=2026-10-01&to=2026-10-08
+    GW->>TS: Forward request (lb://TRAVEL-SERVICE)
     TS->>Cache: Check cached search results
     alt Cache Hit
         Cache-->>TS: Return cached travel listings
@@ -408,7 +389,7 @@ sequenceDiagram
             TS->>Ext: Fetch flight quotes (Amadeus API)
         end
         TS->>TS: Aggregate, normalize, and sort results into UnifiedTravelCatalog
-        TS->>Cache: Store results (TTL = 10 minutes)
+        TS->>Cache: Store results in Redis (TTL = 10 minutes)
     end
     TS-->>GW: 200 OK {destinations, hotels, flights, activities}
     GW-->>User: 200 OK JSON
@@ -416,28 +397,29 @@ sequenceDiagram
 
 ---
 
-### 8.3 Booking Creation & Payment Orchestration (Saga Pattern)
+### 8.3 Booking Creation & Payment Orchestration Flow (Saga Pattern)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Customer Client
-    participant GW as gateway-service
-    participant BS as booking-service
-    participant TS as travel-service
-    participant PS as payment-service
+    participant GW as gateway-service (8888)
+    participant BS as booking-service (8083)
+    participant TS as travel-service (8082)
+    participant PS as payment-service (8084)
     participant Stripe as Stripe PSP
-    participant NS as notification-service
+    participant NS as notification-service (8085)
 
     %% Step 1: Draft & Price Confirmation
     User->>GW: POST /api/v1/bookings/create {items: [{itemId, type, dates}], travelerInfo}
-    GW->>BS: Forward booking request (with X-User-Id header)
-    BS->>TS: Re-validate availability & fetch authoritative price
+    GW->>GW: Validate JWT & inject X-User-Id header
+    GW->>BS: Forward booking request (lb://BOOKING-SERVICE)
+    BS->>TS: Feign: Validate availability & calculate authoritative price
     TS-->>BS: Price confirmed: $450.00
     BS->>BS: Create Booking record in booking_db (Status: PENDING_PAYMENT)
     
     %% Step 2: Payment Intent Creation
-    BS->>PS: POST /api/v1/payments/intents {bookingId, amount: 450.00, currency: "USD"}
+    BS->>PS: Feign: POST /api/v1/payments/intents {bookingId, amount: 450.00, currency: "USD"}
     PS->>Stripe: Create PaymentIntent (amount=45000, currency=usd, metadata={bookingId})
     Stripe-->>PS: Return PaymentIntent {id: "pi_123", client_secret: "cs_xyz"}
     PS->>PS: Record intent in payment_db (Status: REQUIRES_PAYMENT_METHOD)
@@ -469,14 +451,15 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor User as User (Chat UI)
-    participant GW as gateway-service
-    participant AI as ai-service
+    participant GW as gateway-service (8888)
+    participant AI as ai-service (7777)
     participant LLM as OpenAI (gpt-4o-mini)
-    participant TS as travel-service
+    participant TS as travel-service (8082)
     participant Vec as ai_db (pgvector)
 
     User->>GW: POST /api/v1/ai/chat {"message": "Find hotels in Fes under $100 and a 3-day itinerary"}
-    GW->>AI: Forward prompt (with X-User-Id)
+    GW->>GW: Validate JWT & inject X-User-Id header
+    GW->>AI: Forward prompt (lb://AI-SERVICE)
     
     par RAG Knowledge Retrieval
         AI->>Vec: Query top-3 vector chunks for "Fes travel guide 3-day itinerary"
@@ -486,7 +469,7 @@ sequenceDiagram
     AI->>LLM: Send system prompt + RAG context + user message + registered tools: [searchHotels, searchActivities]
     LLM-->>AI: Tool Call Requested: searchHotels(city="Fes", maxPrice=100)
     
-    AI->>TS: Execute Tool: GET /api/v1/travel/hotels/search?city=Fes&maxPrice=100
+    AI->>TS: Feign Tool Call: GET /api/v1/travel/hotels/search?city=Fes&maxPrice=100
     TS-->>AI: Return hotel listings [Riad Fes ($85/night), Hotel Atlas ($70/night)]
     
     AI->>LLM: Send tool execution results back to model
@@ -504,7 +487,7 @@ With Phase 3 (Repository Cleanup) and Phase 4 (V2 Architecture Specification) co
 
 | Phase | Name | Target Deliverables |
 |---|---|---|
-| **Phase 5** | **Cloud Infrastructure & Configuration** | Re-establish clean Eureka `discovery-service` and Spring Cloud `config-service`. Configure Docker Compose environment with PostgreSQL 16 (`pgvector`) and Redis. |
+| **Phase 5** | **Cloud Infrastructure & Configuration** | Modernize Eureka `discovery-service` and Spring Cloud `config-service`. Configure Docker Compose environment with PostgreSQL 16 (`pgvector`) and Redis. |
 | **Phase 6** | **Identity & Security Service** | Implement `identity-service` with Spring Security 6, JWT generation/validation, BCrypt hashing, user/admin entities, and RBAC endpoints. |
 | **Phase 7** | **Unified Travel Service** | Implement `travel-service` managing Flights, Hotels, Activities, Transfers, and Destinations. Implement Amadeus and Booking.com provider adapters with caching. |
 | **Phase 8** | **Booking & Payment Services** | Implement `booking-service` lifecycle state machine and `payment-service` with Stripe PSP integration, idempotency ledger, and webhooks. |
