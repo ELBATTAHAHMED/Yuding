@@ -2,7 +2,6 @@ package com.ahmed.userservice.controllers;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,12 +70,5 @@ public class userController {
 	    public Utilisateurs getUserById(@PathVariable("id") Long id) {
 	        return utilisateurServices.getUserById(id);
 	    }
-	    
-	    @PostMapping("/{username}")
-	    public ResponseEntity<Optional<Utilisateurs>> getUserByUsername(@PathVariable String username) throws NotFoundException {
-	      Optional<Utilisateurs> utilisateur = utilisateurServices.rechercherParUsername(username);
-	      return ResponseEntity.ok(utilisateur);
-	    }
-    
 }
 		

@@ -26,6 +26,9 @@ logs/
 .springBeans
 .sts4-cache/
 .apt_generated
+.vs/
+*.suo
+*.user
 
 # NetBeans
 /nbproject/private/
@@ -37,9 +40,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# OS files
+# OS and temporary files
 .DS_Store
 Thumbs.db
+~$*
 
 # Node (if frontend tooling is added)
 node_modules/
