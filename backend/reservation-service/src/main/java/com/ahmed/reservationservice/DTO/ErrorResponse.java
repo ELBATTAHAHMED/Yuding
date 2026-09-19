@@ -1,4 +1,4 @@
-package com.ahmed.reservationservice.dto;
+package com.ahmed.reservationservice.DTO;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
