@@ -7,6 +7,13 @@ export interface Destination {
   popularRank?: number;
 }
 
+export interface Airport {
+  code: string;
+  name: string;
+  city: string;
+  country: string;
+}
+
 export interface FlightLeg {
   departureAirport: string;
   arrivalAirport: string;

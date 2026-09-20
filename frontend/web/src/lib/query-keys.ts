@@ -26,6 +26,7 @@ export const queryKeys = {
   },
   travel: {
     all: ['travel'] as const,
+    airports: () => [...queryKeys.travel.all, 'airports'] as const,
     destinations: () => [...queryKeys.travel.all, 'destinations'] as const,
     hotels: (filter?: { country?: string; city?: string }) =>
       [...queryKeys.travel.all, 'hotels', filter || {}] as const,

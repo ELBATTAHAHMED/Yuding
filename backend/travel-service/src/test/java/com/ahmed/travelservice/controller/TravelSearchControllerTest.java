@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -64,6 +65,18 @@ class TravelSearchControllerTest {
                 .andExpect(jsonPath("$.totalResults").value(0))
                 .andExpect(jsonPath("$.searchId").isString())
                 .andExpect(jsonPath("$.message").value(containsString("scheduled for Phase")));
+    }
+
+    @Test
+    @DisplayName("GET /travel/airports returns normalized list of airports including CMN, RAK, CDG")
+    void getAirportsSuccess() throws Exception {
+        mockMvc.perform(get("/travel/airports"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$", not(empty())))
+                .andExpect(jsonPath("$[?(@.code == 'CMN')].city").value("Casablanca"))
+                .andExpect(jsonPath("$[?(@.code == 'RAK')].city").value("Marrakech"))
+                .andExpect(jsonPath("$[?(@.code == 'CDG')].city").value("Paris"));
     }
 
     @Test

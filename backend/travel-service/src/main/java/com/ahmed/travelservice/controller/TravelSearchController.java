@@ -29,6 +29,11 @@ public class TravelSearchController {
         return ResponseEntity.ok(response);
     }
 
+    @org.springframework.web.bind.annotation.GetMapping("/airports")
+    public ResponseEntity<java.util.List<AirportDto>> getAirports() {
+        return ResponseEntity.ok(travelSearchService.getAirports());
+    }
+
     @PostMapping("/hotels/search")
     public ResponseEntity<SearchResponse<HotelOfferDto>> searchHotels(
             @Valid @RequestBody HotelSearchRequest request) {

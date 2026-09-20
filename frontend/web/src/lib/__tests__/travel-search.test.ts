@@ -275,5 +275,67 @@ describe('Phase 20 — Travel Search Models & Service Contract Tests', () => {
       assert.equal(response.currentPrice, 150.0);
     });
   });
+
+  describe('7. Airport Directory & Selection UX Contract (Phase 22)', () => {
+    it('routes getAirports to "/travel/airports" via Gateway', async () => {
+      const mockAirports = [
+        { code: 'CMN', name: 'Mohammed V International Airport', city: 'Casablanca', country: 'Morocco' },
+        { code: 'CDG', name: 'Charles de Gaulle Airport', city: 'Paris', country: 'France' },
+        { code: 'RAK', name: 'Marrakech Menara Airport', city: 'Marrakech', country: 'Morocco' },
+      ];
+
+      globalThis.fetch = async (input, init) => {
+        const url = input.toString();
+        const method = init?.method || 'GET';
+        capturedCalls.push({ url, method, body: undefined });
+        return createMockResponse(mockAirports);
+      };
+
+      const airports = await travelService.getAirports();
+
+      assert.equal(capturedCalls.length, 1);
+      assert.match(capturedCalls[0].url, /\/travel\/airports$/);
+      assert.equal(capturedCalls[0].method, 'GET');
+      assert.equal(airports.length, 3);
+      assert.equal(airports[0].code, 'CMN');
+      assert.equal(airports[0].city, 'Casablanca');
+      assert.equal(airports[1].code, 'CDG');
+      assert.equal(airports[2].code, 'RAK');
+    });
+
+    it('ensures flight search sends clean 3-letter IATA codes when airports are selected', async () => {
+      globalThis.fetch = async (input, init) => {
+        const url = input.toString();
+        const method = init?.method || 'GET';
+        const body = init?.body ? JSON.parse(init.body.toString()) : undefined;
+        capturedCalls.push({ url, method, body });
+        return createMockResponse({
+          searchId: 'search-cmn-cdg-1',
+          status: 'SUCCESS',
+          message: 'Found flights',
+          totalResults: 1,
+          results: [],
+        });
+      };
+
+      await travelService.searchFlights({
+        origin: 'CMN',
+        destination: 'CDG',
+        departureDate: '2026-11-15',
+        adults: 1,
+        children: 0,
+        infants: 0,
+        travelClass: 'ECONOMY',
+        nonStop: false,
+        currency: 'EUR',
+      });
+
+      assert.equal(capturedCalls.length, 1);
+      assert.equal(capturedCalls[0].body.origin, 'CMN');
+      assert.equal(capturedCalls[0].body.destination, 'CDG');
+      assert.notEqual(capturedCalls[0].body.origin, 'Casablanca');
+      assert.notEqual(capturedCalls[0].body.destination, 'Paris');
+    });
+  });
 });
 

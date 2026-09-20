@@ -359,6 +359,54 @@ class ScrappaClientTest {
                         .isEqualTo(ProviderErrorCode.PROVIDER_NOT_CONFIGURED));
     }
 
+    // ─── Airports directory tests ──────────────────────────────────────────────
+
+    @Test
+    void getAirports_success_parsesAirportsList() throws InterruptedException {
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody("""
+                        {
+                            "airports": [
+                                {
+                                    "code": "CDG",
+                                    "name": "Charles de Gaulle Airport",
+                                    "city": "Paris",
+                                    "country": "France"
+                                },
+                                {
+                                    "code": "JFK",
+                                    "name": "John F. Kennedy International Airport",
+                                    "city": "New York",
+                                    "country": "United States"
+                                }
+                            ]
+                        }
+                        """));
+
+        var response = client.getAirports();
+
+        RecordedRequest req = mockServer.takeRequest();
+        assertThat(req.getPath()).contains("/flights/airports");
+        assertThat(req.getHeader("X-API-KEY")).isEqualTo("test-api-key-mock");
+
+        assertThat(response.safeAirports()).hasSize(2);
+        assertThat(response.safeAirports().get(0).getCode()).isEqualTo("CDG");
+        assertThat(response.safeAirports().get(0).getCity()).isEqualTo("Paris");
+    }
+
+    @Test
+    void getAirports_503_throwsUnavailable() {
+        mockServer.enqueue(new MockResponse().setResponseCode(503)
+                .setBody("{\"message\":\"Service Unavailable\"}"));
+
+        assertThatThrownBy(() -> client.getAirports())
+                .isInstanceOf(TravelProviderException.class)
+                .satisfies(e -> assertThat(((TravelProviderException) e).getErrorCode())
+                        .isEqualTo(ProviderErrorCode.PROVIDER_UNAVAILABLE));
+    }
+
     // ─── Helpers ───────────────────────────────────────────────────────────────
 
     private FlightSearchQuery minimalOneWayQuery() {

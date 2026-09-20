@@ -9,7 +9,8 @@ Flight searches transition from placeholder/stub behavior to live external looku
 ### End-to-End Flow
 ```
 Next.js Frontend (/flights)
-      │  (POST /travel/flights/search)
+      │  (GET /travel/airports - TanStack Query cached 24h)
+      │  (POST /travel/flights/search - Selected IATA codes only)
       ▼
 Spring Cloud Gateway (port 8888)
       │  (Route: TRAVEL-SERVICE)
@@ -41,8 +42,8 @@ TravelSearchResponse<FlightOfferDto>
 
 - **Key Isolation**: `SCRAPPA_API_KEY` is strictly a backend secret. It is never sent to the browser, never referenced in `NEXT_PUBLIC_*` variables, and never forwarded across the Gateway.
 - **Local Secret Loading**: Local development loads secrets from `backend/travel-service/.env.local`. This file is matched by `.gitignore` (`.env.*` rule) and is never committed.
+- **Automatic Startup Load**: `TravelServiceApplication` automatically parses `.env.local` on startup if present, injecting keys into the local process environment without leaking values.
 - **Configuration Template**: `backend/travel-service/.env.example` provides the template with placeholders only.
-- **Process Environment**: `scripts/start-travel-service.ps1` sets environment variables only within the local PowerShell process scope before launching Spring Boot.
 - **Safe Logging**: The API key is never logged. Log statements only record high-level search metadata (origin, destination, date, passenger count, result count). Response bodies and raw credentials are never printed.
 
 ---
@@ -60,6 +61,12 @@ TravelSearchResponse<FlightOfferDto>
    - Stage 1 (no departure token): Returns outbound flights with `itinerary_complete: false`, `price_type: "round_trip_starting"`, and an opaque `departure_token`.
    - Credit Protection: Automatic second-stage fan-out is explicitly disabled. Outbound results are normalized with `itineraryComplete=false` and preserve `departureToken`.
 
+3. **Airports Directory**:
+   - `GET https://scrappa.co/api/flights/airports` (Free endpoint, 0 credits billed).
+   - Returns major hubs with IATA codes, names, cities, and countries.
+   - Backend `TravelSearchService` enriches this with key Moroccan/regional airports (`CMN`, `RAK`, `RBA`, `TNG`, `AGA`, `FEZ`, `NDR`, `OUJ`, `OZZ`, `ORY`, etc.) and caches in-memory to prevent repeated provider lookups.
+   - Exposed as `GET /travel/airports` to the frontend via Gateway.
+
 ### Domain Decisions
 - **Infants**: Mapped to `infants_on_lap`. `infants_in_seat` is omitted because Yuding's UI passenger counter represents lap infants by default.
 - **IATA Extraction**: Inputs like `"Casablanca (CMN)"` or bare `"CMN"` are parsed to extract the 3-letter uppercase IATA code required by Scrappa.
@@ -74,7 +81,24 @@ TravelSearchResponse<FlightOfferDto>
 
 ---
 
-## 4. Error Mapping
+## 4. Frontend Airport Selection UX
+
+- **AirportSelector Component** (`src/components/travel/AirportSelector.tsx`):
+  - Autocomplete search supporting case-insensitive lookup across airport code, airport name, city, and country.
+  - Keyboard navigation (ArrowUp, ArrowDown, Enter to select, Escape to close).
+  - Clear/reset button for easy re-selection.
+  - Accessible listbox with top 6 matching suggestions.
+- **TanStack Query Caching**:
+  - `useAirportsQuery` fetches `/travel/airports` with `staleTime: 24h`.
+  - Zero network calls on keystroke — filtering is performed locally in the browser.
+- **Search Validation**:
+  - Requires a valid selected origin and destination airport.
+  - Validates `origin !== destination`.
+  - Sends ONLY the 3-letter IATA code (`origin: "CMN"`, `destination: "CDG"`), never raw city names.
+
+---
+
+## 5. Error Mapping
 
 | Scrappa HTTP Status | Yuding ProviderErrorCode | GlobalExceptionHandler HTTP Status | Description |
 |---|---|---|---|
@@ -87,15 +111,19 @@ TravelSearchResponse<FlightOfferDto>
 
 ---
 
-## 5. Testing & Verification
+## 6. Testing & Live Verification
 
 ### Unit & Mocked Tests (Credit-Safe)
-All unit and regression tests use OkHttp `MockWebServer`. No real Scrappa credits are consumed during normal test runs:
-- `ScrappaClientTest`: Verifies query construction, header injection, IATA parsing, and all HTTP error mappings (15 test cases).
-- `ScrappaTravelProviderTest`: Verifies normalization of one-way and round-trip responses, multi-leg flight mapping, `BigDecimal` precision, and capability constraints.
-- `TravelProviderSwappabilityTest`: Verified swappability between stub and real providers.
+All unit and regression tests use OkHttp `MockWebServer`. No real Scrappa credits are consumed during test runs:
+- `ScrappaClientTest`: Verifies query construction, header injection, IATA parsing, airport directory parsing, and all HTTP error mappings (17 test cases).
+- `ScrappaTravelProviderTest`: Verifies normalization of one-way and round-trip responses, multi-leg flight mapping, `BigDecimal` precision, airport normalization, and capability constraints.
+- `TravelSearchControllerTest`: Verifies public endpoints including `GET /travel/airports` and `POST /travel/flights/search`.
+- Frontend tests (`travel-search.test.ts`): Verifies `/travel/airports` route, clean IATA code transmission, and no direct port calls.
 
-### Gated Live Smoke Test
-- `ScrappaLiveSmokeTest`: Gated by `@EnabledIfEnvironmentVariable(named = "SCRAPPA_LIVE_TEST", matches = "true")`.
-- Execution: `CMN → CDG`, future date, 1 adult, economy.
-- Result: **SUCCESS** — returned 9 real flight offers from Royal Air Maroc (`AT`) starting at 116 EUR (direct, 185 minutes).
+### Gateway End-to-End Verification
+- **CMN → CDG** (2026-11-15, 1 adult, economy):
+  - **SUCCESS** — Returned 9 real flight offers from Royal Air Maroc (`AT`) starting at 116 EUR (direct, 185 min), Air France (`AF`), Lufthansa (`LH`).
+- **CMN → RAK** (2026-11-15, 1 adult, economy):
+  - **SUCCESS** — Returned 7 real flight offers from Royal Air Maroc (`AT 401` & `AT 403` direct) starting at 102 EUR, TAP Air Portugal (`TP`), Iberia (`IB`), Air France (`AF`).
+- **Empty State Verification**:
+  - Non-existent/no-flight route returns `totalResults: 0` with a clean `No flights found` state message in the UI without fabricating data.
