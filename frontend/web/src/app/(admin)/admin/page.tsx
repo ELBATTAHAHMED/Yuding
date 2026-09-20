@@ -1,40 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { adminService } from '@/services/admin.service';
+import React from 'react';
 import { AdminStats } from '@/types/admin.types';
+import {
+  useAdminStats,
+  useAdminRecentReservations,
+  useAdminRecentPayments,
+} from '@/hooks/queries/useAdminQueries';
 
 export default function AdminOverviewPage() {
-  const [stats, setStats] = useState<AdminStats>({
+  const { data: statsData, isLoading: loadingStats } = useAdminStats();
+  const { data: recentReservations = [], isLoading: loadingRes } = useAdminRecentReservations();
+  const { data: recentPayments = [], isLoading: loadingPay } = useAdminRecentPayments();
+
+  const stats: AdminStats = statsData || {
     totalReservations: 0,
     totalPayments: 0,
     totalRevenue: 0,
     totalHebergements: 0,
     totalTransports: 0,
     totalActivites: 0,
-  });
-  const [recentReservations, setRecentReservations] = useState<any[]>([]);
-  const [recentPayments, setRecentPayments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      try {
-        const [statsData, resData, payData] = await Promise.all([
-          adminService.getAdminStats(),
-          adminService.getRecentReservations(),
-          adminService.getRecentPayments(),
-        ]);
-        setStats(statsData);
-        setRecentReservations(resData);
-        setRecentPayments(payData);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  };
+  const loading = loadingStats || loadingRes || loadingPay;
 
   return (
     <div>
