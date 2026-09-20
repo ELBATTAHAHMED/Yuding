@@ -41,7 +41,7 @@ public class SecurityConfig {
                         // Public infrastructure & health probes
                         .pathMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         // Downstream routed endpoints (services maintain their own authorization boundary)
-                        .pathMatchers("/apir/**", "/apiu/**", "/apic/**", "/ai/**").permitAll()
+                        .pathMatchers("/apir/**", "/auth/**", "/apic/**", "/ai/**").permitAll()
                         .anyExchange().permitAll()
                 )
                 .build();
