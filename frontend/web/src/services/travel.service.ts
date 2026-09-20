@@ -72,8 +72,8 @@ export const travelService = {
 
     if (queryOrOriginCountry && typeof queryOrOriginCountry === 'object') {
       payload = {
-        origin: queryOrOriginCountry.origin || 'Paris (CDG)',
-        destination: queryOrOriginCountry.destination || 'Casablanca (CMN)',
+        origin: queryOrOriginCountry.origin || '',
+        destination: queryOrOriginCountry.destination || '',
         departureDate: queryOrOriginCountry.departureDate || getDefaultDate(7),
         returnDate: queryOrOriginCountry.returnDate,
         adults: queryOrOriginCountry.adults ?? 1,
@@ -85,12 +85,12 @@ export const travelService = {
       };
     } else {
       const originCountry = queryOrOriginCountry as string | undefined;
-      const origin = originCity || originCountry || 'Paris (CDG)';
-      const dest = destination || 'Casablanca (CMN)';
+      const origin = originCity || originCountry || '';
+      const dest = destination || '';
 
       payload = {
-        origin: origin.trim() || 'Paris (CDG)',
-        destination: dest.trim() || 'Casablanca (CMN)',
+        origin: origin.trim(),
+        destination: dest.trim(),
         departureDate: getDefaultDate(7),
         adults: 1,
         children: 0,

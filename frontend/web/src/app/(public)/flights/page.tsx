@@ -35,32 +35,20 @@ export default function FlightsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Set default departure date: ~2 months ahead
-  useEffect(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 2);
-    setDepartureDate(d.toISOString().split('T')[0]);
-  }, []);
-
-  // Set default airport selection once airports are loaded if not already selected
-  useEffect(() => {
-    if (airports.length > 0) {
-      if (!selectedOrigin) {
-        const cmn = airports.find((a) => a.code === 'CMN') || airports[0];
-        setSelectedOrigin(cmn);
-      }
-      if (!selectedDestination) {
-        const cdg = airports.find((a) => a.code === 'CDG') || airports.find((a) => a.code !== 'CMN') || null;
-        setSelectedDestination(cdg);
-      }
-    }
-  }, [airports, selectedOrigin, selectedDestination]);
+  const today = new Date().toISOString().split('T')[0];
+  const isFormValid = Boolean(
+    selectedOrigin &&
+    selectedDestination &&
+    selectedOrigin.code !== selectedDestination.code &&
+    departureDate &&
+    departureDate >= today
+  );
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
 
-    // Validation rule 7: Origin and destination must be valid selected airports
+    // Validation rules: Origin and destination must be valid selected airports
     if (!selectedOrigin) {
       setValidationError('Veuillez sélectionner un aéroport d\'origine valide dans la liste.');
       return;
@@ -75,6 +63,10 @@ export default function FlightsPage() {
     }
     if (!departureDate) {
       setValidationError('Veuillez sélectionner une date de départ.');
+      return;
+    }
+    if (departureDate < today) {
+      setValidationError('La date de départ doit être aujourd\'hui ou dans le futur.');
       return;
     }
 
@@ -158,7 +150,7 @@ export default function FlightsPage() {
               id="origin-airport"
               label="Origine"
               icon="fa-plane-departure"
-              placeholder="Ex: Casablanca, Paris, CMN..."
+              placeholder="Ville ou aéroport"
               airports={airports}
               selectedAirport={selectedOrigin}
               onSelect={(airport) => {
@@ -172,7 +164,7 @@ export default function FlightsPage() {
               id="destination-airport"
               label="Destination"
               icon="fa-plane-arrival"
-              placeholder="Ex: Paris, Marrakech, CDG..."
+              placeholder="Ville ou aéroport"
               airports={airports}
               selectedAirport={selectedDestination}
               onSelect={(airport) => {
@@ -200,6 +192,7 @@ export default function FlightsPage() {
                 type="date"
                 id="departure-date"
                 className="input-field"
+                min={today}
                 value={departureDate}
                 onChange={(e) => setDepartureDate(e.target.value)}
                 style={{
@@ -252,15 +245,18 @@ export default function FlightsPage() {
               <button
                 type="submit"
                 className="btn-booking search-btn"
-                disabled={isSearching}
+                disabled={isSearching || !isFormValid}
+                title={!isFormValid ? "Veuillez renseigner l'origine, la destination et la date de départ" : undefined}
                 style={{
                   width: '100%',
                   padding: '0.85rem',
                   fontWeight: 700,
                   borderRadius: '6px',
-                  cursor: 'pointer',
+                  cursor: (isSearching || !isFormValid) ? 'not-allowed' : 'pointer',
+                  opacity: (isSearching || !isFormValid) ? 0.6 : 1,
                   color: '#fff',
                   border: 'none',
+                  transition: 'opacity 0.2s ease',
                 }}
               >
                 {isSearching ? (
