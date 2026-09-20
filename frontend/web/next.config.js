@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  env: {
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8888',
-  },
   images: {
     unoptimized: true,
+  },
+  async rewrites() {
+    return [
+      {
+        // Public edge prefix /api/* rewritten to Gateway /*
+        source: '/api/:path*',
+        destination: `${process.env.GATEWAY_INTERNAL_URL || 'http://localhost:8888'}/:path*`,
+      },
+    ];
   },
 };
 

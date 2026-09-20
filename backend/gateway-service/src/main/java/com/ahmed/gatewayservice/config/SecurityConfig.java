@@ -20,10 +20,12 @@ import java.time.Duration;
 public class SecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain springSecurityFilterChain(
+            ServerHttpSecurity http,
+            org.springframework.web.cors.reactive.CorsConfigurationSource corsConfigurationSource) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(Customizer.withDefaults())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives("default-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';"))
