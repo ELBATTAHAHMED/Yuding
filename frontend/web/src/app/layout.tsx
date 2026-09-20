@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/features/auth/AuthContext';
-import { AppShell } from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
   title: 'Yuding — Réservation de Voyages, Hébergements, Vols & Activités',
@@ -32,7 +31,7 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          {children}
         </AuthProvider>
       </body>
     </html>

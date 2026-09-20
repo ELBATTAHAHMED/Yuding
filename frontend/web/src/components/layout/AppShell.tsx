@@ -1,24 +1,12 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 
+/**
+ * AppShell: In Phase 15, route groups ((public), (auth), (user), (checkout), (admin))
+ * manage their own nested layouts. AppShell is maintained as a pass-through
+ * wrapper for backward compatibility.
+ */
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith('/admin');
-  const isAuthRoute = pathname === '/login' || pathname === '/register';
-
-  if (isAdminRoute || isAuthRoute) {
-    return <>{children}</>;
-  }
-
-  return (
-    <>
-      <Header />
-      <main style={{ minHeight: 'calc(100vh - 200px)' }}>{children}</main>
-      <Footer />
-    </>
-  );
+  return <>{children}</>;
 };

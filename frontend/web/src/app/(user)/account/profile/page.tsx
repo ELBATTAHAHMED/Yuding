@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ProtectedRoute } from '@/components/common/ProtectedRoute';
 import { useAuth } from '@/features/auth/useAuth';
 import { authService } from '@/services/auth.service';
 import { ActiveSession, SecurityEvent } from '@/types/auth.types';
@@ -101,10 +100,8 @@ export default function AccountPage() {
   };
 
   return (
-    <ProtectedRoute>
-      <div style={{ padding: '3.5rem 1rem', background: 'var(--bg, #f4f6f6)', minHeight: '85vh' }}>
-        <div className="container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          {/* Header */}
+    <div>
+      {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text, #001b1a)' }}>
@@ -413,8 +410,6 @@ export default function AccountPage() {
               <p style={{ color: '#888', fontSize: '0.9rem' }}>Aucun événement de sécurité consigné pour le moment.</p>
             )}
           </div>
-        </div>
-      </div>
-    </ProtectedRoute>
+    </div>
   );
 }
