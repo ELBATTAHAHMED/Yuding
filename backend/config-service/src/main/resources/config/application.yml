@@ -1,0 +1,33 @@
+# ====================================================================
+# Yuding V2 - Shared Base Configuration (application.yml)
+# Applied to all microservices unless overridden by service or profile
+# ====================================================================
+
+spring:
+  main:
+    banner-mode: console
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_URL:http://localhost:8761/eureka}
+    prefer-ip-address: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true

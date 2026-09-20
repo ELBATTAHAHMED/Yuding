@@ -1,0 +1,13 @@
+# ====================================================================
+# Yuding V2 - AI Service Production Profile (ai-service-prod.yml)
+# ====================================================================
+
+spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?currentSchema=ai}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}

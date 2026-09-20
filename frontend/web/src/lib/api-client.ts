@@ -79,6 +79,8 @@ export interface RequestOptions extends RequestInit {
   isRetry?: boolean;
 }
 
+import { env } from './env.ts';
+
 const TRANSIENT_STATUS_CODES = new Set([502, 503, 504]);
 const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -90,7 +92,7 @@ export class ApiClient {
   private defaultRetryDelayMs: number = 300;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = (baseUrl || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8888').replace(/\/+$/, '');
+    this.baseUrl = (baseUrl || env.apiBaseUrl || 'http://localhost:8888').replace(/\/+$/, '');
   }
 
   public setBaseUrl(url: string) {

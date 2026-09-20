@@ -1,0 +1,20 @@
+# ====================================================================
+# Yuding V2 - Commentaire Service Base Configuration (commentaire-service.yml)
+# Schema: engagement
+# ====================================================================
+
+server:
+  port: 8072
+  max-http-request-header-size: 16KB
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        default_schema: engagement
+    hibernate:
+      ddl-auto: none
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB

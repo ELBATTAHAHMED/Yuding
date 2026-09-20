@@ -1,0 +1,48 @@
+# ====================================================================
+# Yuding V2 - Shared Test Profile (application-test.yml)
+# Active when SPRING_PROFILES_ACTIVE=test
+# ====================================================================
+
+spring:
+  datasource:
+    url: ${TEST_DB_URL:${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:yuding}}}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    # Strictly preserve Flyway as sole DDL authority - never use create/update
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+# Disable Eureka registration in test execution
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# External Providers Mock Mode for Test Determinism
+payment:
+  provider: MOCK
+
+spring.ai:
+  openai:
+    api-key: test-mock-key-do-not-call-external-api
+
+cors:
+  allowed-origins: "*"
+
+cookie:
+  secure: false
+
+logging:
+  level:
+    root: WARN
+    com.ahmed: INFO
+    org.springframework.test: INFO

@@ -1,0 +1,13 @@
+# ====================================================================
+# Yuding V2 - Identity Service Staging Profile (identity-service-staging.yml)
+# ====================================================================
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:yuding}?currentSchema=identity}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://staging.yuding.travel}
+
+cookie:
+  secure: true
