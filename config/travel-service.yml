@@ -40,3 +40,9 @@ travel:
     activities: ${TRAVEL_ACTIVITIES_PROVIDER:none}
     transfers: ${TRAVEL_TRANSFERS_PROVIDER:none}
     default-provider: none
+  scrappa:
+    api-key: ${SCRAPPA_API_KEY:}
+    base-url: ${SCRAPPA_BASE_URL:https://scrappa.co/api}
+    connect-timeout-ms: 5000
+    read-timeout-ms: 15000
+
