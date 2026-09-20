@@ -34,5 +34,9 @@ spring:
           uri: lb://COMMENTAIRE-SERVICE
           predicates:
             - Path=/apic/**
+        - id: travel-route
+          uri: lb://TRAVEL-SERVICE
+          predicates:
+            - Path=/travel/**
   codec:
     max-in-memory-size: 5MB

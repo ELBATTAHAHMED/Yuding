@@ -10,6 +10,7 @@ export default function HotelsPage() {
   const [city, setCity] = useState('');
   const [filterType, setFilterType] = useState<string>('ALL');
   const [hotels, setHotels] = useState<HotelOffer[]>([]);
+  const [providerMessage, setProviderMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -17,7 +18,12 @@ export default function HotelsPage() {
       setLoading(true);
       try {
         const data = await travelService.searchHotels();
-        setHotels(data);
+        setHotels(data.results || []);
+        if (data.status === 'PROVIDER_UNAVAILABLE') {
+          setProviderMessage(data.message);
+        }
+      } catch {
+        setHotels([]);
       } finally {
         setLoading(false);
       }
@@ -30,7 +36,15 @@ export default function HotelsPage() {
     setLoading(true);
     try {
       const data = await travelService.searchHotels(country, city);
-      setHotels(data);
+      setHotels(data.results || []);
+      if (data.status === 'PROVIDER_UNAVAILABLE') {
+        setProviderMessage(data.message);
+      } else {
+        setProviderMessage(null);
+      }
+    } catch {
+      setHotels([]);
+      setProviderMessage('Impossible de contacter le service de voyage.');
     } finally {
       setLoading(false);
     }
@@ -141,61 +155,98 @@ export default function HotelsPage() {
             ))}
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '2rem',
-            }}
-          >
-            {filteredHotels.map((item) => (
+          {filteredHotels.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '3.5rem 1.5rem',
+                background: 'var(--card, #fff)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.05)',
+              }}
+            >
               <div
-                key={item.id}
                 style={{
-                  background: 'var(--card, #fff)',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'rgba(1, 121, 111, 0.1)',
+                  color: '#01796F',
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.8rem',
+                  margin: '0 auto 1.25rem',
                 }}
               >
-                <div style={{ height: '200px', overflow: 'hidden' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.imageUrl || '/image/hotels.jpg'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{item.name}</h3>
-                    <div style={{ color: '#ffb300', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      <i className="fas fa-star"></i>
-                      <span>{item.rating}</span>
-                    </div>
-                  </div>
-
-                  <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-                    <i className="fas fa-map-marker-alt" style={{ color: '#01796F', marginRight: '0.4rem' }}></i>
-                    {item.city}, {item.country}
-                  </p>
-
-                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>{item.pricePerNight} €</span>
-                      <span style={{ fontSize: '0.8rem', color: '#888' }}> / nuit</span>
-                    </div>
-
-                    <Link
-                      href={`/booking?serviceType=HOTEL&serviceId=${item.id}&serviceTitle=${encodeURIComponent(item.name)}&price=${item.pricePerNight}`}
-                      className="btn-booking"
-                      style={{ padding: '0.65rem 1.25rem', borderRadius: '6px', color: '#fff', textDecoration: 'none', fontWeight: 700 }}
-                    >
-                      Réserver
-                    </Link>
-                  </div>
-                </div>
+                <i className="fas fa-hotel"></i>
               </div>
-            ))}
-          </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Aucun hébergement disponible pour le moment
+              </h3>
+              <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                {providerMessage ||
+                  'Votre recherche a été validée avec succès par le service de voyage V2. Les intégrations des hébergements et hôtels en direct sont planifiées pour la Phase 21+.'}
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '2rem',
+              }}
+            >
+              {filteredHotels.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'var(--card, #fff)',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <div style={{ height: '200px', overflow: 'hidden' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.imageUrl || '/image/hotels.jpg'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{item.name}</h3>
+                      <div style={{ color: '#ffb300', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <i className="fas fa-star"></i>
+                        <span>{item.rating}</span>
+                      </div>
+                    </div>
+
+                    <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+                      <i className="fas fa-map-marker-alt" style={{ color: '#01796F', marginRight: '0.4rem' }}></i>
+                      {item.city}, {item.country}
+                    </p>
+
+                    <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>{item.pricePerNight} €</span>
+                        <span style={{ fontSize: '0.8rem', color: '#888' }}> / nuit</span>
+                      </div>
+
+                      <Link
+                        href={`/booking?serviceType=HOTEL&serviceId=${item.id}&serviceTitle=${encodeURIComponent(item.name)}&price=${item.pricePerNight}`}
+                        className="btn-booking"
+                        style={{ padding: '0.65rem 1.25rem', borderRadius: '6px', color: '#fff', textDecoration: 'none', fontWeight: 700 }}
+                      >
+                        Réserver
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

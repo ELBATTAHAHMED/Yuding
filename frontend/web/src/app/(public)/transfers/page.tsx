@@ -9,6 +9,7 @@ export default function TransfersPage() {
   const [transportType, setTransportType] = useState<'TAXI' | 'TRAIN' | 'CAR_RENTAL'>('TAXI');
   const [city, setCity] = useState('');
   const [transfers, setTransfers] = useState<TransferOffer[]>([]);
+  const [providerMessage, setProviderMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -16,7 +17,12 @@ export default function TransfersPage() {
       setLoading(true);
       try {
         const data = await travelService.searchTransfers(transportType, city);
-        setTransfers(data);
+        setTransfers(data.results || []);
+        if (data.status === 'PROVIDER_UNAVAILABLE') {
+          setProviderMessage(data.message);
+        }
+      } catch {
+        setTransfers([]);
       } finally {
         setLoading(false);
       }
@@ -101,76 +107,113 @@ export default function TransfersPage() {
 
           {/* Results */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {transfers.map((item) => (
+            {transfers.length === 0 ? (
               <div
-                key={item.id}
                 style={{
+                  textAlign: 'center',
+                  padding: '3.5rem 1.5rem',
                   background: 'var(--card, #fff)',
-                  padding: '1.5rem 2rem',
                   borderRadius: '12px',
                   boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '1.5rem',
+                  border: '1px solid rgba(0,0,0,0.05)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                  <div
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '12px',
-                      background: 'rgba(1, 121, 111, 0.1)',
-                      color: '#01796F',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.8rem',
-                    }}
-                  >
-                    <i className={item.type === 'TAXI' ? 'fas fa-taxi' : item.type === 'TRAIN' ? 'fas fa-train' : 'fas fa-car'}></i>
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{item.vehicleModel}</h3>
-                    <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      <i className="fas fa-map-marker-alt" style={{ marginRight: '0.3rem', color: '#01796F' }}></i>
-                      {item.departureCity} {item.arrivalCity ? `→ ${item.arrivalCity}` : ''}
-                    </p>
-                    {item.capacity && (
-                      <span style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.2rem', display: 'inline-block' }}>
-                        <i className="fas fa-users" style={{ marginRight: '0.3rem' }}></i>
-                        Jusqu&apos;à {item.capacity} passagers
-                      </span>
-                    )}
-                  </div>
+                <div
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(1, 121, 111, 0.1)',
+                    color: '#01796F',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.8rem',
+                    margin: '0 auto 1.25rem',
+                  }}
+                >
+                  <i className="fas fa-car-side"></i>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
-                      {item.price} €
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: '#888' }}>Prix forfaitaire garanti</div>
-                  </div>
-
-                  <Link
-                    href={`/booking?serviceType=TRANSFER&serviceId=${item.id}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
-                    className="btn-booking"
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '6px',
-                      color: '#fff',
-                      fontWeight: 700,
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Réserver
-                  </Link>
-                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  Aucun moyen de transport disponible pour le moment
+                </h3>
+                <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                  {providerMessage ||
+                    'Votre recherche a été validée avec succès par le service de voyage V2. Les intégrations des transporteurs, trains et loueurs sont planifiées pour la Phase 21+.'}
+                </p>
               </div>
-            ))}
+            ) : (
+              transfers.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'var(--card, #fff)',
+                    padding: '1.5rem 2rem',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1.5rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div
+                      style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '12px',
+                        background: 'rgba(1, 121, 111, 0.1)',
+                        color: '#01796F',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.8rem',
+                      }}
+                    >
+                      <i className={item.type === 'TAXI' ? 'fas fa-taxi' : item.type === 'TRAIN' ? 'fas fa-train' : 'fas fa-car'}></i>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{item.vehicleModel}</h3>
+                      <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.2rem' }}>
+                        <i className="fas fa-map-marker-alt" style={{ marginRight: '0.3rem', color: '#01796F' }}></i>
+                        {item.departureCity} {item.arrivalCity ? `→ ${item.arrivalCity}` : ''}
+                      </p>
+                      {item.capacity && (
+                        <span style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.2rem', display: 'inline-block' }}>
+                          <i className="fas fa-users" style={{ marginRight: '0.3rem' }}></i>
+                          Jusqu&apos;à {item.capacity} passagers
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
+                        {item.price} €
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#888' }}>Prix forfaitaire garanti</div>
+                    </div>
+
+                    <Link
+                      href={`/booking?serviceType=TRANSFER&serviceId=${item.id}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
+                      className="btn-booking"
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      Réserver
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>

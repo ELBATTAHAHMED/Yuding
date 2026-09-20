@@ -30,7 +30,7 @@ export default function HomePage() {
     setSearched(true);
     try {
       const data = await travelService.searchHotels(country, city);
-      setResults(data);
+      setResults(data.results || []);
     } catch {
       setResults([]);
     } finally {
