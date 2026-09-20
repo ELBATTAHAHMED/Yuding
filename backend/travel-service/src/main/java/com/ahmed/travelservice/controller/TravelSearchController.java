@@ -3,6 +3,7 @@ package com.ahmed.travelservice.controller;
 import com.ahmed.travelservice.dto.request.ActivitySearchRequest;
 import com.ahmed.travelservice.dto.request.FlightSearchRequest;
 import com.ahmed.travelservice.dto.request.HotelSearchRequest;
+import com.ahmed.travelservice.dto.request.RevalidateOfferRequest;
 import com.ahmed.travelservice.dto.request.TransferSearchRequest;
 import com.ahmed.travelservice.dto.response.*;
 import com.ahmed.travelservice.service.TravelSearchService;
@@ -46,6 +47,13 @@ public class TravelSearchController {
     public ResponseEntity<SearchResponse<TransferOfferDto>> searchTransfers(
             @Valid @RequestBody TransferSearchRequest request) {
         SearchResponse<TransferOfferDto> response = travelSearchService.searchTransfers(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/offers/revalidate")
+    public ResponseEntity<OfferRevalidationResult> revalidateOffer(
+            @Valid @RequestBody RevalidateOfferRequest request) {
+        OfferRevalidationResult response = travelSearchService.revalidateOffer(request);
         return ResponseEntity.ok(response);
     }
 }

@@ -63,7 +63,7 @@ class TravelSearchControllerTest {
                 .andExpect(jsonPath("$.results", hasSize(0)))
                 .andExpect(jsonPath("$.totalResults").value(0))
                 .andExpect(jsonPath("$.searchId").isString())
-                .andExpect(jsonPath("$.message").value(containsString("Phase 21+")));
+                .andExpect(jsonPath("$.message").value(containsString("scheduled for Phase")));
     }
 
     @Test
@@ -107,7 +107,7 @@ class TravelSearchControllerTest {
                 .andExpect(jsonPath("$.results").isArray())
                 .andExpect(jsonPath("$.results", hasSize(0)))
                 .andExpect(jsonPath("$.totalResults").value(0))
-                .andExpect(jsonPath("$.message").value(containsString("Phase 21+")));
+                .andExpect(jsonPath("$.message").value(containsString("scheduled for Phase")));
     }
 
     @Test
@@ -130,7 +130,7 @@ class TravelSearchControllerTest {
                 .andExpect(jsonPath("$.results").isArray())
                 .andExpect(jsonPath("$.results", hasSize(0)))
                 .andExpect(jsonPath("$.totalResults").value(0))
-                .andExpect(jsonPath("$.message").value(containsString("Phase 21+")));
+                .andExpect(jsonPath("$.message").value(containsString("scheduled for Phase")));
     }
 
     @Test
@@ -153,6 +153,41 @@ class TravelSearchControllerTest {
                 .andExpect(jsonPath("$.results").isArray())
                 .andExpect(jsonPath("$.results", hasSize(0)))
                 .andExpect(jsonPath("$.totalResults").value(0))
-                .andExpect(jsonPath("$.message").value(containsString("Phase 21+")));
+                .andExpect(jsonPath("$.message").value(containsString("scheduled for Phase")));
+    }
+
+    @Test
+    @DisplayName("POST /travel/offers/revalidate succeeds with valid request and returns unavailable result when no provider is active")
+    void revalidateOfferSuccess() throws Exception {
+        com.ahmed.travelservice.dto.request.RevalidateOfferRequest req = com.ahmed.travelservice.dto.request.RevalidateOfferRequest.builder()
+                .offerId("offer-abc-123")
+                .productType(com.ahmed.travelservice.provider.TravelProduct.FLIGHTS)
+                .originalPrice(new java.math.BigDecimal("180.00"))
+                .currency("EUR")
+                .build();
+
+        mockMvc.perform(post("/travel/offers/revalidate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.offerId").value("offer-abc-123"))
+                .andExpect(jsonPath("$.available").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("unavailable")));
+    }
+
+    @Test
+    @DisplayName("POST /travel/offers/revalidate returns 400 Bad Request when offerId is blank")
+    void revalidateOfferValidationFailure() throws Exception {
+        com.ahmed.travelservice.dto.request.RevalidateOfferRequest req = com.ahmed.travelservice.dto.request.RevalidateOfferRequest.builder()
+                .offerId("   ")
+                .productType(com.ahmed.travelservice.provider.TravelProduct.FLIGHTS)
+                .build();
+
+        mockMvc.perform(post("/travel/offers/revalidate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("INVALID_TRAVEL_SEARCH"));
     }
 }

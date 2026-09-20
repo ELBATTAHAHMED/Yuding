@@ -7,6 +7,8 @@ import type {
   FlightSearchRequest,
   HotelOffer,
   HotelSearchRequest,
+  OfferRevalidationResult,
+  RevalidateOfferRequest,
   TransferOffer,
   TransferSearchRequest,
   TravelSearchResponse,
@@ -205,4 +207,12 @@ export const travelService = {
 
     return apiClient.post<TravelSearchResponse<TransferOffer>>('/travel/transfers/search', payload);
   },
+
+  /**
+   * Revalidate an offer (price, availability) via Gateway -> travel-service (/travel/offers/revalidate)
+   */
+  async revalidateOffer(request: RevalidateOfferRequest): Promise<OfferRevalidationResult> {
+    return apiClient.post<OfferRevalidationResult>('/travel/offers/revalidate', request);
+  },
 };
+

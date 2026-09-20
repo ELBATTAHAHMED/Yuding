@@ -12,6 +12,8 @@ import type {
   HotelOffer,
   ActivityOffer,
   TransferOffer,
+  RevalidateOfferRequest,
+  OfferRevalidationResult,
 } from '../../types/travel.types.ts';
 
 function createMockResponse(body: any, status = 200): Response {
@@ -231,4 +233,47 @@ describe('Phase 20 — Travel Search Models & Service Contract Tests', () => {
       assert.ok(result.message.includes('Phase 21+'));
     });
   });
+
+  describe('6. Offer Revalidation Contract (Phase 21)', () => {
+    it('routes offer revalidation to "/travel/offers/revalidate" with validated payload', async () => {
+      const mockRevalResult: OfferRevalidationResult = {
+        offerId: 'FL-TEST-123',
+        provider: 'ALPHA',
+        valid: true,
+        priceChanged: false,
+        currentPrice: 150.0,
+        originalPrice: 150.0,
+        currency: 'EUR',
+      };
+
+      globalThis.fetch = async (input, init) => {
+        const url = input.toString();
+        const method = init?.method || 'GET';
+        const body = init?.body ? JSON.parse(init.body.toString()) : undefined;
+        capturedCalls.push({ url, method, body });
+        return createMockResponse(mockRevalResult);
+      };
+
+      const request: RevalidateOfferRequest = {
+        offerId: 'FL-TEST-123',
+        provider: 'ALPHA',
+        productType: 'FLIGHT',
+        originalPrice: 150.0,
+        currency: 'EUR',
+      };
+
+      const response = await travelService.revalidateOffer(request);
+
+      assert.equal(capturedCalls.length, 1);
+      assert.match(capturedCalls[0].url, /\/travel\/offers\/revalidate$/);
+      assert.equal(capturedCalls[0].method, 'POST');
+      assert.equal(capturedCalls[0].body.offerId, 'FL-TEST-123');
+      assert.equal(capturedCalls[0].body.productType, 'FLIGHT');
+      assert.equal(capturedCalls[0].body.originalPrice, 150.0);
+      assert.equal(response.valid, true);
+      assert.equal(response.priceChanged, false);
+      assert.equal(response.currentPrice, 150.0);
+    });
+  });
 });
+
