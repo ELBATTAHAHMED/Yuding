@@ -1,0 +1,64 @@
+@import '../styles/style.css';
+@import '../styles/stylesA-modern.css';
+@import '../styles/loginStyle.css';
+@import '../styles/VolStyle.css';
+
+/* Global resets for Next.js App Router */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  font-family: 'Poppins', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text, #001b1a);
+  background-color: var(--bg, #ffffff);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Fix for fontawesome / external cdn icon rendering */
+.fa,
+.fas,
+.far,
+.fab {
+  font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'FontAwesome', sans-serif !important;
+  font-weight: 900;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+/* Card hover and smooth transition */
+.item .card,
+.box,
+.stat-card,
+.accommodation-result-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.item:hover .card,
+.box:hover,
+.stat-card:hover {
+  transform: translateY(-4px);
+}
