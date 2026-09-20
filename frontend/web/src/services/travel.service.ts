@@ -101,7 +101,12 @@ export const travelService = {
       };
     }
 
-    return apiClient.post<TravelSearchResponse<FlightOffer>>('/travel/flights/search', payload);
+    return apiClient.post<TravelSearchResponse<FlightOffer>>(
+      '/travel/flights/search',
+      payload,
+      false,
+      { timeoutMs: 35000 }
+    );
   },
 
   /**
