@@ -5,23 +5,24 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { HotelOffer } from '@/types/travel.types';
 import { useAuth } from '@/features/auth/useAuth';
+import { Toast } from '@/components/ui';
+import { HotelCard } from '@/components/travel/HotelCard';
 
 export default function HomePage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [capacity, setCapacity] = useState('1');
   const [results, setResults] = useState<HotelOffer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   // Comment form state
   const [commentName, setCommentName] = useState('');
   const [commentEmail, setCommentEmail] = useState('');
   const [commentContent, setCommentContent] = useState('');
   const [commentFeedback, setCommentFeedback] = useState<string | null>(null);
-
-  const destinations = travelService.getPopularDestinations();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +48,8 @@ export default function HomePage() {
   return (
     <>
       {/* ==================== HERO SECTION ==================== */}
-      <section className="home" id="home" style={{ position: 'relative', overflow: 'hidden' }}>
+      <section className="home" id="home">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <video
           src="/image/video1.mp4"
           autoPlay
@@ -55,51 +57,40 @@ export default function HomePage() {
           loop
           playsInline
           className="video"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
         />
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 27, 26, 0.5)',
-            zIndex: 1,
-          }}
-        />
-        <div className="wrapper" style={{ position: 'relative', zIndex: 2, padding: '6rem 1rem 4rem' }}>
-          <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-            <h2 className="home-title" style={{ fontSize: '3.5rem', color: '#fff', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px' }}>
-              <strong>YUDING</strong>
+        <div className="wrapper">
+          <div className="container">
+            <h2 className="home-title">
+              <br /> <strong>YUDING</strong>
             </h2>
-            <div className="home-subtitle" style={{ maxWidth: '750px', margin: '1.5rem auto 2.5rem', color: '#f0f0f0', fontSize: '1.15rem', lineHeight: '1.7' }}>
+            <div className="home-subtitle">
               <p>
-                <strong>BIENVENUE</strong><br />
-                Nous apprécions votre temps et souhaitons nous assurer que votre expérience avec nous est sans stress et fluide. Découvrez nos offres exclusives pour rendre vos réservations plus accessibles et mémorables.
+                BIENVENUE
+                <br />
+                Nous apprécions votre temps et souhaitons nous assurer que votre expérience avec
+                nous est sans stress et fluide. C&apos;est pourquoi nous avons investi dans cette
+                plateforme pour rendre les réservations plus accessibles et efficaces.
               </p>
             </div>
 
-            <div
-              className="home-btns"
-              style={{
-                display: 'flex',
-                gap: '1rem',
-                justifyContent: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
-              <a href="#searchHebergements" className="btn-booking" style={{ padding: '0.75rem 1.5rem', color: '#fff' }}>
+            <div className="home-btns">
+              <a href="#searchHebergemets" className="btn-booking" style={{ color: 'white' }}>
                 Hébergements
               </a>
-              <Link href="/flights" className="btn-booking" style={{ padding: '0.75rem 1.5rem', color: '#fff' }}>
+              <Link href="/flights" className="btn-booking" style={{ color: 'white' }}>
                 Vols
               </Link>
-              <Link href="/transfers" className="btn-booking" style={{ padding: '0.75rem 1.5rem', color: '#fff' }}>
-                Taxi &amp; Trains
+              <Link href="/transfers" className="btn-booking" style={{ color: 'white' }}>
+                Taxi
               </Link>
-              <Link href="/activities" className="btn-booking" style={{ padding: '0.75rem 1.5rem', color: '#fff' }}>
-                Activités
+              <Link href="/hotels" className="btn-booking" style={{ color: 'white' }}>
+                location de Voiture
+              </Link>
+              <Link href="/activities" className="btn-booking" style={{ color: 'white' }}>
+                Activites
+              </Link>
+              <Link href="/transfers" className="btn-booking" style={{ color: 'white' }}>
+                Trains
               </Link>
             </div>
           </div>
@@ -107,63 +98,57 @@ export default function HomePage() {
       </section>
 
       {/* ==================== SEARCH BAR ==================== */}
-      <div className="touch-search" id="searchHebergements" style={{ padding: '2rem 1rem', background: 'var(--card, #fff)' }}>
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <form onSubmit={handleSearch} className="form" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div className="input-line" style={{ flex: '1 1 220px' }}>
-              <label htmlFor="destination" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
+      <div className="touch-search">
+        <div className="container">
+          <form onSubmit={handleSearch} className="form" id="searchHebergemets">
+            <div className="input-line">
+              <label htmlFor="destination" className="input-label">
                 Pays
               </label>
               <input
                 type="text"
+                name="destination"
                 id="destination"
                 className="input-field"
-                placeholder="Ex: Maroc, France"
+                placeholder="Entrer Pays"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                style={{ color: 'rgba(0, 27, 26, 0.75)' }}
               />
             </div>
-
-            <div className="input-line" style={{ flex: '1 1 220px' }}>
-              <label htmlFor="pax" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
+            <div className="input-line">
+              <label htmlFor="pax" className="input-label">
                 Ville
               </label>
               <input
                 type="text"
+                name="pax"
                 id="pax"
                 className="input-field"
-                placeholder="Ex: Marrakech, Paris"
+                placeholder="Ville"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                style={{ color: 'rgba(0, 27, 26, 0.75)' }}
               />
             </div>
-
-            <div className="input-line" style={{ flex: '1 1 140px' }}>
-              <label htmlFor="number" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
-                Personnes
+            <div className="input-line">
+              <label htmlFor="number" className="input-label">
+                Nombre
               </label>
               <input
                 type="number"
+                name="child"
                 id="number"
-                min="1"
                 className="input-field"
+                placeholder="0"
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                style={{ color: 'rgba(0, 27, 26, 0.75)' }}
               />
             </div>
-
-            <div className="btns-line" style={{ flex: '0 0 auto' }}>
-              <button
-                type="submit"
-                className="btn-booking"
-                disabled={isSearching}
-                style={{ padding: '0.75rem 2rem', fontWeight: 600, cursor: 'pointer' }}
-              >
-                {isSearching ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-search" style={{ marginRight: '0.4rem' }}></i>}
-                Rechercher
+            <div className="btns-line">
+              <button type="submit" className="btn-booking" disabled={isSearching}>
+                {isSearching ? 'Recherche...' : 'Rechercher'}
               </button>
             </div>
           </form>
@@ -172,87 +157,34 @@ export default function HomePage() {
 
       {/* ==================== SEARCH RESULTS SECTION ==================== */}
       {searched && (
-        <section id="search-results" className="search-results" style={{ padding: '3rem 1rem', background: 'var(--bg, #f9f9f9)' }}>
-          <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <section id="search-results" className="search-results">
+          <div className="container">
             <div className="results-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <h2 className="results-title" style={{ fontSize: '2rem', color: '#01796F' }}>Résultats de recherche</h2>
-              <p className="results-subtitle" style={{ color: '#666' }}>Trouvez l&apos;hébergement parfait pour votre séjour</p>
+              <h2 className="results-title" style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-strong, #01796F)' }}>
+                Résultats de recherche
+              </h2>
+              <p className="results-subtitle" style={{ color: 'var(--text-secondary, #6c757d)', marginTop: '0.5rem' }}>
+                Trouvez l&apos;hébergement parfait pour votre séjour
+              </p>
             </div>
-
             {isSearching ? (
-              <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#01796F' }}></i>
-                <p style={{ marginTop: '1rem', color: '#666' }}>Recherche des disponibilités en cours...</p>
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#01796F' }} />
+                <p style={{ marginTop: '1rem', color: '#6c757d' }}>Recherche en cours...</p>
               </div>
             ) : results.length > 0 ? (
-              <div
-                id="results-container"
-                className="results-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: '1.5rem',
-                }}
-              >
+              <div id="results-container" className="results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
                 {results.map((offer) => (
-                  <div
-                    key={offer.id}
-                    className="accommodation-result-card"
-                    style={{
-                      background: 'var(--card, #fff)',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <div style={{ height: '180px', overflow: 'hidden' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={offer.imageUrl || '/image/hotels.jpg'}
-                        alt={offer.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                    <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{offer.name}</h3>
-                        <span style={{ color: '#01796F', fontWeight: 800, fontSize: '1.15rem' }}>
-                          {offer.pricePerNight} €<span style={{ fontSize: '0.8rem', fontWeight: 400 }}>/nuit</span>
-                        </span>
-                      </div>
-                      <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                        <i className="fas fa-map-marker-alt" style={{ color: '#01796F', marginRight: '0.4rem' }}></i>
-                        {offer.city}, {offer.country}
-                      </p>
-                      <div style={{ marginTop: 'auto' }}>
-                        <Link
-                          href={`/booking?serviceType=HOTEL&serviceId=${offer.id}&serviceTitle=${encodeURIComponent(offer.name)}&price=${offer.pricePerNight}`}
-                          className="btn-booking"
-                          style={{
-                            display: 'block',
-                            textAlign: 'center',
-                            padding: '0.65rem 1rem',
-                            borderRadius: '6px',
-                            color: '#fff',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                          }}
-                        >
-                          <i className="fas fa-calendar-check" style={{ marginRight: '0.4rem' }}></i>
-                          Réserver
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                  <HotelCard key={offer.id} hotel={offer} />
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
-                <i className="fas fa-bed fa-3x" style={{ color: '#ccc', marginBottom: '1rem' }}></i>
-                <h3>Aucun hébergement trouvé</h3>
-                <p>Essayez d&apos;élargir vos critères de recherche pour découvrir d&apos;autres disponibilités.</p>
+              <div className="no-results-container" style={{ textAlign: 'center', padding: '3rem' }}>
+                <div className="no-results-icon" style={{ fontSize: '3rem', color: '#01796F', marginBottom: '1rem' }}>
+                  <i className="fas fa-bed" />
+                </div>
+                <h3 className="no-results-title" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Aucun hébergement trouvé</h3>
+                <p className="no-results-text" style={{ color: '#6c757d' }}>Essayez de modifier vos critères de recherche pour découvrir d&apos;autres hébergements disponibles.</p>
               </div>
             )}
           </div>
@@ -260,113 +192,129 @@ export default function HomePage() {
       )}
 
       {/* ==================== POPULAR DESTINATIONS ==================== */}
-      <section className="destination" style={{ padding: '4rem 1rem' }}>
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="heading" style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h1 className="title-heading" style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text, #001b1a)' }}>
-              Destinations populaires
-            </h1>
-            <div className="desc-heading" style={{ maxWidth: '800px', margin: '1rem auto 0', color: '#666' }}>
+      <section className="destination">
+        <div className="container">
+          <div className="heading">
+            <h4 className="subtitle-heading"></h4>
+            <h1 className="title-heading">Destinations populaires</h1>
+            <div className="desc-heading">
               <p>
-                Découvrez les destinations les plus prisées et laissez-vous inspirer par la beauté du monde.
-                Plages immaculées, médinas chargées d&apos;histoire ou paysages désertiques à couper le souffle.
+                Découvrez les destinations les plus populaires de notre plateforme et trouvez
+                l&apos;inspiration pour votre prochain voyage. Que vous cherchiez à vous détendre sur
+                une plage exotique, à explorer une ville animée ou à vous immerger dans la nature, nous
+                avons des options pour tous les goûts et tous les budgets.
               </p>
             </div>
           </div>
-
-          <div
-            className="items"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '2rem',
-            }}
-          >
-            {destinations.map((dest) => (
-              <div
-                key={dest.id}
-                className="item"
-                style={{
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  background: 'var(--card, #fff)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                }}
-              >
-                <div className="img-item" style={{ height: '220px', overflow: 'hidden' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={dest.imageUrl}
-                    alt={dest.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </div>
-                <div className="card" style={{ padding: '1.5rem' }}>
-                  <small className="local" style={{ color: '#01796F', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {dest.country}
-                  </small>
-                  <h2 className="title" style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.4rem 0 0.8rem' }}>
-                    {dest.name}
-                  </h2>
-                  <div className="desc" style={{ color: '#555', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                    <p>{dest.description}</p>
-                  </div>
+          <div className="items">
+            <div className="item">
+              <div className="img-item">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/image/chefchaoun.jpeg" alt="Chefchaouen" />
+              </div>
+              <div className="card">
+                <small className="local">MAROC</small>
+                <h2 className="title">CHEFCHAOUEN</h2>
+                <div className="desc">
+                  <p>
+                    Chefchaouen, la perle bleue du Rif, offre des ruelles étroites, des maisons
+                    blanches et bleues, et une atmosphère paisible.
+                  </p>
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="item">
+              <div className="img-item">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/image/Dakhla.jpg" alt="Dakhla" />
+              </div>
+              <div className="card">
+                <small className="local">Maroc</small>
+                <h2 className="title">DAKHLA</h2>
+                <div className="desc">
+                  <p>
+                    Dakhla, Une destination de sports nautiques de premier plan avec un paysage
+                    époustouflant de désert et de mer, et des fruits de mer délicieux.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="item">
+              <div className="img-item">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/image/marrakech.jpg" alt="Marrakech" />
+              </div>
+              <div className="card">
+                <small className="local">Maroc</small>
+                <h2 className="title">MARRAKECH</h2>
+                <div className="desc">
+                  <p>
+                    Marrakech, une ville animée et vibrante qui offre une expérience culturelle
+                    unique avec ses souks colorés, ses palais majestueux, ses jardins luxuriants et sa
+                    cuisine épicée.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ==================== TYPES D'HÉBERGEMENTS ==================== */}
-      <section className="room top" id="room" style={{ padding: '3rem 1rem 4rem', background: 'var(--bg, #f4f6f6)' }}>
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="heading_top flex1" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '2.2rem', textTransform: 'uppercase', color: 'var(--text, #001b1a)', fontWeight: 800 }}>
-              Type d&apos;hébergements
-            </h2>
+      <section className="room top" id="room">
+        <div className="container">
+          <div className="heading_top flex1">
+            <div className="heading">
+              <h2
+                style={{
+                  fontSize: '34px',
+                  lineHeight: '44px',
+                  textTransform: 'uppercase',
+                  color: 'rgba(0, 27, 26, 0.75)',
+                }}
+              >
+                Type d&apos;hébergements
+              </h2>
+            </div>
           </div>
 
-          <div
-            className="content grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '2rem',
-            }}
-          >
-            <div className="box" style={{ background: 'var(--card, #fff)', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
-              <div className="img" style={{ height: '200px' }}>
+          <div className="content grid">
+            <div className="box">
+              <div className="img">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/image/maisonsVacances.jpg" alt="Maisons de vacances" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src="/image/maisonsVacances.jpg" alt="Maisons de vacances" />
               </div>
-              <div className="text" style={{ padding: '1.25rem', textAlign: 'center' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                  <Link href="/hotels" style={{ color: 'var(--text, #001b1a)' }}>Maisons de vacances</Link>
+              <div className="text">
+                <h3>
+                  <Link href="/hotels" style={{ color: 'rgba(0, 27, 26, 0.75)' }}>
+                    Maisons de vacances
+                  </Link>
                 </h3>
               </div>
             </div>
-
-            <div className="box" style={{ background: 'var(--card, #fff)', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
-              <div className="img" style={{ height: '200px' }}>
+            <div className="box">
+              <div className="img">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/image/hotels.jpg" alt="Hôtels" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src="/image/hotels.jpg" alt="Hotels" />
               </div>
-              <div className="text" style={{ padding: '1.25rem', textAlign: 'center' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                  <Link href="/hotels" style={{ color: 'var(--text, #001b1a)' }}>Hôtels &amp; Riads</Link>
+              <div className="text">
+                <h3>
+                  <Link href="/hotels" style={{ color: 'rgba(0, 27, 26, 0.75)' }}>
+                    Hotels
+                  </Link>
                 </h3>
               </div>
             </div>
-
-            <div className="box" style={{ background: 'var(--card, #fff)', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
-              <div className="img" style={{ height: '200px' }}>
+            <div className="box">
+              <div className="img">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/image/appartements.jpg" alt="Appartements" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src="/image/appartements.jpg" alt="Appartements" />
               </div>
-              <div className="text" style={{ padding: '1.25rem', textAlign: 'center' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                  <Link href="/hotels" style={{ color: 'var(--text, #001b1a)' }}>Appartements urbains</Link>
+              <div className="text">
+                <h3>
+                  <Link href="/hotels" style={{ color: 'rgba(0, 27, 26, 0.75)' }}>
+                    Appartements
+                  </Link>
                 </h3>
               </div>
             </div>
@@ -375,105 +323,157 @@ export default function HomePage() {
       </section>
 
       {/* ==================== GALERIE PHOTO ==================== */}
-      <section className="gallery" id="gallery" style={{ padding: '4rem 1rem' }}>
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="heading" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, textTransform: 'uppercase' }}>
-              Galerie de Voyage
-            </h2>
-            <p style={{ color: '#666', marginTop: '0.5rem' }}>Quelques aperçus de voyages inoubliables partagés par nos clients</p>
+      <section className="gallery" id="gallery">
+        <div className="container">
+          <div className="heading">
+            <h4 className="subtitle-heading"></h4>
+            <h1 className="title-heading">PHOTOS DE NOTRE SERVICES</h1>
+            <div className="desc-heading"></div>
           </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-              gap: '1rem',
-            }}
-          >
-            {['galerie3.jpg', 'galerie4.jpg', 'galerie5.jpg', 'galerie6.jpg', 'galerie7.jpg', 'galerie8.jpg'].map((imgName, index) => (
-              <div key={index} style={{ height: '180px', borderRadius: '8px', overflow: 'hidden' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/image/${imgName}`}
-                  alt={`Galerie ${index + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+          <div className="items">
+            {[
+              'galerie1.jpg',
+              'galerie2.jpg',
+              'galerie3.jpg',
+              'galerie4.jpg',
+              'galerie5.jpg',
+              'galerie6.jpg',
+              'galerie7.jpg',
+              'galerie8.jpg',
+              'galerie9.jpeg',
+            ].map((img, idx) => (
+              <div key={idx} className="item">
+                <div className="img-item">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/image/${img}`} alt={`Galerie ${idx + 1}`} />
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ==================== AVIS & COMMENTAIRES ==================== */}
-      <section style={{ padding: '3rem 1rem 5rem', background: 'var(--bg, #f4f6f6)' }}>
-        <div className="container" style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '1.5rem', fontWeight: 800 }}>
-            Laissez votre avis
-          </h2>
-
-          {commentFeedback && (
-            <div style={{ padding: '1rem', background: '#e8f5e9', color: '#2e7d32', borderRadius: '6px', marginBottom: '1.5rem', textAlign: 'center' }}>
-              <i className="fas fa-check-circle" style={{ marginRight: '0.5rem' }}></i>
-              {commentFeedback}
-            </div>
-          )}
-
-          <div className="cadre-formulaire" style={{ background: 'var(--card, #fff)', padding: '2rem', borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
-            <form onSubmit={handleCommentSubmit} className="comment">
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label htmlFor="nom" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
-                  Votre nom :
-                </label>
-                <input
-                  type="text"
-                  id="nom"
-                  value={commentName || user?.firstName || ''}
-                  onChange={(e) => setCommentName(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label htmlFor="email" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
-                  Votre adresse email :
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={commentEmail || user?.email || ''}
-                  onChange={(e) => setCommentEmail(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label htmlFor="commentaire" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem' }}>
-                  Votre commentaire :
-                </label>
-                <textarea
-                  id="commentaire"
-                  rows={4}
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn-booking"
-                style={{ width: '100%', padding: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
-              >
-                Envoyer mon avis
-              </button>
-            </form>
+      {/* ==================== FORMULAIRE DE COMMENTAIRE ==================== */}
+      <section>
+        <h1
+          style={{
+            fontSize: '34px',
+            lineHeight: '44px',
+            textTransform: 'uppercase',
+            color: 'rgba(0, 27, 26, 0.75)',
+            textAlign: 'center',
+            marginBottom: '1.5rem',
+          }}
+        >
+          Formulaire de commentaire
+        </h1>
+        {commentFeedback && (
+          <div style={{ maxWidth: '600px', margin: '1rem auto' }}>
+            <Toast type="success" message={commentFeedback} />
           </div>
+        )}
+        <div className="cadre-formulaire">
+          <form onSubmit={handleCommentSubmit} className="comment">
+            <label htmlFor="nom">Votre nom :</label>
+            <input
+              type="text"
+              id="nom"
+              name="nom"
+              required
+              value={commentName || user?.firstName || ''}
+              onChange={(e) => setCommentName(e.target.value)}
+            />
+
+            <label htmlFor="email">Votre adresse email :</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              value={commentEmail || user?.email || ''}
+              onChange={(e) => setCommentEmail(e.target.value)}
+            />
+
+            <label htmlFor="commentaire">Votre commentaire :</label>
+            <textarea
+              id="commentaire"
+              name="commentaire"
+              required
+              value={commentContent}
+              onChange={(e) => setCommentContent(e.target.value)}
+            />
+
+            <button type="submit">Envoyer</button>
+          </form>
         </div>
       </section>
+
+      {/* ==================== CHATBOT ==================== */}
+      <div className={`chatbot-container ${chatbotOpen ? 'show' : ''}`} id="chatbotContainer">
+        <div className="chatbot-header">
+          <svg
+            className="chatbot-logo"
+            xmlns="http://www.w3.org/2000/svg"
+            width="50"
+            height="50"
+            viewBox="0 0 1024 1024"
+          >
+            <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z" />
+          </svg>
+          <span className="logo-text">AI Assistant</span>
+          <button id="close-chatbot" className="close-btn" onClick={() => setChatbotOpen(false)}>
+            ×
+          </button>
+        </div>
+        <div className="chatbot-body" id="chatbotBody">
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', margin: '8px 0' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: '#01796F',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                flexShrink: 0,
+              }}
+            >
+              <i className="fas fa-robot" style={{ fontSize: '13px' }} />
+            </div>
+            <div
+              style={{
+                background: 'rgba(241, 245, 249, 0.95)',
+                color: '#0f172a',
+                padding: '10px 14px',
+                borderRadius: '16px 16px 16px 4px',
+                fontSize: '13px',
+                lineHeight: 1.5,
+              }}
+            >
+              Bonjour ! Comment puis-je vous aider dans votre voyage aujourd&apos;hui ?
+            </div>
+          </div>
+        </div>
+        <div className="chatbot-footer">
+          <input type="text" id="userInput" placeholder="Posez une question..." />
+          <button className="send-btn" type="button">
+            <i className="fa fa-paper-plane" />
+          </button>
+        </div>
+      </div>
+
+      {/* Chatbot Toggle Button */}
+      <button
+        className="chatbot-toggle"
+        onClick={() => setChatbotOpen(!chatbotOpen)}
+        title="AI Assistant"
+        type="button"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/image/a1.png" alt="Chatbot" />
+      </button>
     </>
   );
 }
