@@ -1,0 +1,8 @@
+# ====================================================================
+# Yuding V2 - Travel Service Production Profile (travel-service-prod.yml)
+# ====================================================================
+
+logging:
+  level:
+    root: WARN
+    com.ahmed.travelservice: INFO

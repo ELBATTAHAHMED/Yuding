@@ -1,5 +1,22 @@
-import { apiClient } from '@/lib/api-client';
-import { ActivityOffer, Destination, FlightOffer, HotelOffer, TransferOffer } from '@/types/travel.types';
+import { apiClient } from '../lib/api-client.ts';
+import type {
+  ActivityOffer,
+  ActivitySearchRequest,
+  Destination,
+  FlightOffer,
+  FlightSearchRequest,
+  HotelOffer,
+  HotelSearchRequest,
+  TransferOffer,
+  TransferSearchRequest,
+  TravelSearchResponse,
+} from '../types/travel.types.ts';
+
+function getDefaultDate(daysAhead: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
+  return d.toISOString().split('T')[0];
+}
 
 export const travelService = {
   getPopularDestinations(): Destination[] {
@@ -31,241 +48,161 @@ export const travelService = {
     ];
   },
 
-  async searchHotels(country?: string, city?: string): Promise<HotelOffer[]> {
-    try {
-      const results = await apiClient.post<any[]>('/apir/hebergements/search', {
-        destination: country || '',
-        pax: city || '',
-      });
-      if (Array.isArray(results) && results.length > 0) {
-        return results.map((item) => ({
-          id: String(item.id || item.idh || Math.random()),
-          name: item.nom || item.name || 'Hôtel Yuding',
-          city: item.ville || city || 'Marrakech',
-          country: item.pays || country || 'Maroc',
-          type: item.type || 'HOTEL',
-          pricePerNight: item.prix || item.price || 85,
-          currency: 'EUR',
-          rating: item.rating || 4.5,
-          imageUrl: item.image || '/image/hotels.jpg',
-        }));
-      }
-    } catch {
-      // Fallback for visual display if backend search service is unseeded
-    }
+  /**
+   * Search flights via Gateway -> travel-service (/travel/flights/search)
+   * Supports both validated FlightSearchRequest and legacy positional arguments.
+   */
+  async searchFlights(
+    queryOrOriginCountry?: FlightSearchRequest | string,
+    originCity?: string,
+    destination?: string
+  ): Promise<TravelSearchResponse<FlightOffer>> {
+    let payload: FlightSearchRequest;
 
-    return [
-      {
-        id: 'h1',
-        name: 'Palais Riad & Spa',
-        city: city || 'Marrakech',
-        country: country || 'Maroc',
-        type: 'HOTEL',
-        pricePerNight: 120,
-        currency: 'EUR',
-        rating: 4.8,
-        imageUrl: '/image/hotels.jpg',
-      },
-      {
-        id: 'h2',
-        name: 'Villa Vue Océan',
-        city: city || 'Dakhla',
-        country: country || 'Maroc',
-        type: 'VACATION_HOME',
-        pricePerNight: 160,
-        currency: 'EUR',
-        rating: 4.9,
-        imageUrl: '/image/maisonsVacances.jpg',
-      },
-      {
-        id: 'h3',
-        name: 'Appartement Centre Historique',
-        city: city || 'Chefchaouen',
-        country: country || 'Maroc',
-        type: 'APARTMENT',
-        pricePerNight: 65,
-        currency: 'EUR',
-        rating: 4.6,
-        imageUrl: '/image/appartements.jpg',
-      },
-    ];
-  },
-
-  async searchFlights(originCountry?: string, originCity?: string, destination?: string): Promise<FlightOffer[]> {
-    try {
-      const results = await apiClient.post<any[]>('/apir/transports/search1', {
-        pays: originCountry || '',
-        ville: originCity || '',
-        destination: destination || '',
-      });
-      if (Array.isArray(results) && results.length > 0) {
-        return results.map((item) => ({
-          id: String(item.id || item.idt || Math.random()),
-          airline: item.compagnie || 'Royal Air Maroc',
-          flightNumber: item.numero || 'AT402',
-          origin: item.ville || originCity || 'Paris (CDG)',
-          originCountry: item.pays || originCountry || 'France',
-          destination: item.destination || destination || 'Casablanca (CMN)',
-          departureTime: item.depart || '10:30',
-          arrivalTime: item.arrivee || '13:45',
-          price: item.prix || 180,
-          currency: 'EUR',
-          availableSeats: item.places || 24,
-        }));
-      }
-    } catch {
-      // Fallback
-    }
-
-    return [
-      {
-        id: 'f1',
-        airline: 'Royal Air Maroc',
-        flightNumber: 'AT402',
-        origin: originCity || 'Paris (CDG)',
-        destination: destination || 'Casablanca (CMN)',
-        departureTime: '09:15',
-        arrivalTime: '12:30',
-        price: 185,
-        currency: 'EUR',
-        availableSeats: 18,
-      },
-      {
-        id: 'f2',
-        airline: 'Air France',
-        flightNumber: 'AF1496',
-        origin: originCity || 'Paris (ORY)',
-        destination: destination || 'Marrakech (RAK)',
-        departureTime: '13:40',
-        arrivalTime: '16:55',
-        price: 210,
-        currency: 'EUR',
-        availableSeats: 12,
-      },
-      {
-        id: 'f3',
-        airline: 'Transavia',
-        flightNumber: 'TO3012',
-        origin: originCity || 'Lyon (LYS)',
-        destination: destination || 'Agadir (AGA)',
-        departureTime: '15:20',
-        arrivalTime: '18:45',
-        price: 140,
-        currency: 'EUR',
-        availableSeats: 30,
-      },
-    ];
-  },
-
-  async searchActivities(category?: string, city?: string): Promise<ActivityOffer[]> {
-    return [
-      {
-        id: 'a1',
-        title: 'Excursion dans le Désert et Balade en Dromadaire',
-        city: city || 'Marrakech',
-        country: 'Maroc',
-        category: category || 'Aventure',
-        price: 45,
-        currency: 'EUR',
-        durationHours: 4,
-        imageUrl: '/image/a1.jpg',
-        description: 'Vivez une expérience inoubliable au coucher du soleil dans la palmeraie avec thé traditionnel.',
-      },
-      {
-        id: 'a2',
-        title: 'Session Kitesurf & Glisse Lagune',
-        city: city || 'Dakhla',
-        country: 'Maroc',
-        category: category || 'Sports Nautiques',
-        price: 80,
-        currency: 'EUR',
-        durationHours: 3,
-        imageUrl: '/image/a2.jpg',
-        description: 'Cours de kitesurf pour tous niveaux sur l’une des plus belles lagunes au monde.',
-      },
-      {
-        id: 'a3',
-        title: 'Visite Guidée des Palais & Médina',
-        city: city || 'Fès',
-        country: 'Maroc',
-        category: category || 'Culture',
-        price: 30,
-        currency: 'EUR',
-        durationHours: 3,
-        imageUrl: '/image/chefchaoun.jpeg',
-        description: 'Parcourez les venelles historiques et découvrez l’artisanat séculaire avec un guide agréé.',
-      },
-    ];
-  },
-
-  async searchTransfers(type: 'TAXI' | 'TRAIN' | 'CAR_RENTAL', city?: string): Promise<TransferOffer[]> {
-    if (type === 'TAXI') {
-      return [
-        {
-          id: 't1',
-          type: 'TAXI',
-          vehicleModel: 'Mercedes-Benz E-Class Private Taxi',
-          departureCity: city || 'Aéroport Marrakech-Ménara',
-          arrivalCity: 'Centre-ville / Médina',
-          price: 25,
-          currency: 'EUR',
-          capacity: 4,
-        },
-        {
-          id: 't2',
-          type: 'TAXI',
-          vehicleModel: 'Minivan VIP Transfert Famille',
-          departureCity: city || 'Aéroport Casablanca Med V',
-          arrivalCity: 'Hôtel Casablanca',
-          price: 45,
-          currency: 'EUR',
-          capacity: 7,
-        },
-      ];
-    } else if (type === 'TRAIN') {
-      return [
-        {
-          id: 'tr1',
-          type: 'TRAIN',
-          vehicleModel: 'Al Boraq TGV Première Classe',
-          departureCity: city || 'Tanger Ville',
-          arrivalCity: 'Casablanca Voyageurs',
-          price: 35,
-          currency: 'EUR',
-          capacity: 120,
-        },
-        {
-          id: 'tr2',
-          type: 'TRAIN',
-          vehicleModel: 'Atlas Train Rapide Confort',
-          departureCity: city || 'Casablanca Oasis',
-          arrivalCity: 'Marrakech',
-          price: 20,
-          currency: 'EUR',
-          capacity: 90,
-        },
-      ];
+    if (queryOrOriginCountry && typeof queryOrOriginCountry === 'object') {
+      payload = {
+        origin: queryOrOriginCountry.origin || 'Paris (CDG)',
+        destination: queryOrOriginCountry.destination || 'Casablanca (CMN)',
+        departureDate: queryOrOriginCountry.departureDate || getDefaultDate(7),
+        returnDate: queryOrOriginCountry.returnDate,
+        adults: queryOrOriginCountry.adults ?? 1,
+        children: queryOrOriginCountry.children ?? 0,
+        infants: queryOrOriginCountry.infants ?? 0,
+        travelClass: queryOrOriginCountry.travelClass ?? 'ECONOMY',
+        nonStop: queryOrOriginCountry.nonStop ?? false,
+        currency: queryOrOriginCountry.currency ?? 'EUR',
+      };
     } else {
-      return [
-        {
-          id: 'cr1',
-          type: 'CAR_RENTAL',
-          vehicleModel: 'Renault Clio 5 (Climatisation, GPS)',
-          departureCity: city || 'Agence Aéroport Marrakech',
-          price: 30,
-          currency: 'EUR',
-          capacity: 5,
-        },
-        {
-          id: 'cr2',
-          type: 'CAR_RENTAL',
-          vehicleModel: 'Dacia Duster 4x4 Évasion',
-          departureCity: city || 'Agence Dakhla Centre',
-          price: 55,
-          currency: 'EUR',
-          capacity: 5,
-        },
-      ];
+      const originCountry = queryOrOriginCountry as string | undefined;
+      const origin = originCity || originCountry || 'Paris (CDG)';
+      const dest = destination || 'Casablanca (CMN)';
+
+      payload = {
+        origin: origin.trim() || 'Paris (CDG)',
+        destination: dest.trim() || 'Casablanca (CMN)',
+        departureDate: getDefaultDate(7),
+        adults: 1,
+        children: 0,
+        infants: 0,
+        travelClass: 'ECONOMY',
+        nonStop: false,
+        currency: 'EUR',
+      };
     }
+
+    return apiClient.post<TravelSearchResponse<FlightOffer>>('/travel/flights/search', payload);
+  },
+
+  /**
+   * Search hotels/accommodations via Gateway -> travel-service (/travel/hotels/search)
+   * Supports both validated HotelSearchRequest and legacy positional arguments.
+   */
+  async searchHotels(
+    queryOrCountry?: HotelSearchRequest | string,
+    city?: string
+  ): Promise<TravelSearchResponse<HotelOffer>> {
+    let payload: HotelSearchRequest;
+
+    if (queryOrCountry && typeof queryOrCountry === 'object') {
+      payload = {
+        destination: queryOrCountry.destination || 'Marrakech',
+        checkIn: queryOrCountry.checkIn || getDefaultDate(3),
+        checkOut: queryOrCountry.checkOut || getDefaultDate(7),
+        rooms: queryOrCountry.rooms ?? 1,
+        adults: queryOrCountry.adults ?? 1,
+        children: queryOrCountry.children ?? 0,
+        propertyType: queryOrCountry.propertyType ?? 'ALL',
+        currency: queryOrCountry.currency ?? 'EUR',
+      };
+    } else {
+      const country = queryOrCountry as string | undefined;
+      const dest = [city, country].filter(Boolean).join(', ') || 'Marrakech, Maroc';
+
+      payload = {
+        destination: dest,
+        checkIn: getDefaultDate(3),
+        checkOut: getDefaultDate(7),
+        rooms: 1,
+        adults: 1,
+        children: 0,
+        propertyType: 'ALL',
+        currency: 'EUR',
+      };
+    }
+
+    return apiClient.post<TravelSearchResponse<HotelOffer>>('/travel/hotels/search', payload);
+  },
+
+  /**
+   * Search activities and excursions via Gateway -> travel-service (/travel/activities/search)
+   * Supports both validated ActivitySearchRequest and legacy positional arguments.
+   */
+  async searchActivities(
+    queryOrCategory?: ActivitySearchRequest | string,
+    city?: string
+  ): Promise<TravelSearchResponse<ActivityOffer>> {
+    let payload: ActivitySearchRequest;
+
+    if (queryOrCategory && typeof queryOrCategory === 'object') {
+      payload = {
+        destination: queryOrCategory.destination || 'Marrakech',
+        date: queryOrCategory.date || getDefaultDate(5),
+        travelers: queryOrCategory.travelers ?? 1,
+        category: queryOrCategory.category ?? 'ALL',
+        radiusKm: queryOrCategory.radiusKm ?? 25,
+        currency: queryOrCategory.currency ?? 'EUR',
+      };
+    } else {
+      const category = queryOrCategory as string | undefined;
+      payload = {
+        destination: city || 'Marrakech',
+        date: getDefaultDate(5),
+        travelers: 1,
+        category: category || 'ALL',
+        radiusKm: 25,
+        currency: 'EUR',
+      };
+    }
+
+    return apiClient.post<TravelSearchResponse<ActivityOffer>>('/travel/activities/search', payload);
+  },
+
+  /**
+   * Search transfers (taxis, trains, car rentals) via Gateway -> travel-service (/travel/transfers/search)
+   * Supports both validated TransferSearchRequest and legacy positional arguments.
+   */
+  async searchTransfers(
+    queryOrType?: TransferSearchRequest | 'TAXI' | 'TRAIN' | 'CAR_RENTAL',
+    city?: string
+  ): Promise<TravelSearchResponse<TransferOffer>> {
+    let payload: TransferSearchRequest;
+
+    if (queryOrType && typeof queryOrType === 'object') {
+      payload = {
+        pickup: queryOrType.pickup || 'Marrakech Airport (RAK)',
+        dropoff: queryOrType.dropoff || 'Marrakech City Center',
+        date: queryOrType.date || getDefaultDate(2),
+        time: queryOrType.time || '12:00',
+        passengers: queryOrType.passengers ?? 1,
+        transferType: queryOrType.transferType ?? 'TAXI',
+        currency: queryOrType.currency ?? 'EUR',
+      };
+    } else {
+      const type = (queryOrType as 'TAXI' | 'TRAIN' | 'CAR_RENTAL') || 'TAXI';
+      const origin = city || 'Aéroport Marrakech-Ménara';
+      const destination = type === 'TRAIN' ? 'Casablanca Voyageurs' : 'Centre-ville / Médina';
+
+      payload = {
+        pickup: origin,
+        dropoff: destination,
+        date: getDefaultDate(2),
+        time: '12:00',
+        passengers: 1,
+        transferType: type,
+        currency: 'EUR',
+      };
+    }
+
+    return apiClient.post<TravelSearchResponse<TransferOffer>>('/travel/transfers/search', payload);
   },
 };

@@ -1,0 +1,7 @@
+# ====================================================================
+# Yuding V2 - Travel Service Staging Profile (travel-service-staging.yml)
+# ====================================================================
+
+logging:
+  level:
+    com.ahmed.travelservice: INFO

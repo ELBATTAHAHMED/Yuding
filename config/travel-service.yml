@@ -1,0 +1,34 @@
+# ====================================================================
+# Yuding V2 - Travel Service Base Configuration (travel-service.yml)
+# ====================================================================
+
+server:
+  port: 8082
+  max-http-request-header-size: 16KB
+
+spring:
+  application:
+    name: travel-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:yuding}?currentSchema=travel}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        default_schema: travel
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+jwt:
+  public-key-location: classpath:certs/public.pem
+
+logging:
+  level:
+    root: INFO
+    com.ahmed.travelservice: INFO
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:63342,http://127.0.0.1:5500}

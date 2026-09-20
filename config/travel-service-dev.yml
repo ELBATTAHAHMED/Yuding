@@ -1,0 +1,7 @@
+# ====================================================================
+# Yuding V2 - Travel Service Development Profile (travel-service-dev.yml)
+# ====================================================================
+
+logging:
+  level:
+    com.ahmed.travelservice: DEBUG

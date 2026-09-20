@@ -8,6 +8,7 @@ import { ActivityOffer } from '@/types/travel.types';
 export default function ActivitiesPage() {
   const [category, setCategory] = useState('ALL');
   const [activities, setActivities] = useState<ActivityOffer[]>([]);
+  const [providerMessage, setProviderMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -15,7 +16,12 @@ export default function ActivitiesPage() {
       setLoading(true);
       try {
         const data = await travelService.searchActivities();
-        setActivities(data);
+        setActivities(data.results || []);
+        if (data.status === 'PROVIDER_UNAVAILABLE') {
+          setProviderMessage(data.message);
+        }
+      } catch {
+        setActivities([]);
       } finally {
         setLoading(false);
       }
@@ -70,65 +76,102 @@ export default function ActivitiesPage() {
             ))}
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '2rem',
-            }}
-          >
-            {filtered.map((act) => (
+          {filtered.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '3.5rem 1.5rem',
+                background: 'var(--card, #fff)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.05)',
+              }}
+            >
               <div
-                key={act.id}
                 style={{
-                  background: 'var(--card, #fff)',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'rgba(1, 121, 111, 0.1)',
+                  color: '#01796F',
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.8rem',
+                  margin: '0 auto 1.25rem',
                 }}
               >
-                <div style={{ height: '200px', overflow: 'hidden' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={act.imageUrl || '/image/a1.jpg'} alt={act.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#01796F', textTransform: 'uppercase' }}>
-                      {act.category}
-                    </span>
-                    {act.durationHours && (
-                      <span style={{ fontSize: '0.85rem', color: '#888' }}>
-                        <i className="fas fa-clock" style={{ marginRight: '0.3rem' }}></i>
-                        {act.durationHours}h
-                      </span>
-                    )}
+                <i className="fas fa-compass"></i>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Aucune activité disponible pour le moment
+              </h3>
+              <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                {providerMessage ||
+                  'Votre recherche a été validée avec succès par le service de voyage V2. Les intégrations des prestataires d’activités et excursions sont planifiées pour la Phase 21+.'}
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '2rem',
+              }}
+            >
+              {filtered.map((act) => (
+                <div
+                  key={act.id}
+                  style={{
+                    background: 'var(--card, #fff)',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <div style={{ height: '200px', overflow: 'hidden' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={act.imageUrl || '/image/a1.jpg'} alt={act.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
-
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{act.title}</h3>
-                  <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-                    {act.description}
-                  </p>
-
-                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>{act.price} €</span>
-                      <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
+                  <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#01796F', textTransform: 'uppercase' }}>
+                        {act.category}
+                      </span>
+                      {act.durationHours && (
+                        <span style={{ fontSize: '0.85rem', color: '#888' }}>
+                          <i className="fas fa-clock" style={{ marginRight: '0.3rem' }}></i>
+                          {act.durationHours}h
+                        </span>
+                      )}
                     </div>
 
-                    <Link
-                      href={`/booking?serviceType=ACTIVITY&serviceId=${act.id}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
-                      className="btn-booking"
-                      style={{ padding: '0.65rem 1.25rem', borderRadius: '6px', color: '#fff', textDecoration: 'none', fontWeight: 700 }}
-                    >
-                      Réserver
-                    </Link>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{act.title}</h3>
+                    <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+                      {act.description}
+                    </p>
+
+                    <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>{act.price} €</span>
+                        <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
+                      </div>
+
+                      <Link
+                        href={`/booking?serviceType=ACTIVITY&serviceId=${act.id}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
+                        className="btn-booking"
+                        style={{ padding: '0.65rem 1.25rem', borderRadius: '6px', color: '#fff', textDecoration: 'none', fontWeight: 700 }}
+                      >
+                        Réserver
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
