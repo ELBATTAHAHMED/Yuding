@@ -112,7 +112,7 @@ frontend/web/
    - Refresh tokens are transmitted solely through secure, **HttpOnly cookies** managed by the backend and Gateway.
    - `localStorage` is used exclusively for the user's visual theme preference (`'theme': 'dark' | 'light'`).
 3. **No Direct Microservice Calls**:
-   - Replaced hardcoded ports `8888`, `8081`, `8082`, `8084` with `NEXT_PUBLIC_API_BASE_URL` pointing exclusively to the API Gateway (`http://localhost:8080`).
+   - Replaced direct microservice port calls with `NEXT_PUBLIC_API_BASE_URL` pointing exclusively to the API Gateway (`http://localhost:8888`).
 4. **No Unsafe HTML Injection**:
    - All API-driven data is rendered through React JSX escaping. No `innerHTML` or `dangerouslySetInnerHTML` is used.
 

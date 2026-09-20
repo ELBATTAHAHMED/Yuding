@@ -61,7 +61,7 @@ function BookingContent() {
 
     try {
       const response = await bookingService.createBooking(bookingPayload);
-      router.push(`/booking/confirmation?code=${response.confirmationCode}&id=${response.bookingId}&total=${totalPrice}`);
+      router.push(`/booking/confirmation?code=${response.confirmationCode}&id=${response.bookingId}&total=${response.totalPrice}`);
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue lors de la réservation.');
     } finally {
@@ -240,13 +240,17 @@ function BookingContent() {
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: '1.15rem', fontWeight: 700 }}>Total à régler</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>Total estimé</span>
               <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>{totalPrice} €</span>
             </div>
 
-            <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#e0f2f1', borderRadius: '8px', color: '#004d40', fontSize: '0.85rem' }}>
+            <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem', lineHeight: '1.4' }}>
+              * Estimation en direct affichée à titre indicatif. Le tarif final contractuel est certifié et validé côté serveur par le système de réservation.
+            </p>
+
+            <div style={{ marginTop: '1.25rem', padding: '1rem', background: '#e0f2f1', borderRadius: '8px', color: '#004d40', fontSize: '0.85rem' }}>
               <i className="fas fa-lock" style={{ marginRight: '0.4rem' }}></i>
-              Paiement 100% sécurisé et confirmation instantanée.
+              Paiement sécurisé &amp; tarification certifiée.
             </div>
           </div>
         </div>

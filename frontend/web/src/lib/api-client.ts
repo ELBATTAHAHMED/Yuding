@@ -17,7 +17,7 @@ class ApiClient {
   private refreshSubscribers: ((token: string | null) => void)[] = [];
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8888';
   }
 
   public setAccessToken(token: string | null) {
