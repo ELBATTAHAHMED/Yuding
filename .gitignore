@@ -54,3 +54,7 @@ yarn.lock
 
 # Local config repository
 config-repo/
+
+# Local development runner
+.dev-logs/
+.dev-pids.json
