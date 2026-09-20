@@ -60,17 +60,48 @@ export interface FlightOffer {
   legs?: FlightLeg[];
 }
 
-export interface HotelOffer {
-  id: string;
-  name: string;
-  city: string;
-  country: string;
-  type: 'HOTEL' | 'APARTMENT' | 'VACATION_HOME';
-  pricePerNight: number;
+export interface HotelRoomOffer {
+  offerId: string;
+  rateId?: string;
+  roomTypeId?: string;
+  roomName: string;
+  maxOccupancy?: number;
+  adultCount?: number;
+  childCount?: number;
+  boardType?: string;
+  boardName?: string;
+  bedType?: string;
+  refundable?: boolean;
+  cancellationDeadline?: string;
+  cancellationSummary?: string;
+  price: number;
+  pricePerNight?: number;
   currency: string;
-  rating: number;
-  imageUrl?: string;
+}
+
+export interface HotelOffer {
+  id?: string;
+  offerId: string;
+  provider?: string;
+  hotelId?: string;
+  hotelName?: string;
+  name?: string;
+  city?: string;
+  country?: string;
+  destination?: string;
   address?: string;
+  type?: string;
+  starRating?: number;
+  reviewScore?: number;
+  reviewCount?: number;
+  rating?: number;
+  pricePerNight: number;
+  totalPrice?: number;
+  currency: string;
+  imageUrl?: string;
+  availabilityState?: string;
+  roomSummary?: string;
+  roomOffers?: HotelRoomOffer[];
 }
 
 export interface ActivityOffer {
@@ -112,6 +143,11 @@ export interface FlightSearchRequest {
   currency?: string;
 }
 
+export interface RoomOccupancy {
+  adults: number;
+  childrenAges?: number[];
+}
+
 export interface HotelSearchRequest {
   destination: string;
   checkIn: string;       // YYYY-MM-DD
@@ -121,6 +157,10 @@ export interface HotelSearchRequest {
   children?: number;
   propertyType?: string;
   currency?: string;
+  guestNationality?: string;
+  city?: string;
+  countryCode?: string;
+  occupancies?: RoomOccupancy[];
 }
 
 export interface ActivitySearchRequest {

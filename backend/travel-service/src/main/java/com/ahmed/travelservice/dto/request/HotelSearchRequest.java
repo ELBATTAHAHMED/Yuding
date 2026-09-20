@@ -52,6 +52,17 @@ public class HotelSearchRequest {
     @Builder.Default
     private String currency = "EUR";
 
+    @Pattern(regexp = "^[A-Za-z]{2}$", message = "Guest nationality must be a valid 2-letter ISO country code (e.g. MA, FR, US)")
+    @Builder.Default
+    private String guestNationality = "MA";
+
+    private String city;
+
+    @Pattern(regexp = "^[A-Za-z]{2}$", message = "Country code must be a valid 2-letter ISO code (e.g. MA, FR)")
+    private String countryCode;
+
+    private java.util.List<@jakarta.validation.Valid RoomOccupancyDto> occupancies;
+
     // Cross-field validations
     @AssertTrue(message = "Check-out date must be strictly after check-in date")
     public boolean isStayDurationValid() {

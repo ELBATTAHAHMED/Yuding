@@ -31,7 +31,8 @@
 
 [CmdletBinding()]
 param (
-    [switch]$Build
+    [switch]$Build,
+    [switch]$Wait
 )
 
 $ErrorActionPreference = 'Stop'
@@ -321,3 +322,10 @@ Write-Host @"
 
 ==================================================================
 "@ -ForegroundColor Green
+
+if ($Wait) {
+    Write-Host "`nStack is running in wait mode. Press Ctrl+C to exit..." -ForegroundColor Cyan
+    while ($true) {
+        Start-Sleep -Seconds 5
+    }
+}

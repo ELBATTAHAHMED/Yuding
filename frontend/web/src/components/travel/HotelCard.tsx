@@ -9,8 +9,9 @@ export interface HotelCardProps {
 }
 
 export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) => {
-  const bookingUrl = `/booking?serviceType=HOTEL&serviceId=${hotel.id}&serviceTitle=${encodeURIComponent(
-    hotel.name
+  const hotelDisplayName = hotel.name || hotel.hotelName || 'Hôtel';
+  const bookingUrl = `/booking?serviceType=HOTEL&serviceId=${hotel.id || hotel.hotelId}&serviceTitle=${encodeURIComponent(
+    hotelDisplayName
   )}&price=${hotel.pricePerNight}`;
 
   return (
@@ -22,7 +23,7 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={hotel.imageUrl || '/image/hotels.jpg'}
-          alt={hotel.name}
+          alt={hotelDisplayName}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
         {hotel.rating && (

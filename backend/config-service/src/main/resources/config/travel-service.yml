@@ -45,4 +45,9 @@ travel:
     base-url: ${SCRAPPA_BASE_URL:https://scrappa.co/api}
     connect-timeout-ms: 5000
     read-timeout-ms: 15000
+  nuitee:
+    api-key: ${NUITEE_API_KEY:}
+    base-url: ${NUITEE_BASE_URL:https://api.liteapi.travel/v3.0}
+    connect-timeout-ms: 10000
+    read-timeout-ms: 20000
 

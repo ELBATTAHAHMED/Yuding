@@ -121,32 +121,42 @@ export const travelService = {
 
     if (queryOrCountry && typeof queryOrCountry === 'object') {
       payload = {
-        destination: queryOrCountry.destination || 'Marrakech',
-        checkIn: queryOrCountry.checkIn || getDefaultDate(3),
-        checkOut: queryOrCountry.checkOut || getDefaultDate(7),
+        destination: queryOrCountry.destination || '',
+        checkIn: queryOrCountry.checkIn || '',
+        checkOut: queryOrCountry.checkOut || '',
         rooms: queryOrCountry.rooms ?? 1,
-        adults: queryOrCountry.adults ?? 1,
+        adults: queryOrCountry.adults ?? 2,
         children: queryOrCountry.children ?? 0,
         propertyType: queryOrCountry.propertyType ?? 'ALL',
         currency: queryOrCountry.currency ?? 'EUR',
+        guestNationality: queryOrCountry.guestNationality ?? 'MA',
+        city: queryOrCountry.city,
+        countryCode: queryOrCountry.countryCode,
+        occupancies: queryOrCountry.occupancies,
       };
     } else {
       const country = queryOrCountry as string | undefined;
-      const dest = [city, country].filter(Boolean).join(', ') || 'Marrakech, Maroc';
+      const dest = [city, country].filter(Boolean).join(', ');
 
       payload = {
         destination: dest,
-        checkIn: getDefaultDate(3),
-        checkOut: getDefaultDate(7),
+        checkIn: '',
+        checkOut: '',
         rooms: 1,
         adults: 1,
         children: 0,
         propertyType: 'ALL',
         currency: 'EUR',
+        guestNationality: 'MA',
       };
     }
 
-    return apiClient.post<TravelSearchResponse<HotelOffer>>('/travel/hotels/search', payload);
+    return apiClient.post<TravelSearchResponse<HotelOffer>>(
+      '/travel/hotels/search',
+      payload,
+      false,
+      { timeoutMs: 25000 }
+    );
   },
 
   /**
