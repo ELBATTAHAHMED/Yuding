@@ -27,6 +27,18 @@ const PRESET_DESTINATIONS: PresetDestination[] = [
   { label: 'Rome (Italie)', city: 'Rome', country: 'Italie', countryCode: 'IT' },
 ];
 
+function addDays(dateStr: string, days: number): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return '';
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  d.setDate(d.getDate() + days);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function HotelsPage() {
   // Search parameters
   const [destinationInput, setDestinationInput] = useState('');
@@ -54,17 +66,10 @@ export default function HotelsPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
+  const minCheckOut = checkIn ? addDays(checkIn, 1) : addDays(today, 1);
 
   const totalAdults = occupancies.reduce((sum, r) => sum + r.adults, 0);
   const totalChildren = occupancies.reduce((sum, r) => sum + (r.childrenAges?.length || 0), 0);
-
-  const isFormValid = Boolean(
-    destinationInput.trim().length > 0 &&
-    checkIn &&
-    checkOut &&
-    checkIn >= today &&
-    checkOut > checkIn
-  );
 
   const handleDestinationSelect = (preset: PresetDestination) => {
     setDestinationInput(preset.label);
@@ -83,6 +88,24 @@ export default function HotelsPage() {
       setSelectedCity(val.trim());
     }
     setValidationError(null);
+  };
+
+  const handleCheckInChange = (val: string) => {
+    setCheckIn(val);
+    setValidationError(null);
+    // Automatically advance checkOut if it is empty or not after checkIn
+    if (!checkOut || checkOut <= val) {
+      setCheckOut(addDays(val, 1));
+    }
+  };
+
+  const handleCheckOutChange = (val: string) => {
+    setCheckOut(val);
+    if (checkIn && val <= checkIn) {
+      setValidationError("La date de départ doit être au moins 1 jour après la date d'arrivée (séjour minimum d'une nuit).");
+    } else {
+      setValidationError(null);
+    }
   };
 
   const handleAddRoom = () => {
@@ -116,7 +139,7 @@ export default function HotelsPage() {
         let newAges = [...(room.childrenAges || [])];
         if (newCount > currentCount) {
           for (let k = currentCount; k < newCount; k++) {
-            newAges.push(7); // default child age: 7
+            newAges.push(7);
           }
         } else if (newCount < currentCount) {
           newAges = newAges.slice(0, newCount);
@@ -142,23 +165,23 @@ export default function HotelsPage() {
     setValidationError(null);
 
     if (!destinationInput.trim()) {
-      setValidationError('Veuillez renseigner une ville ou destination.');
+      setValidationError('Veuillez renseigner une destination (ex: Marrakech, Casablanca, Paris).');
       return;
     }
     if (!checkIn) {
-      setValidationError('Veuillez sélectionner une date d\'arrivée.');
+      setValidationError("Veuillez sélectionner une date d'arrivée.");
       return;
     }
     if (checkIn < today) {
-      setValidationError('La date d\'arrivée doit être aujourd\'hui ou dans le futur.');
+      setValidationError("La date d'arrivée ne peut pas être dans le passé.");
       return;
     }
     if (!checkOut) {
-      setValidationError('Veuillez sélectionner une date de départ.');
+      setValidationError("Veuillez sélectionner une date de départ.");
       return;
     }
     if (checkOut <= checkIn) {
-      setValidationError('La date de départ doit être postérieure à la date d\'arrivée.');
+      setValidationError("La date de départ doit être au moins 1 jour après la date d'arrivée (séjour minimum d'une nuit).");
       return;
     }
 
@@ -192,7 +215,7 @@ export default function HotelsPage() {
       setSearchMessage(
         msg.includes('400') || msg.includes('INVALID')
           ? 'Paramètres de recherche invalides. Vérifiez la destination et les dates.'
-          : 'Impossible de contacter le service de voyage ou le fournisseur hôtelier Nuitee.'
+          : 'Impossible de contacter le service de voyage ou le fournisseur hôtelier Nuitee Connect.'
       );
     } finally {
       setIsSearching(false);
@@ -207,6 +230,8 @@ export default function HotelsPage() {
   const toggleExpandHotel = (hotelId: string) => {
     setExpandedHotelId((prev) => (prev === hotelId ? null : hotelId));
   };
+
+  const isInvalidDateRange = Boolean(checkIn && checkOut && checkOut <= checkIn);
 
   return (
     <div>
@@ -327,10 +352,7 @@ export default function HotelsPage() {
                 type="date"
                 min={today}
                 value={checkIn}
-                onChange={(e) => {
-                  setCheckIn(e.target.value);
-                  setValidationError(null);
-                }}
+                onChange={(e) => handleCheckInChange(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -359,21 +381,23 @@ export default function HotelsPage() {
               <input
                 id="hotel-checkout"
                 type="date"
-                min={checkIn || today}
+                min={minCheckOut}
                 value={checkOut}
-                onChange={(e) => {
-                  setCheckOut(e.target.value);
-                  setValidationError(null);
-                }}
+                onChange={(e) => handleCheckOutChange(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
                   borderRadius: '6px',
-                  border: '1px solid #ccc',
+                  border: isInvalidDateRange ? '1px solid #ef5350' : '1px solid #ccc',
                   boxSizing: 'border-box',
                   fontSize: '0.95rem',
                 }}
               />
+              {isInvalidDateRange && (
+                <span style={{ display: 'block', fontSize: '0.75rem', color: '#ef5350', marginTop: '0.25rem' }}>
+                  Min. 1 nuit requise
+                </span>
+              )}
             </div>
 
             {/* Rooms & Occupancy Trigger */}
@@ -661,18 +685,18 @@ export default function HotelsPage() {
               <button
                 type="submit"
                 className="btn-booking"
-                disabled={isSearching || !isFormValid}
-                title={!isFormValid ? 'Veuillez renseigner la destination et les dates' : undefined}
+                disabled={isSearching}
                 style={{
                   width: '100%',
                   padding: '0.85rem',
                   fontWeight: 700,
                   borderRadius: '6px',
-                  cursor: isSearching || !isFormValid ? 'not-allowed' : 'pointer',
-                  opacity: isSearching || !isFormValid ? 0.6 : 1,
+                  cursor: isSearching ? 'not-allowed' : 'pointer',
+                  opacity: isSearching ? 0.7 : 1,
                   color: '#fff',
                   border: 'none',
-                  transition: 'opacity 0.2s ease',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: '#01796F',
                 }}
               >
                 {isSearching ? (
