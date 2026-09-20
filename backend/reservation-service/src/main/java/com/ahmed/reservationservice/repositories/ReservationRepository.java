@@ -6,5 +6,5 @@ import com.ahmed.reservationservice.models.Reservations;
 @Repository
 public interface ReservationRepository extends JpaRepository <Reservations , Long>{
 
-
+    java.util.List<Reservations> findByIdu(Long idu);
 }

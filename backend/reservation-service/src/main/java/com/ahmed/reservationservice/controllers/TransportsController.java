@@ -42,17 +42,20 @@ public class TransportsController {
         }
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'CONTENT_MANAGER')")
     @PostMapping("/create")
     public Transports createTransport(@RequestBody Transports transport) {
         return transportsServices.createTransport(transport);
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'CONTENT_MANAGER')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteTransport(@PathVariable(value = "id") Long id) throws ResourceNotFoundException {
         transportsServices.deleteTransport(id);
         return ResponseEntity.ok().build();
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'CONTENT_MANAGER')")
     @PutMapping("/update/{id}")
     public ResponseEntity<Transports> updateTransport(@PathVariable(value = "id") Long id, @RequestBody Transports transportRequest)
     		throws ResourceNotFoundException {

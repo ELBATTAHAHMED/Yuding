@@ -119,8 +119,12 @@ public class ReservationServicesImpl implements ReservationServices{
 		return reservationRepo.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Réservation non trouvée pour l'ID : " + id));
 	}
-	
-	
+
+	@Override
+	public List<Reservations> getReservationsByUserId(Long idu) {
+		return reservationRepo.findByIdu(idu);
+	}
+
 
 	
 	
