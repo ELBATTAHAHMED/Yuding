@@ -48,18 +48,62 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
     }
   }, [selectedAirport]);
 
-  // Filter airports by query (code, name, city, country)
+  // Normalize string for accent-insensitive and case-insensitive comparison
+  const normalize = (s: string) => normalizeStr(s.trim());
+
+  // Helper to find exact or best matching airport from string query
+  const findMatchingAirport = (text: string): Airport | null => {
+    const trimmed = text.trim();
+    if (!trimmed) return null;
+    const q = normalize(trimmed);
+
+    // 1. Exact IATA code match (e.g. "CMN", "CDG", "rak")
+    const iataMatch = airports.find((a) => a.code.toLowerCase() === trimmed.toLowerCase());
+    if (iataMatch) return iataMatch;
+
+    // 2. String containing code in parentheses, e.g. "Casablanca (CMN)"
+    const parenMatch = trimmed.match(/\(([A-Z]{3})\)/i);
+    if (parenMatch) {
+      const codeAirport = airports.find((a) => a.code.toUpperCase() === parenMatch[1].toUpperCase());
+      if (codeAirport) return codeAirport;
+    }
+
+    // 3. Exact city match (e.g. "Casablanca", "Paris", "Marrakech")
+    const exactCity = airports.find((a) => normalize(a.city) === q);
+    if (exactCity) return exactCity;
+
+    // 4. Exact name match
+    const exactName = airports.find((a) => normalize(a.name) === q);
+    if (exactName) return exactName;
+
+    // 5. City starts with query
+    const cityStarts = airports.find((a) => normalize(a.city).startsWith(q));
+    if (cityStarts) return cityStarts;
+
+    // 6. Any field contains query
+    const anyContains = airports.find(
+      (a) =>
+        normalize(a.code).includes(q) ||
+        normalize(a.city).includes(q) ||
+        normalize(a.name).includes(q)
+    );
+    if (anyContains) return anyContains;
+
+    return null;
+  };
+
+  // Filter airports by query (code, name, city, country) with prioritized sorting
   const filteredAirports = useMemo(() => {
     if (!query.trim()) {
-      return airports.slice(0, 6);
+      return airports.slice(0, 8);
     }
-    const q = normalizeStr(query.trim());
+    const q = normalize(query);
     return airports
       .filter((a) => {
-        const code = normalizeStr(a.code);
-        const name = normalizeStr(a.name);
-        const city = normalizeStr(a.city);
-        const country = normalizeStr(a.country);
+        const code = normalize(a.code);
+        const name = normalize(a.name);
+        const city = normalize(a.city);
+        const country = normalize(a.country);
         return (
           code.includes(q) ||
           name.includes(q) ||
@@ -67,7 +111,21 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
           country.includes(q)
         );
       })
-      .slice(0, 6);
+      .sort((a, b) => {
+        // Exact IATA match first
+        if (a.code.toLowerCase() === q) return -1;
+        if (b.code.toLowerCase() === q) return 1;
+        // City exact match second
+        if (normalize(a.city) === q) return -1;
+        if (normalize(b.city) === q) return 1;
+        // City starts with query third
+        const aStarts = normalize(a.city).startsWith(q);
+        const bStarts = normalize(b.city).startsWith(q);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return 0;
+      })
+      .slice(0, 8);
   }, [airports, query]);
 
   // Reset highlight index when filter results change
@@ -75,30 +133,55 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
     setHighlightedIndex(0);
   }, [filteredAirports]);
 
+  // Commit selection when focus leaves or dropdown closes
+  const commitSelection = () => {
+    setIsOpen(false);
+    const trimmed = query.trim();
+    if (!trimmed) {
+      onSelect(null);
+      setQuery('');
+      return;
+    }
+
+    // Try to resolve to an airport
+    const match = findMatchingAirport(trimmed) || (filteredAirports.length > 0 ? filteredAirports[0] : null);
+    if (match) {
+      onSelect(match);
+      setQuery(`${match.city} (${match.code})`);
+    } else if (selectedAirport) {
+      // Revert to previously valid airport
+      setQuery(`${selectedAirport.city} (${selectedAirport.code})`);
+    } else {
+      setQuery('');
+      onSelect(null);
+    }
+  };
+
   // Click outside listener
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-        // If not selected from list, restore previous valid selection text
-        if (selectedAirport) {
-          setQuery(`${selectedAirport.city} (${selectedAirport.code})`);
-        } else {
-          setQuery('');
-        }
+        commitSelection();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [selectedAirport]);
+  }, [containerRef, query, filteredAirports, selectedAirport, airports]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setQuery(val);
     setIsOpen(true);
-    // Clearing input deselects
-    if (!val.trim() && selectedAirport) {
+
+    if (!val.trim()) {
       onSelect(null);
+      return;
+    }
+
+    // If user typed exact 3-letter IATA code or exact city name, eagerly select
+    const match = findMatchingAirport(val);
+    if (match && (val.trim().length === 3 || normalize(match.city) === normalize(val))) {
+      onSelect(match);
     }
   };
 
@@ -139,18 +222,17 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
         );
         break;
       case 'Enter':
-        e.preventDefault();
+      case 'Tab':
         if (filteredAirports[highlightedIndex]) {
+          e.preventDefault();
           handleSelectAirport(filteredAirports[highlightedIndex]);
+        } else {
+          commitSelection();
         }
         break;
       case 'Escape':
         setIsOpen(false);
-        if (selectedAirport) {
-          setQuery(`${selectedAirport.city} (${selectedAirport.code})`);
-        } else {
-          setQuery('');
-        }
+        commitSelection();
         break;
     }
   };
