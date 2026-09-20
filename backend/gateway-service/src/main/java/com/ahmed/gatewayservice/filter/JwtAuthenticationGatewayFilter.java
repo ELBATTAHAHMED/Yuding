@@ -29,14 +29,19 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Gateway perimeter JWT validation and user context propagation filter.
- * Validates RS256 JWT signature when Authorization header is provided,
- * and enriches downstream requests with X-User-Id, X-User-Email, and X-User-Roles.
+ * Gateway perimeter JWT validation, anti-spoofing header sanitization, and identity propagation filter.
+ * 1. Strips all incoming client-supplied identity headers (X-User-*) to eliminate spoofing.
+ * 2. If Authorization Bearer token is provided, cryptographically validates RS256 signature and expiration.
+ * 3. Enriches downstream request with verified X-User-* headers only from trusted JWT claims.
  */
 @Component
 public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationGatewayFilter.class);
+
+    private static final List<String> SPOOFED_HEADERS_TO_STRIP = List.of(
+            "X-User-Id", "X-User-Email", "X-User-Roles", "X-User-Name", "X-User-Country"
+    );
 
     @Value("${jwt.public-key-location:classpath:certs/public.pem}")
     private Resource publicKeyResource;
@@ -62,11 +67,19 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        // Step 1: Strip any client-supplied spoofed identity headers
+        ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate()
+                .headers(httpHeaders -> {
+                    for (String header : SPOOFED_HEADERS_TO_STRIP) {
+                        httpHeaders.remove(header);
+                    }
+                });
+
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
+        // If no Bearer token, proceed with stripped/clean request
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            // No Bearer token; proceed (downstream endpoints will enforce auth if required)
-            return chain.filter(exchange);
+            return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
         }
 
         String token = authHeader.substring(7).trim();
@@ -101,12 +114,11 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
                 rolesStr = rolesClaim.toString();
             }
 
-            // Propagate user identity to downstream services
-            ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate();
-            if (userId != null) {
+            // Step 2: Inject verified claims from validated JWT only
+            if (userId != null && !userId.isBlank()) {
                 requestBuilder.header("X-User-Id", userId);
             }
-            if (email != null) {
+            if (email != null && !email.isBlank()) {
                 requestBuilder.header("X-User-Email", email);
             }
             if (!rolesStr.isEmpty()) {

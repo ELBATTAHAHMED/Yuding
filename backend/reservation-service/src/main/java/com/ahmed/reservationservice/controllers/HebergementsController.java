@@ -7,6 +7,7 @@ import com.ahmed.reservationservice.services.HebergementsServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,18 +45,21 @@ public class HebergementsController {
     }
 
     
+    @PreAuthorize("hasAnyRole('ADMIN', 'CONTENT_MANAGER')")
     @PostMapping("/create")
     public ResponseEntity<Hebergements> createHebergement(@RequestBody Hebergements hebergement) {
       Hebergements createdHebergement = hebergementsServices.createHebergement(hebergement);
       return new ResponseEntity<>(createdHebergement, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CONTENT_MANAGER')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteHebergement(@PathVariable Long id) {
         hebergementsServices.deleteHebergement(id);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CONTENT_MANAGER')")
     @PutMapping("/update/{id}")
     public ResponseEntity<Hebergements> updateHebergement(@PathVariable Long id, @RequestBody Hebergements hebergementRequest) {
         try {

@@ -19,5 +19,6 @@ public interface ReservationServices {
 		
 		ResponseDto getReservation(Long idr) throws ResourceNotFoundException;
 		Reservations getReservationById(Long id) throws ResourceNotFoundException;
+		List<Reservations> getReservationsByUserId(Long idu);
 	}
 

@@ -18,9 +18,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/apir/admin")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
 public class AdminDashboardController {
 
     private final ReservationRepository reservationRepository;
