@@ -98,6 +98,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
 
               <Link
+                href="/admin/bookings"
+                className={`sidebar-link ${pathname === '/admin/bookings' ? 'active' : ''}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  color: pathname === '/admin/bookings' ? '#00D4AA' : '#b0bec5',
+                  background: pathname === '/admin/bookings' ? 'rgba(0, 212, 170, 0.1)' : 'transparent',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  textDecoration: 'none',
+                }}
+              >
+                <i className="fas fa-ticket" style={{ width: '20px', textAlign: 'center' }}></i>
+                {!collapsed && <span>Réservations</span>}
+              </Link>
+
+              <Link
+                href="/admin/payments"
+                className={`sidebar-link ${pathname === '/admin/payments' ? 'active' : ''}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  color: pathname === '/admin/payments' ? '#00D4AA' : '#b0bec5',
+                  background: pathname === '/admin/payments' ? 'rgba(0, 212, 170, 0.1)' : 'transparent',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  textDecoration: 'none',
+                }}
+              >
+                <i className="fas fa-credit-card" style={{ width: '20px', textAlign: 'center' }}></i>
+                {!collapsed && <span>Paiements</span>}
+              </Link>
+
+              <Link
                 href="/hotels"
                 style={{
                   display: 'flex',
