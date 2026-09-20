@@ -9,6 +9,7 @@ import java.util.UUID;
 /**
  * Refresh token entity mapping to identity.refresh_tokens.
  * Tokens are stored ONLY as secure SHA-256 hashes.
+ * Tracks session families, device/IP metadata, and revocation reasons.
  */
 @Entity
 @Table(name = "refresh_tokens", schema = "identity")
@@ -23,6 +24,10 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "session_id", nullable = false)
+    @Builder.Default
+    private UUID sessionId = UUID.randomUUID();
+
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
@@ -31,6 +36,9 @@ public class RefreshToken {
 
     @Column(name = "device_info", length = 255)
     private String deviceInfo;
+
+    @Column(name = "user_agent", length = 512)
+    private String userAgent;
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
@@ -41,16 +49,25 @@ public class RefreshToken {
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
+    @Column(name = "revocation_reason", length = 64)
+    private String revocationReason;
+
+    @Column(name = "last_used_at")
+    @Builder.Default
+    private Instant lastUsedAt = Instant.now();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
 
     public RefreshToken(UUID userId, String tokenHash, Instant expiresAt, String deviceInfo, String ipAddress) {
+        this.sessionId = UUID.randomUUID();
         this.userId = userId;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
         this.deviceInfo = deviceInfo;
         this.ipAddress = ipAddress;
+        this.lastUsedAt = Instant.now();
         this.createdAt = Instant.now();
     }
 
@@ -60,5 +77,9 @@ public class RefreshToken {
 
     public boolean isRevoked() {
         return revokedAt != null;
+    }
+
+    public boolean isActive() {
+        return !isRevoked() && !isExpired();
     }
 }

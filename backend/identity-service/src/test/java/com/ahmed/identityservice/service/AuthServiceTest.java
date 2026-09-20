@@ -50,6 +50,8 @@ class AuthServiceTest {
     private TokenHashService tokenHashService;
     @Mock
     private NotificationPort notificationPort;
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private AuthService authService;
@@ -237,7 +239,7 @@ class AuthServiceTest {
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining("Token family revoked due to reuse detection");
 
-        verify(refreshTokenRepository).revokeAllActiveTokensForUser(eq(testUser.getId()), any(Instant.class));
+        verify(refreshTokenRepository).revokeAllActiveTokensForUserWithReason(eq(testUser.getId()), any(Instant.class), eq("REUSE_DETECTED"));
     }
 
     @Test
@@ -304,7 +306,7 @@ class AuthServiceTest {
         assertThat(token.isUsed()).isTrue();
         assertThat(testUser.getPasswordHash()).isEqualTo("new_bcrypt_hash");
 
-        verify(refreshTokenRepository).revokeAllActiveTokensForUser(eq(testUser.getId()), any(Instant.class));
+        verify(refreshTokenRepository).revokeAllActiveTokensForUserWithReason(eq(testUser.getId()), any(Instant.class), eq("PASSWORD_RESET"));
         verify(userRepository).save(testUser);
     }
 }
