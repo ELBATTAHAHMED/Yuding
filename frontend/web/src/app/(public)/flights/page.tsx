@@ -3,46 +3,64 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
-import { FlightOffer } from '@/types/travel.types';
+import type { FlightOffer } from '@/types/travel.types';
+
+function formatDuration(minutes?: number | null): string {
+  if (!minutes) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}h${m > 0 ? ` ${m}m` : ''}`;
+}
+
+function formatStops(stops?: number | null): string {
+  if (stops == null) return '';
+  if (stops === 0) return 'Direct';
+  return `${stops} escale${stops > 1 ? 's' : ''}`;
+}
 
 export default function FlightsPage() {
-  const [originCountry, setOriginCountry] = useState('');
   const [originCity, setOriginCity] = useState('');
   const [destination, setDestination] = useState('');
+  const [departureDate, setDepartureDate] = useState('');
+  const [adults, setAdults] = useState(1);
   const [flights, setFlights] = useState<FlightOffer[]>([]);
-  const [providerMessage, setProviderMessage] = useState<string | null>(null);
+  const [searchMessage, setSearchMessage] = useState<string | null>(null);
+  const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
+  // Default departure date: 2 months ahead
   useEffect(() => {
-    // Initial flights load
-    async function loadInitial() {
-      try {
-        const data = await travelService.searchFlights();
-        setFlights(data.results || []);
-        if (data.status === 'PROVIDER_UNAVAILABLE') {
-          setProviderMessage(data.message);
-        }
-      } catch {
-        setFlights([]);
-      }
-    }
-    loadInitial();
+    const d = new Date();
+    d.setMonth(d.getMonth() + 2);
+    setDepartureDate(d.toISOString().split('T')[0]);
   }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
+    setHasSearched(true);
+
     try {
-      const data = await travelService.searchFlights(originCountry, originCity, destination);
+      const data = await travelService.searchFlights({
+        origin: originCity.trim() || 'CMN',
+        destination: destination.trim() || 'CDG',
+        departureDate: departureDate,
+        adults: adults,
+        children: 0,
+        infants: 0,
+        travelClass: 'ECONOMY',
+        nonStop: false,
+        currency: 'EUR',
+      });
+
       setFlights(data.results || []);
-      if (data.status === 'PROVIDER_UNAVAILABLE') {
-        setProviderMessage(data.message);
-      } else {
-        setProviderMessage(null);
-      }
+      setSearchStatus(data.status);
+      setSearchMessage(data.message);
     } catch {
       setFlights([]);
-      setProviderMessage('Impossible de contacter le service de voyage.');
+      setSearchStatus('ERROR');
+      setSearchMessage('Impossible de contacter le service de voyage. Vérifiez que les services backend sont démarrés.');
     } finally {
       setIsSearching(false);
     }
@@ -73,56 +91,71 @@ export default function FlightsPage() {
               boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
               color: 'var(--text, #001b1a)',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '1.25rem',
               alignItems: 'flex-end',
             }}
           >
             <div className="input-line">
-              <label htmlFor="pays" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem', textAlign: 'left' }}>
+              <label htmlFor="origine" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem', textAlign: 'left' }}>
                 <i className="fas fa-plane-departure" style={{ marginRight: '0.4rem', color: '#01796F' }}></i>
-                Pays de départ
+                Origine (code IATA)
               </label>
               <input
                 type="text"
-                id="pays"
+                id="origine"
                 className="input-field"
-                placeholder="Ex: France, Maroc"
-                value={originCountry}
-                onChange={(e) => setOriginCountry(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
-              />
-            </div>
-
-            <div className="input-line">
-              <label htmlFor="ville" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem', textAlign: 'left' }}>
-                <i className="fas fa-map-marker-alt" style={{ marginRight: '0.4rem', color: '#01796F' }}></i>
-                Ville de départ
-              </label>
-              <input
-                type="text"
-                id="ville"
-                className="input-field"
-                placeholder="Ex: Paris, Casablanca"
+                placeholder="Ex: CMN, CDG, JFK"
                 value={originCity}
                 onChange={(e) => setOriginCity(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
               />
             </div>
 
             <div className="input-line">
               <label htmlFor="destination" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem', textAlign: 'left' }}>
                 <i className="fas fa-plane-arrival" style={{ marginRight: '0.4rem', color: '#01796F' }}></i>
-                Destination
+                Destination (code IATA)
               </label>
               <input
                 type="text"
                 id="destination"
                 className="input-field"
-                placeholder="Ex: Marrakech, New York"
+                placeholder="Ex: CDG, LHR, DXB"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div className="input-line">
+              <label htmlFor="date" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem', textAlign: 'left' }}>
+                <i className="fas fa-calendar-alt" style={{ marginRight: '0.4rem', color: '#01796F' }}></i>
+                Date de départ
+              </label>
+              <input
+                type="date"
+                id="date"
+                className="input-field"
+                value={departureDate}
+                onChange={(e) => setDepartureDate(e.target.value)}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div className="input-line">
+              <label htmlFor="adults" className="input-label" style={{ display: 'block', fontWeight: 600, marginBottom: '0.4rem', textAlign: 'left' }}>
+                <i className="fas fa-user" style={{ marginRight: '0.4rem', color: '#01796F' }}></i>
+                Passagers adultes
+              </label>
+              <input
+                type="number"
+                id="adults"
+                className="input-field"
+                min={1} max={9}
+                value={adults}
+                onChange={(e) => setAdults(Number(e.target.value))}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -141,7 +174,7 @@ export default function FlightsPage() {
                 }}
               >
                 {isSearching ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-search" style={{ marginRight: '0.4rem' }}></i>}
-                Rechercher des Vols
+                {isSearching ? 'Recherche...' : 'Rechercher'}
               </button>
             </div>
           </form>
@@ -153,49 +186,49 @@ export default function FlightsPage() {
         <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div className="results-header" style={{ marginBottom: '2rem' }}>
             <h2 className="results-title" style={{ fontSize: '2rem', fontWeight: 800 }}>Vols Disponibles</h2>
-            <p className="results-subtitle" style={{ color: '#666' }}>Sélectionnez votre vol et profitez des meilleurs tarifs</p>
+            <p className="results-subtitle" style={{ color: '#666' }}>
+              {flights.length > 0
+                ? `${flights.length} vol${flights.length > 1 ? 's' : ''} trouvé${flights.length > 1 ? 's' : ''}`
+                : 'Sélectionnez votre vol et profitez des meilleurs tarifs'}
+            </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {flights.length === 0 ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '3.5rem 1.5rem',
-                  background: 'var(--card, #fff)',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                }}
-              >
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(1, 121, 111, 0.1)',
-                    color: '#01796F',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.8rem',
-                    margin: '0 auto 1.25rem',
-                  }}
-                >
+            {!hasSearched ? (
+              // Initial state — prompt user to search
+              <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: 'var(--card, #fff)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(1, 121, 111, 0.1)', color: '#01796F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1.25rem' }}>
+                  <i className="fas fa-search"></i>
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Recherchez vos vols</h3>
+                <p style={{ color: '#666', maxWidth: '500px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                  Entrez un code IATA d&apos;origine (ex: CMN pour Casablanca) et de destination (ex: CDG pour Paris) pour rechercher des vols réels.
+                </p>
+              </div>
+            ) : isSearching ? (
+              // Loading state
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--card, #fff)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: '2rem', color: '#01796F', marginBottom: '1rem', display: 'block' }}></i>
+                <p style={{ color: '#666' }}>Recherche des vols en cours...</p>
+              </div>
+            ) : flights.length === 0 ? (
+              // No results or error
+              <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem', background: 'var(--card, #fff)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(1, 121, 111, 0.1)', color: '#01796F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1.25rem' }}>
                   <i className="fas fa-plane"></i>
                 </div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  Aucun vol direct disponible pour cette recherche
+                  {searchStatus === 'ERROR' ? 'Erreur de connexion' : 'Aucun vol trouvé'}
                 </h3>
                 <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  {providerMessage ||
-                    'Votre recherche a été validée avec succès par le service de voyage V2. Les intégrations des fournisseurs de vols en direct (Amadeus / Duffel) sont planifiées pour la Phase 21+.'}
+                  {searchMessage || 'Aucun vol disponible pour cette recherche. Essayez des codes IATA valides (ex: CMN → CDG).'}
                 </p>
               </div>
             ) : (
+              // Real flight results
               flights.map((flight) => (
                 <div
-                  key={flight.id}
+                  key={flight.offerId}
                   style={{
                     background: 'var(--card, #fff)',
                     padding: '1.5rem',
@@ -209,55 +242,71 @@ export default function FlightsPage() {
                     border: '1px solid rgba(0,0,0,0.05)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', minWidth: '220px' }}>
-                    <div
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: '50%',
-                        background: 'rgba(1, 121, 111, 0.1)',
-                        color: '#01796F',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem',
-                      }}
-                    >
+                  {/* Airline info */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', minWidth: '200px' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(1, 121, 111, 0.1)', color: '#01796F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
                       <i className="fas fa-plane"></i>
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{flight.airline}</h3>
-                      <span style={{ fontSize: '0.85rem', color: '#666' }}>Vol {flight.flightNumber}</span>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.15rem' }}>
+                        {flight.airlineName || flight.airlineCode || '—'}
+                      </h3>
+                      <span style={{ fontSize: '0.82rem', color: '#888' }}>
+                        {flight.airlineCode}{flight.flightNumber ? ` · Vol ${flight.flightNumber}` : ''}
+                      </span>
+                      {flight.provider && (
+                        <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.1rem' }}>
+                          via {flight.provider}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                  {/* Route + timing */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{flight.departureTime}</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                        {flight.departureTime ? flight.departureTime.replace('T', ' ').substring(0, 16) : '—'}
+                      </div>
                       <div style={{ fontSize: '0.85rem', color: '#666' }}>{flight.origin}</div>
                     </div>
 
                     <div style={{ textAlign: 'center', color: '#01796F' }}>
                       <i className="fas fa-long-arrow-alt-right fa-2x"></i>
-                      <div style={{ fontSize: '0.75rem', color: '#999' }}>Direct</div>
+                      <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.2rem' }}>
+                        {flight.totalDurationMinutes ? formatDuration(flight.totalDurationMinutes) : ''}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: flight.stops === 0 ? '#4caf50' : '#888' }}>
+                        {formatStops(flight.stops)}
+                      </div>
                     </div>
 
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{flight.arrivalTime}</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                        {flight.arrivalTime ? flight.arrivalTime.replace('T', ' ').substring(0, 16) : '—'}
+                      </div>
                       <div style={{ fontSize: '0.85rem', color: '#666' }}>{flight.destination}</div>
                     </div>
                   </div>
 
+                  {/* Price + action */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
-                        {flight.price} €
+                        {flight.price} {flight.currency}
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: '#888' }}>{flight.availableSeats} places restantes</div>
+                      {flight.priceType === 'round_trip_starting' && (
+                        <div style={{ fontSize: '0.75rem', color: '#888' }}>à partir de (A/R)</div>
+                      )}
+                      {flight.cabinClass && (
+                        <div style={{ fontSize: '0.78rem', color: '#aaa', textTransform: 'capitalize' }}>
+                          {flight.cabinClass}
+                        </div>
+                      )}
                     </div>
 
                     <Link
-                      href={`/booking?serviceType=FLIGHT&serviceId=${flight.id}&serviceTitle=${encodeURIComponent(`${flight.airline} (${flight.origin} → ${flight.destination})`)}&price=${flight.price}`}
+                      href={`/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(`${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`)}&price=${flight.price}`}
                       className="btn-booking"
                       style={{
                         padding: '0.75rem 1.5rem',
@@ -265,6 +314,7 @@ export default function FlightsPage() {
                         color: '#fff',
                         fontWeight: 700,
                         textDecoration: 'none',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       Réserver

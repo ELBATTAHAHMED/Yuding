@@ -9,9 +9,21 @@ export interface FlightCardProps {
 }
 
 export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }) => {
-  const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${flight.id}&serviceTitle=${encodeURIComponent(
-    `${flight.airline} (${flight.origin} → ${flight.destination})`
+  const displayName = flight.airlineName || flight.airlineCode || '—';
+  const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(
+    `${displayName} (${flight.origin} → ${flight.destination})`
   )}&price=${flight.price}`;
+
+  const durationLabel = flight.totalDurationMinutes
+    ? `${Math.floor(flight.totalDurationMinutes / 60)}h${flight.totalDurationMinutes % 60 > 0 ? ` ${flight.totalDurationMinutes % 60}m` : ''}`
+    : null;
+
+  const stopsLabel =
+    flight.stops != null
+      ? flight.stops === 0
+        ? 'Direct'
+        : `${flight.stops} escale${flight.stops > 1 ? 's' : ''}`
+      : 'Direct';
 
   return (
     <Card
@@ -24,8 +36,10 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
           <i className="fas fa-plane" />
         </div>
         <div>
-          <h3 className="font-bold text-base text-gray-900 dark:text-white">{flight.airline}</h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400">Vol {flight.flightNumber}</span>
+          <h3 className="font-bold text-base text-gray-900 dark:text-white">{displayName}</h3>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {flight.airlineCode}{flight.flightNumber ? ` · Vol ${flight.flightNumber}` : ''}
+          </span>
         </div>
       </div>
 
@@ -42,8 +56,11 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
 
         <div className="flex flex-col items-center text-[#01796F] dark:text-[#02E0D5]">
           <i className="fas fa-long-arrow-alt-right text-xl" />
+          {durationLabel && (
+            <span className="text-[10px] text-gray-400 font-medium">{durationLabel}</span>
+          )}
           <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
-            Direct
+            {stopsLabel}
           </span>
         </div>
 
@@ -61,11 +78,16 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
       <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 dark:border-white/5">
         <div className="text-left md:text-right">
           <div className="text-2xl font-extrabold text-[#01796F] dark:text-[#02E0D5]">
-            {flight.price} €
+            {flight.price} {flight.currency || '€'}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            {flight.availableSeats} places restantes
-          </div>
+          {flight.availableSeats != null && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {flight.availableSeats} places restantes
+            </div>
+          )}
+          {flight.priceType === 'round_trip_starting' && (
+            <div className="text-xs text-gray-400">à partir de (A/R)</div>
+          )}
         </div>
 
         <Link

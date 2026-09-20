@@ -7,18 +7,50 @@ export interface Destination {
   popularRank?: number;
 }
 
+export interface FlightLeg {
+  departureAirport: string;
+  arrivalAirport: string;
+  departureTime: string;
+  arrivalTime: string;
+  airlineCode?: string;
+  airlineName?: string;
+  flightNumber?: string;
+  durationMinutes?: number;
+  stops?: number;
+  aircraft?: string;
+}
+
 export interface FlightOffer {
-  id: string;
-  airline: string;
-  flightNumber: string;
+  offerId: string;
+  /** Provider code, e.g. "SCRAPPA". */
+  provider?: string;
+  /** IATA airline code of primary carrier. */
+  airlineCode?: string;
+  /** Human-readable airline name. */
+  airlineName?: string;
+  flightNumber?: string;
   origin: string;
-  originCountry?: string;
   destination: string;
   departureTime: string;
   arrivalTime: string;
+  cabinClass?: string;
   price: number;
   currency: string;
-  availableSeats: number;
+  availableSeats?: number;
+  /** Total journey duration in minutes. */
+  totalDurationMinutes?: number;
+  /** Number of stops (0 = direct). */
+  stops?: number;
+  /**
+   * true = complete itinerary (one-way or round-trip complete).
+   * false = outbound only (round-trip starting price stage).
+   */
+  itineraryComplete?: boolean;
+  /** "round_trip_starting" | "round_trip_total" | null */
+  priceType?: string;
+  /** Opaque token for round-trip second stage — not a bookable token. */
+  departureToken?: string;
+  legs?: FlightLeg[];
 }
 
 export interface HotelOffer {
