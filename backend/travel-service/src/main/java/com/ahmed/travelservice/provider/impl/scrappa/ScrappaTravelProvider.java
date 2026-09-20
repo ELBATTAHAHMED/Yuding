@@ -93,6 +93,26 @@ public class ScrappaTravelProvider implements TravelProvider {
         return offers;
     }
 
+    /**
+     * Retrieves normalized airport directory from Scrappa.
+     */
+    public List<AirportDto> getAirports() throws TravelProviderException {
+        com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirportsResponse response = client.getAirports();
+        List<com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirport> raw = response.safeAirports();
+        List<AirportDto> result = new ArrayList<>(raw.size());
+        for (com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirport a : raw) {
+            if (a.getCode() != null && !a.getCode().isBlank()) {
+                result.add(AirportDto.builder()
+                        .code(a.getCode().trim().toUpperCase(Locale.ROOT))
+                        .name(a.getName() != null ? a.getName().trim() : a.getCode())
+                        .city(a.getCity() != null ? a.getCity().trim() : "")
+                        .country(a.getCountry() != null ? a.getCountry().trim() : "")
+                        .build());
+            }
+        }
+        return result;
+    }
+
     // ─── Unsupported capabilities ─────────────────────────────────────────────
 
     @Override

@@ -2,6 +2,7 @@ import { apiClient } from '../lib/api-client.ts';
 import type {
   ActivityOffer,
   ActivitySearchRequest,
+  Airport,
   Destination,
   FlightOffer,
   FlightSearchRequest,
@@ -48,6 +49,14 @@ export const travelService = {
         popularRank: 3,
       },
     ];
+  },
+
+  /**
+   * Fetch normalized airport directory via Gateway -> travel-service (/travel/airports)
+   * Used for search autocomplete and selection.
+   */
+  async getAirports(): Promise<Airport[]> {
+    return apiClient.get<Airport[]>('/travel/airports');
   },
 
   /**

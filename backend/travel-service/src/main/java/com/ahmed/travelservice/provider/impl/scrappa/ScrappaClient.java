@@ -163,6 +163,63 @@ public class ScrappaClient {
         return executeGet(uri);
     }
 
+    /**
+     * Retrieves the major airports list from Scrappa.
+     * Endpoint: GET /flights/airports (free endpoint).
+     *
+     * @throws TravelProviderException on any provider error.
+     */
+    public com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirportsResponse getAirports() {
+        validateConfigured();
+
+        String baseUrl = props.getBaseUrl().replaceAll("/+$", "");
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/flights/airports")
+                .build()
+                .toUri();
+
+        log.info("[Scrappa] fetching airports directory: provider=SCRAPPA");
+        return executeGetAirports(uri);
+    }
+
+    private com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirportsResponse executeGetAirports(URI relativeUri) {
+        try {
+            byte[] responseBytes = restClient.get()
+                    .uri(relativeUri)
+                    .header("X-API-KEY", props.getApiKey())
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                        int status = response.getStatusCode().value();
+                        mapClientError(status);
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
+                        int status = response.getStatusCode().value();
+                        log.warn("[Scrappa] provider error: HTTP {}", status);
+                        throw new TravelProviderException(PROVIDER_CODE,
+                                ProviderErrorCode.PROVIDER_UNAVAILABLE,
+                                "Scrappa returned HTTP " + status + " (server error)");
+                    })
+                    .body(byte[].class);
+
+            if (responseBytes == null || responseBytes.length == 0) {
+                return new com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirportsResponse();
+            }
+
+            return objectMapper.readValue(responseBytes, com.ahmed.travelservice.provider.impl.scrappa.dto.ScrappaAirportsResponse.class);
+        } catch (TravelProviderException e) {
+            throw e;
+        } catch (ResourceAccessException e) {
+            log.warn("[Scrappa] request timed out or unreachable: {}", e.getMessage());
+            throw new TravelProviderException(PROVIDER_CODE,
+                    ProviderErrorCode.PROVIDER_TIMEOUT,
+                    "Scrappa request timed out: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.warn("[Scrappa] unexpected error during airport request: {}", e.getClass().getSimpleName());
+            throw new TravelProviderException(PROVIDER_CODE,
+                    ProviderErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "Failed to parse Scrappa airport response: " + e.getMessage(), e);
+        }
+    }
+
     // ─── Internal helpers ──────────────────────────────────────────────────────
 
     private ScrappaFlightResponse executeGet(URI relativeUri) {

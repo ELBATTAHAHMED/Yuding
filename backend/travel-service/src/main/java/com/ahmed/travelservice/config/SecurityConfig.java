@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
 
                         // Public travel search endpoints
+                        .requestMatchers(HttpMethod.GET, "/travel/airports").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/flights/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/hotels/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/activities/search").permitAll()
