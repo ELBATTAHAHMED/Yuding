@@ -110,3 +110,25 @@ export interface TravelSearchResponse<T> {
   totalResults: number;
   results: T[];
 }
+
+// ==================== V2 OFFER REVALIDATION MODELS ====================
+
+export interface RevalidateOfferRequest {
+  offerId: string;
+  provider?: string;
+  productType: 'FLIGHT' | 'HOTEL' | 'ACTIVITY' | 'TRANSFER';
+  originalPrice: number;
+  currency: string;
+}
+
+export interface OfferRevalidationResult {
+  offerId: string;
+  provider: string;
+  valid: boolean;
+  priceChanged: boolean;
+  currentPrice: number;
+  originalPrice: number;
+  currency: string;
+  message?: string;
+}
+

@@ -66,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/travel/hotels/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/activities/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/transfers/search").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/travel/offers/revalidate").permitAll()
 
                         // All other travel operations require authentication
                         .anyRequest().authenticated()

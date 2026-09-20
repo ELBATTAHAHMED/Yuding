@@ -97,6 +97,33 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
+    @ExceptionHandler(com.ahmed.travelservice.provider.error.TravelProviderException.class)
+    public ResponseEntity<ErrorResponse> handleTravelProviderException(com.ahmed.travelservice.provider.error.TravelProviderException ex, HttpServletRequest request) {
+        String reqId = getRequestId(request);
+        HttpStatus status = switch (ex.getErrorCode()) {
+            case OFFER_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case OFFER_EXPIRED -> HttpStatus.GONE;
+            case PROVIDER_RATE_LIMITED -> HttpStatus.TOO_MANY_REQUESTS;
+            case PROVIDER_AUTHENTICATION_FAILED -> HttpStatus.BAD_GATEWAY;
+            case PROVIDER_TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT;
+            case CAPABILITY_NOT_SUPPORTED -> HttpStatus.NOT_IMPLEMENTED;
+            case PROVIDER_UNAVAILABLE, PROVIDER_NOT_CONFIGURED -> HttpStatus.SERVICE_UNAVAILABLE;
+            default -> HttpStatus.BAD_GATEWAY;
+        };
+
+        log.warn("TravelProviderException [id={}, provider={}, code={}]: {}",
+                reqId, ex.getProviderCode(), ex.getErrorCode(), ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                reqId,
+                status.value(),
+                ex.getErrorCode().name(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         String reqId = getRequestId(request);
