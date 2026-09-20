@@ -85,7 +85,13 @@ public class SecurityConfig {
                                 "/auth/jwks",
                                 "/auth/public-key"
                         ).permitAll()
-                        .requestMatchers("/auth/me", "/auth/change-password").authenticated()
+                        .requestMatchers(
+                                "/auth/me",
+                                "/auth/change-password",
+                                "/auth/logout-all",
+                                "/auth/sessions/**",
+                                "/auth/security-events"
+                        ).authenticated()
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPPORT")
                         .anyRequest().authenticated()
                 )
