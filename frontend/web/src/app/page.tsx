@@ -472,7 +472,7 @@ export default function HomePage() {
         type="button"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/image/a1.png" alt="Chatbot" />
+        <img src="/a1.png" alt="Chatbot" />
       </button>
     </>
   );
