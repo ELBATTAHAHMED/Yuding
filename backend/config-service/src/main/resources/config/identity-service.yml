@@ -1,0 +1,26 @@
+# ====================================================================
+# Yuding V2 - Identity Service Base Configuration (identity-service.yml)
+# Schema: identity
+# ====================================================================
+
+server:
+  port: 8081
+  max-http-request-header-size: 16KB
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        default_schema: identity
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
+jwt:
+  issuer: yuding-identity-service
+  access-token-expiration-minutes: 15
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:classpath:certs/public.pem}
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:classpath:certs/private.pem}

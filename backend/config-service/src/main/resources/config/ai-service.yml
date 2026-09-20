@@ -1,0 +1,28 @@
+# ====================================================================
+# Yuding V2 - AI Service Base Configuration (ai-service.yml)
+# Schema: ai (pgvector isolation)
+# ====================================================================
+
+server:
+  address: 0.0.0.0
+  port: 7777
+  max-http-request-header-size: 16KB
+
+spring:
+  ai:
+    openai:
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+      api-key: ${OPENAI_API_KEY:your-openai-api-key}
+    vectorstore:
+      pgvector:
+        schema-name: ai
+        initialize-schema: false
+  sql:
+    init:
+      mode: never
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB

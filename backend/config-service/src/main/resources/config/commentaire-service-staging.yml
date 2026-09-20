@@ -1,0 +1,10 @@
+# ====================================================================
+# Yuding V2 - Commentaire Service Staging Profile (commentaire-service-staging.yml)
+# ====================================================================
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:yuding}?currentSchema=engagement}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://staging.yuding.travel}

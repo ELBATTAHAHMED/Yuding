@@ -1,0 +1,21 @@
+# ====================================================================
+# Yuding V2 - Reservation Service Base Configuration (reservation-service.yml)
+# Schema: booking
+# ====================================================================
+
+server:
+  port: 8090
+  max-http-request-header-size: 16KB
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        default_schema: booking
+    hibernate:
+      # Preserves legacy mapping compatibility without DDL alteration
+      ddl-auto: none
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB

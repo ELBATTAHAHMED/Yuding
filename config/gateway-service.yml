@@ -1,0 +1,38 @@
+# ====================================================================
+# Yuding V2 - Gateway Service Base Configuration (gateway-service.yml)
+# ====================================================================
+
+server:
+  port: 8888
+  max-http-request-header-size: 16KB
+
+spring:
+  cloud:
+    discovery:
+      enabled: true
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@ipKeyResolver}"
+            redis-rate-limiter.replenishRate: 50
+            redis-rate-limiter.burstCapacity: 100
+      routes:
+        - id: reservation-route
+          uri: lb://RESERVATION-SERVICE
+          predicates:
+            - Path=/apir/**
+        - id: identity-route
+          uri: lb://IDENTITY-SERVICE
+          predicates:
+            - Path=/auth/**,/admin/**
+        - id: ai-route
+          uri: lb://AI-SERVICE
+          predicates:
+            - Path=/ai/**
+        - id: commentaire-route
+          uri: lb://COMMENTAIRE-SERVICE
+          predicates:
+            - Path=/apic/**
+  codec:
+    max-in-memory-size: 5MB

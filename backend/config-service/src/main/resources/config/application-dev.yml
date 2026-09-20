@@ -1,0 +1,40 @@
+# ====================================================================
+# Yuding V2 - Shared Development Profile (application-dev.yml)
+# Active when SPRING_PROFILES_ACTIVE=dev
+# ====================================================================
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:yuding}}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# Development CORS - allows local Next.js dev server
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:63342,http://127.0.0.1:5500}
+
+# Cookie security - false for local HTTP development
+cookie:
+  secure: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    com.ahmed: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always
