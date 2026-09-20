@@ -1,63 +1,36 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
-import { authService } from '@/services/auth.service';
-import { ActiveSession, SecurityEvent } from '@/types/auth.types';
+import {
+  useActiveSessions,
+  useSecurityEvents,
+  useRevokeSessionMutation,
+  useChangePasswordMutation,
+} from '@/hooks/queries/useAccountQueries';
 
 export default function AccountPage() {
-  const { user, logout, logoutAll, reloadProfile } = useAuth();
+  const { user, logout, logoutAll } = useAuth();
 
-  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
-  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
-  const [loadingSessions, setLoadingSessions] = useState(false);
-  const [loadingEvents, setLoadingEvents] = useState(false);
+  // Server state managed via TanStack Query
+  const { data: activeSessions = [], isLoading: loadingSessions } = useActiveSessions();
+  const { data: securityEvents = [], isLoading: loadingEvents } = useSecurityEvents();
+  const revokeSessionMutation = useRevokeSessionMutation();
+  const changePasswordMutation = useChangePasswordMutation();
 
-  // Change password form state
+  // Change password local form state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // General feedback
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const loadSessions = useCallback(async () => {
-    setLoadingSessions(true);
-    try {
-      const data = await authService.getActiveSessions();
-      setActiveSessions(data);
-    } catch {
-      setActiveSessions([]);
-    } finally {
-      setLoadingSessions(false);
-    }
-  }, []);
-
-  const loadEvents = useCallback(async () => {
-    setLoadingEvents(true);
-    try {
-      const data = await authService.getSecurityEvents();
-      setSecurityEvents(data);
-    } catch {
-      setSecurityEvents([]);
-    } finally {
-      setLoadingEvents(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSessions();
-    loadEvents();
-  }, [loadSessions, loadEvents]);
-
   const handleRevokeSession = async (sessionId: string) => {
     try {
-      await authService.revokeSession(sessionId);
+      await revokeSessionMutation.mutateAsync(sessionId);
       setFeedback('Session révoquée avec succès.');
-      loadSessions();
-      loadEvents();
       setTimeout(() => setFeedback(null), 3000);
     } catch (err: any) {
       setFeedback(err.message || 'Erreur lors de la révocation.');
@@ -84,18 +57,14 @@ export default function AccountPage() {
       return;
     }
 
-    setIsChangingPassword(true);
     try {
-      const res = await authService.changePassword(currentPassword, newPassword);
+      const res = await changePasswordMutation.mutateAsync({ currentPassword, newPassword });
       setPasswordStatus({ type: 'success', message: res.message || 'Mot de passe modifié avec succès.' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      loadEvents();
     } catch (err: any) {
       setPasswordStatus({ type: 'error', message: err.message || 'Erreur lors du changement de mot de passe.' });
-    } finally {
-      setIsChangingPassword(false);
     }
   };
 
@@ -346,7 +315,7 @@ export default function AccountPage() {
 
                 <button
                   type="submit"
-                  disabled={isChangingPassword || !user?.isEmailVerified}
+                  disabled={changePasswordMutation.isPending || !user?.isEmailVerified}
                   className="btn-booking"
                   style={{
                     width: '100%',
@@ -358,7 +327,7 @@ export default function AccountPage() {
                     opacity: !user?.isEmailVerified ? 0.6 : 1,
                   }}
                 >
-                  {isChangingPassword ? <i className="fas fa-spinner fa-spin"></i> : 'Mettre à jour le mot de passe'}
+                  {changePasswordMutation.isPending ? <i className="fas fa-spinner fa-spin"></i> : 'Mettre à jour le mot de passe'}
                 </button>
               </form>
             </div>

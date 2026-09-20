@@ -1,42 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { adminService } from '@/services/admin.service';
+import React, { useState } from 'react';
 import { AdminUserSummary } from '@/types/admin.types';
 import { useAuth } from '@/features/auth/useAuth';
+import {
+  useAdminUsers,
+  useUnlockUserMutation,
+  useUpdateUserRolesMutation,
+} from '@/hooks/queries/useAdminQueries';
 
 export default function AdminUsersPage() {
   const { isAdmin } = useAuth();
-  const [users, setUsers] = useState<AdminUserSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: users = [], isLoading: loading, refetch: loadUsers } = useAdminUsers();
+  const unlockUserMutation = useUnlockUserMutation();
+  const updateUserRolesMutation = useUpdateUserRolesMutation();
+
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
   // Selected user for role editing
   const [selectedUser, setSelectedUser] = useState<AdminUserSummary | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [updating, setUpdating] = useState(false);
-
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await adminService.getAllUsers();
-      setUsers(data);
-    } catch {
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
 
   const handleUnlock = async (userId: string) => {
     try {
-      const res = await adminService.unlockUser(userId);
+      const res = await unlockUserMutation.mutateAsync(userId);
       setActionFeedback(res.message || 'Compte déverrouillé avec succès.');
-      loadUsers();
       setTimeout(() => setActionFeedback(null), 3000);
     } catch (err: any) {
       setActionFeedback(err.message || 'Erreur lors du déverrouillage.');
@@ -60,17 +48,13 @@ export default function AdminUsersPage() {
 
   const handleSaveRoles = async () => {
     if (!selectedUser) return;
-    setUpdating(true);
     try {
-      await adminService.updateUserRoles(selectedUser.id, selectedRoles);
+      await updateUserRolesMutation.mutateAsync({ userId: selectedUser.id, roles: selectedRoles });
       setActionFeedback(`Rôles mis à jour pour ${selectedUser.email}`);
       setSelectedUser(null);
-      loadUsers();
       setTimeout(() => setActionFeedback(null), 3000);
     } catch (err: any) {
       setActionFeedback(err.message || 'Erreur lors de la mise à jour des rôles.');
-    } finally {
-      setUpdating(false);
     }
   };
 
@@ -87,7 +71,7 @@ export default function AdminUsersPage() {
         </div>
 
         <button
-          onClick={loadUsers}
+          onClick={() => loadUsers()}
           style={{
             padding: '0.6rem 1.25rem',
             background: 'rgba(0, 212, 170, 0.1)',
@@ -312,7 +296,7 @@ export default function AdminUsersPage() {
 
               <button
                 onClick={handleSaveRoles}
-                disabled={updating}
+                disabled={updateUserRolesMutation.isPending}
                 style={{
                   padding: '0.65rem 1.5rem',
                   background: '#00D4AA',
@@ -323,7 +307,7 @@ export default function AdminUsersPage() {
                   cursor: 'pointer',
                 }}
               >
-                {updating ? <i className="fas fa-spinner fa-spin"></i> : 'Enregistrer'}
+                {updateUserRolesMutation.isPending ? <i className="fas fa-spinner fa-spin"></i> : 'Enregistrer'}
               </button>
             </div>
           </div>
