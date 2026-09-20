@@ -1,13 +1,12 @@
 @import '../styles/style.css';
-@import '../styles/stylesA-modern.css';
-@import '../styles/loginStyle.css';
-@import '../styles/VolStyle.css';
 
-/* Global resets for Next.js App Router */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global resets and enhancements for Next.js App Router */
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html,
