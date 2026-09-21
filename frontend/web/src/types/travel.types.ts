@@ -27,6 +27,20 @@ export interface FlightLeg {
   aircraft?: string;
 }
 
+export type ConversionStatus = 'CONVERTED' | 'IDENTITY' | 'UNAVAILABLE';
+
+/** Immutable provider amount plus optional MAD display conversion returned by travel-service. */
+export interface PriceConversionSnapshot {
+  providerAmount: number;
+  providerCurrency: string;
+  exchangeRate?: number;
+  displayAmount?: number;
+  displayCurrency: string;
+  exchangeRateDate?: string;
+  exchangeRateProvider?: string;
+  conversionStatus: ConversionStatus;
+}
+
 export interface FlightOffer {
   offerId: string;
   /** Provider code, e.g. "SCRAPPA". */
@@ -43,6 +57,7 @@ export interface FlightOffer {
   cabinClass?: string;
   price: number;
   currency: string;
+  priceConversion?: PriceConversionSnapshot;
   availableSeats?: number;
   /** Total journey duration in minutes. */
   totalDurationMinutes?: number;
@@ -77,6 +92,8 @@ export interface HotelRoomOffer {
   price: number;
   pricePerNight?: number;
   currency: string;
+  priceConversion?: PriceConversionSnapshot;
+  pricePerNightConversion?: PriceConversionSnapshot;
 }
 
 export interface HotelOffer {
@@ -102,6 +119,9 @@ export interface HotelOffer {
   pricePerNight: number;
   totalPrice?: number;
   currency: string;
+  /** Conversion of the existing per-night headline price. */
+  priceConversion?: PriceConversionSnapshot;
+  totalPriceConversion?: PriceConversionSnapshot;
   imageUrl?: string;
   availabilityState?: string;
   roomSummary?: string;
@@ -120,6 +140,7 @@ export interface ActivityOffer {
   category: string;
   price: number;
   currency: string;
+  priceConversion?: PriceConversionSnapshot;
   durationHours?: number;
   imageUrl?: string;
   description?: string;
@@ -140,6 +161,7 @@ export interface TransferOffer {
   time?: string;
   price: number;
   currency: string;
+  priceConversion?: PriceConversionSnapshot;
   capacity?: number;
 }
 

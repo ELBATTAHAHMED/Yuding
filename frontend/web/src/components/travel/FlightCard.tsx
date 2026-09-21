@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { FlightOffer } from '@/types/travel.types';
 import { Card } from '@/components/ui/Card';
+import { PriceDisplay } from './PriceDisplay';
 
 export interface FlightCardProps {
   flight: FlightOffer;
@@ -78,7 +79,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
       <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 dark:border-white/5">
         <div className="text-left md:text-right">
           <div className="text-2xl font-extrabold text-[#01796F] dark:text-[#02E0D5]">
-            {flight.price} {flight.currency || '€'}
+            <PriceDisplay conversion={flight.priceConversion} amount={flight.price} currency={flight.currency} />
           </div>
           {flight.availableSeats != null && (
             <div className="text-xs text-gray-500 dark:text-gray-400">

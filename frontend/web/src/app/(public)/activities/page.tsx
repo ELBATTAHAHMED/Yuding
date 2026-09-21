@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -482,7 +483,7 @@ export default function ActivitiesPage() {
                       <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
                         <div>
                           <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
-                            {act.price} {act.currency === 'USD' ? '$' : '€'}
+                            <PriceDisplay conversion={act.priceConversion} amount={act.price} currency={act.currency} />
                           </span>
                           <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
                         </div>

@@ -68,6 +68,12 @@ public class HotelOfferDto {
     /** ISO currency code (e.g. "EUR", "USD", "MAD"). */
     private String currency;
 
+    /** Conversion for the existing per-night headline price. */
+    private PriceConversionSnapshot priceConversion;
+
+    /** Conversion for the existing total-stay price, kept distinct from the nightly amount. */
+    private PriceConversionSnapshot totalPriceConversion;
+
     /** Hotel official star rating (e.g. 3.0, 4.0, 5.0). */
     private Double starRating;
 

@@ -25,4 +25,5 @@ public class TransferOfferDto {
     private Integer capacity;
     private BigDecimal price;
     private String currency;
+    private PriceConversionSnapshot priceConversion;
 }

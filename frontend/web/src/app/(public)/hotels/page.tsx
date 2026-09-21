@@ -10,6 +10,7 @@ import {
   type HotelCategoryFilter,
 } from '@/lib/hotel-filters';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -1121,7 +1122,7 @@ export default function HotelsPage() {
                           <div>
                             <span style={{ fontSize: '0.75rem', color: '#888', display: 'block' }}>À partir de</span>
                             <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
-                              {item.pricePerNight} {item.currency}
+                              <PriceDisplay conversion={item.priceConversion} amount={item.pricePerNight} currency={item.currency} />
                             </span>
                             <span style={{ fontSize: '0.8rem', color: '#888' }}> / nuit</span>
                           </div>
@@ -1218,11 +1219,11 @@ export default function HotelsPage() {
 
                                 <div style={{ textAlign: 'right' }}>
                                   <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#01796F' }}>
-                                    {offer.price} {offer.currency}
+                                    <PriceDisplay conversion={offer.priceConversion} amount={offer.price} currency={offer.currency} />
                                   </div>
                                   {offer.pricePerNight && (
                                     <div style={{ fontSize: '0.7rem', color: '#888' }}>
-                                      ({offer.pricePerNight} {offer.currency}/nuit)
+                                      (<PriceDisplay conversion={offer.pricePerNightConversion} amount={offer.pricePerNight} currency={offer.currency} />/nuit)
                                     </div>
                                   )}
                                   <Link
