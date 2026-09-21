@@ -12,6 +12,34 @@ import {
   isMinibusOrRental,
   type TransferCategoryFilter,
 } from '@/lib/transfer-filters';
+import { TransferLocationSelector, LocationSuggestion } from '@/components/travel/TransferLocationSelector';
+
+const POPULAR_AIRPORTS: LocationSuggestion[] = [
+  { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
+  { code: 'CMN', title: 'Casablanca Mohammed V', subtitle: 'Aéroport international • Maroc', badge: 'CMN' },
+  { code: 'RBA', title: 'Rabat-Salé', subtitle: 'Aéroport international • Maroc', badge: 'RBA' },
+  { code: 'TNG', title: 'Tanger Ibn Battouta', subtitle: 'Aéroport international • Maroc', badge: 'TNG' },
+  { code: 'AGA', title: 'Agadir Al Massira', subtitle: 'Aéroport international • Maroc', badge: 'AGA' },
+  { code: 'FEZ', title: 'Fès-Saïss', subtitle: 'Aéroport international • Maroc', badge: 'FEZ' },
+  { code: 'CDG', title: 'Paris Charles de Gaulle', subtitle: 'Aéroport international • France', badge: 'CDG' },
+  { code: 'ORY', title: 'Paris Orly', subtitle: 'Aéroport international • France', badge: 'ORY' },
+  { code: 'BCN', title: 'Barcelone El Prat', subtitle: 'Aéroport international • Espagne', badge: 'BCN' },
+  { code: 'MAD', title: 'Madrid-Barajas', subtitle: 'Aéroport international • Espagne', badge: 'MAD' },
+  { code: 'FCO', title: 'Rome Fiumicino', subtitle: 'Aéroport international • Italie', badge: 'FCO' },
+  { code: 'LHR', title: 'Londres Heathrow', subtitle: 'Aéroport international • Royaume-Uni', badge: 'LHR' },
+  { code: 'JFK', title: 'New York JFK', subtitle: 'Aéroport international • États-Unis', badge: 'JFK' },
+  { code: 'DXB', title: 'Dubaï International', subtitle: 'Aéroport international • Émirats', badge: 'DXB' },
+  { code: 'IST', title: 'Istanbul Airport', subtitle: 'Aéroport international • Turquie', badge: 'IST' },
+];
+
+const POPULAR_DESTINATIONS: LocationSuggestion[] = [
+  { code: 'CTR', title: 'Centre-ville', subtitle: 'Zone centrale & commerces', badge: 'VILLE' },
+  { code: 'MED', title: 'Médina / Riad', subtitle: 'Vieille ville & hébergements traditionnels', badge: 'MÉDINA' },
+  { code: 'HOT', title: 'Zone Hôtelière', subtitle: 'Complexes hôteliers & resorts', badge: 'HÔTEL' },
+  { code: 'GAR', title: 'Gare Ferroviaire', subtitle: 'Gare centrale de train ONCF / TGV', badge: 'GARE' },
+  { code: 'PLG', title: 'Front de Mer / Plage', subtitle: 'Zone balnéaire & corniche', badge: 'PLAGE' },
+  { code: 'AER', title: 'Aéroport (Trajet retour)', subtitle: 'Transfert vers le terminal de départ', badge: 'RETOUR' },
+];
 
 export default function TransfersPage() {
   const today = new Date().toISOString().split('T')[0];
@@ -32,6 +60,12 @@ export default function TransfersPage() {
 
   const categoryCounts = useMemo(() => getTransferCategoryCounts(transfers), [transfers]);
   const filteredTransfers = useMemo(() => filterTransfers(transfers, transportType), [transfers, transportType]);
+
+  const handleSwap = () => {
+    const temp = pickup;
+    setPickup(dropoff);
+    setDropoff(temp);
+  };
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -111,11 +145,11 @@ export default function TransfersPage() {
           <form
             onSubmit={handleSearch}
             style={{
-              background: 'var(--card, #fff)',
+              background: '#ffffff',
               padding: '1.75rem',
-              borderRadius: '12px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              color: 'var(--text, #333)',
+              borderRadius: '16px',
+              boxShadow: '0 12px 35px rgba(0, 0, 0, 0.25)',
+              color: '#1e293b',
               display: 'flex',
               flexWrap: 'wrap',
               gap: '1rem',
@@ -123,136 +157,185 @@ export default function TransfersPage() {
               textAlign: 'left',
             }}
           >
-            <div style={{ flex: '2 1 200px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-plane-departure" style={{ marginRight: '0.4rem' }}></i>
-                Point de départ
-              </label>
-              <input
-                type="text"
-                value={pickup}
-                onChange={(e) => setPickup(e.target.value)}
-                list="popular-airports"
+            {/* Origin Airport / Location */}
+            <div style={{ flex: '3 1 230px' }}>
+              <TransferLocationSelector
+                id="pickupLocation"
+                label="Point de départ"
+                icon="fas fa-plane-departure"
                 placeholder="Aéroport ou code IATA (ex: RAK, CMN, CDG, BCN...)"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '0.95rem',
+                value={pickup}
+                onChange={(val) => {
+                  setPickup(val);
+                  if (errorMessage) setErrorMessage(null);
                 }}
+                suggestions={POPULAR_AIRPORTS}
               />
-              <datalist id="popular-airports">
-                <option value="RAK — Marrakech Menara" />
-                <option value="CMN — Casablanca Mohammed V" />
-                <option value="RBA — Rabat-Salé" />
-                <option value="TNG — Tanger Ibn Battouta" />
-                <option value="AGA — Agadir Al Massira" />
-                <option value="FEZ — Fès-Saïss" />
-                <option value="CDG — Paris Charles de Gaulle" />
-                <option value="ORY — Paris Orly" />
-                <option value="BCN — Barcelone El Prat" />
-                <option value="MAD — Madrid-Barajas" />
-                <option value="FCO — Rome Fiumicino" />
-                <option value="LHR — Londres Heathrow" />
-                <option value="JFK — New York JFK" />
-              </datalist>
             </div>
 
-            <div style={{ flex: '2 1 200px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-map-marker-alt" style={{ marginRight: '0.4rem' }}></i>
-                Destination
-              </label>
-              <input
-                type="text"
-                value={dropoff}
-                onChange={(e) => setDropoff(e.target.value)}
-                list="popular-destinations"
+            {/* Swap Button */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '4px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleSwap}
+                disabled={!pickup && !dropoff}
+                title="Inverser les points de transfert"
+                aria-label="Inverser le départ et l'arrivée"
+                style={{
+                  background: '#f1f5f9',
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '50%',
+                  width: '42px',
+                  height: '42px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: pickup || dropoff ? 'pointer' : 'not-allowed',
+                  color: '#01796F',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                }}
+              >
+                <i className="fas fa-exchange-alt" />
+              </button>
+            </div>
+
+            {/* Destination Location / Hotel */}
+            <div style={{ flex: '3 1 230px' }}>
+              <TransferLocationSelector
+                id="dropoffLocation"
+                label="Destination"
+                icon="fas fa-map-marker-alt"
                 placeholder="Hôtel, coordonnées ou ville (ex: Centre-ville, Médina...)"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '0.95rem',
+                value={dropoff}
+                onChange={(val) => {
+                  setDropoff(val);
+                  if (errorMessage) setErrorMessage(null);
                 }}
+                suggestions={POPULAR_DESTINATIONS}
               />
-              <datalist id="popular-destinations">
-                <option value="Centre-ville" />
-                <option value="Médina / Riad" />
-                <option value="Zone Hôtelière" />
-                <option value="Gare Ferroviaire" />
-              </datalist>
             </div>
 
-            <div style={{ flex: '1 1 140px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-calendar-alt" style={{ marginRight: '0.4rem' }}></i>
+            {/* Departure Date */}
+            <div style={{ flex: '2 1 140px' }}>
+              <label
+                htmlFor="transferDate"
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  marginBottom: '0.4rem',
+                  color: '#01796F',
+                }}
+              >
+                <i className="fas fa-calendar-alt" style={{ marginRight: '6px' }}></i>
                 Date
               </label>
               <input
+                id="transferDate"
                 type="date"
                 value={date}
                 min={today}
                 onChange={(e) => setDate(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '0.75rem 1rem',
+                  padding: '0.72rem 1rem',
                   borderRadius: '8px',
-                  border: '1px solid #ccc',
+                  border: '1.5px solid #cbd5e1',
                   fontSize: '0.95rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#1e293b',
                 }}
               />
             </div>
 
-            <div style={{ flex: '1 1 100px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-clock" style={{ marginRight: '0.4rem' }}></i>
+            {/* Departure Time */}
+            <div style={{ flex: '1 1 110px' }}>
+              <label
+                htmlFor="transferTime"
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  marginBottom: '0.4rem',
+                  color: '#01796F',
+                }}
+              >
+                <i className="fas fa-clock" style={{ marginRight: '6px' }}></i>
                 Heure
               </label>
               <input
+                id="transferTime"
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '0.75rem 1rem',
+                  padding: '0.72rem 1rem',
                   borderRadius: '8px',
-                  border: '1px solid #ccc',
+                  border: '1.5px solid #cbd5e1',
                   fontSize: '0.95rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#1e293b',
                 }}
               />
             </div>
 
+            {/* Passenger Count */}
             <div style={{ flex: '1 1 90px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-users" style={{ marginRight: '0.4rem' }}></i>
+              <label
+                htmlFor="transferPax"
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  marginBottom: '0.4rem',
+                  color: '#01796F',
+                }}
+              >
+                <i className="fas fa-users" style={{ marginRight: '6px' }}></i>
                 Passagers
               </label>
               <input
+                id="transferPax"
                 type="number"
                 min="1"
-                max="10"
+                max="16"
                 value={passengers}
                 onChange={(e) => setPassengers(parseInt(e.target.value, 10) || 1)}
                 style={{
                   width: '100%',
-                  padding: '0.75rem 1rem',
+                  padding: '0.72rem 1rem',
                   borderRadius: '8px',
-                  border: '1px solid #ccc',
+                  border: '1.5px solid #cbd5e1',
                   fontSize: '0.95rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  background: '#fff',
+                  color: '#1e293b',
                 }}
               />
             </div>
 
+            {/* Submit Button */}
             <div style={{ flex: '1 1 160px' }}>
               <button
                 type="submit"
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '0.85rem 1.5rem',
+                  padding: '0.78rem 1.5rem',
                   borderRadius: '8px',
                   border: 'none',
                   backgroundColor: '#01796F',
@@ -265,6 +348,7 @@ export default function TransfersPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
+                  transition: 'background-color 0.2s ease, transform 0.1s ease',
                 }}
               >
                 {loading ? (

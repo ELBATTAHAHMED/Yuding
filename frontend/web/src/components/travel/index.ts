@@ -5,4 +5,4 @@ export * from './SearchForm';
 export * from './AirportSelector';
 export * from './StationSelector';
 export * from './TrainCard';
-
+export * from './TransferLocationSelector';
