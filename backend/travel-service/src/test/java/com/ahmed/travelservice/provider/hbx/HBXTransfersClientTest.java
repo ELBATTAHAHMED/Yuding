@@ -106,14 +106,53 @@ class HBXTransfersClientTest {
     }
 
     @Test
-    @DisplayName("Resolves Moroccan airport names and IATA codes correctly")
+    @DisplayName("Resolves global airport names and IATA codes correctly")
     void resolveOrigin_mapsAirportsAccurately() {
+        // Morocco airports
         assertThat(HBXTransfersClient.resolveOrigin("Marrakech Menara").code()).isEqualTo("RAK");
         assertThat(HBXTransfersClient.resolveOrigin("CMN").code()).isEqualTo("CMN");
         assertThat(HBXTransfersClient.resolveOrigin("Casablanca").code()).isEqualTo("CMN");
         assertThat(HBXTransfersClient.resolveOrigin("Agadir Al Massira").code()).isEqualTo("AGA");
         assertThat(HBXTransfersClient.resolveOrigin("Fes Saiss").code()).isEqualTo("FEZ");
         assertThat(HBXTransfersClient.resolveOrigin("Tangier Ibn Battouta").code()).isEqualTo("TNG");
+
+        // Global airports
+        assertThat(HBXTransfersClient.resolveOrigin("CDG").code()).isEqualTo("CDG");
+        assertThat(HBXTransfersClient.resolveOrigin("BCN").code()).isEqualTo("BCN");
+        assertThat(HBXTransfersClient.resolveOrigin("Madrid").code()).isEqualTo("MAD");
+        assertThat(HBXTransfersClient.resolveOrigin("JFK").code()).isEqualTo("JFK");
+
+        // Provider location prefixes
+        assertThat(HBXTransfersClient.resolveOrigin("IATA:LHR").type()).isEqualTo("IATA");
+        assertThat(HBXTransfersClient.resolveOrigin("IATA:LHR").code()).isEqualTo("LHR");
+        assertThat(HBXTransfersClient.resolveOrigin("GPS:41.2974,2.0833").type()).isEqualTo("GPS");
+        assertThat(HBXTransfersClient.resolveOrigin("ATLAS:12345").type()).isEqualTo("ATLAS");
+        assertThat(HBXTransfersClient.resolveOrigin("PORT:BCN").type()).isEqualTo("PORT");
+        assertThat(HBXTransfersClient.resolveOrigin("STATION:PAR").type()).isEqualTo("STATION");
+    }
+
+    @Test
+    @DisplayName("Resolves global destination coordinates and points dynamically")
+    void resolveDestination_resolvesGlobalPoints() {
+        // Raw GPS
+        HBXTransfersClient.LocationPoint p1 = HBXTransfersClient.resolveDestination("41.3879,2.1699", "BCN");
+        assertThat(p1.type()).isEqualTo("GPS");
+        assertThat(p1.code()).isEqualTo("41.3879,2.1699");
+
+        // Explicit prefix
+        HBXTransfersClient.LocationPoint p2 = HBXTransfersClient.resolveDestination("ATLAS:999", "CDG");
+        assertThat(p2.type()).isEqualTo("ATLAS");
+        assertThat(p2.code()).isEqualTo("999");
+
+        // Derives coordinates dynamically from origin airport (BCN -> Barcelona coordinates)
+        HBXTransfersClient.LocationPoint p3 = HBXTransfersClient.resolveDestination("Centre-ville", "BCN");
+        assertThat(p3.type()).isEqualTo("GPS");
+        assertThat(p3.code()).isEqualTo("41.2974,2.0833");
+
+        // Derives coordinates dynamically from origin airport (CDG -> Paris coordinates)
+        HBXTransfersClient.LocationPoint p4 = HBXTransfersClient.resolveDestination(null, "CDG");
+        assertThat(p4.type()).isEqualTo("GPS");
+        assertThat(p4.code()).isEqualTo("49.0097,2.5479");
     }
 
     @Test

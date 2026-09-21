@@ -17,8 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import com.ahmed.travelservice.service.AirportDirectory;
+
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Dedicated HTTP client for the HBX / Hotelbeds APITUDE Activities API v3.0.
@@ -39,19 +40,6 @@ public class HBXActivitiesClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    private static final Map<String, String> MOROCCO_DESTINATIONS = Map.ofEntries(
-            Map.entry("MARRAKECH", "RAK"),
-            Map.entry("MARRAKESH", "RAK"),
-            Map.entry("CASABLANCA", "CAS"),
-            Map.entry("AGADIR", "AGA"),
-            Map.entry("FES", "FEZ"),
-            Map.entry("FEZ", "FEZ"),
-            Map.entry("TANGIER", "TNG"),
-            Map.entry("TANGER", "TNG"),
-            Map.entry("RABAT", "RBA"),
-            Map.entry("OUARZAZATE", "OZZ"),
-            Map.entry("ESSAOUIRA", "ESU")
-    );
 
     @org.springframework.beans.factory.annotation.Autowired
     public HBXActivitiesClient(HBXProperties properties) {
@@ -92,22 +80,22 @@ public class HBXActivitiesClient {
     }
 
     /**
-     * Resolves human-friendly destination to HBX destination code.
+     * Resolves human-friendly destination to HBX destination code globally and dynamically.
+     * Supports:
+     * - Any valid 3-letter IATA / destination code directly (e.g. BCN, PAR, NYC, RAK, DXB, ROM, MAD, LON).
+     * - Dynamic lookup from AirportDirectory for cities/names (e.g. Paris, Barcelona, Madrid, Marrakech).
      */
     public static String resolveDestinationCode(String input) {
         if (input == null || input.isBlank()) {
-            return "RAK";
+            return null;
         }
         String normalized = input.trim().toUpperCase(Locale.ROOT);
-        if (normalized.length() == 3) {
+        if (normalized.length() == 3 && normalized.chars().allMatch(Character::isLetter)) {
             return normalized;
         }
-        for (Map.Entry<String, String> entry : MOROCCO_DESTINATIONS.entrySet()) {
-            if (normalized.contains(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
-        return normalized;
+        return AirportDirectory.findAirport(normalized)
+                .map(a -> a.getCode().toUpperCase(Locale.ROOT))
+                .orElse(normalized);
     }
 
     /**

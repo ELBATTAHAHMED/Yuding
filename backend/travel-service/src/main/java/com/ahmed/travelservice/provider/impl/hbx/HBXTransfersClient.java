@@ -16,11 +16,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import com.ahmed.travelservice.dto.response.AirportDto;
+import com.ahmed.travelservice.service.AirportDirectory;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Dedicated HTTP client for the HBX / Hotelbeds APITUDE Transfers API v1.0.
@@ -41,41 +46,8 @@ public class HBXTransfersClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    // Moroccan airport IATA mappings
-    private static final Map<String, String> MOROCCO_AIRPORTS = Map.ofEntries(
-            Map.entry("MARRAKECH", "RAK"),
-            Map.entry("MARRAKESH", "RAK"),
-            Map.entry("MENARA", "RAK"),
-            Map.entry("CASABLANCA", "CMN"),
-            Map.entry("MOHAMMED", "CMN"),
-            Map.entry("AGADIR", "AGA"),
-            Map.entry("MASSIRA", "AGA"),
-            Map.entry("FES", "FEZ"),
-            Map.entry("FEZ", "FEZ"),
-            Map.entry("SAISS", "FEZ"),
-            Map.entry("TANGIER", "TNG"),
-            Map.entry("TANGER", "TNG"),
-            Map.entry("BATTUTA", "TNG"),
-            Map.entry("RABAT", "RBA"),
-            Map.entry("SALE", "RBA")
-    );
-
-    // City center GPS coordinates (minimum 3 decimal places required by HBX)
-    private static final Map<String, String> CITY_COORDINATES = Map.ofEntries(
-            Map.entry("RAK", "31.6295,-7.9811"),
-            Map.entry("MARRAKECH", "31.6295,-7.9811"),
-            Map.entry("CMN", "33.5731,-7.5898"),
-            Map.entry("CASABLANCA", "33.5731,-7.5898"),
-            Map.entry("AGA", "30.4278,-9.5981"),
-            Map.entry("AGADIR", "30.4278,-9.5981"),
-            Map.entry("FEZ", "34.0181,-5.0078"),
-            Map.entry("FES", "34.0181,-5.0078"),
-            Map.entry("TNG", "35.7595,-5.8340"),
-            Map.entry("TANGIER", "35.7595,-5.8340"),
-            Map.entry("TANGER", "35.7595,-5.8340"),
-            Map.entry("RBA", "34.0209,-6.8416"),
-            Map.entry("RABAT", "34.0209,-6.8416")
-    );
+    private static final Pattern GPS_PATTERN = Pattern.compile("^-?\\d+(\\.\\d+)?\\s*,\\s*-?\\d+(\\.\\d+)?$");
+    private static final Set<String> VALID_LOCATION_TYPES = Set.of("IATA", "ATLAS", "GPS", "PORT", "STATION");
 
     @org.springframework.beans.factory.annotation.Autowired
     public HBXTransfersClient(HBXProperties properties) {
@@ -115,45 +87,103 @@ public class HBXTransfersClient {
 
     /**
      * Resolves origin into HBX LocationPoint (fromType, fromCode).
+     * Accepts:
+     * - Explicit provider type prefix: IATA, ATLAS, GPS, PORT, STATION (e.g. "IATA:CDG", "GPS:41.2974,2.0833")
+     * - Raw GPS coordinates: lat,lng
+     * - 3-letter IATA code: e.g. "CDG", "BCN", "RAK", "JFK"
+     * - Airport / city name lookup dynamically from AirportDirectory
      */
     public static LocationPoint resolveOrigin(String input) {
         if (input == null || input.isBlank()) {
-            return new LocationPoint("IATA", "RAK");
+            return null;
         }
-        String normalized = input.trim().toUpperCase(Locale.ROOT);
-        if (normalized.length() == 3) {
-            return new LocationPoint("IATA", normalized);
-        }
-        for (Map.Entry<String, String> entry : MOROCCO_AIRPORTS.entrySet()) {
-            if (normalized.contains(entry.getKey())) {
-                return new LocationPoint("IATA", entry.getValue());
+        String trimmed = input.trim();
+
+        // 1. Check for explicit provider type prefix: TYPE:CODE
+        int colonIdx = trimmed.indexOf(':');
+        if (colonIdx > 0) {
+            String prefix = trimmed.substring(0, colonIdx).toUpperCase(Locale.ROOT);
+            String code = trimmed.substring(colonIdx + 1).trim();
+            if (VALID_LOCATION_TYPES.contains(prefix) && !code.isEmpty()) {
+                return new LocationPoint(prefix, code);
             }
         }
-        return new LocationPoint("IATA", "RAK");
+
+        // 2. Check for GPS coordinates
+        if (GPS_PATTERN.matcher(trimmed).matches()) {
+            return new LocationPoint("GPS", trimmed.replaceAll("\\s+", ""));
+        }
+
+        // 3. Check for 3-letter IATA code
+        String upper = trimmed.toUpperCase(Locale.ROOT);
+        if (upper.length() == 3 && upper.chars().allMatch(Character::isLetter)) {
+            return new LocationPoint("IATA", upper);
+        }
+
+        // 4. Dynamic airport lookup from AirportDirectory
+        return AirportDirectory.findAirport(upper)
+                .map(a -> new LocationPoint("IATA", a.getCode().toUpperCase(Locale.ROOT)))
+                .orElseGet(() -> new LocationPoint("IATA", upper));
     }
 
     /**
      * Resolves destination into HBX LocationPoint (toType, toCode).
+     * Accepts:
+     * - Explicit provider type prefix: IATA, ATLAS, GPS, PORT, STATION
+     * - Raw GPS coordinates: lat,lng
+     * - 3-letter IATA code
+     * - Airport / city name lookup dynamically from AirportDirectory
+     * - Fallback: dynamically derives city coordinates from origin airport
      */
     public static LocationPoint resolveDestination(String input, String originIata) {
         if (input == null || input.isBlank()) {
-            String coords = CITY_COORDINATES.getOrDefault(originIata, "31.6295,-7.9811");
-            return new LocationPoint("GPS", coords);
+            return resolveOriginCoordinates(originIata).orElse(null);
         }
-        String normalized = input.trim().toUpperCase(Locale.ROOT);
-        if (normalized.contains(",") && normalized.matches(".*\\d+\\.\\d+.*")) {
-            return new LocationPoint("GPS", normalized.replaceAll("\\s+", ""));
-        }
-        if (normalized.length() == 3) {
-            return new LocationPoint("IATA", normalized);
-        }
-        for (Map.Entry<String, String> entry : CITY_COORDINATES.entrySet()) {
-            if (normalized.contains(entry.getKey())) {
-                return new LocationPoint("GPS", entry.getValue());
+        String trimmed = input.trim();
+
+        // 1. Check for explicit provider type prefix: TYPE:CODE
+        int colonIdx = trimmed.indexOf(':');
+        if (colonIdx > 0) {
+            String prefix = trimmed.substring(0, colonIdx).toUpperCase(Locale.ROOT);
+            String code = trimmed.substring(colonIdx + 1).trim();
+            if (VALID_LOCATION_TYPES.contains(prefix) && !code.isEmpty()) {
+                return new LocationPoint(prefix, code);
             }
         }
-        String defaultCoords = CITY_COORDINATES.getOrDefault(originIata, "31.6295,-7.9811");
-        return new LocationPoint("GPS", defaultCoords);
+
+        // 2. Check for GPS coordinates
+        if (GPS_PATTERN.matcher(trimmed).matches()) {
+            return new LocationPoint("GPS", trimmed.replaceAll("\\s+", ""));
+        }
+
+        // 3. Check for 3-letter IATA code
+        String upper = trimmed.toUpperCase(Locale.ROOT);
+        if (upper.length() == 3 && upper.chars().allMatch(Character::isLetter)) {
+            return new LocationPoint("IATA", upper);
+        }
+
+        // 4. Dynamic airport / city lookup from AirportDirectory
+        Optional<AirportDto> airportOpt = AirportDirectory.findAirport(upper);
+        if (airportOpt.isPresent()) {
+            AirportDto airport = airportOpt.get();
+            if (airport.getLatitude() != null && airport.getLongitude() != null) {
+                return new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", airport.getLatitude(), airport.getLongitude()));
+            }
+            return new LocationPoint("IATA", airport.getCode().toUpperCase(Locale.ROOT));
+        }
+
+        // 5. If generic text like "Centre-ville" or unparsed address, derive from origin airport
+        return resolveOriginCoordinates(originIata)
+                .orElseGet(() -> new LocationPoint("IATA", upper));
+    }
+
+    private static Optional<LocationPoint> resolveOriginCoordinates(String originIata) {
+        if (originIata == null || originIata.isBlank()) {
+            return Optional.empty();
+        }
+        return AirportDirectory.findAirport(originIata)
+                .filter(a -> a.getLatitude() != null && a.getLongitude() != null)
+                .map(a -> new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", a.getLatitude(), a.getLongitude())));
     }
 
     /**

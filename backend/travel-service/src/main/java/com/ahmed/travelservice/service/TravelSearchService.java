@@ -140,26 +140,7 @@ public class TravelSearchService {
     // Cache for airports directory to protect provider and preserve fast response times
     private final java.util.concurrent.atomic.AtomicReference<List<AirportDto>> cachedAirports = new java.util.concurrent.atomic.AtomicReference<>();
 
-    private static final List<AirportDto> ESSENTIAL_AIRPORTS = List.of(
-            AirportDto.builder().code("CMN").name("Mohammed V International Airport").city("Casablanca").country("Morocco").build(),
-            AirportDto.builder().code("RAK").name("Marrakech Menara Airport").city("Marrakech").country("Morocco").build(),
-            AirportDto.builder().code("RBA").name("Rabat-Salé Airport").city("Rabat").country("Morocco").build(),
-            AirportDto.builder().code("TNG").name("Tangier Ibn Battouta Airport").city("Tangier").country("Morocco").build(),
-            AirportDto.builder().code("AGA").name("Agadir-Al Massira Airport").city("Agadir").country("Morocco").build(),
-            AirportDto.builder().code("FEZ").name("Fès-Saïss Airport").city("Fez").country("Morocco").build(),
-            AirportDto.builder().code("NDR").name("Nador El Aroui Airport").city("Nador").country("Morocco").build(),
-            AirportDto.builder().code("OUJ").name("Angads Airport").city("Oujda").country("Morocco").build(),
-            AirportDto.builder().code("OZZ").name("Ouarzazate Airport").city("Ouarzazate").country("Morocco").build(),
-            AirportDto.builder().code("CDG").name("Charles de Gaulle Airport").city("Paris").country("France").build(),
-            AirportDto.builder().code("ORY").name("Paris Orly Airport").city("Paris").country("France").build(),
-            AirportDto.builder().code("MAD").name("Adolfo Suárez Madrid-Barajas Airport").city("Madrid").country("Spain").build(),
-            AirportDto.builder().code("BCN").name("Josep Tarradellas Barcelona-El Prat Airport").city("Barcelona").country("Spain").build(),
-            AirportDto.builder().code("LHR").name("London Heathrow Airport").city("London").country("United Kingdom").build(),
-            AirportDto.builder().code("LGW").name("London Gatwick Airport").city("London").country("United Kingdom").build(),
-            AirportDto.builder().code("DXB").name("Dubai International Airport").city("Dubai").country("United Arab Emirates").build(),
-            AirportDto.builder().code("IST").name("Istanbul Airport").city("Istanbul").country("Turkey").build(),
-            AirportDto.builder().code("JFK").name("John F. Kennedy International Airport").city("New York").country("United States").build()
-    );
+    private static final List<AirportDto> ESSENTIAL_AIRPORTS = AirportDirectory.ESSENTIAL_AIRPORTS;
 
     /**
      * Retrieves normalized list of airports for autocomplete/selection.

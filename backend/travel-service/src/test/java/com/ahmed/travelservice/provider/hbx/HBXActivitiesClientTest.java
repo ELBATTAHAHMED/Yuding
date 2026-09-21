@@ -169,4 +169,27 @@ class HBXActivitiesClientTest {
                     assertThat(tpe.getErrorCode()).isEqualTo(ProviderErrorCode.PROVIDER_UNAVAILABLE);
                 });
     }
+
+    @Test
+    @DisplayName("Resolves global destination codes and city names dynamically")
+    void resolveDestinationCode_resolvesGlobalDestinations() {
+        // Direct 3-letter IATA / destination codes
+        assertThat(HBXActivitiesClient.resolveDestinationCode("BCN")).isEqualTo("BCN");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("PAR")).isEqualTo("PAR");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("NYC")).isEqualTo("NYC");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("RAK")).isEqualTo("RAK");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("DXB")).isEqualTo("DXB");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("ROM")).isEqualTo("ROM");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("MAD")).isEqualTo("MAD");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("LON")).isEqualTo("LON");
+
+        // Dynamic lookup from AirportDirectory
+        assertThat(HBXActivitiesClient.resolveDestinationCode("Barcelona")).isEqualTo("BCN");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("Marrakech")).isEqualTo("RAK");
+        assertThat(HBXActivitiesClient.resolveDestinationCode("Madrid")).isEqualTo("MAD");
+
+        // Null / blank handling
+        assertThat(HBXActivitiesClient.resolveDestinationCode(null)).isNull();
+        assertThat(HBXActivitiesClient.resolveDestinationCode("")).isNull();
+    }
 }

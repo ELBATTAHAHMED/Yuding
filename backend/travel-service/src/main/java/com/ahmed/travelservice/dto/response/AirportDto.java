@@ -25,4 +25,10 @@ public class AirportDto {
 
     /** Country where the airport is located, e.g. "Morocco". */
     private String country;
+
+    /** Geographical latitude for transfer/location routing. */
+    private Double latitude;
+
+    /** Geographical longitude for transfer/location routing. */
+    private Double longitude;
 }

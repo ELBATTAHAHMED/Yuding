@@ -23,7 +23,7 @@ export default function TransfersPage() {
     if (e) e.preventDefault();
 
     if (!pickup.trim()) {
-      setErrorMessage('Veuillez renseigner un lieu de départ (ex: Aéroport RAK, CMN).');
+      setErrorMessage('Veuillez renseigner un lieu de départ (ex: CDG, BCN, MAD, RAK, JFK).');
       return;
     }
 
@@ -104,7 +104,7 @@ export default function TransfersPage() {
                 type="text"
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
-                placeholder="Aéroport ou ville (ex: RAK, CMN, Marrakech...)"
+                placeholder="Aéroport ou code IATA (ex: CDG, BCN, MAD, RAK, JFK...)"
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -124,7 +124,7 @@ export default function TransfersPage() {
                 type="text"
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
-                placeholder="Hôtel ou adresse (ex: Centre-ville, Médina...)"
+                placeholder="Hôtel, coordonnées ou adresse (ex: Centre-ville, Tour Eiffel...)"
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -336,7 +336,7 @@ export default function TransfersPage() {
                 Trouvez votre transfert direct depuis l&apos;aéroport
               </h3>
               <p style={{ color: '#666', maxWidth: '550px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                Entrez votre aéroport d&apos;arrivée (ex: <strong>RAK</strong> pour Marrakech, <strong>CMN</strong> pour Casablanca) et votre destination pour afficher les véhicules et tarifs en direct.
+                Entrez votre aéroport d&apos;arrivée (ex: <strong>CDG</strong> pour Paris, <strong>BCN</strong> pour Barcelone, <strong>RAK</strong> pour Marrakech) et votre destination pour afficher les véhicules et tarifs en direct.
               </p>
             </div>
           )}

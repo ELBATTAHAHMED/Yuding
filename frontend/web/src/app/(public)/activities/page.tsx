@@ -105,7 +105,7 @@ export default function ActivitiesPage() {
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                placeholder="Ville (ex: Marrakech, Casablanca, Agadir...)"
+                placeholder="Ville ou code IATA (ex: Paris, Barcelone, Rome, Marrakech, BCN...)"
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -263,7 +263,7 @@ export default function ActivitiesPage() {
                 Prêt à explorer votre prochaine destination ?
               </h3>
               <p style={{ color: '#666', maxWidth: '550px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                Indiquez une ville ci-dessus (par exemple <strong>Marrakech</strong>, <strong>Casablanca</strong> ou <strong>Agadir</strong>) et cliquez sur Rechercher pour découvrir les offres en direct.
+                Indiquez une ville ou un code IATA ci-dessus (par exemple <strong>Paris</strong>, <strong>Barcelone</strong>, <strong>Rome</strong> ou <strong>Marrakech</strong>) et cliquez sur Rechercher pour découvrir les offres en direct.
               </p>
             </div>
           )}

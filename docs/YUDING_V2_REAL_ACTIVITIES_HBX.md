@@ -48,14 +48,17 @@ Implemented in:
    - [`HBXActivitySearchResponse.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/impl/hbx/dto/activities/HBXActivitySearchResponse.java): Response parser for activities, modalities, pricing, and media.
    - [`ActivityOfferDto.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/dto/response/ActivityOfferDto.java): Added `source` provenance field (`HBX` vs `YUDING_CUSTOM`).
 3. **Client (`HBXActivitiesClient`):**
-   - Resolves Moroccan destinations to HBX destination codes (e.g. Marrakech $\to$ `RAK`, Casablanca $\to$ `CAS`, Agadir $\to$ `AGA`, Fes $\to$ `FEZ`, Tangier $\to$ `TNG`, Rabat $\to$ `RBA`).
+   - Resolves destinations dynamically and globally:
+     - Accepts any valid 3-letter IATA or destination code directly (e.g. `BCN`, `PAR`, `NYC`, `RAK`, `DXB`, `ROM`, `MAD`, `LON`).
+     - Performs dynamic lookup from `AirportDirectory` for global city names.
+     - No hardcoded regional destination maps or whitelists.
    - Executes `POST /activities` with standard headers and filters.
    - Gracefully handles HTTP 403, 429, timeouts, and network issues by remapping to `TravelProviderException`.
 4. **Provider Adapter (`HBXTravelProvider`):**
    - Implements `searchActivities(ActivitySearchRequest)`.
-   - Normalizes HBX activity modalities, pricing, currency, duration, and images into `ActivityOfferDto`.
+   - Normalizes HBX activity modalities, pricing, currency, duration, images, and country code into `ActivityOfferDto`.
    - Tags each offer with `source: "HBX"`.
-   - In case HBX returns no availability for a specific regional search, provides curated `YUDING_CUSTOM` offers marked explicitly with `source: "YUDING_CUSTOM"` to ensure transparency.
+   - **Strict Curated Policy:** `YUDING_CUSTOM` offers are strictly static and restricted to genuinely curated markets (Marrakech/Agafay). Non-curated global destinations with zero HBX inventory return a clean empty list `[]` with zero manufactured activities.
 
 ---
 
