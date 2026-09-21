@@ -61,6 +61,13 @@ public class NuiteeClient {
         this.objectMapper = new ObjectMapper()
                 .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        String key = props.getApiKey();
+        boolean hasKey = key != null && !key.isBlank();
+        String pfx = (hasKey && key.length() >= 5) ? key.substring(0, 5) : "none";
+        int len = hasKey ? key.length() : 0;
+        log.info("[DIAGNOSTIC] NuiteeClient initialized: apiKey_configured={}, prefix={}, length={}, baseUrl={}",
+                hasKey, pfx, len, props.getBaseUrl());
     }
 
     /**
