@@ -54,6 +54,9 @@ public class FlightOfferDto {
     /** ISO currency code (e.g. "EUR", "USD"). */
     private String currency;
 
+    /** Immutable raw-provider/display conversion snapshot; price and currency remain provider values. */
+    private PriceConversionSnapshot priceConversion;
+
     /** Available seats, if provided by the provider. May be null. */
     private Integer availableSeats;
 

@@ -22,6 +22,7 @@ public class ActivityOfferDto {
     private String category;
     private BigDecimal price;
     private String currency;
+    private PriceConversionSnapshot priceConversion;
     private String imageUrl;
     private String description;
     private String country;

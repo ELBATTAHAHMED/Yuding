@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { HotelOffer } from '@/types/travel.types';
 import { Card } from '@/components/ui/Card';
+import { PriceDisplay } from './PriceDisplay';
 
 export interface HotelCardProps {
   hotel: HotelOffer;
@@ -56,7 +57,7 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
         <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
           <div>
             <span className="text-xl font-extrabold text-[#01796F] dark:text-[#02E0D5]">
-              {hotel.pricePerNight} €
+              <PriceDisplay conversion={hotel.priceConversion} amount={hotel.pricePerNight} currency={hotel.currency} />
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400"> / nuit</span>
           </div>

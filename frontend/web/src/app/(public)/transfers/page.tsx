@@ -13,6 +13,7 @@ import {
   type TransferCategoryFilter,
 } from '@/lib/transfer-filters';
 import { TransferLocationSelector, LocationSuggestion } from '@/components/travel/TransferLocationSelector';
+import { PriceDisplay } from '@/components/travel/PriceDisplay';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -646,7 +647,7 @@ export default function TransfersPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
-                          {item.price} {item.currency === 'USD' ? '$' : '€'}
+                          <PriceDisplay conversion={item.priceConversion} amount={item.price} currency={item.currency} />
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#888' }}>Tarif garanti par véhicule</div>
                       </div>

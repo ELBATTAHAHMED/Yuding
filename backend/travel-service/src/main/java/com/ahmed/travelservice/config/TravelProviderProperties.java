@@ -16,5 +16,6 @@ public class TravelProviderProperties {
     private String globalTrains = "transitous";
     private String geo = "none";
     private String weather = "open-meteo";
+    private String currency = "frankfurter";
     private String defaultProvider = "none";
 }

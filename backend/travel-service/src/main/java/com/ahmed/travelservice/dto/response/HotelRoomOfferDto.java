@@ -65,4 +65,10 @@ public class HotelRoomOfferDto {
 
     /** Currency ISO code (e.g. "EUR", "USD", "MAD"). */
     private String currency;
+
+    /** Conversion for this room's total-stay price. */
+    private PriceConversionSnapshot priceConversion;
+
+    /** Conversion for this room's existing per-night price. */
+    private PriceConversionSnapshot pricePerNightConversion;
 }

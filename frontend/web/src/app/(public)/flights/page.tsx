@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
 import { AirportSelector } from '@/components/travel/AirportSelector';
+import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import type { Airport, FlightOffer } from '@/types/travel.types';
 
 function formatDuration(minutes?: number | null): string {
@@ -499,7 +500,7 @@ export default function FlightsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
-                        {flight.price} {flight.currency}
+                        <PriceDisplay conversion={flight.priceConversion} amount={flight.price} currency={flight.currency} />
                       </div>
                       {flight.priceType === 'round_trip_starting' && (
                         <div style={{ fontSize: '0.75rem', color: '#888' }}>à partir de (A/R)</div>

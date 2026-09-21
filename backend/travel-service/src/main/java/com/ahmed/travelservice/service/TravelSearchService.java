@@ -27,15 +27,19 @@ public class TravelSearchService {
 
     private final TravelProviderRegistry providerRegistry;
     private final TrainRoutingService trainRoutingService;
+    private final CurrencyService currencyService;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService) {
+    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService, CurrencyService currencyService) {
         this.providerRegistry = providerRegistry;
         this.trainRoutingService = trainRoutingService;
+        this.currencyService = currencyService;
     }
 
+    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService) { this(providerRegistry, trainRoutingService, null); }
+
     public TravelSearchService(TravelProviderRegistry providerRegistry) {
-        this(providerRegistry, null);
+        this(providerRegistry, null, null);
     }
 
     public SearchResponse<FlightOfferDto> searchFlights(FlightSearchRequest request) {
@@ -47,6 +51,7 @@ public class TravelSearchService {
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.FLIGHTS);
             List<FlightOfferDto> offers = provider.searchFlights(query);
+            applyFlightConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -66,6 +71,7 @@ public class TravelSearchService {
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.HOTELS);
             List<HotelOfferDto> offers = provider.searchHotels(query);
+            applyHotelConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -85,6 +91,7 @@ public class TravelSearchService {
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.ACTIVITIES);
             List<ActivityOfferDto> offers = provider.searchActivities(query);
+            applyActivityConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -104,6 +111,7 @@ public class TravelSearchService {
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.TRANSFERS);
             List<TransferOfferDto> offers = provider.searchTransfers(query);
+            applyTransferConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -192,6 +200,36 @@ public class TravelSearchService {
         return e.getErrorCode() == ProviderErrorCode.PROVIDER_UNAVAILABLE
                 || e.getErrorCode() == ProviderErrorCode.PROVIDER_NOT_CONFIGURED
                 || e.getErrorCode() == ProviderErrorCode.CAPABILITY_NOT_SUPPORTED;
+    }
+
+    private CurrencyService.CurrencyConversionScope conversionScope() { return currencyService == null ? null : currencyService.newRequestScope(); }
+
+    private void applyFlightConversions(List<FlightOfferDto> offers) {
+        CurrencyService.CurrencyConversionScope scope = conversionScope();
+        if (scope != null) offers.forEach(offer -> offer.setPriceConversion(scope.convertSupplementary(offer.getPrice(), offer.getCurrency())));
+    }
+
+    private void applyActivityConversions(List<ActivityOfferDto> offers) {
+        CurrencyService.CurrencyConversionScope scope = conversionScope();
+        if (scope != null) offers.forEach(offer -> offer.setPriceConversion(scope.convertSupplementary(offer.getPrice(), offer.getCurrency())));
+    }
+
+    private void applyTransferConversions(List<TransferOfferDto> offers) {
+        CurrencyService.CurrencyConversionScope scope = conversionScope();
+        if (scope != null) offers.forEach(offer -> offer.setPriceConversion(scope.convertSupplementary(offer.getPrice(), offer.getCurrency())));
+    }
+
+    private void applyHotelConversions(List<HotelOfferDto> offers) {
+        CurrencyService.CurrencyConversionScope scope = conversionScope();
+        if (scope == null) return;
+        offers.forEach(hotel -> {
+            hotel.setPriceConversion(scope.convertSupplementary(hotel.getPricePerNight(), hotel.getCurrency()));
+            hotel.setTotalPriceConversion(scope.convertSupplementary(hotel.getTotalPrice(), hotel.getCurrency()));
+            if (hotel.getRoomOffers() != null) hotel.getRoomOffers().forEach(room -> {
+                room.setPriceConversion(scope.convertSupplementary(room.getPrice(), room.getCurrency()));
+                room.setPricePerNightConversion(scope.convertSupplementary(room.getPricePerNight(), room.getCurrency()));
+            });
+        });
     }
 
     // Cache for airports directory to protect provider and preserve fast response times

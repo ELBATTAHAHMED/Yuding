@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
 
                         // Public travel search endpoints
-                        .requestMatchers(HttpMethod.GET, "/travel/airports", "/travel/trains/stations", "/travel/geo/**", "/travel/weather").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/travel/airports", "/travel/trains/stations", "/travel/geo/**", "/travel/weather", "/travel/currency/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/flights/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/hotels/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/activities/search").permitAll()
