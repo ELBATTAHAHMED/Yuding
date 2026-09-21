@@ -30,7 +30,7 @@ public class TravelServiceApplication {
                             int idx = trimmed.indexOf('=');
                             String key = trimmed.substring(0, idx).trim();
                             String val = trimmed.substring(idx + 1).trim();
-                            if (!key.isEmpty() && System.getProperty(key) == null && System.getenv(key) == null) {
+                            if (!key.isEmpty()) {
                                 System.setProperty(key, val);
                             }
                         }
