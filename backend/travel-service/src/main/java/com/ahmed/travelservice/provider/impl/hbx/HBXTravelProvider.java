@@ -306,12 +306,8 @@ public class HBXTravelProvider implements TravelProvider {
 
     private List<TransferOfferDto> normalizeTransfers(HBXTransferAvailabilityResponse response, TransferSearchQuery query) {
         List<HBXTransferAvailabilityResponse.TransferService> services = null;
-        if (response != null) {
-            if (response.getServices() != null && !response.getServices().isEmpty()) {
-                services = response.getServices();
-            } else if (response.getSearch() != null && !response.getSearch().isEmpty()) {
-                services = response.getSearch();
-            }
+        if (response != null && response.getServices() != null && !response.getServices().isEmpty()) {
+            services = response.getServices();
         }
 
         if (services == null || services.isEmpty()) {
