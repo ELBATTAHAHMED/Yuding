@@ -47,6 +47,9 @@ public class HotelOfferDto {
     /** Property classification (e.g. "HOTEL", "RESORT", "APARTMENT"). */
     private String propertyType;
 
+    /** Normalized accommodation category derived from Nuitee location_type. */
+    private String accommodationType;
+
     /** Brief summary of room options (e.g. "Standard King Room"). */
     private String roomSummary;
 

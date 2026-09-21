@@ -767,11 +767,6 @@ export default function HotelsPage() {
               <button
                 key={tab.value}
                 onClick={() => setFilterType(tab.value)}
-                title={
-                  tab.value !== 'ALL'
-                    ? 'Le fournisseur Nuitee ne renvoie pas encore de catégorie pour ces résultats.'
-                    : undefined
-                }
                 style={{
                   padding: '0.6rem 1.25rem',
                   borderRadius: '30px',

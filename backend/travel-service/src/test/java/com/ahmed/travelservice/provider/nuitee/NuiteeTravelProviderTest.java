@@ -150,6 +150,7 @@ class NuiteeTravelProviderTest {
                                 .stars(5.0)
                                 .rating(9.2)
                                 .reviewCount(250)
+                                .hotelTypeId(227)
                                 .mainPhoto("https://cdn.example.com/riad.jpg")
                                 .build()
                 ))
@@ -211,6 +212,7 @@ class NuiteeTravelProviderTest {
         assertThat(hotel.getHotelId()).isEqualTo("lp100");
         assertThat(hotel.getHotelName()).isEqualTo("Palais Riad Marrakech");
         assertThat(hotel.getProvider()).isEqualTo("NUITEE");
+        assertThat(hotel.getAccommodationType()).isEqualTo("RIAD");
         assertThat(hotel.getAvailabilityState()).isEqualTo("AVAILABLE_ON_PROVIDER");
         assertThat(hotel.getOfferId()).isEqualTo("OFFER_NUITEE_REAL_12345");
         assertThat(hotel.getTotalPrice()).isEqualByComparingTo(new BigDecimal("300.00"));

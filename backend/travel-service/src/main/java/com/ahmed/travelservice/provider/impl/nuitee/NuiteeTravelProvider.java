@@ -176,6 +176,10 @@ public class NuiteeTravelProvider implements TravelProvider {
                 }
             }
         }
+        Map<String, Integer> hotelTypeIds = client.getHotelTypeIds(hotelMap.keySet());
+        if (hotelTypeIds == null) {
+            hotelTypeIds = Collections.emptyMap();
+        }
 
         long nights = Math.max(1, query.getNumberOfNights());
         List<HotelOfferDto> hotelOffers = new ArrayList<>();
@@ -280,6 +284,9 @@ public class NuiteeTravelProvider implements TravelProvider {
                     .city(city)
                     .country(country)
                     .propertyType(query.getPropertyType() != null ? query.getPropertyType() : "HOTEL")
+                    .accommodationType(normalizeAccommodationType(hotelMeta,
+                            hotelMeta != null && hotelMeta.getHotelTypeId() != null
+                                    ? hotelMeta.getHotelTypeId() : hotelTypeIds.get(hotelId)))
                     .roomSummary(startingRoomName != null ? startingRoomName : "Chambre disponible")
                     .checkIn(query.getCheckIn())
                     .checkOut(query.getCheckOut())
@@ -297,5 +304,54 @@ public class NuiteeTravelProvider implements TravelProvider {
 
         log.info("NuiteeTravelProvider: Successfully normalized {} hotel offers from Nuitee response", hotelOffers.size());
         return hotelOffers;
+    }
+
+    /**
+     * Map Nuitee's explicit location_type classification to the provider-neutral
+     * categories consumed by the frontend. Unknown classifications remain null;
+     * they are never guessed from hotel or room names.
+     */
+    private String normalizeAccommodationType(NuiteeHotelData hotelMeta, Integer hotelTypeId) {
+        String typeFromId = normalizeAccommodationTypeId(hotelTypeId);
+        if (typeFromId != null) {
+            return typeFromId;
+        }
+        if (hotelMeta == null || hotelMeta.getLocationType() == null
+                || hotelMeta.getLocationType().isBlank()) {
+            return null;
+        }
+
+        String locationType = hotelMeta.getLocationType().trim().toLowerCase(Locale.ROOT);
+        if (locationType.contains("riad")) {
+            return "RIAD";
+        }
+        if (locationType.contains("villa")) {
+            return "VILLA";
+        }
+        if (locationType.contains("apartment") || locationType.contains("aparthotel")) {
+            return "APARTMENT";
+        }
+        if (locationType.contains("house") || locationType.contains("holiday home")
+                || locationType.contains("vacation home")) {
+            return "HOUSE";
+        }
+        if (locationType.contains("hotel")) {
+            return "HOTEL";
+        }
+        return null;
+    }
+
+    private String normalizeAccommodationTypeId(Integer hotelTypeId) {
+        if (hotelTypeId == null) {
+            return null;
+        }
+        return switch (hotelTypeId) {
+            case 201, 207, 219, 229 -> "APARTMENT";
+            case 213 -> "VILLA";
+            case 220, 223, 250, 252 -> "HOUSE";
+            case 227 -> "RIAD";
+            case 204, 206, 208, 216, 218, 231, 274, 278 -> "HOTEL";
+            default -> null;
+        };
     }
 }

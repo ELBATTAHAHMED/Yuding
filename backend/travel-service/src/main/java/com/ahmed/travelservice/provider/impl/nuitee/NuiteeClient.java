@@ -18,7 +18,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Dedicated HTTP client for the Nuitee Connect / LiteAPI v3 REST API.
@@ -138,6 +142,52 @@ public class NuiteeClient {
             throw new TravelProviderException(PROVIDER_CODE,
                     ProviderErrorCode.PROVIDER_UNAVAILABLE,
                     "Une erreur inattendue est survenue lors de la communication avec Nuitee: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Fetch the explicit Nuitee hotel type IDs for the rate groups returned by
+     * /hotels/rates. Standard rate responses may omit this field, while the
+     * documented /data/hotels endpoint exposes it. Metadata failure must not make
+     * an otherwise valid live rate search fail, so this returns an empty map.
+     */
+    public Map<String, Integer> getHotelTypeIds(Collection<String> hotelIds) {
+        if (hotelIds == null || hotelIds.isEmpty() || props.getApiKey() == null || props.getApiKey().isBlank()) {
+            return Collections.emptyMap();
+        }
+
+        String ids = hotelIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .collect(Collectors.joining(","));
+        if (ids.isBlank()) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            String body = restClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/data/hotels")
+                            .queryParam("hotelIds", ids)
+                            .build())
+                    .header("X-API-Key", props.getApiKey())
+                    .retrieve()
+                    .body(String.class);
+
+            var root = objectMapper.readTree(body == null ? "{}" : body);
+            Map<String, Integer> result = new HashMap<>();
+            if (root != null && root.path("data").isArray()) {
+                root.path("data").forEach(hotel -> {
+                    String id = hotel.path("id").asText(null);
+                    if (id != null && hotel.hasNonNull("hotelTypeId")) {
+                        result.put(id, hotel.get("hotelTypeId").asInt());
+                    }
+                });
+            }
+            return result;
+        } catch (Exception e) {
+            log.warn("NuiteeClient: hotel type metadata unavailable; continuing without categories: {}",
+                    e.getMessage());
+            return Collections.emptyMap();
         }
     }
 
