@@ -10,7 +10,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HBXTransferAvailabilityResponse {
     private List<TransferService> services;
-    private List<TransferService> search;
+    private Object search;
     private ErrorDetail error;
 
     @Data
