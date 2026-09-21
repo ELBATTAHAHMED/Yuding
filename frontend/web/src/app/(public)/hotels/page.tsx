@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ApiError } from '@/lib/api-client';
 import type { HotelOffer, HotelRoomOffer, RoomOccupancy } from '@/types/travel.types';
+import {
+  filterHotels,
+  hasAccommodationTypeData,
+  type HotelCategoryFilter,
+} from '@/lib/hotel-filters';
 
 interface PresetDestination {
   label: string;
@@ -57,9 +62,9 @@ export default function HotelsPage() {
   const [showOccupancyModal, setShowOccupancyModal] = useState(false);
 
   // Results & UI State
-  const [hotels, setHotels] = useState<HotelOffer[]>([]);
+  const [allHotels, setAllHotels] = useState<HotelOffer[]>([]);
   const [expandedHotelId, setExpandedHotelId] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<string>('ALL');
+  const [filterType, setFilterType] = useState<HotelCategoryFilter>('ALL');
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
@@ -189,6 +194,7 @@ export default function HotelsPage() {
     setIsSearching(true);
     setHasSearched(true);
     setExpandedHotelId(null);
+    setFilterType('ALL');
 
     try {
       const data = await travelService.searchHotels({
@@ -203,14 +209,13 @@ export default function HotelsPage() {
         occupancies,
         guestNationality,
         currency,
-        propertyType: filterType !== 'ALL' ? filterType : undefined,
       });
 
-      setHotels(data.results || []);
+      setAllHotels(data.results || []);
       setSearchStatus(data.status);
       setSearchMessage(data.message);
     } catch (err: unknown) {
-      setHotels([]);
+      setAllHotels([]);
       setSearchStatus('ERROR');
       if (err instanceof ApiError) {
         const code = err.errorCode || (err.data && err.data.errorCode);
@@ -240,10 +245,8 @@ export default function HotelsPage() {
     }
   };
 
-  const filteredHotels = hotels.filter((h) => {
-    if (filterType === 'ALL') return true;
-    return h.type === filterType;
-  });
+  const filteredHotels = filterHotels(allHotels, filterType);
+  const hasProviderAccommodationTypes = hasAccommodationTypeData(allHotels);
 
   const toggleExpandHotel = (hotelId: string) => {
     setExpandedHotelId((prev) => (prev === hotelId ? null : hotelId));
@@ -758,21 +761,23 @@ export default function HotelsPage() {
           {/* Filter Categories */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
             {[
-              { label: 'Tous les hébergements', value: 'ALL' },
-              { label: 'Hôtels & Riads', value: 'HOTEL' },
-              { label: 'Villas & Maisons', value: 'VACATION_HOME' },
-              { label: 'Appartements', value: 'APARTMENT' },
+              { label: 'Tous les hébergements', value: 'ALL' as const },
+              { label: 'Hôtels & Riads', value: 'HOTEL_RIAD' as const },
+              { label: 'Villas & Maisons', value: 'VILLA_HOUSE' as const },
+              { label: 'Appartements', value: 'APARTMENT' as const },
             ].map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setFilterType(tab.value)}
+                disabled={tab.value !== 'ALL' && !hasProviderAccommodationTypes}
                 style={{
                   padding: '0.6rem 1.25rem',
                   borderRadius: '30px',
                   border: 'none',
                   fontWeight: 600,
                   fontSize: '0.9rem',
-                  cursor: 'pointer',
+                  cursor: tab.value !== 'ALL' && !hasProviderAccommodationTypes ? 'not-allowed' : 'pointer',
+                  opacity: tab.value !== 'ALL' && !hasProviderAccommodationTypes ? 0.55 : 1,
                   backgroundColor: filterType === tab.value ? '#01796F' : 'var(--card, #eee)',
                   color: filterType === tab.value ? '#fff' : 'var(--text, #333)',
                   boxShadow: filterType === tab.value ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
@@ -871,7 +876,9 @@ export default function HotelsPage() {
                 Aucun hébergement trouvé pour ces critères
               </h3>
               <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                {searchMessage ||
+                {allHotels.length > 0 && filterType !== 'ALL'
+                  ? 'Aucun hébergement de cette catégorie dans les résultats.'
+                  : searchMessage ||
                   'Aucun hôtel disponible pour cette destination et ces dates auprès du fournisseur Nuitee Connect. Essayez d\'autres dates ou une autre ville.'}
               </p>
               {searchStatus === 'PROVIDER_UNAVAILABLE' && (

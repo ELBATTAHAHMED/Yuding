@@ -91,6 +91,10 @@ export interface HotelOffer {
   destination?: string;
   address?: string;
   type?: string;
+  /** Normalized provider-neutral accommodation type when supplied by backend. */
+  accommodationType?: 'HOTEL' | 'RIAD' | 'VILLA' | 'HOUSE' | 'APARTMENT';
+  /** Legacy/backend alias retained while normalized responses migrate. */
+  propertyType?: string;
   starRating?: number;
   reviewScore?: number;
   reviewCount?: number;
@@ -210,4 +214,3 @@ export interface OfferRevalidationResult {
   currency: string;
   message?: string;
 }
-
