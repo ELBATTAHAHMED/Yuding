@@ -24,6 +24,12 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
         <img
           src={hotel.imageUrl || '/image/hotels.jpg'}
           alt={hotelDisplayName}
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = '/image/hotels.jpg';
+          }}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
         {hotel.rating && (
