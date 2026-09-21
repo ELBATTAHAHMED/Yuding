@@ -12,6 +12,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +82,34 @@ public class GlobalExceptionHandler {
                 "INVALID_ARGUMENT",
                 ex.getMessage(),
                 request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestParameter(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        String reqId = getRequestId(request);
+        ErrorResponse errorResponse = ErrorResponse.withValidationErrors(
+                reqId,
+                HttpStatus.BAD_REQUEST.value(),
+                "MISSING_REQUEST_PARAMETER",
+                "Required request parameter '" + ex.getParameterName() + "' is missing",
+                request.getRequestURI(),
+                List.of(new ErrorResponse.ValidationError(ex.getParameterName(), "This parameter is required"))
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleRequestParameterTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String reqId = getRequestId(request);
+        ErrorResponse errorResponse = ErrorResponse.withValidationErrors(
+                reqId,
+                HttpStatus.BAD_REQUEST.value(),
+                "INVALID_REQUEST_PARAMETER",
+                "Request parameter '" + ex.getName() + "' has an invalid value",
+                request.getRequestURI(),
+                List.of(new ErrorResponse.ValidationError(ex.getName(), "Invalid parameter value"))
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }

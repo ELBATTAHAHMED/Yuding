@@ -15,5 +15,6 @@ public class TravelProviderProperties {
     private String trains = "oncf_gtfs";
     private String globalTrains = "transitous";
     private String geo = "none";
+    private String weather = "open-meteo";
     private String defaultProvider = "none";
 }
