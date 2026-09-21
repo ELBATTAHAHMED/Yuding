@@ -7,7 +7,6 @@ import { ApiError } from '@/lib/api-client';
 import type { HotelOffer, HotelRoomOffer, RoomOccupancy } from '@/types/travel.types';
 import {
   filterHotels,
-  hasAccommodationTypeData,
   type HotelCategoryFilter,
 } from '@/lib/hotel-filters';
 
@@ -246,7 +245,6 @@ export default function HotelsPage() {
   };
 
   const filteredHotels = filterHotels(allHotels, filterType);
-  const hasProviderAccommodationTypes = hasAccommodationTypeData(allHotels);
 
   const toggleExpandHotel = (hotelId: string) => {
     setExpandedHotelId((prev) => (prev === hotelId ? null : hotelId));
@@ -769,15 +767,18 @@ export default function HotelsPage() {
               <button
                 key={tab.value}
                 onClick={() => setFilterType(tab.value)}
-                disabled={tab.value !== 'ALL' && !hasProviderAccommodationTypes}
+                title={
+                  tab.value !== 'ALL'
+                    ? 'Le fournisseur Nuitee ne renvoie pas encore de catégorie pour ces résultats.'
+                    : undefined
+                }
                 style={{
                   padding: '0.6rem 1.25rem',
                   borderRadius: '30px',
                   border: 'none',
                   fontWeight: 600,
                   fontSize: '0.9rem',
-                  cursor: tab.value !== 'ALL' && !hasProviderAccommodationTypes ? 'not-allowed' : 'pointer',
-                  opacity: tab.value !== 'ALL' && !hasProviderAccommodationTypes ? 0.55 : 1,
+                  cursor: 'pointer',
                   backgroundColor: filterType === tab.value ? '#01796F' : 'var(--card, #eee)',
                   color: filterType === tab.value ? '#fff' : 'var(--text, #333)',
                   boxShadow: filterType === tab.value ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
@@ -941,6 +942,12 @@ export default function HotelsPage() {
                         <img
                           src={item.imageUrl || '/image/hotels.jpg'}
                           alt={item.name || item.hotelName || 'Hôtel'}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = '/image/hotels.jpg';
+                          }}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                         <div
