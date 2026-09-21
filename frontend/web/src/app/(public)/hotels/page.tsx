@@ -9,7 +9,7 @@ import {
   filterHotels,
   type HotelCategoryFilter,
 } from '@/lib/hotel-filters';
-import { GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -810,6 +810,13 @@ export default function HotelsPage() {
                 </button>
               </div>
 
+              <div style={{ marginBottom: '1.25rem' }}>
+                <DestinationWeather
+                  latitude={selectedGeoPlace.latitude}
+                  longitude={selectedGeoPlace.longitude}
+                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
                 <GeoMap
                   latitude={selectedGeoPlace.latitude}

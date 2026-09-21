@@ -36,5 +36,7 @@ export const queryKeys = {
       [...queryKeys.travel.all, 'transfers', filter || {}] as const,
     activities: (filter?: { city?: string }) =>
       [...queryKeys.travel.all, 'activities', filter || {}] as const,
+    weather: (lat: number, lon: number, forecastDays?: number) =>
+      [...queryKeys.travel.all, 'weather', lat, lon, forecastDays ?? 7] as const,
   },
 } as const;

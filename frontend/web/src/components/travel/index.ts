@@ -9,3 +9,4 @@ export * from './TransferLocationSelector';
 export * from './GeoPlaceSelector';
 export * from './GeoMap';
 export * from './NearbyPoiPanel';
+export * from './DestinationWeather';
