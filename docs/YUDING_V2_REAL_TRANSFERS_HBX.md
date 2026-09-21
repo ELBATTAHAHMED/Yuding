@@ -51,15 +51,19 @@ GET /availability/{lang}/from/{fromType}/{fromCode}/to/{toType}/{toCode}/{outbou
    - [`HBXTransferAvailabilityResponse.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/impl/hbx/dto/transfers/HBXTransferAvailabilityResponse.java): Response model mapping services, vehicles, categories, pricing, currency, and cancellation policies.
    - [`TransferOfferDto.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/dto/response/TransferOfferDto.java): Standardized transfer offer with source provenance, vehicle category, passenger/luggage capacities, pickup, and dropoff.
 3. **Client (`HBXTransfersClient`):**
-   - Resolves Moroccan airports (e.g. `Marrakech-Ménara` $\to$ `RAK`, `Mohammed V` $\to$ `CMN`, `Al Massira` $\to$ `AGA`, etc.).
-   - Resolves Moroccan city centers to GPS coordinates (`31.6295,-7.9811` for Marrakech, `33.5731,-7.5898` for Casablanca, etc.) when the endpoint requires GPS coordinates for destinations.
+   - Resolves locations dynamically and globally:
+     - Accepts explicit provider location prefixes (`IATA:`, `ATLAS:`, `GPS:`, `PORT:`, `STATION:`).
+     - Accepts raw GPS coordinates (`lat,long`).
+     - Accepts arbitrary 3-letter IATA airport codes (`CDG`, `BCN`, `MAD`, `RAK`, `JFK`, etc.).
+     - Performs dynamic lookup against `AirportDirectory`.
+     - Derives destination GPS coordinates dynamically from the origin airport without static regional maps.
    - Formats outbound date-time `YYYY-MM-DDTHH:mm:00`.
    - Dispatches authenticated GET request with error remapping to `TravelProviderException`.
 4. **Provider Adapter (`HBXTravelProvider`):**
    - Implements `searchTransfers(TransferSearchRequest)`.
    - Maps HBX vehicle categories (`STANDARD`, `MINIVAN`, `EXECUTIVE`, `SHUTTLE`) to Yuding transfer types.
    - Populates `source: "HBX"`.
-   - In case HBX returns no availability for a specific regional search, provides curated `YUDING_CUSTOM` private transfer offers with explicit source disclosure.
+   - In case HBX returns no availability, returns a clean empty list `[]` without fabricating fake transfer services.
 
 ---
 

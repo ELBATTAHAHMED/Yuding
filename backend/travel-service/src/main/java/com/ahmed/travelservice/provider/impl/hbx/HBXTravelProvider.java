@@ -77,6 +77,12 @@ public class HBXTravelProvider implements TravelProvider {
         validateActivityQuery(query);
 
         String destCode = HBXActivitiesClient.resolveDestinationCode(query.getDestination());
+        if (destCode == null || destCode.isBlank()) {
+            throw new TravelProviderException(METADATA.getProviderCode(),
+                    ProviderErrorCode.PROVIDER_REQUEST_INVALID,
+                    "Destination invalide ou non reconnue: " + query.getDestination());
+        }
+
         LocalDate fromDate = query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3);
         LocalDate toDate = fromDate.plusDays(4);
 
@@ -105,10 +111,10 @@ public class HBXTravelProvider implements TravelProvider {
 
         List<ActivityOfferDto> normalized = normalizeActivities(response, query);
 
-        // Fallback policy: if provider has no inventory for a regional Morocco query, supply curated YUDING_CUSTOM
-        if (normalized.isEmpty() && isMoroccoDestination(query.getDestination())) {
-            log.info("HBXTravelProvider: Zero HBX activities for {}; applying YUDING_CUSTOM fallback with explicit provenance", query.getDestination());
-            return getCustomCuratedOffers(query);
+        // Fallback policy: only supply curated YUDING_CUSTOM for specifically curated markets (e.g. Marrakech)
+        if (normalized.isEmpty() && isCuratedMarket(destCode, query.getDestination())) {
+            log.info("HBXTravelProvider: Zero HBX activities for curated market {}; applying YUDING_CUSTOM fallback with explicit provenance", query.getDestination());
+            return getCuratedMarrakechOffers(query);
         }
 
         return normalized;
@@ -119,6 +125,11 @@ public class HBXTravelProvider implements TravelProvider {
             throw new TravelProviderException(METADATA.getProviderCode(),
                     ProviderErrorCode.PROVIDER_REQUEST_INVALID,
                     "La requête de recherche d'activités ne peut pas être vide.");
+        }
+        if (query.getDestination() == null || query.getDestination().isBlank()) {
+            throw new TravelProviderException(METADATA.getProviderCode(),
+                    ProviderErrorCode.PROVIDER_REQUEST_INVALID,
+                    "La destination est obligatoire pour rechercher des activités.");
         }
     }
 
@@ -145,7 +156,8 @@ public class HBXTravelProvider implements TravelProvider {
                     .provider("HBX")
                     .source("HBX")
                     .title(act.getName())
-                    .destination(query.getDestination() != null ? query.getDestination() : "Maroc")
+                    .destination(query.getDestination() != null ? query.getDestination() : "Global")
+                    .country(act.getCountryCode() != null ? act.getCountryCode() : null)
                     .date(query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3))
                     .durationHours(duration)
                     .category(category)
@@ -226,25 +238,26 @@ public class HBXTravelProvider implements TravelProvider {
         return "Découvrez une expérience d'exception organisée par notre partenaire HBX.";
     }
 
-    private boolean isMoroccoDestination(String dest) {
-        if (dest == null) return false;
-        String d = dest.toUpperCase(Locale.ROOT);
-        return d.contains("MARRAK") || d.contains("CASABLANCA") || d.contains("AGADIR")
-                || d.contains("FES") || d.contains("FEZ") || d.contains("TANGIER") || d.contains("TANGER")
-                || d.contains("RABAT") || d.contains("OUARZAZATE") || d.contains("ESSAOUIRA")
-                || d.contains("MERZOUGA") || d.contains("MAROC") || d.contains("MOROCCO");
+    private boolean isCuratedMarket(String destCode, String queryDest) {
+        if ("RAK".equalsIgnoreCase(destCode)) return true;
+        if (queryDest != null) {
+            String q = queryDest.toUpperCase(Locale.ROOT);
+            return q.contains("MARRAK") || q.contains("AGAFAY");
+        }
+        return false;
     }
 
-    private List<ActivityOfferDto> getCustomCuratedOffers(ActivitySearchQuery query) {
-        String dest = (query.getDestination() != null && !query.getDestination().isBlank()) ? query.getDestination() : "Marrakech";
+    private List<ActivityOfferDto> getCuratedMarrakechOffers(ActivitySearchQuery query) {
+        LocalDate date = query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3);
         return List.of(
                 ActivityOfferDto.builder()
                         .offerId("YUDING-CUSTOM-001")
                         .provider("HBX")
                         .source("YUDING_CUSTOM")
-                        .title("Excursion Désert d'Agafay & Coucher de Soleil (" + dest + ")")
-                        .destination(dest)
-                        .date(query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3))
+                        .title("Excursion Désert d'Agafay & Coucher de Soleil")
+                        .destination("Marrakech")
+                        .country("Morocco")
+                        .date(date)
                         .durationHours(5.0)
                         .category("Aventure")
                         .price(BigDecimal.valueOf(45.00))
@@ -256,9 +269,10 @@ public class HBXTravelProvider implements TravelProvider {
                         .offerId("YUDING-CUSTOM-002")
                         .provider("HBX")
                         .source("YUDING_CUSTOM")
-                        .title("Visite Guidée des Palais et Médina Historique (" + dest + ")")
-                        .destination(dest)
-                        .date(query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3))
+                        .title("Visite Guidée des Palais et Médina Historique")
+                        .destination("Marrakech")
+                        .country("Morocco")
+                        .date(date)
                         .durationHours(4.0)
                         .category("Culture")
                         .price(BigDecimal.valueOf(30.00))
@@ -276,7 +290,18 @@ public class HBXTravelProvider implements TravelProvider {
         validateTransferQuery(query);
 
         HBXTransfersClient.LocationPoint origin = HBXTransfersClient.resolveOrigin(query.getPickup());
+        if (origin == null) {
+            throw new TravelProviderException(METADATA.getProviderCode(),
+                    ProviderErrorCode.PROVIDER_REQUEST_INVALID,
+                    "Le point de départ est invalide ou non reconnu: " + query.getPickup());
+        }
+
         HBXTransfersClient.LocationPoint destination = HBXTransfersClient.resolveDestination(query.getDropoff(), origin.code());
+        if (destination == null) {
+            throw new TravelProviderException(METADATA.getProviderCode(),
+                    ProviderErrorCode.PROVIDER_REQUEST_INVALID,
+                    "Le point d'arrivée est invalide ou non reconnu: " + query.getDropoff());
+        }
 
         LocalDate date = query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3);
         LocalTime time = query.getTime() != null ? query.getTime() : LocalTime.of(12, 0);
@@ -301,6 +326,11 @@ public class HBXTravelProvider implements TravelProvider {
             throw new TravelProviderException(METADATA.getProviderCode(),
                     ProviderErrorCode.PROVIDER_REQUEST_INVALID,
                     "La requête de recherche de transferts ne peut pas être vide.");
+        }
+        if (query.getPickup() == null || query.getPickup().isBlank()) {
+            throw new TravelProviderException(METADATA.getProviderCode(),
+                    ProviderErrorCode.PROVIDER_REQUEST_INVALID,
+                    "Le point de départ est obligatoire pour rechercher des transferts.");
         }
     }
 
