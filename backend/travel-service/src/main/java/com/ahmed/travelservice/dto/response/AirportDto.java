@@ -31,4 +31,10 @@ public class AirportDto {
 
     /** Geographical longitude for transfer/location routing. */
     private Double longitude;
+
+    /** Geographical latitude of the city center served by this airport. */
+    private Double cityLatitude;
+
+    /** Geographical longitude of the city center served by this airport. */
+    private Double cityLongitude;
 }

@@ -114,16 +114,19 @@ public class HBXTransfersClient {
             return new LocationPoint("GPS", trimmed.replaceAll("\\s+", ""));
         }
 
-        // 3. Check for 3-letter IATA code
+        // 3. Dynamic airport lookup from AirportDirectory (by name, city, or IATA code)
+        Optional<AirportDto> airportOpt = AirportDirectory.findAirport(trimmed);
+        if (airportOpt.isPresent()) {
+            return new LocationPoint("IATA", airportOpt.get().getCode().toUpperCase(Locale.ROOT));
+        }
+
+        // 4. Check for valid 3-letter IATA code
         String upper = trimmed.toUpperCase(Locale.ROOT);
         if (upper.length() == 3 && upper.chars().allMatch(Character::isLetter)) {
             return new LocationPoint("IATA", upper);
         }
 
-        // 4. Dynamic airport lookup from AirportDirectory
-        return AirportDirectory.findAirport(upper)
-                .map(a -> new LocationPoint("IATA", a.getCode().toUpperCase(Locale.ROOT)))
-                .orElseGet(() -> new LocationPoint("IATA", upper));
+        return null;
     }
 
     /**
@@ -131,15 +134,12 @@ public class HBXTransfersClient {
      * Accepts:
      * - Explicit provider type prefix: IATA, ATLAS, GPS, PORT, STATION
      * - Raw GPS coordinates: lat,lng
-     * - 3-letter IATA code
-     * - Airport / city name lookup dynamically from AirportDirectory
-     * - Fallback: dynamically derives city coordinates from origin airport
+     * - Destination city or airport lookup dynamically from AirportDirectory (maps to city center coordinates)
+     * - 3-letter IATA code (if different from origin)
+     * - Fallback: dynamically derives city center coordinates from the origin airport
      */
-    public static LocationPoint resolveDestination(String input, String originIata) {
-        if (input == null || input.isBlank()) {
-            return resolveOriginCoordinates(originIata).orElse(null);
-        }
-        String trimmed = input.trim();
+    public static LocationPoint resolveDestination(String input, String originCode) {
+        String trimmed = input != null ? input.trim() : "";
 
         // 1. Check for explicit provider type prefix: TYPE:CODE
         int colonIdx = trimmed.indexOf(':');
@@ -156,34 +156,49 @@ public class HBXTransfersClient {
             return new LocationPoint("GPS", trimmed.replaceAll("\\s+", ""));
         }
 
-        // 3. Check for 3-letter IATA code
+        // 3. Dynamic destination city or airport lookup from AirportDirectory
+        if (!trimmed.isEmpty()) {
+            Optional<AirportDto> airportOpt = AirportDirectory.findAirport(trimmed);
+            if (airportOpt.isPresent()) {
+                AirportDto destAirport = airportOpt.get();
+                // Route to city center coordinates for transfers into destination cities/resorts
+                if (destAirport.getCityLatitude() != null && destAirport.getCityLongitude() != null) {
+                    return new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", destAirport.getCityLatitude(), destAirport.getCityLongitude()));
+                }
+                // If a different airport is explicitly requested as dropoff
+                if (!destAirport.getCode().equalsIgnoreCase(originCode)) {
+                    return new LocationPoint("IATA", destAirport.getCode().toUpperCase(Locale.ROOT));
+                }
+            }
+        }
+
+        // 4. Check for 3-letter IATA code (if different from origin)
         String upper = trimmed.toUpperCase(Locale.ROOT);
         if (upper.length() == 3 && upper.chars().allMatch(Character::isLetter)) {
-            return new LocationPoint("IATA", upper);
-        }
-
-        // 4. Dynamic airport / city lookup from AirportDirectory
-        Optional<AirportDto> airportOpt = AirportDirectory.findAirport(upper);
-        if (airportOpt.isPresent()) {
-            AirportDto airport = airportOpt.get();
-            if (airport.getLatitude() != null && airport.getLongitude() != null) {
-                return new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", airport.getLatitude(), airport.getLongitude()));
+            if (!upper.equalsIgnoreCase(originCode)) {
+                return new LocationPoint("IATA", upper);
             }
-            return new LocationPoint("IATA", airport.getCode().toUpperCase(Locale.ROOT));
         }
 
-        // 5. If generic text like "Centre-ville" or unparsed address, derive from origin airport
-        return resolveOriginCoordinates(originIata)
-                .orElseGet(() -> new LocationPoint("IATA", upper));
+        // 5. Fallback for generic destination ("Centre-ville", "Hôtel", unparsed) -> derive city center from origin airport
+        return resolveCityCenterCoordinates(originCode).orElse(null);
     }
 
-    private static Optional<LocationPoint> resolveOriginCoordinates(String originIata) {
-        if (originIata == null || originIata.isBlank()) {
+    private static Optional<LocationPoint> resolveCityCenterCoordinates(String originCode) {
+        if (originCode == null || originCode.isBlank()) {
             return Optional.empty();
         }
-        return AirportDirectory.findAirport(originIata)
-                .filter(a -> a.getLatitude() != null && a.getLongitude() != null)
-                .map(a -> new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", a.getLatitude(), a.getLongitude())));
+        return AirportDirectory.findAirport(originCode)
+                .map(a -> {
+                    if (a.getCityLatitude() != null && a.getCityLongitude() != null) {
+                        return new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", a.getCityLatitude(), a.getCityLongitude()));
+                    }
+                    if (a.getLatitude() != null && a.getLongitude() != null) {
+                        // Offset by ~5km to avoid airport-to-same-airport zero result
+                        return new LocationPoint("GPS", String.format(Locale.ROOT, "%.4f,%.4f", a.getLatitude() + 0.04, a.getLongitude() + 0.04));
+                    }
+                    return null;
+                });
     }
 
     /**

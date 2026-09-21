@@ -144,15 +144,27 @@ class HBXTransfersClientTest {
         assertThat(p2.type()).isEqualTo("ATLAS");
         assertThat(p2.code()).isEqualTo("999");
 
-        // Derives coordinates dynamically from origin airport (BCN -> Barcelona coordinates)
+        // Derives city center coordinates dynamically from origin airport (BCN -> Barcelona city center)
         HBXTransfersClient.LocationPoint p3 = HBXTransfersClient.resolveDestination("Centre-ville", "BCN");
         assertThat(p3.type()).isEqualTo("GPS");
-        assertThat(p3.code()).isEqualTo("41.2974,2.0833");
+        assertThat(p3.code()).isEqualTo("41.3851,2.1734");
 
-        // Derives coordinates dynamically from origin airport (CDG -> Paris coordinates)
+        // Derives city center coordinates dynamically from origin airport (CDG -> Paris city center)
         HBXTransfersClient.LocationPoint p4 = HBXTransfersClient.resolveDestination(null, "CDG");
         assertThat(p4.type()).isEqualTo("GPS");
-        assertThat(p4.code()).isEqualTo("49.0097,2.5479");
+        assertThat(p4.code()).isEqualTo("48.8566,2.3522");
+
+        // Maps destination city to city center coordinates
+        HBXTransfersClient.LocationPoint p5 = HBXTransfersClient.resolveDestination("Marrakech", "RAK");
+        assertThat(p5.type()).isEqualTo("GPS");
+        assertThat(p5.code()).isEqualTo("31.6295,-7.9811");
+
+        HBXTransfersClient.LocationPoint p6 = HBXTransfersClient.resolveDestination("Casablanca", "CMN");
+        assertThat(p6.type()).isEqualTo("GPS");
+        assertThat(p6.code()).isEqualTo("33.5951,-7.6187");
+
+        // Invalid origin returns null rather than generating illegal IATA codes
+        assertThat(HBXTransfersClient.resolveOrigin("UNKNOWN_GIBBERISH")).isNull();
     }
 
     @Test
