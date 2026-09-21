@@ -17,6 +17,8 @@ import java.util.List;
 public class NuiteeHotelData {
     private String id;
     private String name;
+    @JsonProperty("hotelTypeId")
+    private Integer hotelTypeId;
     @JsonProperty("main_photo")
     private String mainPhoto;
     private String thumbnail;
@@ -34,5 +36,8 @@ public class NuiteeHotelData {
     private List<String> tags;
     private String persona;
     private String style;
+    /** Nuitee hotel classification, e.g. "Urban Boutique Hotel". */
+    @JsonProperty("location_type")
+    private String locationType;
     private String story;
 }
