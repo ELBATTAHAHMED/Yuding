@@ -73,6 +73,14 @@ public class TravelServiceApplication {
                                     System.setProperty("travel.transitland.oncf-operator-id", val);
                                 } else if ("TRANSITLAND_ONCF_FEED_ID".equals(key)) {
                                     System.setProperty("travel.transitland.oncf-feed-id", val);
+                                } else if ("GEOAPIFY_API_KEY".equals(key)) {
+                                    System.setProperty("travel.geoapify.api-key", val);
+                                } else if ("GEOAPIFY_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.geoapify.base-url", val);
+                                } else if ("GEOAPIFY_MAPS_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.geoapify.maps-base-url", val);
+                                } else if ("TRAVEL_GEO_PROVIDER".equals(key)) {
+                                    System.setProperty("travel.providers.geo", val);
                                 }
                             }
                         }
@@ -96,6 +104,7 @@ public class TravelServiceApplication {
         logHbxStatus("HBX Activities", "HBX_ACTIVITIES_API_KEY", "HBX_ACTIVITIES_SECRET");
         logHbxStatus("HBX Transfers", "HBX_TRANSFERS_API_KEY", "HBX_TRANSFERS_SECRET");
         logTransitlandStatus();
+        logGeoapifyStatus();
     }
 
     private static void logTransitlandStatus() {
@@ -126,5 +135,14 @@ public class TravelServiceApplication {
         boolean keyCfg = key != null && !key.isBlank();
         boolean secCfg = secret != null && !secret.isBlank();
         System.out.println("[DIAGNOSTIC] " + suite + ": key=" + (keyCfg ? "configured" : "missing") + ", secret=" + (secCfg ? "configured" : "missing"));
+    }
+
+    private static void logGeoapifyStatus() {
+        String key = System.getProperty("GEOAPIFY_API_KEY");
+        if (key == null) {
+            key = System.getenv("GEOAPIFY_API_KEY");
+        }
+        boolean configured = key != null && !key.isBlank();
+        System.out.println("[DIAGNOSTIC] Geoapify configured: " + (configured ? "YES" : "NO"));
     }
 }

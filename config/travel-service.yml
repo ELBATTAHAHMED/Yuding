@@ -39,6 +39,7 @@ travel:
     hotels: ${TRAVEL_HOTELS_PROVIDER:none}
     activities: ${TRAVEL_ACTIVITIES_PROVIDER:none}
     transfers: ${TRAVEL_TRANSFERS_PROVIDER:none}
+    geo: ${TRAVEL_GEO_PROVIDER:none}
     default-provider: none
   scrappa:
     api-key: ${SCRAPPA_API_KEY:}
@@ -48,6 +49,15 @@ travel:
   nuitee:
     api-key: ${NUITEE_API_KEY:}
     base-url: ${NUITEE_BASE_URL:https://api.liteapi.travel/v3.0}
+    connect-timeout-ms: 10000
+    read-timeout-ms: 20000
+  geoapify:
+    api-key: ${GEOAPIFY_API_KEY:}
+    base-url: ${GEOAPIFY_BASE_URL:https://api.geoapify.com}
+    maps-base-url: ${GEOAPIFY_MAPS_BASE_URL:https://maps.geoapify.com}
+    default-language: ${GEOAPIFY_DEFAULT_LANGUAGE:en}
+    autocomplete-limit: ${GEOAPIFY_AUTOCOMPLETE_LIMIT:8}
+    places-limit: ${GEOAPIFY_PLACES_LIMIT:20}
     connect-timeout-ms: 10000
     read-timeout-ms: 20000
 
