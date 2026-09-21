@@ -17,8 +17,8 @@ export default function TransfersPage() {
   const today = new Date().toISOString().split('T')[0];
   const defaultFutureDate = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
 
-  const [pickup, setPickup] = useState('RAK');
-  const [dropoff, setDropoff] = useState('Centre-ville');
+  const [pickup, setPickup] = useState('');
+  const [dropoff, setDropoff] = useState('');
   const [date, setDate] = useState(defaultFutureDate);
   const [time, setTime] = useState('12:00');
   const [passengers, setPassengers] = useState(2);
@@ -38,12 +38,21 @@ export default function TransfersPage() {
 
     const rawPickup = pickup.trim();
     if (!rawPickup) {
-      setErrorMessage('Veuillez renseigner un lieu de départ (ex: CDG, BCN, MAD, RAK, JFK).');
+      setErrorMessage('Veuillez renseigner un lieu de départ (ex: CDG, BCN, MAD, RAK, CMN).');
       return;
     }
     const cleanPickup = rawPickup.includes('—')
       ? rawPickup.split('—')[0].trim()
       : (rawPickup.includes(' - ') ? rawPickup.split(' - ')[0].trim() : rawPickup);
+
+    const rawDropoff = dropoff.trim();
+    if (!rawDropoff) {
+      setErrorMessage('Veuillez renseigner une destination (ex: Hôtel, adresse ou centre-ville).');
+      return;
+    }
+    const cleanDropoff = rawDropoff.includes('—')
+      ? rawDropoff.split('—')[0].trim()
+      : (rawDropoff.includes(' - ') ? rawDropoff.split(' - ')[0].trim() : rawDropoff);
 
     setLoading(true);
     setErrorMessage(null);
@@ -53,7 +62,7 @@ export default function TransfersPage() {
     try {
       const data = await travelService.searchTransfers({
         pickup: cleanPickup,
-        dropoff: dropoff.trim() || 'Centre-ville',
+        dropoff: cleanDropoff,
         date: date || defaultFutureDate,
         time: time || '12:00',
         passengers: passengers > 0 ? passengers : 2,
