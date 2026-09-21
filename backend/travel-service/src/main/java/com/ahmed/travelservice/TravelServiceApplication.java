@@ -63,6 +63,16 @@ public class TravelServiceApplication {
                                     System.setProperty("travel.hbx.transfers.secret", val);
                                 } else if ("HBX_TRANSFERS_BASE_URL".equals(key)) {
                                     System.setProperty("travel.hbx.transfers.base-url", val);
+                                } else if ("TRAVEL_TRAINS_PROVIDER".equals(key)) {
+                                    System.setProperty("travel.providers.trains", val);
+                                } else if ("TRANSITLAND_API_KEY".equals(key)) {
+                                    System.setProperty("travel.transitland.api-key", val);
+                                } else if ("TRANSITLAND_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.transitland.base-url", val);
+                                } else if ("TRANSITLAND_ONCF_OPERATOR_ID".equals(key)) {
+                                    System.setProperty("travel.transitland.oncf-operator-id", val);
+                                } else if ("TRANSITLAND_ONCF_FEED_ID".equals(key)) {
+                                    System.setProperty("travel.transitland.oncf-feed-id", val);
                                 }
                             }
                         }
@@ -85,6 +95,23 @@ public class TravelServiceApplication {
 
         logHbxStatus("HBX Activities", "HBX_ACTIVITIES_API_KEY", "HBX_ACTIVITIES_SECRET");
         logHbxStatus("HBX Transfers", "HBX_TRANSFERS_API_KEY", "HBX_TRANSFERS_SECRET");
+        logTransitlandStatus();
+    }
+
+    private static void logTransitlandStatus() {
+        String key = System.getProperty("TRANSITLAND_API_KEY");
+        if (key == null) {
+            key = System.getenv("TRANSITLAND_API_KEY");
+        }
+        String baseUrl = System.getProperty("TRANSITLAND_BASE_URL");
+        if (baseUrl == null) {
+            baseUrl = System.getenv("TRANSITLAND_BASE_URL");
+        }
+        if (baseUrl == null || baseUrl.isBlank()) {
+            baseUrl = "https://transit.land/api/v2/rest";
+        }
+        boolean keyCfg = key != null && !key.isBlank();
+        System.out.println("[DIAGNOSTIC] Transitland Trains: key=" + (keyCfg ? "configured" : "missing") + ", baseUrl=" + baseUrl);
     }
 
     private static void logHbxStatus(String suite, String keyVar, String secretVar) {
