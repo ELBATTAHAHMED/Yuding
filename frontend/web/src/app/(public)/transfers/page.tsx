@@ -6,9 +6,12 @@ import { travelService } from '@/services/travel.service';
 import { TransferOffer } from '@/types/travel.types';
 
 export default function TransfersPage() {
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
-  const [date, setDate] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+  const defaultFutureDate = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+
+  const [pickup, setPickup] = useState('RAK');
+  const [dropoff, setDropoff] = useState('Centre-ville');
+  const [date, setDate] = useState(defaultFutureDate);
   const [time, setTime] = useState('12:00');
   const [passengers, setPassengers] = useState(2);
   const [transportType, setTransportType] = useState<'TAXI' | 'TRAIN' | 'CAR_RENTAL'>('TAXI');
@@ -22,10 +25,14 @@ export default function TransfersPage() {
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!pickup.trim()) {
+    const rawPickup = pickup.trim();
+    if (!rawPickup) {
       setErrorMessage('Veuillez renseigner un lieu de départ (ex: CDG, BCN, MAD, RAK, JFK).');
       return;
     }
+    const cleanPickup = rawPickup.includes('—')
+      ? rawPickup.split('—')[0].trim()
+      : (rawPickup.includes(' - ') ? rawPickup.split(' - ')[0].trim() : rawPickup);
 
     setLoading(true);
     setErrorMessage(null);
@@ -34,9 +41,9 @@ export default function TransfersPage() {
 
     try {
       const data = await travelService.searchTransfers({
-        pickup: pickup.trim(),
+        pickup: cleanPickup,
         dropoff: dropoff.trim() || 'Centre-ville',
-        date: date || new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+        date: date || defaultFutureDate,
         time: time || '12:00',
         passengers: passengers > 0 ? passengers : 2,
         transferType: transportType,
@@ -53,6 +60,8 @@ export default function TransfersPage() {
         setErrorMessage('Limite de requêtes atteinte auprès du partenaire de transport. Veuillez patienter.');
       } else if (msg.includes('TIMEOUT') || msg.toLowerCase().includes('délai')) {
         setErrorMessage('Délai de connexion dépassé. Veuillez réessayer.');
+      } else if (msg.includes('invalide') || msg.includes('400')) {
+        setErrorMessage(msg);
       } else {
         setErrorMessage('Impossible de contacter le service de transfert. Vérifiez la passerelle API.');
       }
@@ -104,7 +113,8 @@ export default function TransfersPage() {
                 type="text"
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
-                placeholder="Aéroport ou code IATA (ex: CDG, BCN, MAD, RAK, JFK...)"
+                list="popular-airports"
+                placeholder="Aéroport ou code IATA (ex: RAK, CMN, CDG, BCN...)"
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -113,6 +123,21 @@ export default function TransfersPage() {
                   fontSize: '0.95rem',
                 }}
               />
+              <datalist id="popular-airports">
+                <option value="RAK — Marrakech Menara" />
+                <option value="CMN — Casablanca Mohammed V" />
+                <option value="RBA — Rabat-Salé" />
+                <option value="TNG — Tanger Ibn Battouta" />
+                <option value="AGA — Agadir Al Massira" />
+                <option value="FEZ — Fès-Saïss" />
+                <option value="CDG — Paris Charles de Gaulle" />
+                <option value="ORY — Paris Orly" />
+                <option value="BCN — Barcelone El Prat" />
+                <option value="MAD — Madrid-Barajas" />
+                <option value="FCO — Rome Fiumicino" />
+                <option value="LHR — Londres Heathrow" />
+                <option value="JFK — New York JFK" />
+              </datalist>
             </div>
 
             <div style={{ flex: '2 1 200px' }}>
@@ -124,7 +149,8 @@ export default function TransfersPage() {
                 type="text"
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
-                placeholder="Hôtel, coordonnées ou adresse (ex: Centre-ville, Tour Eiffel...)"
+                list="popular-destinations"
+                placeholder="Hôtel, coordonnées ou ville (ex: Centre-ville, Médina...)"
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -133,6 +159,12 @@ export default function TransfersPage() {
                   fontSize: '0.95rem',
                 }}
               />
+              <datalist id="popular-destinations">
+                <option value="Centre-ville" />
+                <option value="Médina / Riad" />
+                <option value="Zone Hôtelière" />
+                <option value="Gare Ferroviaire" />
+              </datalist>
             </div>
 
             <div style={{ flex: '1 1 140px' }}>
@@ -143,6 +175,7 @@ export default function TransfersPage() {
               <input
                 type="date"
                 value={date}
+                min={today}
                 onChange={(e) => setDate(e.target.value)}
                 style={{
                   width: '100%',
