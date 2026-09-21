@@ -537,6 +537,9 @@ public class OncfGtfsIndex {
                         .name(displayName)
                         .city(city)
                         .country("Maroc")
+                        .countryCode("MA")
+                        .provider("ONCF_GTFS")
+                        .locationType("STATION")
                         .latitude(s.getStopLat())
                         .longitude(s.getStopLon())
                         .build();
@@ -564,6 +567,9 @@ public class OncfGtfsIndex {
                         .name(displayName)
                         .city(city)
                         .country("Maroc")
+                        .countryCode("MA")
+                        .provider("ONCF_GTFS")
+                        .locationType("STATION")
                         .latitude(s.getStopLat())
                         .longitude(s.getStopLon())
                         .build();

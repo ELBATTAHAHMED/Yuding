@@ -63,8 +63,9 @@ public class TravelSearchController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/trains/stations")
-    public ResponseEntity<java.util.List<TrainStationDto>> getTrainStations() {
-        return ResponseEntity.ok(travelSearchService.getTrainStations());
+    public ResponseEntity<java.util.List<TrainStationDto>> getTrainStations(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String query) {
+        return ResponseEntity.ok(travelSearchService.getTrainStations(query));
     }
 
     @PostMapping("/offers/revalidate")

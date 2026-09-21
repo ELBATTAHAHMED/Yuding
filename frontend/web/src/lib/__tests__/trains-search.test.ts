@@ -146,4 +146,98 @@ describe('Trains Feature — Service & Model Contract Tests', () => {
       }
     );
   });
+
+  it('getTrainStations passes query parameter for global Transitous autocomplete', async () => {
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({ url: input.toString(), method: init?.method || 'GET', body: undefined });
+      return createMockResponse([
+        { id: 'FR:StopPlace:87686006', name: 'Paris Gare de Lyon', city: 'Paris', country: 'France', countryCode: 'FR', provider: 'TRANSITOUS' },
+      ]);
+    };
+
+    const stations = await travelService.getTrainStations('Paris');
+
+    assert.equal(capturedCalls.length, 1);
+    assert.ok(capturedCalls[0].url.includes('/travel/trains/stations?query=Paris'));
+    assert.equal(stations.length, 1);
+    assert.equal(stations[0].provider, 'TRANSITOUS');
+    assert.equal(stations[0].countryCode, 'FR');
+  });
+
+  it('searchTrains handles Transitous global multi-leg journey offers', async () => {
+    const mockTransitousResponse: TravelSearchResponse<TrainOffer> = {
+      searchId: 'transitous-001',
+      status: 'SUCCESS',
+      message: 'Found 1 journeys',
+      totalResults: 1,
+      results: [
+        {
+          offerId: 'transitous-paris-lyon-01',
+          provider: 'TRANSITOUS',
+          source: 'TRANSITOUS_PUBLIC',
+          operator: 'SNCF Voyageurs',
+          trainNumber: 'TGV INOUI 6611',
+          routeName: 'Paris Gare de Lyon -> Lyon Part Dieu',
+          productType: 'TGV INOUI',
+          originStation: 'Paris Gare de Lyon',
+          destinationStation: 'Lyon Part-Dieu',
+          departureDate: '2026-09-22',
+          departureTime: '08:00:00',
+          arrivalTime: '09:56:00',
+          durationMinutes: 116,
+          direct: true,
+          stopsCount: 1,
+          numberOfTransfers: 0,
+          legs: [
+            {
+              operator: 'SNCF Voyageurs',
+              serviceName: 'TGV INOUI 6611',
+              mode: 'HIGHSPEED_RAIL',
+              origin: 'Paris Gare de Lyon',
+              destination: 'Lyon Part-Dieu',
+              departureTime: '08:00:00',
+              arrivalTime: '09:56:00',
+              durationMinutes: 116,
+              intermediateStops: [{ stationName: 'Le Creusot Montceau Montchanin TGV' }],
+            },
+          ],
+          price: null,
+          currency: 'EUR',
+          officialScheduleUrl: 'https://transitous.org',
+        },
+      ],
+    };
+
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({
+        url: input.toString(),
+        method: init?.method || 'GET',
+        body: init?.body ? JSON.parse(init.body.toString()) : undefined,
+      });
+      return createMockResponse(mockTransitousResponse);
+    };
+
+    const request: TrainSearchRequest = {
+      originStation: 'FR:StopPlace:87686006',
+      destinationStation: 'FR:StopPlace:87722025',
+      date: '2026-09-22',
+      originCoordinates: '48.8448,2.3735',
+      destinationCoordinates: '45.7606,4.8594',
+      originCountryCode: 'FR',
+      destinationCountryCode: 'FR',
+    };
+
+    const response = await travelService.searchTrains(request);
+
+    assert.equal(capturedCalls.length, 1);
+    assert.equal(capturedCalls[0].body.originCoordinates, '48.8448,2.3735');
+    assert.equal(response.results.length, 1);
+    const offer = response.results[0];
+    assert.equal(offer.provider, 'TRANSITOUS');
+    assert.equal(offer.price, null);
+    assert.equal(offer.numberOfTransfers, 0);
+    assert.equal(offer.legs?.length, 1);
+    assert.equal(offer.legs?.[0].mode, 'HIGHSPEED_RAIL');
+  });
 });
+

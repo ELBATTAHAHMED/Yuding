@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { TrainStation } from '@/types/travel.types';
+import { travelService } from '@/services/travel.service';
 
 export interface StationSelectorProps {
   id: string;
@@ -26,8 +27,8 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   id,
   label,
   icon = 'fas fa-train',
-  placeholder = 'Rechercher une gare (ex: Casa-Voyageurs, Rabat-Agdal)...',
-  stations,
+  placeholder = 'Rechercher une gare ou ville (ex: Casa, Paris, Lyon, Madrid)...',
+  stations: initialStations,
   selectedStation,
   onSelect,
   error,
@@ -36,8 +37,12 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [remoteResults, setRemoteResults] = useState<TrainStation[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const latestQueryRef = useRef('');
 
   useEffect(() => {
     if (selectedStation) {
@@ -49,31 +54,90 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
 
   const normalize = (s: string) => normalizeStr(s.trim());
 
-  const filteredStations = useMemo(() => {
+  // Debounced remote search when query has >= 2 characters
+  const fetchRemoteStations = useCallback(async (searchQuery: string) => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setRemoteResults(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const targetQuery = searchQuery.trim();
+    latestQueryRef.current = targetQuery;
+
+    try {
+      const results = await travelService.getTrainStations(targetQuery);
+      // Ensure we only update state for the latest query (race condition prevention)
+      if (latestQueryRef.current === targetQuery) {
+        setRemoteResults(results);
+      }
+    } catch {
+      if (latestQueryRef.current === targetQuery) {
+        setRemoteResults(null);
+      }
+    } finally {
+      if (latestQueryRef.current === targetQuery) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    setIsOpen(true);
+
+    if (selectedStation && val !== selectedStation.name) {
+      onSelect(null);
+    }
+
+    // Debounce 300ms
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (val.trim().length >= 2) {
+      setIsLoading(true);
+      debounceTimerRef.current = setTimeout(() => {
+        fetchRemoteStations(val);
+      }, 300);
+    } else {
+      setRemoteResults(null);
+      setIsLoading(false);
+    }
+  };
+
+  // Determine displayed stations
+  const displayedStations = useMemo(() => {
+    if (remoteResults !== null) {
+      return remoteResults.slice(0, 15);
+    }
+
     const q = normalize(query);
     if (!q) {
-      return stations.slice(0, 10);
+      return initialStations.slice(0, 10);
     }
-    return stations
+
+    return initialStations
       .filter((s) => {
         const nameMatch = normalize(s.name).includes(q);
-        const cityMatch = normalize(s.city).includes(q);
+        const cityMatch = normalize(s.city || '').includes(q);
         const idMatch = s.id ? normalize(s.id).includes(q) : false;
         return nameMatch || cityMatch || idMatch;
       })
       .slice(0, 15);
-  }, [stations, query]);
+  }, [remoteResults, initialStations, query]);
 
   useEffect(() => {
     setHighlightedIndex(0);
-  }, [filteredStations]);
+  }, [displayedStations]);
 
   // Click outside listener
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        // Reset query if nothing selected
         if (selectedStation) {
           setQuery(selectedStation.name);
         } else {
@@ -83,17 +147,13 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [selectedStation]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setQuery(val);
-    setIsOpen(true);
-    if (selectedStation && val !== selectedStation.name) {
-      onSelect(null);
-    }
-  };
 
   const handleSelectStation = (station: TrainStation) => {
     onSelect(station);
@@ -112,18 +172,61 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHighlightedIndex((prev) => (prev < filteredStations.length - 1 ? prev + 1 : prev));
+      setHighlightedIndex((prev) => (prev < displayedStations.length - 1 ? prev + 1 : prev));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredStations.length > 0 && highlightedIndex < filteredStations.length) {
-        handleSelectStation(filteredStations[highlightedIndex]);
+      if (displayedStations.length > 0 && highlightedIndex < displayedStations.length) {
+        handleSelectStation(displayedStations[highlightedIndex]);
       }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
     }
+  };
+
+  const renderBadge = (station: TrainStation) => {
+    const isOncf = station.provider === 'ONCF_GTFS' || station.countryCode === 'MA' || (!station.provider && station.country === 'Maroc');
+    if (isOncf) {
+      return (
+        <span
+          style={{
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            background: '#e0e7ff',
+            color: '#4338ca',
+            padding: '2px 7px',
+            borderRadius: '4px',
+            letterSpacing: '0.02em',
+          }}
+        >
+          ONCF
+        </span>
+      );
+    }
+
+    const label = station.countryCode || (station.country ? station.country.substring(0, 2).toUpperCase() : 'INTL');
+    return (
+      <span
+        style={{
+          fontSize: '0.7rem',
+          fontWeight: 600,
+          background: '#f1f5f9',
+          color: '#0f766e',
+          border: '1px solid #cbd5e1',
+          padding: '2px 7px',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+        }}
+        title="Transitous International"
+      >
+        <i className="fas fa-globe-europe" style={{ fontSize: '0.65rem' }} />
+        {label}
+      </span>
+    );
   };
 
   return (
@@ -157,6 +260,10 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
           ref={inputRef}
           id={id}
           type="text"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls={`${id}-listbox`}
+          aria-autocomplete="list"
           value={query}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
@@ -166,7 +273,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
           autoComplete="off"
           style={{
             width: '100%',
-            padding: '0.65rem 0.8rem 0.65rem 2.2rem',
+            padding: '0.65rem 2.2rem 0.65rem 2.2rem',
             border: `1.5px solid ${error ? '#ef4444' : '#cbd5e1'}`,
             borderRadius: '8px',
             fontSize: '0.95rem',
@@ -188,12 +295,26 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
             pointerEvents: 'none',
           }}
         />
+        {isLoading && (
+          <i
+            className="fas fa-spinner fa-spin"
+            style={{
+              position: 'absolute',
+              right: selectedStation ? '2rem' : '0.75rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#3b82f6',
+              fontSize: '0.85rem',
+            }}
+          />
+        )}
         {selectedStation && (
           <button
             type="button"
             onClick={() => {
               onSelect(null);
               setQuery('');
+              setRemoteResults(null);
               inputRef.current?.focus();
             }}
             style={{
@@ -208,6 +329,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
               padding: '2px',
             }}
             title="Effacer"
+            aria-label="Effacer la sélection"
           >
             <i className="fas fa-times-circle" />
           </button>
@@ -219,6 +341,8 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
       {/* Autocomplete Dropdown */}
       {isOpen && (
         <ul
+          id={`${id}-listbox`}
+          role="listbox"
           style={{
             position: 'absolute',
             top: '100%',
@@ -226,7 +350,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
             right: 0,
             zIndex: 50,
             marginTop: '4px',
-            maxHeight: '260px',
+            maxHeight: '270px',
             overflowY: 'auto',
             background: '#ffffff',
             border: '1px solid #cbd5e1',
@@ -237,55 +361,57 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
             margin: '4px 0 0 0',
           }}
         >
-          {filteredStations.length === 0 ? (
+          {displayedStations.length === 0 ? (
             <li
               style={{
-                padding: '0.6rem 1rem',
+                padding: '0.75rem 1rem',
                 fontSize: '0.875rem',
                 color: '#64748b',
                 fontStyle: 'italic',
+                textAlign: 'center',
               }}
             >
-              Aucune gare trouvée
+              {isLoading ? 'Recherche des gares...' : 'Aucune gare trouvée'}
             </li>
           ) : (
-            filteredStations.map((station, index) => {
+            displayedStations.map((station, index) => {
               const isHighlighted = index === highlightedIndex;
               return (
                 <li
-                  key={station.id || station.name}
+                  key={station.id || `${station.name}-${station.countryCode || index}`}
+                  role="option"
+                  aria-selected={isHighlighted}
                   onClick={() => handleSelectStation(station)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   style={{
-                    padding: '0.6rem 1rem',
+                    padding: '0.65rem 1rem',
                     cursor: 'pointer',
                     background: isHighlighted ? '#eff6ff' : 'transparent',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     borderBottom: '1px solid #f1f5f9',
+                    gap: '8px',
                   }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        color: '#1e293b',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       {station.name}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      {station.city}, {station.country}
+                      {station.city ? `${station.city}, ` : ''}{station.country || 'International'}
                     </div>
                   </div>
-                  <span
-                    style={{
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      background: '#e0e7ff',
-                      color: '#4338ca',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    ONCF
-                  </span>
+                  <div>{renderBadge(station)}</div>
                 </li>
               );
             })

@@ -14,4 +14,8 @@ public class TrainSearchQuery {
     LocalDate date;
     LocalTime departureTime;
     String currency;
+    String originCoordinates;
+    String destinationCoordinates;
+    String originCountryCode;
+    String destinationCountryCode;
 }

@@ -21,12 +21,22 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class TravelSearchService {
 
     private static final Logger log = LoggerFactory.getLogger(TravelSearchService.class);
 
     private final TravelProviderRegistry providerRegistry;
+    private final TrainRoutingService trainRoutingService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService) {
+        this.providerRegistry = providerRegistry;
+        this.trainRoutingService = trainRoutingService;
+    }
+
+    public TravelSearchService(TravelProviderRegistry providerRegistry) {
+        this(providerRegistry, null);
+    }
 
     public SearchResponse<FlightOfferDto> searchFlights(FlightSearchRequest request) {
         FlightSearchQuery query = TravelSearchMapper.toQuery(request);
@@ -111,6 +121,10 @@ public class TravelSearchService {
                 .date(request.getDate())
                 .departureTime(request.getDepartureTime())
                 .currency(request.getCurrency())
+                .originCoordinates(request.getOriginCoordinates())
+                .destinationCoordinates(request.getDestinationCoordinates())
+                .originCountryCode(request.getOriginCountryCode())
+                .destinationCountryCode(request.getDestinationCountryCode())
                 .build();
 
         String searchId = UUID.randomUUID().toString();
@@ -118,8 +132,9 @@ public class TravelSearchService {
                 searchId, query.getOriginStation(), query.getDestinationStation(), query.getDate(), query.getDepartureTime());
 
         try {
-            TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.TRAINS);
-            List<TrainOfferDto> offers = provider.searchTrains(query);
+            List<TrainOfferDto> offers = (trainRoutingService != null)
+                    ? trainRoutingService.searchTrains(query)
+                    : providerRegistry.getProviderForProduct(TravelProduct.TRAINS).searchTrains(query);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -130,14 +145,20 @@ public class TravelSearchService {
         }
     }
 
-    public List<TrainStationDto> getTrainStations() {
+    public List<TrainStationDto> getTrainStations(String query) {
         try {
-            TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.TRAINS);
-            return provider.getTrainStations();
+            if (trainRoutingService != null) {
+                return trainRoutingService.searchStations(query);
+            }
+            return providerRegistry.getProviderForProduct(TravelProduct.TRAINS).getTrainStations();
         } catch (Exception e) {
             log.warn("TravelSearch: Failed to load train stations: {}", e.getMessage());
             return List.of();
         }
+    }
+
+    public List<TrainStationDto> getTrainStations() {
+        return getTrainStations(null);
     }
 
     public OfferRevalidationResult revalidateOffer(RevalidateOfferRequest request) {

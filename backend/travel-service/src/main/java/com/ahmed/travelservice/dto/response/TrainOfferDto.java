@@ -67,11 +67,17 @@ public class TrainOfferDto {
     /** Whether the journey is direct without transfers. */
     private boolean direct;
 
+    /** Number of transfers / connections (0 for direct journeys). */
+    private int numberOfTransfers;
+
     /** Number of intermediate stops. */
     private int stopsCount;
 
     /** Ordered sequence of intermediate / terminal stops with scheduled times. */
     private List<TrainStopDto> intermediateStops;
+
+    /** Journey legs for multi-leg or connection trips. */
+    private List<TrainLegDto> legs;
 
     /**
      * Fare price in BigDecimal.

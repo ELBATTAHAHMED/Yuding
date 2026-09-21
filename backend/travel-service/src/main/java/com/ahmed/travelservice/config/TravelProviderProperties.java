@@ -13,5 +13,6 @@ public class TravelProviderProperties {
     private String activities = "none";
     private String transfers = "none";
     private String trains = "oncf_gtfs";
+    private String globalTrains = "transitous";
     private String defaultProvider = "none";
 }
