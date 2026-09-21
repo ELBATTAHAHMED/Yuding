@@ -25,11 +25,7 @@ export default function FlightsPage() {
 
   const [selectedOrigin, setSelectedOrigin] = useState<Airport | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<Airport | null>(null);
-  const [departureDate, setDepartureDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().split('T')[0];
-  });
+  const [departureDate, setDepartureDate] = useState('');
   const [adults, setAdults] = useState(1);
 
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -39,19 +35,6 @@ export default function FlightsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Set default popular route (CDG -> CMN) when airports load if none selected yet
-  useEffect(() => {
-    if (airports.length > 0) {
-      if (!selectedOrigin) {
-        const cdg = airports.find((a) => a.code === 'CDG') || airports.find((a) => a.code === 'ORY') || airports[0];
-        if (cdg) setSelectedOrigin(cdg);
-      }
-      if (!selectedDestination) {
-        const cmn = airports.find((a) => a.code === 'CMN') || airports.find((a) => a.code === 'RAK') || airports[1];
-        if (cmn) setSelectedDestination(cmn);
-      }
-    }
-  }, [airports]);
 
   const today = new Date().toISOString().split('T')[0];
   const isFormValid = Boolean(
