@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
+import { ApiError } from '@/lib/api-client';
 import type { HotelOffer, HotelRoomOffer, RoomOccupancy } from '@/types/travel.types';
 
 interface PresetDestination {
@@ -211,12 +212,29 @@ export default function HotelsPage() {
     } catch (err: unknown) {
       setHotels([]);
       setSearchStatus('ERROR');
-      const msg = err instanceof Error ? err.message : 'Erreur de connexion';
-      setSearchMessage(
-        msg.includes('400') || msg.includes('INVALID')
-          ? 'Paramètres de recherche invalides. Vérifiez la destination et les dates.'
-          : 'Impossible de contacter le service de voyage ou le fournisseur hôtelier Nuitee Connect.'
-      );
+      if (err instanceof ApiError) {
+        const code = err.errorCode || (err.data && err.data.errorCode);
+        if (code === 'PROVIDER_AUTHENTICATION_FAILED' || err.status === 401) {
+          setSearchMessage("Échec de l'authentification auprès du fournisseur hôtelier. Veuillez vérifier votre clé Nuitee Connect Sandbox.");
+        } else if (code === 'PROVIDER_RATE_LIMITED' || err.status === 429) {
+          setSearchMessage("Limite de requêtes atteinte auprès du fournisseur hôtelier. Veuillez patienter un instant.");
+        } else if (code === 'PROVIDER_TIMEOUT' || err.status === 504) {
+          setSearchMessage("Le fournisseur hôtelier a mis trop de temps à répondre. Veuillez réessayer.");
+        } else if (code === 'PROVIDER_REQUEST_INVALID' || err.status === 400) {
+          setSearchMessage("Paramètres de recherche d'hôtels non valides. Vérifiez la destination et les dates sélectionnées.");
+        } else {
+          setSearchMessage("Le fournisseur hôtelier est temporairement indisponible.");
+        }
+      } else {
+        const msg = err instanceof Error ? err.message : '';
+        if (msg.includes('401') || msg.includes('AUTHENTICATION')) {
+          setSearchMessage("Échec de l'authentification auprès du fournisseur hôtelier. Veuillez vérifier votre clé Nuitee Connect Sandbox.");
+        } else if (msg.includes('400') || msg.includes('INVALID')) {
+          setSearchMessage("Paramètres de recherche d'hôtels non valides. Vérifiez la destination et les dates sélectionnées.");
+        } else {
+          setSearchMessage("Le fournisseur hôtelier est temporairement indisponible.");
+        }
+      }
     } finally {
       setIsSearching(false);
     }
