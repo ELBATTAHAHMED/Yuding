@@ -25,7 +25,11 @@ export default function FlightsPage() {
 
   const [selectedOrigin, setSelectedOrigin] = useState<Airport | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<Airport | null>(null);
-  const [departureDate, setDepartureDate] = useState('');
+  const [departureDate, setDepartureDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split('T')[0];
+  });
   const [adults, setAdults] = useState(1);
 
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -34,6 +38,20 @@ export default function FlightsPage() {
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Set default popular route (CDG -> CMN) when airports load if none selected yet
+  useEffect(() => {
+    if (airports.length > 0) {
+      if (!selectedOrigin) {
+        const cdg = airports.find((a) => a.code === 'CDG') || airports.find((a) => a.code === 'ORY') || airports[0];
+        if (cdg) setSelectedOrigin(cdg);
+      }
+      if (!selectedDestination) {
+        const cmn = airports.find((a) => a.code === 'CMN') || airports.find((a) => a.code === 'RAK') || airports[1];
+        if (cmn) setSelectedDestination(cmn);
+      }
+    }
+  }, [airports]);
 
   const today = new Date().toISOString().split('T')[0];
   const isFormValid = Boolean(
@@ -245,18 +263,17 @@ export default function FlightsPage() {
               <button
                 type="submit"
                 className="btn-booking search-btn"
-                disabled={isSearching || !isFormValid}
-                title={!isFormValid ? "Veuillez renseigner l'origine, la destination et la date de départ" : undefined}
+                disabled={isSearching}
                 style={{
                   width: '100%',
                   padding: '0.85rem',
                   fontWeight: 700,
                   borderRadius: '6px',
-                  cursor: (isSearching || !isFormValid) ? 'not-allowed' : 'pointer',
-                  opacity: (isSearching || !isFormValid) ? 0.6 : 1,
+                  cursor: isSearching ? 'not-allowed' : 'pointer',
+                  opacity: isSearching ? 0.7 : 1,
                   color: '#fff',
                   border: 'none',
-                  transition: 'opacity 0.2s ease',
+                  transition: 'opacity 0.2s ease, transform 0.1s ease',
                 }}
               >
                 {isSearching ? (
