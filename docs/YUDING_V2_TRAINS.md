@@ -1,102 +1,254 @@
-# Yuding V2 — Provider-Backed Trains Feature (Transitland / ONCF)
+# Yuding V2 — Trains Feature (ONCF GTFS Local Provider)
 
 **Status:** COMPLETED (Supplemental Feature after Phase 25)  
 **Branch:** `develop-v2`  
-**Provider Suite:** Transitland REST API v2 (`f-oncf~morocco~rail` / `o-oncf~morocco`)  
+**Provider:** `ONCF_GTFS` — Local GTFS Dataset (`orhazal/oncf-gtfs-unofficial`)  
+**Calendar Validity:** 2026-08-18 → 2028-08-18 (2-year forward window)
 
 ---
 
 ## 1. Overview & Architectural Role
 
-The Trains feature introduces provider-backed timetable and route schedule search for Moroccan rail services (ONCF — Office National des Chemins de Fer) using the Transitland REST API v2.
+The Trains feature introduces GTFS-backed timetable and route schedule search for Moroccan rail services (ONCF — Office National des Chemins de Fer) using a locally-cached, community-maintained GTFS dataset parsed entirely in-process — **no external API calls** during user search.
 
-This feature is designed as a standalone, provider-backed search integration strictly adhering to Yuding's Data Integrity and Truth-in-Advertising principles:
-- **Mandatory Data Freshness Gate:** GTFS feeds have fixed calendar service windows. Yuding enforces an explicit server-side freshness check. If a user queries dates past the feed validity window, the system returns `SCHEDULE_DATA_OUTDATED` (HTTP 422) and provides an immediate redirect to the official ONCF portal ([oncf-voyages.ma](https://www.oncf-voyages.ma)).
-- **Zero Price Invention:** GTFS data for ONCF does not carry fare rules. Train offers explicitly return `price = null` with user-facing notification *"Tarif non disponible via cette source"*. Never display fake prices or $0.
-- **Zero Fake Bookings / Live Availability:** Train search is informational for timetable planning. Direct ticket booking is linked to official ONCF reservation channels.
+This feature strictly adheres to Yuding's Data Integrity and Truth-in-Advertising principles:
 
-### Complete Provider Topology
-| Vertical | Provider | Protocol / Version | Port / Service | Base URL |
-|---|---|---|---|---|
-| **FLIGHTS** | `SCRAPPA` | Google Flights Scraper | `travel-service:8082` | `https://scrappa.co/api` |
-| **HOTELS** | `NUITEE` | LiteAPI v3 Sandbox | `travel-service:8082` | `https://api.liteapi.travel/v3.0` |
-| **ACTIVITIES** | `HBX` | APITUDE Activities 3.0 | `travel-service:8082` | `https://api.test.hotelbeds.com/activity-api/3.0` |
-| **TRANSFERS** | `HBX` | APITUDE Transfers 1.0 | `travel-service:8082` | `https://api.test.hotelbeds.com/transfer-api/1.0` |
-| **TRAINS** | `TRANSITLAND` | Transitland v2 REST | `travel-service:8082` | `https://transit.land/api/v2/rest` |
+- **Mandatory Freshness Gate:** The GTFS calendar has a fixed service window (2026-08-18 to 2028-08-18). The server enforces an explicit date-range check. Dates outside this window return `SCHEDULE_DATA_OUTDATED` (HTTP 422) plus a redirect to [oncf-voyages.ma](https://www.oncf-voyages.ma).
+- **Zero Price Invention:** GTFS data for ONCF carries no fare rules. Train offers always return `price = null` with the user-facing message *"Tarif non disponible via cette source"*.
+- **Zero Fake Bookings:** Train search is informational. The "Choisir ce train" CTA is UX-only — it stores client-side selection state for Yuding's future trip planner flow. No ONCF API is called; external booking redirects to `oncf-voyages.ma`.
+- **Accurate Attribution:** Data is labelled "GTFS communautaire ONCF" / `orhazal/oncf-gtfs-unofficial`, not "live", "real-time" or "official".
 
----
+### Provider Topology (current)
 
-## 2. Transitland & ONCF Feed Specification
-
-- **Operator OneStop ID:** `o-oncf~morocco`
-- **Feed OneStop ID:** `f-oncf~morocco~rail`
-- **Feed Source:** `https://github.com/newsbubbles/rail_maroc_oncf/raw/main/oncf_gtfs.zip`
-- **Feed License:** Open Database License (ODbL-1.0)
-- **Feed Status:** Unofficial community-maintained GTFS feed
-- **Feed Validity Window:** `2024-01-01` to `2025-12-31`
-- **Total Network Stations:** 33 indexed train stations across Morocco (Casa-Voyageurs, Rabat-Ville, Tanger-Ville, Marrakech, Fès, Oujda, Kenitra, etc.)
-- **Service Types:**
-  - `Al Boraq` (High Speed Rail / LGV Kenitra-Tanger)
-  - `Al Atlas` (Intercity Mainline)
-  - `TNR` (Train Navette Rapide / Regional Commuter)
+| Vertical | Provider | Source | Capabilities |
+|---|---|---|---|
+| **FLIGHTS** | `SCRAPPA` | Google Flights Scraper | Flights |
+| **HOTELS** | `NUITEE` | LiteAPI v3 Sandbox | Hotels |
+| **ACTIVITIES** | `HBX` | APITUDE Activities 3.0 | Activities |
+| **TRANSFERS** | `HBX` | APITUDE Transfers 1.0 | Transfers |
+| **TRAINS** | `ONCF_GTFS` | Local GTFS (community dataset) | Trains |
 
 ---
 
-## 3. Backend Implementation (`travel-service`)
+## 2. GTFS Dataset Specification
+
+| Property | Value |
+|---|---|
+| Repository | [orhazal/oncf-gtfs-unofficial](https://github.com/orhazal/oncf-gtfs-unofficial) |
+| Download URL | `https://raw.githubusercontent.com/orhazal/oncf-gtfs-unofficial/master/oncf-gtfs.zip` |
+| License | Open Database License (ODbL-1.0) |
+| Feed Version | `2026-08-18` (last commit: `2026-08-17T23:41:42Z`) |
+| Calendar valid | 2026-08-18 → 2028-08-18 |
+| Stations | 217 stops total / 115 parent stations |
+| Routes | 64 routes |
+| Trips | 354 trips |
+| Service types | Al Boraq (TGV), Al Atlas (Intercity), TNR (Regional Commuter) |
+| No `calendar_dates.txt` | Confirmed (only weekday-based calendar) |
+| Local path | `backend/travel-service/data/oncf-gtfs/` (git-ignored — download via script) |
+
+---
+
+## 3. Backend Implementation
 
 ### 3.1 Domain & Provider SPI Extensions
-- [`ProviderCapability.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/ProviderCapability.java): Added `TRAINS`.
-- [`TravelProduct.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/TravelProduct.java): Added `TRAINS(ProviderCapability.TRAINS)`.
-- [`TravelProvider.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/TravelProvider.java): Added SPI methods:
-  - `searchTrains(TrainSearchQuery query)`
-  - `getTrainStations()`
-- [`ProviderErrorCode.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/error/ProviderErrorCode.java): Added `SCHEDULE_DATA_OUTDATED`.
-- [`GlobalExceptionHandler.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/exception/GlobalExceptionHandler.java): Maps `SCHEDULE_DATA_OUTDATED` to HTTP `422 Unprocessable Entity`.
 
-### 3.2 Transitland Client & Provider
-- [`TransitlandProperties.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/config/TransitlandProperties.java): Configured under `travel.transitland.*` with API key, base URL, feed ID, operator ID, and timeouts.
-- [`TransitlandClient.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/impl/transitland/TransitlandClient.java):
-  - Uses Spring 6 `RestClient`.
-  - Injects `apikey` header into requests.
-  - Implements typed error handling: HTTP 401/403 (`AUTHENTICATION_FAILED`), 429 (`RATE_LIMIT_EXCEEDED`), 5xx (`PROVIDER_UNAVAILABLE`), connection timeout (`TIMEOUT`).
-  - Fetches feed versions, stops/stations, and departures by station.
-- [`TransitlandTravelProvider.java`](file:///c:/Users/LENOVO/Desktop/Yuding/backend/travel-service/src/main/java/com/ahmed/travelservice/provider/impl/transitland/TransitlandTravelProvider.java):
-  - Station caching and normalization: deduplicates platforms and child stops into consolidated parent stations with friendly French/Arabic naming.
-  - **Data Freshness Gate:** Dynamically checks requested travel date against feed `earliest_calendar_date` and `latest_calendar_date`. Throws `TravelProviderException.scheduleDataOutdated(...)` if the requested date falls outside the feed's calendar coverage.
-  - Traversal matching: Queries origin departures, resolves route trip stop times, validates origin stop comes strictly before destination stop, and reconstructs intermediate stops.
-  - Pricing & Provenance: Explicitly assigns `price = null`, `currency = "MAD"`, and sets `officialBookingUrl = "https://www.oncf-voyages.ma"`.
+Previously added (Phase before Trains):
+- `ProviderCapability.TRAINS`
+- `TravelProduct.TRAINS`
+- `TravelProvider.searchTrains()` / `TravelProvider.getTrainStations()` (default methods)
+- `TrainSearchRequest`, `TrainSearchResponse`, `TrainOffer`, `TrainStation`, `TrainStopDetail` (domain types)
 
-### 3.3 Endpoints & Security
-- `GET /travel/trains/stations`: Returns list of available train stations.
-- `POST /travel/trains/search`: Accepts `TrainSearchRequest` and returns `List<TrainOfferDto>`.
-- Both endpoints are permitted public access in `SecurityConfig.java`, fronted by Gateway routing on port 8888.
+### 3.2 New Classes
+
+| Class | Path | Purpose |
+|---|---|---|
+| `OncfGtfsProperties` | `config/OncfGtfsProperties.java` | `@ConfigurationProperties(prefix="travel.oncf-gtfs")` — data path, enabled, source URL, license, official portal |
+| `GtfsModels` | `provider/impl/gtfs/model/GtfsModels.java` | Inner record classes for all GTFS file rows: `GtfsAgency`, `GtfsStop`, `GtfsRoute`, `GtfsTrip`, `GtfsStopTime`, `GtfsCalendar`, `GtfsFeedInfo` |
+| `OncfGtfsIndex` | `provider/impl/gtfs/OncfGtfsIndex.java` | Full GTFS parser + in-memory search index. Parses all required GTFS CSV files, builds acceleration indexes, handles GTFS >24:00 time format, weekday calendar logic, freshness gate |
+| `OncfGtfsTrainProvider` | `provider/impl/gtfs/OncfGtfsTrainProvider.java` | `TravelProvider` implementation with `@PostConstruct` startup diagnostics |
+
+### 3.3 Modified Files
+
+| File | Change |
+|---|---|
+| `TravelProviderProperties.java` | Default trains provider: `"none"` → `"oncf_gtfs"` |
+| `TravelProviderRegistry.java` | Added code normalization: `oncf_gtfs` → `ONCF_GTFS` (underscore/hyphen handling) |
+| `TravelProviderException.java` | Added `providerUnavailable(String, String, Throwable)`, `invalidSearch()`, `badRequest()` factory methods |
+| `application.properties` | Added `travel.trains.provider=oncf_gtfs`, `travel.oncf-gtfs.*` defaults |
+| `.env.local` / `.env.example` | Added `TRAVEL_TRAINS_PROVIDER=oncf_gtfs`, `ONCF_GTFS_DATA_PATH`, `ONCF_GTFS_ENABLED` |
+
+### 3.4 Configuration Properties
+
+```properties
+# application.properties
+travel.trains.provider=oncf_gtfs
+travel.oncf-gtfs.data-path=data/oncf-gtfs
+travel.oncf-gtfs.enabled=true
+travel.oncf-gtfs.source-url=https://github.com/orhazal/oncf-gtfs-unofficial
+travel.oncf-gtfs.license=ODbL-1.0
+travel.oncf-gtfs.official-portal-url=https://www.oncf-voyages.ma
+```
+
+### 3.5 Startup Diagnostics
+
+On startup, the provider logs:
+```
+========================================================
+ ONCF GTFS Train Provider Diagnostics
+========================================================
+ ONCF GTFS configured: YES
+ Dataset loaded:       YES
+ Source:               https://github.com/orhazal/oncf-gtfs-unofficial
+ Valid from:           2026-08-18
+ Valid until:          2028-08-18
+ Stations:             115
+ Routes:               64
+ Trips:                354
+========================================================
+```
+
+### 3.6 Tests
+
+- **File:** `OncfGtfsTrainProviderTest.java`
+- **Test count:** 8 deterministic unit tests (no network calls, offline fixture)
+- **Fixture:** `src/test/resources/gtfs-test-fixture/` (6 GTFS CSV files)
+- **All tests pass:** 138 total, 0 failures, 1 skipped
 
 ---
 
-## 4. Frontend Implementation (`frontend/web`)
+## 4. Frontend Implementation
 
-### 4.1 Types & Services
-- [`travel.types.ts`](file:///c:/Users/LENOVO/Desktop/Yuding/frontend/web/src/types/travel.types.ts): Defined `TrainStation`, `TrainStop`, `TrainOffer`, and `TrainSearchRequest`.
-- [`travel.service.ts`](file:///c:/Users/LENOVO/Desktop/Yuding/frontend/web/src/services/travel.service.ts): Added `getTrainStations()` and `searchTrains()` routed strictly through the central `api-client.ts` via Gateway (`http://localhost:8888`).
+### 4.1 Pages & Components
 
-### 4.2 UI Components
-- [`StationSelector.tsx`](file:///c:/Users/LENOVO/Desktop/Yuding/frontend/web/src/components/travel/StationSelector.tsx): Accessible autocomplete with debouncing, accent-insensitive search, and keyboard navigation.
-- [`TrainCard.tsx`](file:///c:/Users/LENOVO/Desktop/Yuding/frontend/web/src/components/travel/TrainCard.tsx):
-  - Displays product badge (`Al Boraq`, `Al Atlas`, `TNR`).
-  - Departure and arrival timings, duration, and intermediate stops expander.
-  - Clearly displays *"Tarif non disponible via cette source"*.
-  - Direct CTA button redirecting to official ONCF reservation portal.
-- [`app/(public)/trains/page.tsx`](file:///c:/Users/LENOVO/Desktop/Yuding/frontend/web/src/app/(public)/trains/page.tsx):
-  - Dedicated hero with rail imagery and badge.
-  - Origin, destination, date, and passenger inputs with a station swap button.
-  - **Freshness Gate Banner:** When the backend signals outdated calendar data, renders a prominent warning explaining that current timetable verification is required at `oncf-voyages.ma`.
-  - Filters: Direct trains only, train type filter, sorting by departure time or duration.
-  - Legal and data provenance disclosure at the bottom of the page.
+| File | Change |
+|---|---|
+| `src/app/(public)/trains/page.tsx` | Date picker `min=today`, defaults to today, attribution updated |
+| `src/components/travel/TrainCard.tsx` | "Choisir ce train" CTA, "GTFS communautaire ONCF" badge, "Réserver sur ONCF" external link |
+| `src/components/travel/StationSelector.tsx` | Station autocomplete (unchanged) |
+
+### 4.2 UX Flows
+
+**Happy path (today or future date, valid route):**
+1. User selects gare de départ + gare d'arrivée + date (min = today)
+2. Optional: choose "À partir de" time filter
+3. Click "Rechercher" → POST `/travel/trains/search` via Gateway
+4. Results show as `TrainCard` list (sorted by departure)
+5. Each card: product type badge, train number, departure/arrival time, duration, "GTFS communautaire ONCF" source badge
+6. "Choisir ce train" CTA toggles to "Train sélectionné" (local state — future booking flow hook)
+7. "Réserver sur ONCF" links to `oncf-voyages.ma`
+
+**Outdated date path:**
+- Backend returns HTTP 422 with `SCHEDULE_DATA_OUTDATED`
+- Frontend shows amber alert: calendar gate explanation + ONCF redirect button
+
+**Provider unavailable:**
+- Backend returns `PROVIDER_UNAVAILABLE` status
+- Frontend shows grey notice + ONCF link
+
+### 4.3 Source Attribution
+
+Footer correctly reads:
+> "Données d'horaires ferroviaires issues du jeu de données GTFS communautaire ONCF ([orhazal/oncf-gtfs-unofficial](https://github.com/orhazal/oncf-gtfs-unofficial), Licence ODbL 1.0) — source non officielle, mise à jour périodiquement."
+
+**No Transitland branding** — Transitland is not used as the data source.
 
 ---
 
-## 5. Security & Secret Hygiene
+## 5. Operational Scripts
 
-- `TRANSITLAND_API_KEY` is loaded exclusively via environment variable or `backend/travel-service/.env.local`.
-- Zero exposure in client bundles or public git commits.
-- No direct service port access from browser; all calls traverse Gateway `http://localhost:8888`.
+| Script | Purpose |
+|---|---|
+| `scripts/update-oncf-gtfs.ps1` | Downloads/updates ONCF GTFS dataset from GitHub. Run periodically (e.g., monthly) to refresh calendar data |
+| `scripts/start-dev.ps1` | Auto-checks GTFS dataset presence on startup; runs update script if dataset is missing |
+| `backend/travel-service/start-travel.ps1` | Loads `.env.local` and starts travel-service with correct env vars |
+
+### Update Dataset
+```powershell
+cd C:\Users\LENOVO\Desktop\Yuding
+.\scripts\update-oncf-gtfs.ps1
+```
+
+---
+
+## 6. API Specification
+
+### Search Trains
+```
+POST /travel/trains/search   (via Gateway :8888)
+Authorization: Bearer <token>  OR  anonymous (public endpoint)
+```
+
+**Request:**
+```json
+{
+  "originStation": "Casa-Voyageurs",
+  "destinationStation": "Tanger-Ville",
+  "date": "2026-09-22",
+  "departureTime": "08:00",   // optional — filter from this time
+  "currency": "MAD"
+}
+```
+
+**Response (SUCCESS):**
+```json
+{
+  "status": "SUCCESS",
+  "searchId": "uuid",
+  "results": [
+    {
+      "offerId": "uuid",
+      "provider": "ONCF_GTFS",
+      "source": "ONCF_GTFS_LOCAL",
+      "productType": "Al Boraq",
+      "trainNumber": "7001",
+      "operator": "ONCF",
+      "originStation": "Casa-Voyageurs",
+      "destinationStation": "Tanger-Ville",
+      "departureTime": "06:10",
+      "arrivalTime": "08:10",
+      "durationMinutes": 120,
+      "direct": true,
+      "stopsCount": 0,
+      "price": null,
+      "currency": "MAD",
+      "officialScheduleUrl": "https://www.oncf-voyages.ma",
+      "intermediateStops": []
+    }
+  ],
+  "providerCode": "ONCF_GTFS",
+  "message": null
+}
+```
+
+### Get Train Stations
+```
+GET /travel/trains/stations   (via Gateway :8888)
+```
+
+**Response:** Array of `{ "id": "Casa-Voyageurs", "name": "Casa-Voyageurs", "country": "MA", ... }`
+
+---
+
+## 7. Live Validation Results
+
+Confirmed live results via Gateway (2026-09-21):
+
+| Search | Date | Result |
+|---|---|---|
+| Casa-Voyageurs → Tanger-Ville | 2026-09-22 (Tuesday) | ✅ 16 trains |
+| Gateway status | — | ✅ `SUCCESS` |
+| Backend startup | — | ✅ 25.4s boot, GTFS loaded |
+| TypeScript check | — | ✅ 0 errors |
+| Next.js build | — | ✅ 21 pages, 0 errors |
+| Backend tests | — | ✅ 138/138, 0 failures |
+
+---
+
+## 8. Data Freshness & Maintenance
+
+The ONCF GTFS dataset must be refreshed periodically:
+- **Current validity:** 2026-08-18 → 2028-08-18 (2 years)
+- **Recommended refresh:** Monthly, or when ONCF announces timetable changes
+- **Alert threshold:** If current date > dataset `feed_end_date - 30 days`, log a WARNING at startup
+
+Run `scripts/update-oncf-gtfs.ps1` to refresh. The dataset file is git-ignored (only `.gitkeep` is committed to preserve the directory).
