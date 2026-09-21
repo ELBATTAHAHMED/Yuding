@@ -225,6 +225,15 @@ Write-Host "`n[4/6] Starting Downstream Microservices..." -ForegroundColor Yello
 Start-BackendService 'identity-service' 8081 | Out-Null
 
 # Travel Service (8082, load .env.local secrets into process environment)
+# Ensure ONCF GTFS dataset is present for train search
+$gtfsCalendar = Join-Path $repoRoot 'backend\travel-service\data\oncf-gtfs\calendar.txt'
+if (-not (Test-Path $gtfsCalendar)) {
+    Write-Host "  ONCF GTFS dataset missing. Running scripts/update-oncf-gtfs.ps1..." -ForegroundColor DarkYellow
+    $updateScript = Join-Path $repoRoot 'scripts\update-oncf-gtfs.ps1'
+    if (Test-Path $updateScript) {
+        & powershell -ExecutionPolicy Bypass -File $updateScript
+    }
+}
 $travelEnvFile = Join-Path $repoRoot 'backend\travel-service\.env.local'
 if (Test-Path $travelEnvFile) {
     Get-Content $travelEnvFile | ForEach-Object {

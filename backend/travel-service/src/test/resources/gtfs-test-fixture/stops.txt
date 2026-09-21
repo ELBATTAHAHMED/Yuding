@@ -1,0 +1,11 @@
+stop_id,stop_code,stop_name,stop_lat,stop_lon,location_type,parent_station
+200,9300200,Casa Voyageurs,33.590131,-7.590102,1,
+200_RAIL,,Casa Voyageurs,33.590131,-7.590102,0,200
+229,9300229,Rabat Agdal,34.001109,-6.857096,1,
+229_RAIL,,Rabat Agdal,34.001109,-6.857096,0,229
+250,9300250,Kénitra,34.2610,-6.5802,1,
+250_RAIL,,Kénitra,34.2610,-6.5802,0,250
+303,9300303,Tanger Ville,35.770577,-5.785686,1,
+303_RAIL,,Tanger Ville,35.770577,-5.785686,0,303
+110,9300110,Marrakech,31.630631,-8.017179,1,
+110_RAIL,,Marrakech,31.630631,-8.017179,0,110

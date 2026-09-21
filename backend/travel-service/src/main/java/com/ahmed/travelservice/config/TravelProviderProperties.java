@@ -12,6 +12,6 @@ public class TravelProviderProperties {
     private String hotels = "none";
     private String activities = "none";
     private String transfers = "none";
-    private String trains = "none";
+    private String trains = "oncf_gtfs";
     private String defaultProvider = "none";
 }

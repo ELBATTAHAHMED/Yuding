@@ -1,0 +1,4 @@
+route_id,agency_id,route_short_name,route_long_name,route_type
+R_BORAQ,0093,Al Boraq,Casa Voyageurs - Tanger Ville,101
+R_ATLAS,0093,Al Atlas,Casa Voyageurs - Marrakech,2
+R_TNR,0093,TNR,Casa Port - Kenitra,2

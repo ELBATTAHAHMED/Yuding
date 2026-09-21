@@ -1,0 +1,5 @@
+route_id,service_id,trip_id,trip_short_name,trip_headsign,direction_id
+R_BORAQ,DAILY,TRIP_BORAQ_0800,1001,Tanger Ville,0
+R_BORAQ,SPECIAL,TRIP_BORAQ_SPECIAL,1099,Tanger Ville,0
+R_BORAQ,WEEKDAY,TRIP_BORAQ_WEEKDAY,1005,Tanger Ville,0
+R_ATLAS,DAILY,TRIP_ATLAS_OVERNIGHT,2001,Marrakech,0

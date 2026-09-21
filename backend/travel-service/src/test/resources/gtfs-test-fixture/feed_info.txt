@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version
+"Test ONCF Feed",https://example.com/gtfs,fr,20260101,20281231,2026.1
