@@ -23,6 +23,8 @@ Write-Host "Environment loaded:"
 Write-Host "  TRAVEL_TRAINS_PROVIDER=$env:TRAVEL_TRAINS_PROVIDER"
 Write-Host "  ONCF_GTFS_ENABLED=$env:ONCF_GTFS_ENABLED"
 Write-Host "  ONCF_GTFS_DATA_PATH=$env:ONCF_GTFS_DATA_PATH"
+$geoConfigured = if ([string]::IsNullOrWhiteSpace($env:GEOAPIFY_API_KEY)) { "NO" } else { "YES" }
+Write-Host "  Geoapify configured: $geoConfigured"
 Write-Host ""
 
 $jar = Join-Path $PSScriptRoot "target\travel-service-0.0.1-SNAPSHOT.jar"
