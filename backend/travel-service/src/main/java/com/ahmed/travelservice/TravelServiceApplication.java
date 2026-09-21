@@ -47,6 +47,22 @@ public class TravelServiceApplication {
                                     System.setProperty("travel.scrappa.api-key", val);
                                 } else if ("TRAVEL_FLIGHTS_PROVIDER".equals(key)) {
                                     System.setProperty("travel.providers.flights", val);
+                                } else if ("TRAVEL_ACTIVITIES_PROVIDER".equals(key)) {
+                                    System.setProperty("travel.providers.activities", val);
+                                } else if ("TRAVEL_TRANSFERS_PROVIDER".equals(key)) {
+                                    System.setProperty("travel.providers.transfers", val);
+                                } else if ("HBX_ACTIVITIES_API_KEY".equals(key)) {
+                                    System.setProperty("travel.hbx.activities.api-key", val);
+                                } else if ("HBX_ACTIVITIES_SECRET".equals(key)) {
+                                    System.setProperty("travel.hbx.activities.secret", val);
+                                } else if ("HBX_ACTIVITIES_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.hbx.activities.base-url", val);
+                                } else if ("HBX_TRANSFERS_API_KEY".equals(key)) {
+                                    System.setProperty("travel.hbx.transfers.api-key", val);
+                                } else if ("HBX_TRANSFERS_SECRET".equals(key)) {
+                                    System.setProperty("travel.hbx.transfers.secret", val);
+                                } else if ("HBX_TRANSFERS_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.hbx.transfers.base-url", val);
                                 }
                             }
                         }
@@ -66,5 +82,22 @@ public class TravelServiceApplication {
         String prefix = (configured && nuiteeKey.length() >= 5) ? nuiteeKey.substring(0, 5) : "none";
         int len = configured ? nuiteeKey.length() : 0;
         System.out.println("[DIAGNOSTIC] NUITEE_API_KEY configured=" + configured + " prefix=" + prefix + " length=" + len);
+
+        logHbxStatus("HBX Activities", "HBX_ACTIVITIES_API_KEY", "HBX_ACTIVITIES_SECRET");
+        logHbxStatus("HBX Transfers", "HBX_TRANSFERS_API_KEY", "HBX_TRANSFERS_SECRET");
+    }
+
+    private static void logHbxStatus(String suite, String keyVar, String secretVar) {
+        String key = System.getProperty(keyVar);
+        if (key == null) {
+            key = System.getenv(keyVar);
+        }
+        String secret = System.getProperty(secretVar);
+        if (secret == null) {
+            secret = System.getenv(secretVar);
+        }
+        boolean keyCfg = key != null && !key.isBlank();
+        boolean secCfg = secret != null && !secret.isBlank();
+        System.out.println("[DIAGNOSTIC] " + suite + ": key=" + (keyCfg ? "configured" : "missing") + ", secret=" + (secCfg ? "configured" : "missing"));
     }
 }
