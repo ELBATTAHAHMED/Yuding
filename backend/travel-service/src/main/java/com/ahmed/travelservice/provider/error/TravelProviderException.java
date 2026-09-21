@@ -56,6 +56,18 @@ public class TravelProviderException extends RuntimeException {
         return new TravelProviderException(providerCode, ProviderErrorCode.PROVIDER_AUTHENTICATION_FAILED, message);
     }
 
+    public static TravelProviderException providerUnavailable(String providerCode, String message, Throwable cause) {
+        return new TravelProviderException(providerCode, ProviderErrorCode.PROVIDER_UNAVAILABLE, message, cause);
+    }
+
+    public static TravelProviderException invalidSearch(String providerCode, String message) {
+        return new TravelProviderException(providerCode, ProviderErrorCode.PROVIDER_REQUEST_INVALID, message);
+    }
+
+    public static TravelProviderException badRequest(String message) {
+        return new TravelProviderException("TRAVEL_SEARCH", ProviderErrorCode.PROVIDER_REQUEST_INVALID, message);
+    }
+
     public static TravelProviderException scheduleDataOutdated(String providerCode, String message) {
         return new TravelProviderException(providerCode, ProviderErrorCode.SCHEDULE_DATA_OUTDATED, message);
     }

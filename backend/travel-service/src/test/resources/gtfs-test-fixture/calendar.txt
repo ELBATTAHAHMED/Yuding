@@ -1,0 +1,6 @@
+service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
+DAILY,1,1,1,1,1,1,1,20260101,20281231
+WEEKDAY,1,1,1,1,1,0,0,20260101,20281231
+WEEKEND,0,0,0,0,0,1,1,20260101,20281231
+FRIDAY_ONLY,0,0,0,0,1,0,0,20260101,20281231
+SPECIAL,1,0,0,0,0,0,0,20260101,20281231

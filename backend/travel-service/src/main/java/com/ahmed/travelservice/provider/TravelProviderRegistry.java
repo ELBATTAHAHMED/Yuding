@@ -96,6 +96,11 @@ public class TravelProviderRegistry {
         if (providerCode == null || providerCode.isBlank() || "NONE".equalsIgnoreCase(providerCode.trim())) {
             return noConfiguredProvider;
         }
+        String key = providerCode.trim().toUpperCase(Locale.ROOT).replace("-", "_");
+        TravelProvider direct = providers.get(key);
+        if (direct != null) {
+            return direct;
+        }
         return providers.getOrDefault(providerCode.trim().toUpperCase(Locale.ROOT), noConfiguredProvider);
     }
 

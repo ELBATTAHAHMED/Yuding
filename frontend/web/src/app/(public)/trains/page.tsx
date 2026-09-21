@@ -7,11 +7,13 @@ import type { TrainOffer, TrainStation } from '@/types/travel.types';
 import { StationSelector } from '@/components/travel/StationSelector';
 import { TrainCard } from '@/components/travel/TrainCard';
 
+const TODAY = new Date().toISOString().split('T')[0];
+
 export default function TrainsPage() {
   const [stations, setStations] = useState<TrainStation[]>([]);
   const [originStation, setOriginStation] = useState<TrainStation | null>(null);
   const [destinationStation, setDestinationStation] = useState<TrainStation | null>(null);
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(TODAY);
   const [departureTime, setDepartureTime] = useState('');
 
   const [trains, setTrains] = useState<TrainOffer[]>([]);
@@ -282,6 +284,7 @@ export default function TrainsPage() {
                 id="trainDate"
                 type="date"
                 value={date}
+                min={TODAY}
                 onChange={(e) => {
                   setDate(e.target.value);
                   if (errorMessage) setErrorMessage(null);
@@ -624,18 +627,18 @@ export default function TrainsPage() {
             Attribution &amp; Informations de source :
           </div>
           <div>
-            Données d’horaires ferroviaires fournies via l’API{' '}
+            Données d&apos;horaires ferroviaires issues du jeu de données GTFS communautaire ONCF (
             <a
-              href="https://transit.land"
+              href="https://github.com/orhazal/oncf-gtfs-unofficial"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#2563eb', textDecoration: 'underline' }}
             >
-              Transitland
-            </a>{' '}
-            (Licence ODbL 1.0) sous le flux <code>f-oncf~morocco~rail</code> (projet communautaire open-source).
-            Les horaires statiques GTFS sont fournis à titre indicatif et ne constituent pas un état de disponibilité,
-            de retard en direct ou de réservation transactionnelle. Pour toute réservation ou confirmation en temps réel,
+              orhazal/oncf-gtfs-unofficial
+            </a>
+            , Licence ODbL 1.0) — source non officielle, mise à jour périodiquement.
+            Les horaires statiques GTFS sont fournis à titre indicatif et ne constituent pas un état de disponibilité
+            en temps réel ni une réservation transactionnelle. Pour toute réservation ou confirmation officielle,
             consultez{' '}
             <a
               href="https://www.oncf-voyages.ma"

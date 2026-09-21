@@ -58,3 +58,7 @@ config-repo/
 # Local development runner
 .dev-logs/
 .dev-pids.json
+
+# GTFS runtime downloaded dataset
+backend/travel-service/data/oncf-gtfs/*
+!backend/travel-service/data/oncf-gtfs/.gitkeep

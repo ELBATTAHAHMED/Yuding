@@ -9,6 +9,7 @@ export interface TrainCardProps {
 
 export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
   const [showStops, setShowStops] = useState(false);
+  const [selected, setSelected] = useState(false);
 
   const getProductColor = (product?: string) => {
     switch (product) {
@@ -93,16 +94,16 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
           <span
             style={{
               fontSize: '0.7rem',
-              color: '#64748b',
-              background: '#f8fafc',
+              color: '#059669',
+              background: '#ecfdf5',
               padding: '2px 8px',
               borderRadius: '4px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #a7f3d0',
             }}
-            title="Source provenance"
+            title="Source des données d'horaires"
           >
-            <i className="fas fa-database" style={{ marginRight: '4px', color: '#64748b' }} />
-            {offer.source}
+            <i className="fas fa-database" style={{ marginRight: '4px', color: '#059669' }} />
+            GTFS communautaire ONCF
           </span>
         </div>
       </div>
@@ -210,6 +211,40 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
             Tarif non disponible via cette source
           </div>
 
+          {/* Primary CTA — informational selection for Yuding trip flow */}
+          <button
+            type="button"
+            onClick={() => setSelected((prev) => !prev)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              background: selected ? '#16a34a' : '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              marginBottom: '0.5rem',
+              transition: 'background 0.2s ease',
+            }}
+            title="Mémoriser ce train pour votre voyage Yuding"
+          >
+            {selected ? (
+              <>
+                <i className="fas fa-check-circle" />
+                <span>Train sélectionné</span>
+              </>
+            ) : (
+              <>
+                <i className="fas fa-hand-pointer" />
+                <span>Choisir ce train</span>
+              </>
+            )}
+          </button>
+
           {offer.officialScheduleUrl && (
             <a
               href={offer.officialScheduleUrl}
@@ -230,7 +265,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
                 cursor: 'pointer',
               }}
             >
-              <span>Vérifier sur ONCF</span>
+              <span>Réserver sur ONCF</span>
               <i className="fas fa-external-link-alt" style={{ fontSize: '0.7rem' }} />
             </a>
           )}

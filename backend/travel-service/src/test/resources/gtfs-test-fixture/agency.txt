@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang
+0093,ONCF,https://www.oncf-voyages.ma/,Africa/Casablanca,fr
