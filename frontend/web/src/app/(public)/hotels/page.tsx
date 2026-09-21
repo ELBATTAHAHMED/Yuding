@@ -9,6 +9,9 @@ import {
   filterHotels,
   type HotelCategoryFilter,
 } from '@/lib/hotel-filters';
+import { GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
+import { geoService } from '@/services/geo.service';
 
 interface PresetDestination {
   label: string;
@@ -49,6 +52,11 @@ export default function HotelsPage() {
   const [destinationInput, setDestinationInput] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCountryCode, setSelectedCountryCode] = useState('MA');
+  const [selectedGeoPlace, setSelectedGeoPlace] = useState<GeoPlace | null>(null);
+  const [destinationPois, setDestinationPois] = useState<NearbyPlace[]>([]);
+  const [isLoadingPois, setIsLoadingPois] = useState(false);
+  const [selectedPoi, setSelectedPoi] = useState<NearbyPlace | null>(null);
+  const [showDestinationGuide, setShowDestinationGuide] = useState(false);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guestNationality, setGuestNationality] = useState('MA');
@@ -76,23 +84,54 @@ export default function HotelsPage() {
   const totalAdults = occupancies.reduce((sum, r) => sum + r.adults, 0);
   const totalChildren = occupancies.reduce((sum, r) => sum + (r.childrenAges?.length || 0), 0);
 
+  const handleGeoPlaceSelect = async (place: GeoPlace | null) => {
+    setSelectedGeoPlace(place);
+    setSelectedPoi(null);
+    if (place) {
+      const cityName = place.city || place.name;
+      setSelectedCity(cityName);
+      setSelectedCountryCode(place.countryCode || 'MA');
+      setDestinationInput(cityName);
+      setValidationError(null);
+
+      // Fetch nearby POIs if coordinates available
+      if (place.latitude && place.longitude) {
+        setIsLoadingPois(true);
+        setShowDestinationGuide(true);
+        try {
+          const pois = await geoService.getNearbyPlaces({
+            lat: place.latitude,
+            lon: place.longitude,
+            radius: 5000,
+            limit: 20,
+          });
+          setDestinationPois(pois);
+        } catch {
+          setDestinationPois([]);
+        } finally {
+          setIsLoadingPois(false);
+        }
+      }
+    } else {
+      setSelectedCity('');
+      setDestinationInput('');
+      setDestinationPois([]);
+      setShowDestinationGuide(false);
+    }
+  };
+
   const handleDestinationSelect = (preset: PresetDestination) => {
-    setDestinationInput(preset.label);
+    setDestinationInput(preset.city);
     setSelectedCity(preset.city);
     setSelectedCountryCode(preset.countryCode);
     setValidationError(null);
-  };
 
-  const handleDestinationChange = (val: string) => {
-    setDestinationInput(val);
-    const match = PRESET_DESTINATIONS.find((p) => p.label.toLowerCase() === val.toLowerCase());
-    if (match) {
-      setSelectedCity(match.city);
-      setSelectedCountryCode(match.countryCode);
-    } else {
-      setSelectedCity(val.trim());
-    }
-    setValidationError(null);
+    // Forward geocode preset to obtain coordinates and POIs for map
+    geoService.geocode({ text: `${preset.city}, ${preset.country}` }).then((res) => {
+      if (res && res.length > 0) {
+        handleGeoPlaceSelect(res[0]);
+      }
+    }).catch(() => {});
   };
 
   const handleCheckInChange = (val: string) => {
@@ -293,45 +332,22 @@ export default function HotelsPage() {
               boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
             }}
           >
-            {/* Destination Field with Popular Picks */}
+            {/* Destination Field with GeoPlaceSelector */}
             <div style={{ textAlign: 'left', position: 'relative' }}>
-              <label
-                htmlFor="hotel-destination"
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  marginBottom: '0.4rem',
-                }}
-              >
-                <i className="fas fa-map-marker-alt" style={{ color: '#01796F', marginRight: '0.4rem' }} />
-                Destination / Ville
-              </label>
-              <input
+              <GeoPlaceSelector
                 id="hotel-destination"
-                type="text"
-                list="popular-destinations"
-                placeholder="Ex: Marrakech, Casablanca, Paris"
-                value={destinationInput}
-                onChange={(e) => handleDestinationChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  boxSizing: 'border-box',
-                  fontSize: '0.95rem',
-                }}
+                label="Destination / Ville"
+                placeholder="Rechercher une ville dans le monde (ex: Marrakech, Paris, Rome, Tokyo)..."
+                type="city"
+                selectedPlace={selectedGeoPlace}
+                onSelect={handleGeoPlaceSelect}
+                error={validationError && !destinationInput.trim() ? validationError : null}
+                required
               />
-              <datalist id="popular-destinations">
-                {PRESET_DESTINATIONS.map((preset) => (
-                  <option key={preset.label} value={preset.label} />
-                ))}
-              </datalist>
 
               {/* Quick suggestion tags */}
               <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
-                {PRESET_DESTINATIONS.slice(0, 3).map((preset) => (
+                {PRESET_DESTINATIONS.slice(0, 4).map((preset) => (
                   <button
                     key={preset.city}
                     type="button"
@@ -752,6 +768,70 @@ export default function HotelsPage() {
           )}
         </div>
       </section>
+
+      {/* ==================== DESTINATION GUIDE & MAP (PHASE 26) ==================== */}
+      {selectedGeoPlace && selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide && (
+        <section style={{ padding: '2rem 1rem 0', background: 'var(--bg, #fcfcfc)' }}>
+          <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                border: '1px solid #e0e0e0',
+                padding: '1.5rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                marginBottom: '1rem',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F', margin: 0 }}>
+                    <i className="fas fa-map-marked-alt" style={{ marginRight: '0.5rem' }} />
+                    {selectedGeoPlace.city || selectedGeoPlace.name} — Carte &amp; Lieux Remarquables
+                  </h2>
+                  <p style={{ margin: '0.25rem 0 0', color: '#666', fontSize: '0.9rem' }}>
+                    {selectedGeoPlace.state ? `${selectedGeoPlace.state}, ` : ''}{selectedGeoPlace.country || ''} • Coordonnées: {selectedGeoPlace.latitude.toFixed(4)}, {selectedGeoPlace.longitude.toFixed(4)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDestinationGuide(false)}
+                  style={{
+                    background: 'none',
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    padding: '0.4rem 0.8rem',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    color: '#666',
+                  }}
+                >
+                  Masquer la carte
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+                <GeoMap
+                  latitude={selectedGeoPlace.latitude}
+                  longitude={selectedGeoPlace.longitude}
+                  placeName={selectedGeoPlace.city || selectedGeoPlace.name}
+                  pois={destinationPois}
+                  selectedPoi={selectedPoi}
+                  onSelectPoi={(poi) => setSelectedPoi(poi)}
+                  height={360}
+                />
+                <NearbyPoiPanel
+                  pois={destinationPois}
+                  isLoading={isLoadingPois}
+                  selectedPoi={selectedPoi}
+                  onSelectPoi={(poi) => setSelectedPoi(poi)}
+                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ==================== FILTER TABS & RESULTS ==================== */}
       <section style={{ padding: '3.5rem 1rem' }}>

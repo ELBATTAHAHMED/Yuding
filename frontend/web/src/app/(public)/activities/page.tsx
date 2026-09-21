@@ -4,12 +4,52 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
+import { GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
+import { geoService } from '@/services/geo.service';
 
 export default function ActivitiesPage() {
   const [destination, setDestination] = useState('');
+  const [selectedGeoPlace, setSelectedGeoPlace] = useState<GeoPlace | null>(null);
+  const [destinationPois, setDestinationPois] = useState<NearbyPlace[]>([]);
+  const [isLoadingPois, setIsLoadingPois] = useState(false);
+  const [selectedPoi, setSelectedPoi] = useState<NearbyPlace | null>(null);
+  const [showDestinationGuide, setShowDestinationGuide] = useState(false);
   const [date, setDate] = useState('');
   const [travelers, setTravelers] = useState(1);
   const [category, setCategory] = useState('ALL');
+
+  const handlePlaceSelect = async (place: GeoPlace | null) => {
+    setSelectedGeoPlace(place);
+    setSelectedPoi(null);
+    if (place) {
+      const name = place.city || place.name;
+      setDestination(name);
+      setErrorMessage(null);
+
+      if (place.latitude && place.longitude) {
+        setIsLoadingPois(true);
+        setShowDestinationGuide(true);
+        try {
+          const pois = await geoService.getNearbyPlaces({
+            lat: place.latitude,
+            lon: place.longitude,
+            radius: 5000,
+            limit: 20,
+          });
+          setDestinationPois(pois);
+        } catch {
+          setDestinationPois([]);
+        } finally {
+          setIsLoadingPois(false);
+        }
+      }
+    } else {
+      setDestination('');
+      setDestinationPois([]);
+      setShowDestinationGuide(false);
+    }
+  };
 
   const [activities, setActivities] = useState<ActivityOffer[]>([]);
   const [providerMessage, setProviderMessage] = useState<string | null>(null);
@@ -97,22 +137,15 @@ export default function ActivitiesPage() {
             }}
           >
             <div style={{ flex: '2 1 220px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-map-marker-alt" style={{ marginRight: '0.4rem' }}></i>
-                Destination
-              </label>
-              <input
-                type="text"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="Ville ou code IATA (ex: Paris, Barcelone, Rome, Marrakech, BCN...)"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '0.95rem',
-                }}
+              <GeoPlaceSelector
+                id="activity-destination"
+                label="Destination"
+                placeholder="Rechercher une ville dans le monde (ex: Paris, Marrakech, Rome, Barcelone)..."
+                type="city"
+                selectedPlace={selectedGeoPlace}
+                onSelect={handlePlaceSelect}
+                error={errorMessage && !destination.trim() ? errorMessage : null}
+                required
               />
             </div>
 
@@ -231,6 +264,66 @@ export default function ActivitiesPage() {
               </button>
             ))}
           </div>
+
+          {/* Destination Guide & Map (Phase 26) */}
+          {selectedGeoPlace && selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide && (
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                border: '1px solid #e0e0e0',
+                padding: '1.5rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                marginBottom: '2.5rem',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#01796F', margin: 0 }}>
+                    <i className="fas fa-map-marked-alt" style={{ marginRight: '0.5rem' }} />
+                    {selectedGeoPlace.city || selectedGeoPlace.name} — Découverte &amp; Points d&apos;Intérêt
+                  </h2>
+                  <p style={{ margin: '0.25rem 0 0', color: '#666', fontSize: '0.88rem' }}>
+                    {selectedGeoPlace.country ? `${selectedGeoPlace.country} • ` : ''}Coordonnées: {selectedGeoPlace.latitude.toFixed(4)}, {selectedGeoPlace.longitude.toFixed(4)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDestinationGuide(false)}
+                  style={{
+                    background: 'none',
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    padding: '0.4rem 0.8rem',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    color: '#666',
+                  }}
+                >
+                  Masquer
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+                <GeoMap
+                  latitude={selectedGeoPlace.latitude}
+                  longitude={selectedGeoPlace.longitude}
+                  placeName={selectedGeoPlace.city || selectedGeoPlace.name}
+                  pois={destinationPois}
+                  selectedPoi={selectedPoi}
+                  onSelectPoi={(poi) => setSelectedPoi(poi)}
+                  height={340}
+                />
+                <NearbyPoiPanel
+                  pois={destinationPois}
+                  isLoading={isLoadingPois}
+                  selectedPoi={selectedPoi}
+                  onSelectPoi={(poi) => setSelectedPoi(poi)}
+                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                />
+              </div>
+            </div>
+          )}
 
           {!hasSearched && (
             <div
