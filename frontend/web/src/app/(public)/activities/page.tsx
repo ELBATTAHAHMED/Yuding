@@ -107,8 +107,7 @@ export default function ActivitiesPage() {
                 Aucune activité disponible pour le moment
               </h3>
               <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                {providerMessage ||
-                  'Votre recherche a été validée avec succès par le service de voyage V2. Les intégrations des prestataires d’activités et excursions sont planifiées pour la Phase 21+.'}
+                Les activités seront bientôt disponibles.
               </p>
             </div>
           ) : (
