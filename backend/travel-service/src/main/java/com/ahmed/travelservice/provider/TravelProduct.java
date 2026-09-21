@@ -4,7 +4,8 @@ public enum TravelProduct {
     FLIGHTS(ProviderCapability.FLIGHTS),
     HOTELS(ProviderCapability.HOTELS),
     ACTIVITIES(ProviderCapability.ACTIVITIES),
-    TRANSFERS(ProviderCapability.TRANSFERS);
+    TRANSFERS(ProviderCapability.TRANSFERS),
+    TRAINS(ProviderCapability.TRAINS);
 
     private final ProviderCapability requiredCapability;
 

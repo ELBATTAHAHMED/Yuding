@@ -112,6 +112,7 @@ public class TravelProviderRegistry {
             case HOTELS -> properties.getHotels();
             case ACTIVITIES -> properties.getActivities();
             case TRANSFERS -> properties.getTransfers();
+            case TRAINS -> properties.getTrains();
         };
     }
 }

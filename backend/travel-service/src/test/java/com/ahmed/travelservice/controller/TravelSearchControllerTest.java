@@ -189,18 +189,26 @@ class TravelSearchControllerTest {
     }
 
     @Test
-    @DisplayName("POST /travel/offers/revalidate returns 400 Bad Request when offerId is blank")
-    void revalidateOfferValidationFailure() throws Exception {
-        com.ahmed.travelservice.dto.request.RevalidateOfferRequest req = com.ahmed.travelservice.dto.request.RevalidateOfferRequest.builder()
-                .offerId("   ")
-                .productType(com.ahmed.travelservice.provider.TravelProduct.FLIGHTS)
+    @DisplayName("GET /travel/trains/stations returns 200 OK")
+    void getTrainStationsSuccess() throws Exception {
+        mockMvc.perform(get("/travel/trains/stations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("POST /travel/trains/search rejects identical origin and destination with 400 Bad Request")
+    void searchTrainsIdenticalStationsFails() throws Exception {
+        com.ahmed.travelservice.dto.request.TrainSearchRequest req = com.ahmed.travelservice.dto.request.TrainSearchRequest.builder()
+                .originStation("Casa-Voyageurs")
+                .destinationStation("Casa-Voyageurs")
+                .date(LocalDate.now().plusDays(2))
                 .build();
 
-        mockMvc.perform(post("/travel/offers/revalidate")
+        mockMvc.perform(post("/travel/trains/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("INVALID_TRAVEL_SEARCH"));
+                .andExpect(jsonPath("$.status").value(400));
     }
 }

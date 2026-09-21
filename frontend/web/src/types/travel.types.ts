@@ -197,6 +197,60 @@ export interface TransferSearchRequest {
   currency?: string;
 }
 
+export interface TrainStation {
+  id: string;
+  onestopId?: string;
+  name: string;
+  city: string;
+  country: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+}
+
+export interface TrainStop {
+  stopSequence: number;
+  stationId: string;
+  stationName: string;
+  arrivalTime?: string;
+  departureTime?: string;
+}
+
+export interface TrainOffer {
+  offerId: string;
+  provider: string;
+  source: string;
+  operator: string;
+  trainNumber: string;
+  routeName: string;
+  productType?: string;
+  originStation: string;
+  originStationId?: string;
+  destinationStation: string;
+  destinationStationId?: string;
+  departureDate: string;
+  departureTime: string;
+  arrivalTime?: string;
+  durationMinutes?: number;
+  direct: boolean;
+  stopsCount: number;
+  intermediateStops?: TrainStop[];
+  price: number | null;
+  currency: string;
+  dataFreshness?: string;
+  feedValidityStart?: string;
+  feedValidityEnd?: string;
+  officialScheduleUrl?: string;
+}
+
+export interface TrainSearchRequest {
+  originStation: string;
+  destinationStation: string;
+  date: string;          // YYYY-MM-DD
+  departureTime?: string; // HH:mm
+  currency?: string;
+}
+
 export interface TravelSearchResponse<T> {
   searchId: string;
   status: 'SUCCESS' | 'PROVIDER_UNAVAILABLE';

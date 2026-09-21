@@ -12,5 +12,6 @@ public class TravelProviderProperties {
     private String hotels = "none";
     private String activities = "none";
     private String transfers = "none";
+    private String trains = "none";
     private String defaultProvider = "none";
 }

@@ -10,6 +10,9 @@ import type {
   HotelSearchRequest,
   OfferRevalidationResult,
   RevalidateOfferRequest,
+  TrainOffer,
+  TrainSearchRequest,
+  TrainStation,
   TransferOffer,
   TransferSearchRequest,
   TravelSearchResponse,
@@ -237,6 +240,20 @@ export const travelService = {
    */
   async revalidateOffer(request: RevalidateOfferRequest): Promise<OfferRevalidationResult> {
     return apiClient.post<OfferRevalidationResult>('/travel/offers/revalidate', request);
+  },
+
+  /**
+   * Get train stations directory via Gateway -> travel-service (/travel/trains/stations)
+   */
+  async getTrainStations(): Promise<TrainStation[]> {
+    return apiClient.get<TrainStation[]>('/travel/trains/stations');
+  },
+
+  /**
+   * Search train timetable schedules via Gateway -> travel-service (/travel/trains/search)
+   */
+  async searchTrains(request: TrainSearchRequest): Promise<TravelSearchResponse<TrainOffer>> {
+    return apiClient.post<TravelSearchResponse<TrainOffer>>('/travel/trains/search', request);
   },
 };
 
