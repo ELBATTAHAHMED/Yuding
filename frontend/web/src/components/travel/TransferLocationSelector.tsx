@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { geoService } from '@/services/geo.service';
 
 export interface LocationSuggestion {
   code?: string;
@@ -42,27 +43,63 @@ export const TransferLocationSelector: React.FC<TransferLocationSelectorProps> =
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [geoSuggestions, setGeoSuggestions] = useState<LocationSuggestion[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const normalize = (s: string) => normalizeStr(s.trim());
 
-  // Filtered suggestions based on typed value
+  // Debounced Geo place lookup
+  useEffect(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    const q = value.trim();
+    if (q.length < 2) {
+      setGeoSuggestions([]);
+      return;
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const places = await geoService.autocomplete({ text: q, limit: 5 });
+        const mapped: LocationSuggestion[] = places.map((p) => ({
+          title: p.city || p.name,
+          subtitle: [p.state, p.country].filter(Boolean).join(', '),
+          badge: p.type === 'city' ? 'VILLE' : 'LIEU',
+          badgeColor: '#01796F',
+        }));
+        setGeoSuggestions(mapped);
+      } catch {
+        setGeoSuggestions([]);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [value]);
+
+  // Combined suggestions: static airports / popular points first, followed by Geo places
   const filteredSuggestions = useMemo(() => {
     const q = normalize(value);
     if (!q) {
       return suggestions.slice(0, 10);
     }
 
-    return suggestions
-      .filter((item) => {
-        const titleMatch = normalize(item.title).includes(q);
-        const codeMatch = item.code ? normalize(item.code).includes(q) : false;
-        const subMatch = item.subtitle ? normalize(item.subtitle).includes(q) : false;
-        return titleMatch || codeMatch || subMatch;
-      })
-      .slice(0, 12);
-  }, [suggestions, value]);
+    const staticMatches = suggestions.filter((item) => {
+      const titleMatch = normalize(item.title).includes(q);
+      const codeMatch = item.code ? normalize(item.code).includes(q) : false;
+      const subMatch = item.subtitle ? normalize(item.subtitle).includes(q) : false;
+      return titleMatch || codeMatch || subMatch;
+    });
+
+    // Merge static and geo suggestions without title duplicates
+    const seenTitles = new Set(staticMatches.map((s) => s.title.toLowerCase()));
+    const uniqueGeo = geoSuggestions.filter((g) => !seenTitles.has(g.title.toLowerCase()));
+
+    return [...staticMatches, ...uniqueGeo].slice(0, 12);
+  }, [suggestions, value, geoSuggestions]);
 
   useEffect(() => {
     setHighlightedIndex(0);

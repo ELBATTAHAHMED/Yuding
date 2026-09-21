@@ -7,11 +7,14 @@ import { HotelOffer } from '@/types/travel.types';
 import { useAuth } from '@/features/auth/useAuth';
 import { Toast } from '@/components/ui';
 import { HotelCard } from '@/components/travel/HotelCard';
+import { GeoPlaceSelector } from '@/components/travel';
+import type { GeoPlace } from '@/types/geo.types';
 
 export default function HomePage() {
   const { user } = useAuth();
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
+  const [selectedGeoPlace, setSelectedGeoPlace] = useState<GeoPlace | null>(null);
   const [capacity, setCapacity] = useState('1');
   const [results, setResults] = useState<HotelOffer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -116,19 +119,22 @@ export default function HomePage() {
                 style={{ color: 'rgba(0, 27, 26, 0.75)' }}
               />
             </div>
-            <div className="input-line">
-              <label htmlFor="pax" className="input-label">
-                Ville
-              </label>
-              <input
-                type="text"
-                name="pax"
-                id="pax"
-                className="input-field"
-                placeholder="Ville"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                style={{ color: 'rgba(0, 27, 26, 0.75)' }}
+            <div className="input-line" style={{ minWidth: '220px' }}>
+              <GeoPlaceSelector
+                id="home-city"
+                label="Ville"
+                placeholder="Entrer Ville (ex: Marrakech, Paris...)"
+                type="city"
+                selectedPlace={selectedGeoPlace}
+                onSelect={(place) => {
+                  setSelectedGeoPlace(place);
+                  if (place) {
+                    setCity(place.city || place.name);
+                    if (place.country) setCountry(place.country);
+                  } else {
+                    setCity('');
+                  }
+                }}
               />
             </div>
             <div className="input-line">

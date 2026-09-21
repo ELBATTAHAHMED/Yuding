@@ -6,3 +6,6 @@ export * from './AirportSelector';
 export * from './StationSelector';
 export * from './TrainCard';
 export * from './TransferLocationSelector';
+export * from './GeoPlaceSelector';
+export * from './GeoMap';
+export * from './NearbyPoiPanel';
