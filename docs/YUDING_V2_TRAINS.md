@@ -1,22 +1,44 @@
-# Yuding V2 — Trains Feature (ONCF GTFS Local Provider)
+# Yuding V2 — Trains Feature (ONCF GTFS Local + Transitous Global)
 
-**Status:** COMPLETED (Supplemental Feature after Phase 25)  
+**Status:** COMPLETED (Global Rail Extension after Phase 25)  
 **Branch:** `develop-v2`  
-**Provider:** `ONCF_GTFS` — Local GTFS Dataset (`orhazal/oncf-gtfs-unofficial`)  
-**Calendar Validity:** 2026-08-18 → 2028-08-18 (2-year forward window)
+**Domestic Morocco Provider:** `ONCF_GTFS` — Local GTFS Dataset (`orhazal/oncf-gtfs-unofficial`)  
+**Global / International Provider:** `TRANSITOUS` — Public MOTIS v2 Journey Planner (`api.transitous.org`)  
+**Calendar Validity (Morocco):** 2026-08-18 → 2028-08-18 (2-year forward window)  
+**Global Coverage:** Worldwide open transit feeds (Europe, North America, Japan, etc.)
 
 ---
 
 ## 1. Overview & Architectural Role
 
-The Trains feature introduces GTFS-backed timetable and route schedule search for Moroccan rail services (ONCF — Office National des Chemins de Fer) using a locally-cached, community-maintained GTFS dataset parsed entirely in-process — **no external API calls** during user search.
+The Trains vertical provides a unified train schedule and journey search experience across two integrated provider tiers managed seamlessly by `TrainRoutingService`:
+
+1. **Morocco Tier (`ONCF_GTFS`):** Local GTFS dataset parsed in-memory for Moroccan domestic rail services (Al Boraq high-speed, Al Atlas intercity, TNR commuter). Zero network overhead and deterministic reliability.
+2. **Global Tier (`TRANSITOUS`):** Public Transitous MOTIS v2 engine providing intercity, regional, and international rail journeys worldwide with multi-leg transfer support.
+
+```
+TRAINS SEARCH (POST /travel/trains/search)
+                  │
+        TrainRoutingService
+                  ├── isMoroccanDomestic(origin, destination)?
+                  │       ├── YES ──► OncfGtfsTrainProvider (Local GTFS)
+                  │       │            └── (fallback to Transitous if unserved)
+                  │       └── NO  ──► TransitousTrainProvider (MOTIS v2)
+                  │
+STATIONS AUTOCOMPLETE (GET /travel/trains/stations?query=...)
+                  │
+        TrainRoutingService
+                  ├── ONCF GTFS stations (indexed locally)
+                  └── Transitous Geocoding API (/v1/geocode)
+                  (merged and deduplicated)
+```
 
 This feature strictly adheres to Yuding's Data Integrity and Truth-in-Advertising principles:
 
-- **Mandatory Freshness Gate:** The GTFS calendar has a fixed service window (2026-08-18 to 2028-08-18). The server enforces an explicit date-range check. Dates outside this window return `SCHEDULE_DATA_OUTDATED` (HTTP 422) plus a redirect to [oncf-voyages.ma](https://www.oncf-voyages.ma).
-- **Zero Price Invention:** GTFS data for ONCF carries no fare rules. Train offers always return `price = null` with the user-facing message *"Tarif non disponible via cette source"*.
-- **Zero Fake Bookings:** Train search is informational. The "Choisir ce train" CTA is UX-only — it stores client-side selection state for Yuding's future trip planner flow. No ONCF API is called; external booking redirects to `oncf-voyages.ma`.
-- **Accurate Attribution:** Data is labelled "GTFS communautaire ONCF" / `orhazal/oncf-gtfs-unofficial`, not "live", "real-time" or "official".
+- **Mandatory Freshness Gate (Morocco):** The ONCF GTFS calendar has a fixed service window (2026-08-18 to 2028-08-18). Dates outside this window return `SCHEDULE_DATA_OUTDATED` (HTTP 422) plus an official redirect link to [oncf-voyages.ma](https://www.oncf-voyages.ma).
+- **Truth-in-Advertising Fares:** Transitous and ONCF GTFS do not publish ticketing fare tables. Train offers strictly return `price = null` with the UI displaying *"Tarif non disponible via cette source"* — zero artificial or 0-euro prices are ever displayed.
+- **Zero Fake Bookings:** Train search is informational. The "Choisir ce train" CTA is UX-only — it stores client-side selection state for Yuding's future trip planner flow. External official booking redirects to carrier portals (e.g. `oncf-voyages.ma`, `transitous.org`).
+- **Compliant Attribution & Headers:** Transitous calls include the required `User-Agent: Yuding/2.0 (https://ahmedelbattah.vercel.app)`. UI prominently attributes both datasets: GTFS communautaire ONCF and Transitous Open Transit Data.
 
 ### Provider Topology (current)
 
@@ -26,7 +48,8 @@ This feature strictly adheres to Yuding's Data Integrity and Truth-in-Advertisin
 | **HOTELS** | `NUITEE` | LiteAPI v3 Sandbox | Hotels |
 | **ACTIVITIES** | `HBX` | APITUDE Activities 3.0 | Activities |
 | **TRANSFERS** | `HBX` | APITUDE Transfers 1.0 | Transfers |
-| **TRAINS** | `ONCF_GTFS` | Local GTFS (community dataset) | Trains |
+| **TRAINS (Morocco)** | `ONCF_GTFS` | Local GTFS (community dataset) | Trains (Morocco) |
+| **TRAINS (Global)** | `TRANSITOUS` | Transitous Public MOTIS v2 API | Trains & Rail Journeys (Global) |
 
 ---
 
@@ -58,61 +81,50 @@ Previously added (Phase before Trains):
 - `TravelProvider.searchTrains()` / `TravelProvider.getTrainStations()` (default methods)
 - `TrainSearchRequest`, `TrainSearchResponse`, `TrainOffer`, `TrainStation`, `TrainStopDetail` (domain types)
 
-### 3.2 New Classes
+### 3.2 Key Classes
 
 | Class | Path | Purpose |
 |---|---|---|
 | `OncfGtfsProperties` | `config/OncfGtfsProperties.java` | `@ConfigurationProperties(prefix="travel.oncf-gtfs")` — data path, enabled, source URL, license, official portal |
+| `TransitousProperties` | `config/TransitousProperties.java` | `@ConfigurationProperties(prefix="travel.transitous")` — base URL, user agent, timeout, language |
 | `GtfsModels` | `provider/impl/gtfs/model/GtfsModels.java` | Inner record classes for all GTFS file rows: `GtfsAgency`, `GtfsStop`, `GtfsRoute`, `GtfsTrip`, `GtfsStopTime`, `GtfsCalendar`, `GtfsFeedInfo` |
-| `OncfGtfsIndex` | `provider/impl/gtfs/OncfGtfsIndex.java` | Full GTFS parser + in-memory search index. Parses all required GTFS CSV files, builds acceleration indexes, handles GTFS >24:00 time format, weekday calendar logic, freshness gate |
-| `OncfGtfsTrainProvider` | `provider/impl/gtfs/OncfGtfsTrainProvider.java` | `TravelProvider` implementation with `@PostConstruct` startup diagnostics |
+| `OncfGtfsIndex` | `provider/impl/gtfs/OncfGtfsIndex.java` | Full GTFS parser + in-memory search index with date freshness gate |
+| `OncfGtfsTrainProvider` | `provider/impl/gtfs/OncfGtfsTrainProvider.java` | `TravelProvider` implementation for Moroccan GTFS schedules |
+| `TransitousModels` | `provider/impl/transitous/model/TransitousModels.java` | Geocode and MOTIS v2 Plan DTOs (`PlanResponse`, `Itinerary`, `Leg`, `StopPlace`) |
+| `TransitousClient` | `provider/impl/transitous/client/TransitousClient.java` | Spring RestClient with custom User-Agent, `/v1/geocode` and `/v6/plan` |
+| `TransitousTrainProvider` | `provider/impl/transitous/TransitousTrainProvider.java` | Global `TravelProvider` mapping Transitous itineraries and multi-leg transfers |
+| `TrainRoutingService` | `service/TrainRoutingService.java` | Coordinates domestic Moroccan routing vs global Transitous journeys, merges stations |
 
-### 3.3 Modified Files
-
-| File | Change |
-|---|---|
-| `TravelProviderProperties.java` | Default trains provider: `"none"` → `"oncf_gtfs"` |
-| `TravelProviderRegistry.java` | Added code normalization: `oncf_gtfs` → `ONCF_GTFS` (underscore/hyphen handling) |
-| `TravelProviderException.java` | Added `providerUnavailable(String, String, Throwable)`, `invalidSearch()`, `badRequest()` factory methods |
-| `application.properties` | Added `travel.trains.provider=oncf_gtfs`, `travel.oncf-gtfs.*` defaults |
-| `.env.local` / `.env.example` | Added `TRAVEL_TRAINS_PROVIDER=oncf_gtfs`, `ONCF_GTFS_DATA_PATH`, `ONCF_GTFS_ENABLED` |
-
-### 3.4 Configuration Properties
+### 3.3 Configuration Properties
 
 ```properties
 # application.properties
+# Moroccan Domestic GTFS
 travel.trains.provider=oncf_gtfs
 travel.oncf-gtfs.data-path=data/oncf-gtfs
 travel.oncf-gtfs.enabled=true
 travel.oncf-gtfs.source-url=https://github.com/orhazal/oncf-gtfs-unofficial
 travel.oncf-gtfs.license=ODbL-1.0
 travel.oncf-gtfs.official-portal-url=https://www.oncf-voyages.ma
+
+# Global Transitous (MOTIS v2)
+travel.providers.global-trains=transitous
+travel.transitous.base-url=https://api.transitous.org/api
+travel.transitous.user-agent=Yuding/2.0 (https://ahmedelbattah.vercel.app)
+travel.transitous.connect-timeout-ms=5000
+travel.transitous.read-timeout-ms=15000
+travel.transitous.lang=en
 ```
 
-### 3.5 Startup Diagnostics
+### 3.4 Automated Tests
 
-On startup, the provider logs:
-```
-========================================================
- ONCF GTFS Train Provider Diagnostics
-========================================================
- ONCF GTFS configured: YES
- Dataset loaded:       YES
- Source:               https://github.com/orhazal/oncf-gtfs-unofficial
- Valid from:           2026-08-18
- Valid until:          2028-08-18
- Stations:             115
- Routes:               64
- Trips:                354
-========================================================
-```
-
-### 3.6 Tests
-
-- **File:** `OncfGtfsTrainProviderTest.java`
-- **Test count:** 8 deterministic unit tests (no network calls, offline fixture)
-- **Fixture:** `src/test/resources/gtfs-test-fixture/` (6 GTFS CSV files)
-- **All tests pass:** 138 total, 0 failures, 1 skipped
+- **TransitousClientTest:** 5 deterministic unit tests via `MockRestServiceServer` (no live network, headers validated).
+- **TransitousTrainProviderTest:** 4 unit tests verifying itineraries, transfers, error handling, null price policy.
+- **TrainRoutingServiceTest:** 4 unit tests verifying Moroccan vs international route dispatch and deduplication.
+- **OncfGtfsTrainProviderTest:** 9 deterministic unit tests with offline GTFS fixture.
+- **Frontend Service & Model Tests:** 5 unit tests in `trains-search.test.ts` verifying stations query, search payloads, error states, and multi-leg journey handling.
+- **Full Backend Suite:** 151 passed, 0 failures, 0 errors.
+- **Full Frontend Suite:** 55 passed, 0 failures.
 
 ---
 

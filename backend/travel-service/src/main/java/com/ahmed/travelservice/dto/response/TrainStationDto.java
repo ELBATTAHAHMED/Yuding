@@ -28,6 +28,15 @@ public class TrainStationDto {
     /** Country where the station is located. */
     private String country;
 
+    /** ISO 3166-1 alpha-2 country code, e.g. "MA", "FR", "ES", "DE". */
+    private String countryCode;
+
+    /** Provider code offering this station, e.g. "ONCF_GTFS", "TRANSITOUS". */
+    private String provider;
+
+    /** Location type classification, e.g. "STATION", "STOP", "CITY", "PLACE". */
+    private String locationType;
+
     /** Geographic latitude. */
     private Double latitude;
 

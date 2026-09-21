@@ -203,17 +203,34 @@ export interface TrainStation {
   name: string;
   city: string;
   country: string;
+  countryCode?: string;
+  provider?: string;
+  locationType?: string;
   latitude?: number;
   longitude?: number;
   timezone?: string;
 }
 
 export interface TrainStop {
-  stopSequence: number;
-  stationId: string;
+  stopSequence?: number;
+  stationId?: string;
   stationName: string;
   arrivalTime?: string;
   departureTime?: string;
+}
+
+export interface TrainLeg {
+  mode: string;
+  operator?: string;
+  serviceName?: string;
+  origin?: string;
+  destination?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  durationMinutes?: number;
+  intermediateStops?: TrainStop[];
+  realTime?: boolean;
+  cancelled?: boolean;
 }
 
 export interface TrainOffer {
@@ -233,8 +250,10 @@ export interface TrainOffer {
   arrivalTime?: string;
   durationMinutes?: number;
   direct: boolean;
+  numberOfTransfers?: number;
   stopsCount: number;
   intermediateStops?: TrainStop[];
+  legs?: TrainLeg[];
   price: number | null;
   currency: string;
   dataFreshness?: string;
@@ -249,6 +268,10 @@ export interface TrainSearchRequest {
   date: string;          // YYYY-MM-DD
   departureTime?: string; // HH:mm
   currency?: string;
+  originCoordinates?: string;
+  destinationCoordinates?: string;
+  originCountryCode?: string;
+  destinationCountryCode?: string;
 }
 
 export interface TravelSearchResponse<T> {

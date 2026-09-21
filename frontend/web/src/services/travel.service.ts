@@ -243,10 +243,13 @@ export const travelService = {
   },
 
   /**
-   * Get train stations directory via Gateway -> travel-service (/travel/trains/stations)
+   * Get train stations directory and global search via Gateway -> travel-service (/travel/trains/stations)
    */
-  async getTrainStations(): Promise<TrainStation[]> {
-    return apiClient.get<TrainStation[]>('/travel/trains/stations');
+  async getTrainStations(query?: string): Promise<TrainStation[]> {
+    const url = query && query.trim()
+      ? `/travel/trains/stations?query=${encodeURIComponent(query.trim())}`
+      : '/travel/trains/stations';
+    return apiClient.get<TrainStation[]>(url);
   },
 
   /**

@@ -39,6 +39,18 @@ public class TrainSearchRequest {
     @Builder.Default
     private String currency = "MAD";
 
+    /** Optional coordinates for origin (format: "lat,lon"), enables exact spatial routing. */
+    private String originCoordinates;
+
+    /** Optional coordinates for destination (format: "lat,lon"), enables exact spatial routing. */
+    private String destinationCoordinates;
+
+    /** Optional country code for origin station (e.g. "MA", "FR"). */
+    private String originCountryCode;
+
+    /** Optional country code for destination station (e.g. "MA", "FR"). */
+    private String destinationCountryCode;
+
     @AssertTrue(message = "Origin station and destination station cannot be identical")
     public boolean isRouteValid() {
         if (originStation == null || destinationStation == null) return true;

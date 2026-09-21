@@ -84,12 +84,30 @@ export default function TrainsPage() {
     setHasSearched(true);
 
     try {
+      const originCoords =
+        originStation.latitude && originStation.longitude
+          ? `${originStation.latitude},${originStation.longitude}`
+          : originStation.id.includes(',')
+          ? originStation.id
+          : undefined;
+
+      const destCoords =
+        destinationStation.latitude && destinationStation.longitude
+          ? `${destinationStation.latitude},${destinationStation.longitude}`
+          : destinationStation.id.includes(',')
+          ? destinationStation.id
+          : undefined;
+
       const response = await travelService.searchTrains({
-        originStation: originStation.id,
-        destinationStation: destinationStation.id,
+        originStation: originStation.name || originStation.id,
+        destinationStation: destinationStation.name || destinationStation.id,
         date,
         departureTime: departureTime || undefined,
-        currency: 'MAD',
+        currency: 'EUR',
+        originCoordinates: originCoords,
+        destinationCoordinates: destCoords,
+        originCountryCode: originStation.countryCode,
+        destinationCountryCode: destinationStation.countryCode,
       });
 
       if (response.status === 'PROVIDER_UNAVAILABLE') {
@@ -126,6 +144,15 @@ export default function TrainsPage() {
       setLoading(false);
     }
   };
+
+  // Dynamically extract unique products from current results
+  const availableProducts = useMemo(() => {
+    const set = new Set<string>();
+    trains.forEach((t) => {
+      if (t.productType) set.add(t.productType);
+    });
+    return Array.from(set);
+  }, [trains]);
 
   // Filter and Sort results
   const filteredTrains = useMemo(() => {
@@ -181,7 +208,7 @@ export default function TrainsPage() {
               margin: '0 auto 2.5rem',
             }}
           >
-            Consultez les liaisons ferroviaires et grilles horaires du réseau ONCF (Al Boraq Grande Vitesse, Al Atlas, TNR)
+            Consultez les liaisons ferroviaires et grilles horaires au Maroc (réseau ONCF) et dans le monde entier (Transitous)
           </p>
 
           <form
@@ -205,7 +232,7 @@ export default function TrainsPage() {
                 id="originStation"
                 label="Gare de départ"
                 icon="fas fa-train"
-                placeholder={loadingStations ? 'Chargement des gares...' : 'Gare de départ (ex: Casa-Voyageurs)'}
+                placeholder={loadingStations ? 'Chargement des gares...' : 'Gare de départ (ex: Casa, Paris, Lyon, Madrid)'}
                 stations={stations}
                 selectedStation={originStation}
                 onSelect={(st) => {
@@ -254,7 +281,7 @@ export default function TrainsPage() {
                 id="destinationStation"
                 label="Gare d’arrivée"
                 icon="fas fa-map-marker-alt"
-                placeholder={loadingStations ? 'Chargement des gares...' : 'Gare d’arrivée (ex: Rabat-Agdal, Tanger)'}
+                placeholder={loadingStations ? 'Chargement des gares...' : 'Gare d’arrivée (ex: Rabat, Tanger, Barcelone)'}
                 stations={stations}
                 selectedStation={destinationStation}
                 onSelect={(st) => {
@@ -501,25 +528,29 @@ export default function TrainsPage() {
               </label>
 
               {/* Product filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}>
-                <span>Type :</span>
-                <select
-                  value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(e.target.value)}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.85rem',
-                    background: '#ffffff',
-                  }}
-                >
-                  <option value="ALL">Tous les trains</option>
-                  <option value="Al Boraq">Al Boraq (TGV)</option>
-                  <option value="Al Atlas">Al Atlas</option>
-                  <option value="TNR">TNR (Navette)</option>
-                </select>
-              </div>
+              {availableProducts.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}>
+                  <span>Type :</span>
+                  <select
+                    value={selectedProduct}
+                    onChange={(e) => setSelectedProduct(e.target.value)}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      background: '#ffffff',
+                    }}
+                  >
+                    <option value="ALL">Tous les trains</option>
+                    {availableProducts.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Sort by */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}>
@@ -626,29 +657,41 @@ export default function TrainsPage() {
           <div style={{ fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
             Attribution &amp; Informations de source :
           </div>
-          <div>
-            Données d&apos;horaires ferroviaires issues du jeu de données GTFS communautaire ONCF (
-            <a
-              href="https://github.com/orhazal/oncf-gtfs-unofficial"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#2563eb', textDecoration: 'underline' }}
-            >
-              orhazal/oncf-gtfs-unofficial
-            </a>
-            , Licence ODbL 1.0) — source non officielle, mise à jour périodiquement.
-            Les horaires statiques GTFS sont fournis à titre indicatif et ne constituent pas un état de disponibilité
-            en temps réel ni une réservation transactionnelle. Pour toute réservation ou confirmation officielle,
-            consultez{' '}
-            <a
-              href="https://www.oncf-voyages.ma"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#2563eb', textDecoration: 'underline' }}
-            >
-              oncf-voyages.ma
-            </a>
-            .
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div>
+              <strong>Réseau Maroc (ONCF) :</strong> Données issues du jeu GTFS communautaire (
+              <a
+                href="https://github.com/orhazal/oncf-gtfs-unofficial"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#2563eb', textDecoration: 'underline' }}
+              >
+                orhazal/oncf-gtfs-unofficial
+              </a>
+              , Licence ODbL 1.0) — horaires fournis à titre indicatif sans réservation transactionnelle directe.
+              Pour toute réservation officielle, consultez{' '}
+              <a
+                href="https://www.oncf-voyages.ma"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#2563eb', textDecoration: 'underline' }}
+              >
+                oncf-voyages.ma
+              </a>
+              .
+            </div>
+            <div>
+              <strong>Réseau International :</strong> Planification d&apos;itinéraires ferroviaires et multimodaux propulsée par{' '}
+              <a
+                href="https://transitous.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#2563eb', textDecoration: 'underline' }}
+              >
+                Transitous
+              </a>{' '}
+              (moteur libre MOTIS, données OpenStreetMap / GTFS / NeTEx). Les tarifs ne sont pas fournis par cette source.
+            </div>
           </div>
         </div>
       </section>
