@@ -109,10 +109,14 @@ export interface HotelOffer {
 }
 
 export interface ActivityOffer {
-  id: string;
+  id?: string;
+  offerId?: string;
+  provider?: string;
+  source?: string;
   title: string;
-  city: string;
-  country: string;
+  city?: string;
+  destination?: string;
+  country?: string;
   category: string;
   price: number;
   currency: string;
@@ -122,11 +126,18 @@ export interface ActivityOffer {
 }
 
 export interface TransferOffer {
-  id: string;
-  type: 'TAXI' | 'TRAIN' | 'CAR_RENTAL';
+  id?: string;
+  offerId?: string;
+  provider?: string;
+  type?: 'TAXI' | 'TRAIN' | 'CAR_RENTAL' | string;
+  transferType?: string;
   vehicleModel?: string;
-  departureCity: string;
+  departureCity?: string;
   arrivalCity?: string;
+  pickup?: string;
+  dropoff?: string;
+  date?: string;
+  time?: string;
   price: number;
   currency: string;
   capacity?: number;
