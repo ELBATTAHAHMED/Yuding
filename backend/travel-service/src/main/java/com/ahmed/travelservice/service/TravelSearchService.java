@@ -104,6 +104,42 @@ public class TravelSearchService {
         }
     }
 
+    public SearchResponse<TrainOfferDto> searchTrains(com.ahmed.travelservice.dto.request.TrainSearchRequest request) {
+        TrainSearchQuery query = TrainSearchQuery.builder()
+                .originStation(request.getOriginStation())
+                .destinationStation(request.getDestinationStation())
+                .date(request.getDate())
+                .departureTime(request.getDepartureTime())
+                .currency(request.getCurrency())
+                .build();
+
+        String searchId = UUID.randomUUID().toString();
+        log.info("TravelSearch: Train search initiated [searchId={}]: {} -> {}, date={}, time={}",
+                searchId, query.getOriginStation(), query.getDestinationStation(), query.getDate(), query.getDepartureTime());
+
+        try {
+            TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.TRAINS);
+            List<TrainOfferDto> offers = provider.searchTrains(query);
+            return SearchResponse.success(searchId, offers);
+        } catch (TravelProviderException e) {
+            if (isCleanUnavailable(e)) {
+                log.info("TravelSearch: Train provider unavailable [searchId={}]: {}", searchId, e.getMessage());
+                return SearchResponse.providerUnavailable(searchId, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    public List<TrainStationDto> getTrainStations() {
+        try {
+            TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.TRAINS);
+            return provider.getTrainStations();
+        } catch (Exception e) {
+            log.warn("TravelSearch: Failed to load train stations: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
     public OfferRevalidationResult revalidateOffer(RevalidateOfferRequest request) {
         log.info("TravelSearch: Revalidating offer [offerId={}, product={}, provider={}]",
                 request.getOfferId(), request.getProductType(), request.getProvider());

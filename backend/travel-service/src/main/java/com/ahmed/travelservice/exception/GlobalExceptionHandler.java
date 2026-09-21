@@ -109,6 +109,7 @@ public class GlobalExceptionHandler {
             case CAPABILITY_NOT_SUPPORTED -> HttpStatus.NOT_IMPLEMENTED;
             case PROVIDER_QUOTA_EXHAUSTED -> HttpStatus.BAD_GATEWAY;
             case PROVIDER_REQUEST_INVALID -> HttpStatus.BAD_REQUEST;
+            case SCHEDULE_DATA_OUTDATED -> HttpStatus.UNPROCESSABLE_ENTITY;
             case PROVIDER_UNAVAILABLE, PROVIDER_NOT_CONFIGURED -> HttpStatus.SERVICE_UNAVAILABLE;
             default -> HttpStatus.BAD_GATEWAY;
         };

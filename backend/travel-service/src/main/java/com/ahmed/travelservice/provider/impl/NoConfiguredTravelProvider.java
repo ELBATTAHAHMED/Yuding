@@ -56,6 +56,14 @@ public class NoConfiguredTravelProvider implements TravelProvider {
     }
 
     @Override
+    public List<TrainOfferDto> searchTrains(TrainSearchQuery query) throws TravelProviderException {
+        throw TravelProviderException.notConfigured(
+                METADATA.getProviderCode(),
+                "No live train provider is configured. External train provider integrations are scheduled for Phase 25+."
+        );
+    }
+
+    @Override
     public OfferRevalidationResult revalidateOffer(RevalidateOfferQuery query) throws TravelProviderException {
         throw TravelProviderException.notConfigured(
                 METADATA.getProviderCode(),

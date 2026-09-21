@@ -45,6 +45,23 @@ public interface TravelProvider {
     List<TransferOfferDto> searchTransfers(TransferSearchQuery query) throws TravelProviderException;
 
     /**
+     * Search train schedule offers from this provider using normalized domain query.
+     */
+    default List<TrainOfferDto> searchTrains(TrainSearchQuery query) throws TravelProviderException {
+        throw TravelProviderException.capabilityNotSupported(
+                getMetadata() != null ? getMetadata().getProviderCode() : "UNKNOWN",
+                ProviderCapability.TRAINS.name()
+        );
+    }
+
+    /**
+     * Get available train stations supported by this provider for search and autocomplete.
+     */
+    default List<TrainStationDto> getTrainStations() throws TravelProviderException {
+        return List.of();
+    }
+
+    /**
      * Revalidates an offer's availability and real-time price prior to checkout.
      */
     OfferRevalidationResult revalidateOffer(RevalidateOfferQuery query) throws TravelProviderException;

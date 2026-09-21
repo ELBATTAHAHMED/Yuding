@@ -55,6 +55,18 @@ public class TravelSearchController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/trains/search")
+    public ResponseEntity<SearchResponse<TrainOfferDto>> searchTrains(
+            @Valid @RequestBody com.ahmed.travelservice.dto.request.TrainSearchRequest request) {
+        SearchResponse<TrainOfferDto> response = travelSearchService.searchTrains(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/trains/stations")
+    public ResponseEntity<java.util.List<TrainStationDto>> getTrainStations() {
+        return ResponseEntity.ok(travelSearchService.getTrainStations());
+    }
+
     @PostMapping("/offers/revalidate")
     public ResponseEntity<OfferRevalidationResult> revalidateOffer(
             @Valid @RequestBody RevalidateOfferRequest request) {

@@ -57,8 +57,8 @@ export const Header: React.FC = () => {
                 Activités
               </Link>
               <Link
-                href="/transfers"
-                className={`nav-link ${pathname === '/transfers' ? 'active' : ''}`}
+                href="/trains"
+                className={`nav-link ${pathname === '/trains' ? 'active' : ''}`}
               >
                 Trains
               </Link>

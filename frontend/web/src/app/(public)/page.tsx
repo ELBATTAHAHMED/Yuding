@@ -89,7 +89,7 @@ export default function HomePage() {
               <Link href="/activities" className="btn-booking" style={{ color: 'white' }}>
                 Activites
               </Link>
-              <Link href="/transfers" className="btn-booking" style={{ color: 'white' }}>
+              <Link href="/trains" className="btn-booking" style={{ color: 'white' }}>
                 Trains
               </Link>
             </div>

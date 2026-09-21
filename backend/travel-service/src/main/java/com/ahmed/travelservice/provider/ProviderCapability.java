@@ -5,5 +5,6 @@ public enum ProviderCapability {
     HOTELS,
     ACTIVITIES,
     TRANSFERS,
+    TRAINS,
     REVALIDATION
 }
