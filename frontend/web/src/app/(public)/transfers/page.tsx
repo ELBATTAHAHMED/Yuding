@@ -1,9 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { TransferOffer } from '@/types/travel.types';
+import {
+  filterTransfers,
+  getTransferCategoryCounts,
+  isPrivateTransfer,
+  isSharedNavette,
+  isMinibusOrRental,
+  type TransferCategoryFilter,
+} from '@/lib/transfer-filters';
 
 export default function TransfersPage() {
   const today = new Date().toISOString().split('T')[0];
@@ -14,13 +22,16 @@ export default function TransfersPage() {
   const [date, setDate] = useState(defaultFutureDate);
   const [time, setTime] = useState('12:00');
   const [passengers, setPassengers] = useState(2);
-  const [transportType, setTransportType] = useState<'TAXI' | 'TRAIN' | 'CAR_RENTAL'>('TAXI');
+  const [transportType, setTransportType] = useState<TransferCategoryFilter>('ALL');
 
   const [transfers, setTransfers] = useState<TransferOffer[]>([]);
   const [providerMessage, setProviderMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  const categoryCounts = useMemo(() => getTransferCategoryCounts(transfers), [transfers]);
+  const filteredTransfers = useMemo(() => filterTransfers(transfers, transportType), [transfers, transportType]);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -46,7 +57,6 @@ export default function TransfersPage() {
         date: date || defaultFutureDate,
         time: time || '12:00',
         passengers: passengers > 0 ? passengers : 2,
-        transferType: transportType,
       });
 
       setTransfers(data.results || []);
@@ -276,9 +286,10 @@ export default function TransfersPage() {
       <section style={{ padding: '3.5rem 1rem' }}>
         <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
           {/* Mode Selector Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: transportType !== 'ALL' ? '1rem' : '2.5rem', flexWrap: 'wrap' }}>
             <button
-              onClick={() => setTransportType('TAXI')}
+              type="button"
+              onClick={() => setTransportType((prev) => (prev === 'TAXI' ? 'ALL' : 'TAXI'))}
               style={{
                 padding: '0.75rem 1.5rem',
                 borderRadius: '8px',
@@ -291,14 +302,16 @@ export default function TransfersPage() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 boxShadow: transportType === 'TAXI' ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
+                transition: 'all 0.2s ease',
               }}
             >
               <i className="fas fa-taxi"></i>
-              Transfert Privé &amp; VTC
+              Transfert Privé &amp; VTC {hasSearched && transfers.length > 0 && `(${categoryCounts.private})`}
             </button>
 
             <button
-              onClick={() => setTransportType('TRAIN')}
+              type="button"
+              onClick={() => setTransportType((prev) => (prev === 'TRAIN' ? 'ALL' : 'TRAIN'))}
               style={{
                 padding: '0.75rem 1.5rem',
                 borderRadius: '8px',
@@ -311,14 +324,16 @@ export default function TransfersPage() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 boxShadow: transportType === 'TRAIN' ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
+                transition: 'all 0.2s ease',
               }}
             >
               <i className="fas fa-train"></i>
-              Trains &amp; Navettes
+              Trains &amp; Navettes {hasSearched && transfers.length > 0 && `(${categoryCounts.shared})`}
             </button>
 
             <button
-              onClick={() => setTransportType('CAR_RENTAL')}
+              type="button"
+              onClick={() => setTransportType((prev) => (prev === 'CAR_RENTAL' ? 'ALL' : 'CAR_RENTAL'))}
               style={{
                 padding: '0.75rem 1.5rem',
                 borderRadius: '8px',
@@ -331,12 +346,38 @@ export default function TransfersPage() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 boxShadow: transportType === 'CAR_RENTAL' ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
+                transition: 'all 0.2s ease',
               }}
             >
               <i className="fas fa-car"></i>
-              Location &amp; Minibus
+              Location &amp; Minibus {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
             </button>
           </div>
+
+          {/* Active filter badge / reset option */}
+          {hasSearched && transfers.length > 0 && transportType !== 'ALL' && (
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <button
+                type="button"
+                onClick={() => setTransportType('ALL')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#01796F',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <i className="fas fa-undo-alt"></i>
+                Afficher tous les transferts ({transfers.length})
+              </button>
+            </div>
+          )}
 
           {!hasSearched && (
             <div
@@ -410,11 +451,28 @@ export default function TransfersPage() {
             </div>
           )}
 
-          {hasSearched && transfers.length > 0 && (
+          {/* Render filtered transfers list */}
+          {hasSearched && transfers.length > 0 && filteredTransfers.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {transfers.map((item) => {
+              {filteredTransfers.map((item) => {
                 const offerKey = item.offerId || item.id || `trf-${item.price}`;
-                const isPrivate = !item.transferType || item.transferType.toUpperCase() === 'PRIVATE';
+                const isPrivate = isPrivateTransfer(item);
+                const isShuttle = isSharedNavette(item);
+                const isMinibus = isMinibusOrRental(item);
+
+                let badgeLabel = 'Transfert Privé';
+                let badgeBg = '#01796F';
+                let vehicleIcon = 'fas fa-car';
+
+                if (isShuttle) {
+                  badgeLabel = 'Navette Partagée';
+                  badgeBg = '#4B5563';
+                  vehicleIcon = 'fas fa-bus';
+                } else if (isMinibus && item.capacity && item.capacity >= 5) {
+                  badgeLabel = 'Minibus & Van';
+                  badgeBg = '#0D9488';
+                  vehicleIcon = 'fas fa-shuttle-van';
+                }
 
                 return (
                   <div
@@ -446,13 +504,13 @@ export default function TransfersPage() {
                           fontSize: '1.8rem',
                         }}
                       >
-                        <i className={item.type === 'TRAIN' ? 'fas fa-train' : 'fas fa-car'}></i>
+                        <i className={vehicleIcon}></i>
                       </div>
                       <div>
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' }}>
                           <span
                             style={{
-                              background: isPrivate ? '#01796F' : '#4B5563',
+                              background: badgeBg,
                               color: '#fff',
                               fontSize: '0.72rem',
                               fontWeight: 700,
@@ -461,7 +519,7 @@ export default function TransfersPage() {
                               textTransform: 'uppercase',
                             }}
                           >
-                            {isPrivate ? 'Transfert Privé' : 'Navette Partagée'}
+                            {badgeLabel}
                           </span>
                           <span
                             style={{
@@ -519,6 +577,61 @@ export default function TransfersPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Filter empty state: has search results, but none match current filter */}
+          {hasSearched && transfers.length > 0 && filteredTransfers.length === 0 && !loading && (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '3.5rem 1.5rem',
+                background: 'var(--card, #fff)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.05)',
+              }}
+            >
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'rgba(1, 121, 111, 0.1)',
+                  color: '#01796F',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.8rem',
+                  margin: '0 auto 1.25rem',
+                }}
+              >
+                <i className="fas fa-filter"></i>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Aucun transfert dans cette catégorie
+              </h3>
+              <p style={{ color: '#666', maxWidth: '550px', margin: '0 auto 1.5rem', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                Aucun véhicule ne correspond au filtre sélectionné pour ce trajet. {transfers.length} option(s) disponible(s) dans les autres catégories.
+              </p>
+              <button
+                type="button"
+                onClick={() => setTransportType('ALL')}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#01796F',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(1, 121, 111, 0.3)',
+                }}
+              >
+                <i className="fas fa-th-large" style={{ marginRight: '0.5rem' }}></i>
+                Afficher tous les transferts ({transfers.length})
+              </button>
             </div>
           )}
         </div>
