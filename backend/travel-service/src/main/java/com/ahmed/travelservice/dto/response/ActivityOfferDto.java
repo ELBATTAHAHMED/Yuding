@@ -24,4 +24,5 @@ public class ActivityOfferDto {
     private String currency;
     private String imageUrl;
     private String description;
+    private String source;
 }

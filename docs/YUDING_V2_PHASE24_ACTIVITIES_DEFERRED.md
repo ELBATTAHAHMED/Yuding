@@ -1,18 +1,18 @@
 # Yuding V2 — Phase 24: Activities Provider Integration (HBX Group / Hotelbeds)
 
-**Status:** RESUMED / PENDING IMPLEMENTATION  
+**Status:** COMPLETED  
 **Branch:** `develop-v2`  
 **Provider Suite:** HBX Group (Hotelbeds APITUDE Activities)  
 
 ---
 
-## 1. Executive Summary & Resumption
+## 1. Executive Summary & Resolution
 
 Phase 24 of the Yuding V2 roadmap was initially deferred pending partner onboarding across legacy candidates.
 
-With the selection of the **HBX Group (Hotelbeds APITUDE)** API suite for both Activities and Transfers, Phase 24 is **OFFICIALLY RESUMED** in status `PENDING IMPLEMENTATION`.
+With the selection and implementation of the **HBX Group (Hotelbeds APITUDE)** API suite for both Activities and Transfers, Phase 24 is now **COMPLETED**. Provider-backed search and availability for activities and experiences are fully integrated with evaluation endpoints, frontend search UX, and explicit source provenance.
 
-Work on Phase 24 will implement provider-backed search and availability for activities and experiences using the official evaluation endpoints.
+See detailed documentation: [`docs/YUDING_V2_REAL_ACTIVITIES_HBX.md`](file:///c:/Users/LENOVO/Desktop/Yuding/docs/YUDING_V2_REAL_ACTIVITIES_HBX.md).
 
 ---
 
