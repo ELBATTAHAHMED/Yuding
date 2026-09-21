@@ -30,8 +30,24 @@ public class TravelServiceApplication {
                             int idx = trimmed.indexOf('=');
                             String key = trimmed.substring(0, idx).trim();
                             String val = trimmed.substring(idx + 1).trim();
+                            if ((val.startsWith("\"") && val.endsWith("\"")) || (val.startsWith("'") && val.endsWith("'"))) {
+                                if (val.length() >= 2) {
+                                    val = val.substring(1, val.length() - 1).trim();
+                                }
+                            }
                             if (!key.isEmpty()) {
                                 System.setProperty(key, val);
+                                if ("NUITEE_API_KEY".equals(key)) {
+                                    System.setProperty("travel.nuitee.api-key", val);
+                                } else if ("NUITEE_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.nuitee.base-url", val);
+                                } else if ("TRAVEL_HOTELS_PROVIDER".equals(key)) {
+                                    System.setProperty("travel.providers.hotels", val);
+                                } else if ("SCRAPPA_API_KEY".equals(key)) {
+                                    System.setProperty("travel.scrappa.api-key", val);
+                                } else if ("TRAVEL_FLIGHTS_PROVIDER".equals(key)) {
+                                    System.setProperty("travel.providers.flights", val);
+                                }
                             }
                         }
                     }
@@ -41,5 +57,14 @@ public class TravelServiceApplication {
                 }
             }
         }
+
+        String nuiteeKey = System.getProperty("NUITEE_API_KEY");
+        if (nuiteeKey == null) {
+            nuiteeKey = System.getenv("NUITEE_API_KEY");
+        }
+        boolean configured = nuiteeKey != null && !nuiteeKey.isBlank();
+        String prefix = (configured && nuiteeKey.length() >= 5) ? nuiteeKey.substring(0, 5) : "none";
+        int len = configured ? nuiteeKey.length() : 0;
+        System.out.println("[DIAGNOSTIC] NUITEE_API_KEY configured=" + configured + " prefix=" + prefix + " length=" + len);
     }
 }
