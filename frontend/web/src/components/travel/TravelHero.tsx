@@ -11,6 +11,8 @@ export interface TravelHeroProps {
   country?: string;
   /** Stable product-specific Pexels query used until a destination is selected. */
   defaultImageQuery: string;
+  /** Deliberate cached Pexels result used for the default product context. */
+  defaultImageIndex?: number;
   icon: string;
   compact?: boolean;
 }
@@ -25,6 +27,7 @@ export function TravelHero({
   destination,
   country,
   defaultImageQuery,
+  defaultImageIndex = 0,
   icon,
   compact = false,
 }: TravelHeroProps) {
@@ -33,9 +36,13 @@ export function TravelHero({
   const { data, isLoading } = useDestinationImages({
     city: imageQuery,
     country: selectedDestination ? country : undefined,
-    limit: 1,
+    // Fetch a small, cached candidate set only for deliberate product defaults.
+    // Destination overrides remain a single contextual result.
+    limit: selectedDestination ? 1 : 6,
   });
-  const image = data?.images?.[0];
+  const image = selectedDestination
+    ? data?.images?.[0]
+    : data?.images?.[defaultImageIndex] || data?.images?.[0];
 
   return (
     <section className={`travel-hero ${compact ? 'travel-hero--compact' : ''}`} aria-label={`${title} — contexte de destination`}>

@@ -191,6 +191,7 @@ export default function TrainsPage() {
         destination={destinationStation?.city || undefined}
         country={destinationStation?.country}
         defaultImageQuery="train railway travel journey"
+        defaultImageIndex={1}
         icon="fas fa-train"
         compact={hasSearched}
       />
