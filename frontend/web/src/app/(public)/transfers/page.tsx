@@ -139,6 +139,7 @@ export default function TransfersPage() {
         title="Transferts"
         subtitle="Reliez aéroport, gare et destination avec des offres fournisseur vérifiables."
         destination={dropoff || pickup || undefined}
+        defaultImageQuery="airport transfer travel shuttle car"
         icon="fas fa-route"
         compact={hasSearched}
       />
@@ -290,7 +291,7 @@ export default function TransfersPage() {
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
+      <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
           {/* Mode Selector Tabs */}
           <div className="flex justify-center gap-3 mb-6 flex-wrap">

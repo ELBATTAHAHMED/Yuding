@@ -9,6 +9,8 @@ export interface TravelHeroProps {
   /** A structured or stable contextual destination; never represents an offer. */
   destination?: string;
   country?: string;
+  /** Stable product-specific Pexels query used until a destination is selected. */
+  defaultImageQuery: string;
   icon: string;
   compact?: boolean;
 }
@@ -22,11 +24,17 @@ export function TravelHero({
   subtitle,
   destination,
   country,
+  defaultImageQuery,
   icon,
   compact = false,
 }: TravelHeroProps) {
-  const city = destination?.trim() || 'Voyage';
-  const { data, isLoading } = useDestinationImages({ city, country, limit: 1 });
+  const selectedDestination = destination?.trim();
+  const imageQuery = selectedDestination || defaultImageQuery;
+  const { data, isLoading } = useDestinationImages({
+    city: imageQuery,
+    country: selectedDestination ? country : undefined,
+    limit: 1,
+  });
   const image = data?.images?.[0];
 
   return (

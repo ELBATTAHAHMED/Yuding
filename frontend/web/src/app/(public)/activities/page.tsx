@@ -119,8 +119,9 @@ export default function ActivitiesPage() {
       <TravelHero
         title="Activités & expériences"
         subtitle="Des idées authentiques pour donner du relief à votre voyage."
-        destination={destination || undefined}
+        destination={selectedGeoPlace ? destination || undefined : undefined}
         country={selectedGeoPlace?.country}
+        defaultImageQuery="travel adventure activity excursion"
         icon="fas fa-compass"
         compact={hasSearched}
       />
@@ -223,7 +224,7 @@ export default function ActivitiesPage() {
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
+      <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
           {/* Category Tabs */}
           <div className="flex justify-center gap-2.5 mb-6 flex-wrap">

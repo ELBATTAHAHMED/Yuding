@@ -190,6 +190,7 @@ export default function TrainsPage() {
         subtitle="Des horaires ferroviaires fiables pour le Maroc et les réseaux internationaux."
         destination={destinationStation?.city || undefined}
         country={destinationStation?.country}
+        defaultImageQuery="train railway travel journey"
         icon="fas fa-train"
         compact={hasSearched}
       />
@@ -354,7 +355,7 @@ export default function TrainsPage() {
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
+      <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
         {/* Freshness Gate Alert (Outdated Schedule Rejection) */}
         {outdatedNotice && (
