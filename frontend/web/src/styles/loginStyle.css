@@ -78,19 +78,28 @@
     box-sizing: border-box;
     font-family: "Space Grotesk", sans-serif;
 }
-body,
+body:has(.auth-layout-root),
+body.auth-body {
+    background: transparent !important;
+}
+
 .auth-layout-root {
     min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(160deg, var(--bg-primary) 0%, var(--bg-secondary) 60%, var(--bg-tertiary) 100%);
-    padding: 30px;
+    padding-top: 100px;
+    padding-bottom: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
     position: relative;
-    transition: var(--transition);
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
-body::before {
+.auth-layout-root::before {
     content: '';
     position: fixed;
     inset: 0;
@@ -99,11 +108,11 @@ body::before {
         radial-gradient(circle at 85% 15%, rgba(14, 116, 144, 0.12) 0%, transparent 45%),
         radial-gradient(circle at 35% 80%, rgba(100, 116, 139, 0.18) 0%, transparent 50%);
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
 }
 
 /* Arrière-plan animé pour le dark mode */
-[data-theme="dark"] body::before {
+[data-theme="dark"] .auth-layout-root::before {
     background:
         radial-gradient(circle at 20% 80%, rgba(0, 212, 170, 0.18) 0%, transparent 55%),
         radial-gradient(circle at 78% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
@@ -115,14 +124,16 @@ body::before {
     33% { transform: translateY(-20px) rotate(1deg); }
     66% { transform: translateY(10px) rotate(-1deg); }
 }
-.container {
-    margin: 120px auto 0;
+
+.container,
+.auth-container {
+    margin: 0 auto !important;
     position: relative;
-    max-width: 900px;
-    width: 100%;
+    max-width: 900px !important;
+    width: 100% !important;
     border-radius: 28px;
-    min-height: 200px;
-    z-index: 1;
+    min-height: 480px;
+    z-index: 10;
     background: var(--container-bg);
     padding: 46px 40px;
     box-shadow: var(--shadow-strong);
@@ -228,13 +239,15 @@ body::before {
     transform-origin: left;
     transform-style: preserve-3d;
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
-/* Quand on coche #flip, on retourne la couverture */
-#flip:checked ~ .cover {
+#flip:checked ~ .cover,
+.cover.flipped {
     transform: rotateY(-180deg);
 }
 /* Empêche de cliquer sur le login quand on est sur la face signup */
-#flip:checked ~ .forms .login-form {
+#flip:checked ~ .forms .login-form,
+.forms.flipped .login-form {
     pointer-events: none;
 }
 .cover .front,
@@ -246,6 +259,8 @@ body::before {
     width: 100%;
     border-radius: 28px;
     overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 .cover .back {
     transform: rotateY(180deg);
@@ -752,7 +767,8 @@ label:hover::after {
     height: 100%;
     width: 100%;
     overflow: hidden;
-    z-index: -1;
+    z-index: 0;
+    pointer-events: none;
 }
 .video {
     min-height: 100%;
@@ -763,8 +779,9 @@ label:hover::after {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1;
+    z-index: 0;
     max-width: none;
+    pointer-events: none;
 }
 
 .header {

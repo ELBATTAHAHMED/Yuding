@@ -33,12 +33,17 @@ function LoginFormContent() {
 
   // Initialize and listen to Dark Mode
   useEffect(() => {
+    document.body.classList.add('auth-body');
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
 
     setIsDark(darkActive);
     applyTheme(darkActive);
+
+    return () => {
+      document.body.classList.remove('auth-body');
+    };
   }, []);
 
   const applyTheme = (dark: boolean) => {
@@ -181,7 +186,7 @@ function LoginFormContent() {
       </section>
 
       {/* ==================== 3D FLIP CONTAINER ==================== */}
-      <div className="container">
+      <div className="container auth-container">
         {/* Checkbox pour l'effet flip */}
         <input
           type="checkbox"
@@ -191,7 +196,7 @@ function LoginFormContent() {
         />
 
         {/* Couverture (images + textes) */}
-        <div className="cover">
+        <div className={`cover ${isFlipped ? 'flipped' : ''}`}>
           <div className="front">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -220,7 +225,7 @@ function LoginFormContent() {
         </div>
 
         {/* Zone des formulaires */}
-        <div className="forms">
+        <div className={`forms ${isFlipped ? 'flipped' : ''}`}>
           <div className="form-content">
             {/* =========== LOGIN FORM =========== */}
             <div className="login-form">
