@@ -27,3 +27,21 @@ export interface BookingResponse {
   createdAt: string;
   confirmationCode: string;
 }
+
+export interface BookingPricingResponseDto {
+  bookingReference: string;
+  pricingStatus: 'PRICED' | 'NOT_PRICED' | 'NOT_APPLICABLE';
+  baseAmount?: number | null;
+  taxAmount?: number | null;
+  feeAmount?: number | null;
+  totalAmount?: number | null;
+  currency?: string | null;
+  breakdownComplete: boolean;
+  pricedAt: string;
+  validUntil: string;
+  provider: string;
+  productType: string;
+  canProceedToPayment: boolean;
+  message?: string | null;
+}
+

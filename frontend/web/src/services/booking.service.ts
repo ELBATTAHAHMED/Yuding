@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import { BookingRequest, BookingResponse } from '@/types/booking.types';
+import { BookingPricingResponseDto, BookingRequest, BookingResponse } from '@/types/booking.types';
 
 export const bookingService = {
   async createBooking(request: BookingRequest): Promise<BookingResponse> {
@@ -38,4 +38,13 @@ export const bookingService = {
   async getMyBookings(): Promise<any[]> {
     return apiClient.get<any[]>('/apir/reservations/me', true);
   },
+
+  async createAuthoritativePricing(bookingReference: string): Promise<BookingPricingResponseDto> {
+    return apiClient.post<BookingPricingResponseDto>(`/bookings/${bookingReference}/pricing`, undefined, true);
+  },
+
+  async getAuthoritativePricing(bookingReference: string): Promise<BookingPricingResponseDto> {
+    return apiClient.get<BookingPricingResponseDto>(`/bookings/${bookingReference}/pricing`, true);
+  },
 };
+
