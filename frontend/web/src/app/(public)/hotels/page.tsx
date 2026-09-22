@@ -626,6 +626,7 @@ export default function HotelsPage() {
       <section className="travel-results-section py-8 px-4 bg-slate-50 dark:bg-slate-950">
         <div className="max-w-6xl mx-auto">
           {/* Filter Categories */}
+          {hasSearched && allHotels.length > 0 && (
           <div className="flex justify-center gap-2 mb-6 flex-wrap">
             {[
               { label: 'Tous les hébergements', value: 'ALL' as const },
@@ -646,6 +647,7 @@ export default function HotelsPage() {
               </button>
             ))}
           </div>
+          )}
 
           {/* Results State Management */}
           {!hasSearched ? (
