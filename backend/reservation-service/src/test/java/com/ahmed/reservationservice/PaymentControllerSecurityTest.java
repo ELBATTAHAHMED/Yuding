@@ -168,4 +168,28 @@ class PaymentControllerSecurityTest {
                 .andExpect(jsonPath("$.paymentReference").value(validPayRef))
                 .andExpect(jsonPath("$.amount").value(120.00));
     }
+
+    @Test
+    @DisplayName("POST /bookings/{reference}/payment/capture rejects payload containing forbidden card credentials (cardNumber, cvv, pan)")
+    void capturePaymentRejectsForbiddenCardCredentials() throws Exception {
+        String forbiddenPayload = """
+                {
+                    "paymentReference": "%s",
+                    "providerOrderId": "5O190127TN364715T",
+                    "cardNumber": "4242424242424242",
+                    "cvv": "123",
+                    "expiry": "12/28"
+                }
+                """.formatted(validPayRef);
+
+        mockMvc.perform(post("/bookings/{reference}/payment/capture", validRef)
+                        .with(jwt().jwt(j -> j.subject(userUuid.toString()))
+                                .authorities(new SimpleGrantedAuthority("ROLE_USER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(forbiddenPayload)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Malformed request body or unrecognized/forbidden property provided"));
+    }
 }

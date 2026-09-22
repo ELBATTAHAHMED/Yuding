@@ -97,10 +97,14 @@ Table: `payment.payments`
 
 ---
 
-## 4. Frontend 3D Animated Card Parity
+## 4. Frontend 3D Animated Card Parity & Zero Card Ownership (Phase 39)
 
 The checkout experience in `frontend/web/src/app/(checkout)/booking/[reference]/payment` provides:
 - Interactive 3D CSS card flip (`perspective: 1000px`, `transform-style: preserve-3d`).
-- Auto-flip on CVV input focus / blur.
-- Dual payment options: Simulated Card & PayPal Sandbox.
+- Manual flip toggle on the back CVC strip for preview inspection.
+- Purely decorative card art rendering permanently masked digits (`•••• •••• •••• ••••`), static expiry (`••/••`), and static CVC (`•••`).
+- Zero Yuding ownership of raw card credentials (see `docs/YUDING_V2_CARD_DATA_SECURITY.md`).
+- Truthful fallback message when direct provider-hosted card entry is unavailable on the sandbox account.
+- PayPal Sandbox approval checkout.
 - Authoritative pricing summary banner guaranteeing certified server amounts.
+

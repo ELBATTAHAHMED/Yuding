@@ -183,6 +183,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Malformed or unrecognized request payload on {}: {}", requestId, request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "Malformed request body or unrecognized/forbidden property provided",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         String requestId = getOrGenerateRequestId(request);

@@ -3,30 +3,25 @@
 import React from 'react';
 
 export interface CardPreviewProps {
-  cardNumber: string;
-  cardHolder: string;
-  expiry: string;
-  cvv: string;
-  isFlipped: boolean;
+  cardHolder?: string;
+  last4?: string;
+  isFlipped?: boolean;
   brand: 'visa' | 'mastercard';
   onToggleFlip?: () => void;
 }
 
 export const CardPreview: React.FC<CardPreviewProps> = ({
-  cardNumber,
   cardHolder,
-  expiry,
-  cvv,
-  isFlipped,
+  last4,
+  isFlipped = false,
   brand,
   onToggleFlip,
 }) => {
-  // Normalize card number into 4 groups of 4
-  const digits = cardNumber.replace(/\D/g, '').padEnd(16, '•');
-  const g1 = digits.slice(0, 4);
-  const g2 = digits.slice(4, 8);
-  const g3 = digits.slice(8, 12);
-  const g4 = digits.slice(12, 16);
+  // Phase 39: PAN is permanently masked. Only safe provider-returned last4 may be displayed.
+  const g1 = '••••';
+  const g2 = '••••';
+  const g3 = '••••';
+  const g4 = last4 ? last4.slice(-4) : '••••';
 
   const isVisa = brand === 'visa';
 
@@ -214,13 +209,13 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
               </div>
             </div>
 
-            {/* Expiry */}
+            {/* Expiry: permanently masked decorative placeholder */}
             <div style={{ marginRight: '1.2rem', textAlign: 'center' }}>
               <div style={{ fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.75, marginBottom: '2px' }}>
                 Expire fin
               </div>
               <div style={{ fontSize: '0.88rem', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '1px' }}>
-                {expiry || '••/••'}
+                ••/••
               </div>
             </div>
 
@@ -310,7 +305,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                 </span>
               </div>
 
-              {/* CVC Box */}
+              {/* CVC Box: permanently masked */}
               <div
                 style={{
                   width: '64px',
@@ -328,7 +323,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                   boxShadow: 'inset 0 0 3px rgba(0,0,0,0.2)',
                 }}
               >
-                {cvv ? cvv : '•••'}
+                •••
               </div>
             </div>
 

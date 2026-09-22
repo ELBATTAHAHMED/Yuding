@@ -20,50 +20,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const router = useRouter();
 
-  // Payment method: 'visa' | 'mastercard' | 'paypal'
-  const [selectedMethod, setSelectedMethod] = useState<'visa' | 'mastercard' | 'paypal'>('visa');
+  // Payment method: 'visa' | 'mastercard' | 'paypal' (decorative scheme preview or active PayPal Sandbox)
+  const [selectedMethod, setSelectedMethod] = useState<'visa' | 'mastercard' | 'paypal'>('paypal');
   const [isFlipped, setIsFlipped] = useState(false);
-
-  // Form Fields
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardHolder, setCardHolder] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [saveCard, setSaveCard] = useState(true);
 
   // Processing state
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingOrder, setPendingOrder] = useState<PaymentOrderResponseDto | null>(null);
-
-  // Auto-detect brand from card number prefix
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-    const formatted = raw.replace(/(\d{4})/g, '$1 ').trim();
-    setCardNumber(formatted);
-
-    // Auto-detect Visa vs Mastercard if user enters digits
-    if (raw.startsWith('4')) {
-      if (selectedMethod !== 'visa') setSelectedMethod('visa');
-    } else if (/^(5[1-5]|2[2-7])/.test(raw)) {
-      if (selectedMethod !== 'mastercard') setSelectedMethod('mastercard');
-    }
-  };
-
-  // Expiry MM/YY formatting
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-    if (raw.length >= 3) {
-      raw = raw.slice(0, 2) + '/' + raw.slice(2);
-    }
-    setExpiry(raw);
-  };
-
-  // CVC 3 or 4 digits
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-    setCvv(raw);
-  };
 
   // Format authoritative total amount
   const formattedAmount = pricing.totalAmount != null
@@ -206,13 +170,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               </span>
             </div>
 
-            {/* 3D Interactive Card Preview */}
+            {/* 3D Interactive Card Preview (Phase 39: Permanently masked decorative artwork) */}
             <div style={{ marginTop: '0.75rem', marginBottom: '1.5rem' }}>
               <CardPreview
-                cardNumber={cardNumber}
-                cardHolder={cardHolder}
-                expiry={expiry}
-                cvv={cvv}
                 isFlipped={isFlipped}
                 brand={selectedMethod === 'mastercard' ? 'mastercard' : 'visa'}
                 onToggleFlip={() => setIsFlipped(!isFlipped)}
@@ -230,7 +190,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 }}
               >
                 <i className="fas fa-arrows-rotate text-xs" />
-                <span>Cliquez sur la carte ou remplissez le CVC pour la retourner</span>
+                <span>Cliquez sur la carte pour la retourner</span>
               </div>
             </div>
           </div>
@@ -484,286 +444,82 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             {/* Form */}
             <form onSubmit={handlePay}>
               {isCardMode ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-                  {/* Cardholder Name */}
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        marginBottom: '0.4rem',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        color: '#334155',
-                      }}
-                    >
-                      Nom du titulaire
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <span
-                        style={{
-                          position: 'absolute',
-                          left: '1rem',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: '#94a3b8',
-                          fontSize: '0.95rem',
-                        }}
-                      >
-                        <i className="fas fa-user" />
-                      </span>
-                      <input
-                        type="text"
-                        placeholder="ex. Jean Dupont"
-                        value={cardHolder}
-                        onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.8rem 1rem 0.8rem 2.6rem',
-                          borderRadius: '10px',
-                          border: '1.5px solid #cbd5e1',
-                          fontSize: '0.95rem',
-                          color: '#0f172a',
-                          outline: 'none',
-                          transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-                          fontFamily: 'inherit',
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = '#01796F';
-                          e.target.style.boxShadow = '0 0 0 3px rgba(1, 121, 111, 0.15)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = '#cbd5e1';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Card Number with Live Brand Detection Badge */}
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        marginBottom: '0.4rem',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        color: '#334155',
-                      }}
-                    >
-                      Numéro de carte
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <span
-                        style={{
-                          position: 'absolute',
-                          left: '1rem',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: '#94a3b8',
-                          fontSize: '0.95rem',
-                        }}
-                      >
-                        <i className="fas fa-credit-card" />
-                      </span>
-                      <input
-                        type="text"
-                        placeholder="4242 4242 4242 4242"
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.8rem 4rem 0.8rem 2.6rem',
-                          borderRadius: '10px',
-                          border: '1.5px solid #cbd5e1',
-                          fontSize: '1rem',
-                          fontFamily: "'Space Grotesk', 'Roboto Mono', monospace",
-                          letterSpacing: '1px',
-                          color: '#0f172a',
-                          outline: 'none',
-                          transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = '#01796F';
-                          e.target.style.boxShadow = '0 0 0 3px rgba(1, 121, 111, 0.15)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = '#cbd5e1';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                      />
-                      {/* Live Brand Icon inside input */}
-                      <span
-                        style={{
-                          position: 'absolute',
-                          right: '0.85rem',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                        }}
-                      >
-                        {selectedMethod === 'visa' ? (
-                          <span style={{ fontWeight: 800, fontSize: '0.85rem', color: '#01796F' }}>VISA</span>
-                        ) : (
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#EB001B' }} />
-                            <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#F79E1B', marginLeft: '-5px' }} />
-                          </div>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Expiry and CVC Row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    {/* Expiry */}
-                    <div>
-                      <label
-                        style={{
-                          display: 'block',
-                          marginBottom: '0.4rem',
-                          fontSize: '0.82rem',
-                          fontWeight: 600,
-                          color: '#334155',
-                        }}
-                      >
-                        Date d&apos;expiration
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <span
-                          style={{
-                            position: 'absolute',
-                            left: '1rem',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#94a3b8',
-                            fontSize: '0.95rem',
-                          }}
-                        >
-                          <i className="fas fa-calendar-alt" />
-                        </span>
-                        <input
-                          type="text"
-                          placeholder="MM / AA"
-                          value={expiry}
-                          onChange={handleExpiryChange}
-                          required
-                          style={{
-                            width: '100%',
-                            padding: '0.8rem 1rem 0.8rem 2.6rem',
-                            borderRadius: '10px',
-                            border: '1.5px solid #cbd5e1',
-                            fontSize: '0.95rem',
-                            fontFamily: 'monospace',
-                            color: '#0f172a',
-                            outline: 'none',
-                            transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = '#01796F';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(1, 121, 111, 0.15)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = '#cbd5e1';
-                            e.target.style.boxShadow = 'none';
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* CVC (Triggers 3D Flip on Focus) */}
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                        <label
-                          style={{
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
-                            color: '#334155',
-                          }}
-                        >
-                          CVC / CVV
-                        </label>
-                        <span style={{ fontSize: '0.7rem', color: '#01796F', fontWeight: 600 }}>
-                          Au dos
-                        </span>
-                      </div>
-                      <div style={{ position: 'relative' }}>
-                        <span
-                          style={{
-                            position: 'absolute',
-                            left: '1rem',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#94a3b8',
-                            fontSize: '0.95rem',
-                          }}
-                        >
-                          <i className="fas fa-lock" />
-                        </span>
-                        <input
-                          type="password"
-                          placeholder="123"
-                          value={cvv}
-                          onChange={handleCvvChange}
-                          onFocus={(e) => {
-                            setIsFlipped(true);
-                            e.target.style.borderColor = '#01796F';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(1, 121, 111, 0.15)';
-                          }}
-                          onBlur={(e) => {
-                            setIsFlipped(false);
-                            e.target.style.borderColor = '#cbd5e1';
-                            e.target.style.boxShadow = 'none';
-                          }}
-                          required
-                          style={{
-                            width: '100%',
-                            padding: '0.8rem 1rem 0.8rem 2.6rem',
-                            borderRadius: '10px',
-                            border: '1.5px solid #cbd5e1',
-                            fontSize: '0.95rem',
-                            fontFamily: 'monospace',
-                            letterSpacing: '2px',
-                            color: '#0f172a',
-                            outline: 'none',
-                            transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Save Card Checkbox */}
-                  <label
+                /* Card Mode: Truthful Provider-Hosted Notice (Phase 39) */
+                <div
+                  style={{
+                    padding: '2rem 1.5rem',
+                    borderRadius: '14px',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    textAlign: 'center',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <div
                     style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.65rem',
-                      cursor: 'pointer',
-                      marginTop: '0.2rem',
+                      fontSize: '2.5rem',
+                      color: selectedMethod === 'mastercard' ? '#005951' : '#01796F',
+                      marginBottom: '0.75rem',
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      checked={saveCard}
-                      onChange={(e) => setSaveCard(e.target.checked)}
+                    <i className="fas fa-credit-card" />
+                  </div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>
+                    Paiement direct par carte ({selectedMethod === 'visa' ? 'Visa' : 'Mastercard'})
+                  </h3>
+                  <p
+                    style={{
+                      color: '#64748b',
+                      fontSize: '0.88rem',
+                      maxWidth: '420px',
+                      margin: '0 auto 1.25rem',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Le paiement direct par carte n&apos;est pas disponible pour ce compte sandbox.
+                    Conformément aux normes de sécurité, Yuding ne reçoit, ne traite et ne stocke aucun
+                    numéro complet de carte bancaire (PAN), cryptogramme (CVC) ni date d&apos;expiration.
+                  </p>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.4rem 0.9rem',
+                      borderRadius: '20px',
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <i className="fas fa-shield-halved text-xs text-[#01796F]" />
+                    Champs carte hébergés par le prestataire uniquement
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMethod('paypal')}
                       style={{
-                        accentColor: '#01796F',
-                        width: '16px',
-                        height: '16px',
-                        marginTop: '3px',
+                        padding: '0.65rem 1.25rem',
+                        borderRadius: '10px',
+                        background: '#01796F',
+                        color: '#ffffff',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        border: 'none',
                         cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        boxShadow: '0 4px 12px rgba(1, 121, 111, 0.25)',
                       }}
-                    />
-                    <div style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.4 }}>
-                      <span style={{ fontWeight: 600 }}>Enregistrer cette carte pour mes prochains voyages</span>
-                      <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                        Stocké selon les normes de chiffrement sécurisées Yuding
-                      </div>
-                    </div>
-                  </label>
+                    >
+                      <i className="fab fa-paypal" />
+                      <span>Régler via PayPal Sandbox ({formattedAmount})</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 /* PayPal Sandbox View */
@@ -808,7 +564,8 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
               {/* Primary Pay Action CTA */}
               <button
-                type="submit"
+                type={isCardMode ? 'button' : 'submit'}
+                onClick={isCardMode ? () => setSelectedMethod('paypal') : undefined}
                 disabled={isLoading}
                 style={{
                   marginTop: '1.75rem',
@@ -828,7 +585,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.75rem',
-                  boxShadow: '0 8px 20px -4px rgba(1, 121, 111, 0.35)',
+                  boxShadow:
+                    selectedMethod === 'paypal'
+                      ? '0 8px 20px -4px rgba(0, 112, 186, 0.35)'
+                      : '0 8px 20px -4px rgba(1, 121, 111, 0.35)',
                   transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                   position: 'relative',
                   overflow: 'hidden',
@@ -836,12 +596,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 onMouseEnter={(e) => {
                   if (!isLoading) {
                     e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 12px 24px -4px rgba(1, 121, 111, 0.45)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 8px 20px -4px rgba(1, 121, 111, 0.35)';
                 }}
               >
                 {isLoading ? (
@@ -849,12 +607,16 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                     <i className="fas fa-spinner fa-spin" />
                     <span>Traitement sécurisé en cours...</span>
                   </>
+                ) : isCardMode ? (
+                  <>
+                    <i className="fab fa-paypal" />
+                    <span>Basculer sur PayPal Sandbox pour régler {formattedAmount}</span>
+                    <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
+                  </>
                 ) : (
                   <>
                     <i className="fas fa-lock" />
-                    <span>
-                      {selectedMethod === 'paypal' ? 'Payer avec PayPal' : `Régler ${formattedAmount}`}
-                    </span>
+                    <span>Payer avec PayPal ({formattedAmount})</span>
                     <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
                   </>
                 )}
@@ -862,7 +624,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             </form>
           </div>
 
-          {/* Security & Assurance Row (Reference-inspired) */}
+          {/* Security & Assurance Row (Phase 39 Truthful Non-Custodial Assurances) */}
           <div
             style={{
               marginTop: '2rem',
@@ -879,7 +641,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <i className="fas fa-shield-alt text-[#01796F]" />
-              <span>PCI-DSS Level 1</span>
+              <span>Paiement Orchestré par Prestataire Agréé</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <i className="fas fa-lock text-[#01796F]" />
@@ -887,7 +649,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <i className="fas fa-circle-check text-[#01796F]" />
-              <span>CVC non stocké</span>
+              <span>Zéro Stockage PAN / CVC</span>
             </div>
           </div>
         </div>
