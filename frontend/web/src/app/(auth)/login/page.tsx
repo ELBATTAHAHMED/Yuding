@@ -139,7 +139,7 @@ function LoginFormContent() {
       {/* ==================== EXACT LEGACY HEADER ==================== */}
       <header className="header auth-header">
         <div className="header-top">
-          <div className="container1">
+          <div className="container1 header-inner">
             <Link href="/" className="logo">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -162,15 +162,17 @@ function LoginFormContent() {
             </nav>
 
             {/* Bouton Dark Mode */}
-            <button
-              id="darkModeToggle"
-              className={`dark-mode-toggle ${isDark ? 'active' : ''}`}
-              title="Basculer le mode sombre"
-              onClick={toggleDarkMode}
-              type="button"
-            >
-              <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`} id="darkModeIcon"></i>
-            </button>
+            <div className="header-btns">
+              <button
+                id="darkModeToggle"
+                className={`dark-mode-toggle ${isDark ? 'active' : ''}`}
+                title="Basculer le mode sombre"
+                onClick={toggleDarkMode}
+                type="button"
+              >
+                <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`} id="darkModeIcon"></i>
+              </button>
+            </div>
           </div>
         </div>
       </header>

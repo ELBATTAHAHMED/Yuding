@@ -232,4 +232,18 @@ describe('V2 Authentication Service & Contracts', () => {
     assert.ok(cssContent.includes('transform: rotateY(-180deg)'), '3D rotateY transform must be present in loginStyle.css');
     assert.ok(cssContent.includes('min-height: 100px !important'), '100px fixed header height must be enforced with !important');
   });
+
+  it('8. Unified Travel Header navigation contract: ensures travel icons and navigation links are configured', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const headerPath = path.resolve(process.cwd(), 'src/components/layout/Header.tsx');
+    const headerContent = fs.readFileSync(headerPath, 'utf8');
+
+    assert.ok(headerContent.includes('fas fa-bed'), 'Hotels must use bed icon');
+    assert.ok(headerContent.includes('fas fa-plane'), 'Flights must use plane icon');
+    assert.ok(headerContent.includes('fas fa-compass'), 'Activities must use compass icon');
+    assert.ok(headerContent.includes('fas fa-taxi'), 'Transfers must use taxi icon');
+    assert.ok(headerContent.includes('fas fa-train'), 'Trains must use train icon');
+    assert.ok(headerContent.includes('btn-connexion'), 'Connexion action must be present');
+  });
 });
