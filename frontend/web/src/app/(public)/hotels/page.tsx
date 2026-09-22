@@ -311,8 +311,9 @@ export default function HotelsPage() {
       <TravelHero
         title="Hébergements"
         subtitle="Des séjours sélectionnés par nos partenaires, partout dans le monde."
-        destination={selectedCity || destinationInput || undefined}
+        destination={selectedCity || undefined}
         country={selectedGeoPlace?.country}
+        defaultImageQuery="hotel resort travel accommodation"
         icon="fas fa-bed"
         compact={hasSearched}
       />
@@ -671,7 +672,7 @@ export default function HotelsPage() {
       )}
 
       {/* ==================== FILTER TABS & RESULTS ==================== */}
-      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+      <section className="travel-results-section py-8 px-4 bg-slate-50 dark:bg-slate-950">
         <div className="max-w-6xl mx-auto">
           {/* Filter Categories */}
           <div className="flex justify-center gap-2 mb-6 flex-wrap">

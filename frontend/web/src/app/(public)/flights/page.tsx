@@ -189,6 +189,7 @@ export default function FlightsPage() {
         subtitle="Comparez les itinéraires et les prix fournisseurs, en toute transparence."
         destination={selectedDestination?.city}
         country={selectedDestination?.country}
+        defaultImageQuery="airplane travel airport aviation"
         icon="fas fa-plane-departure"
         compact={hasSearched}
       />
@@ -343,7 +344,7 @@ export default function FlightsPage() {
       </section>
 
       {/* ==================== FLIGHT RESULTS ==================== */}
-      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
+      <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
           <div className="results-header" style={{ marginBottom: '2rem' }}>
             <h2 className="results-title" style={{ fontSize: '2rem', fontWeight: 800 }}>

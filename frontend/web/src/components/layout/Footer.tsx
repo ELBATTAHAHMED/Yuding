@@ -5,9 +5,9 @@ import Link from 'next/link';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#002220] text-[#e0e0e0] pt-12 pb-6 px-4 mt-16 border-t border-white/10">
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+    <footer className="yuding-footer">
+      <div className="yuding-footer__inner">
+        <div className="yuding-footer__grid">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -15,9 +15,8 @@ export const Footer: React.FC = () => {
               alt="Yuding Logo"
               className="max-h-11 mb-4 object-contain"
             />
-            <p className="text-sm leading-relaxed text-[#b0bec5]">
-              Votre plateforme intelligente de réservation de voyages : hébergements, vols, transferts,
-              trains et activités partout dans le monde.
+            <p className="yuding-footer__copy">
+              Yuding V2 est un projet de démonstration pour explorer les recherches de voyage, les prix et les disponibilités fournisseur.
             </p>
           </div>
 
@@ -51,6 +50,11 @@ export const Footer: React.FC = () => {
                   Activités
                 </Link>
               </li>
+              <li>
+                <Link href="/trains" className="hover:text-white transition-colors">
+                  Trains
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -69,27 +73,27 @@ export const Footer: React.FC = () => {
 
           <div>
             <h4 className="text-white text-base font-bold mb-4 border-b-2 border-[#00796b] inline-block pb-1">
-              Contact &amp; Sécurité
+              À propos du projet
             </h4>
-            <div className="text-sm text-[#b0bec5] space-y-2 leading-relaxed">
+            <div className="yuding-footer__project">
               <p className="flex items-center gap-2">
-                <i className="fas fa-shield-alt text-[#4db6ac]" />
-                <span>Paiements sécurisés &amp; Données chiffrées</span>
+                <i className="fas fa-flask text-[#4db6ac]" />
+                <span>Plateforme de démonstration technique.</span>
               </p>
               <p className="flex items-center gap-2">
-                <i className="fas fa-envelope text-[#4db6ac]" />
-                <span>support@yuding.travel</span>
+                <i className="fas fa-satellite-dish text-[#4db6ac]" />
+                <span>Données affichées selon la disponibilité des fournisseurs.</span>
               </p>
               <p className="flex items-center gap-2">
-                <i className="fas fa-phone text-[#4db6ac]" />
-                <span>+212 (0) 522 00 00 00</span>
+                <i className="fas fa-info-circle text-[#4db6ac]" />
+                <span>Les paiements ne sont pas activés dans cette démonstration.</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-6 text-center text-xs text-[#78909c]">
-          &copy; {new Date().getFullYear()} YUDING V2. Tous droits réservés.
+        <div className="yuding-footer__rights">
+          &copy; {new Date().getFullYear()} YUDING V2 — Projet de démonstration.
         </div>
       </div>
     </footer>
