@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
-import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
@@ -312,6 +312,14 @@ export default function ActivitiesPage() {
                   destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
                 />
               </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <DestinationImageGallery
+                  city={selectedGeoPlace.city || selectedGeoPlace.name}
+                  country={selectedGeoPlace.country}
+                  countryCode={selectedGeoPlace.countryCode}
+                />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
                 <GeoMap
                   latitude={selectedGeoPlace.latitude}
@@ -431,14 +439,11 @@ export default function ActivitiesPage() {
                     }}
                   >
                     <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={act.imageUrl || '/image/a1.jpg'}
+                      <SafeEntityImage
+                        src={act.imageUrl}
                         alt={act.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/image/a1.jpg';
-                        }}
+                        entityType="ACTIVITY"
+                        className="w-full h-full object-cover"
                       />
                       <span
                         style={{

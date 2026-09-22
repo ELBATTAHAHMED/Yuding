@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { HotelOffer } from '@/types/travel.types';
 import { Card } from '@/components/ui/Card';
 import { PriceDisplay } from './PriceDisplay';
+import { SafeEntityImage } from './SafeEntityImage';
 
 export interface HotelCardProps {
   hotel: HotelOffer;
@@ -21,16 +22,10 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
       className={`flex flex-col h-full ${className}`}
     >
       <div className="h-48 overflow-hidden relative">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={hotel.imageUrl || '/image/hotels.jpg'}
+        <SafeEntityImage
+          src={hotel.imageUrl}
           alt={hotelDisplayName}
-          loading="lazy"
-          decoding="async"
-          onError={(event) => {
-            event.currentTarget.onerror = null;
-            event.currentTarget.src = '/image/hotels.jpg';
-          }}
+          entityType="HOTEL"
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
         {hotel.rating && (

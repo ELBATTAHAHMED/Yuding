@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.ahmed.travelservice.dto.image.ImageAssetDto;
 
 @Data
 @Builder
@@ -24,6 +25,7 @@ public class ActivityOfferDto {
     private String currency;
     private PriceConversionSnapshot priceConversion;
     private String imageUrl;
+    private ImageAssetDto imageAsset;
     private String description;
     private String country;
     private String source;

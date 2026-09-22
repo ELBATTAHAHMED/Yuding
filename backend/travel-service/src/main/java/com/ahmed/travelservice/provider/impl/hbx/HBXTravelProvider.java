@@ -9,6 +9,9 @@ import com.ahmed.travelservice.provider.error.ProviderErrorCode;
 import com.ahmed.travelservice.provider.error.TravelProviderException;
 import com.ahmed.travelservice.provider.impl.hbx.dto.activities.*;
 import com.ahmed.travelservice.provider.impl.hbx.dto.transfers.*;
+import com.ahmed.travelservice.dto.image.ImageAssetDto;
+import com.ahmed.travelservice.dto.image.ImageRole;
+import com.ahmed.travelservice.dto.image.ImageSourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -151,6 +154,29 @@ public class HBXTravelProvider implements TravelProvider {
             String description = resolveActivityDescription(act);
             String category = (act.getType() != null && !act.getType().isBlank()) ? act.getType() : "Excursion";
 
+            ImageAssetDto imageAsset;
+            if (imageUrl != null && !imageUrl.isBlank()) {
+                imageAsset = ImageAssetDto.builder()
+                        .id("hbx-activity-" + act.getCode())
+                        .url(imageUrl)
+                        .altText("Photo de l'activité " + act.getName())
+                        .sourceType(ImageSourceType.PROVIDER_ENTITY)
+                        .sourceProvider("HBX")
+                        .sourceAssetId(act.getCode())
+                        .role(ImageRole.ACTIVITY)
+                        .representsEntity(true)
+                        .build();
+            } else {
+                imageAsset = ImageAssetDto.builder()
+                        .id("placeholder-activity-" + act.getCode())
+                        .altText("Photo non fournie pour " + act.getName())
+                        .sourceType(ImageSourceType.PLACEHOLDER)
+                        .sourceProvider("SYSTEM")
+                        .role(ImageRole.ACTIVITY)
+                        .representsEntity(false)
+                        .build();
+            }
+
             ActivityOfferDto dto = ActivityOfferDto.builder()
                     .offerId("HBX-" + act.getCode())
                     .provider("HBX")
@@ -164,6 +190,7 @@ public class HBXTravelProvider implements TravelProvider {
                     .price(price)
                     .currency(act.getCurrency() != null ? act.getCurrency() : "EUR")
                     .imageUrl(imageUrl)
+                    .imageAsset(imageAsset)
                     .description(description)
                     .build();
 
@@ -223,7 +250,7 @@ public class HBXTravelProvider implements TravelProvider {
                 }
             }
         }
-        return "/image/a1.jpg";
+        return null;
     }
 
     private String resolveActivityDescription(HBXActivitySearchResponse.HBXActivity act) {
@@ -263,6 +290,15 @@ public class HBXTravelProvider implements TravelProvider {
                         .price(BigDecimal.valueOf(45.00))
                         .currency("EUR")
                         .imageUrl("/image/a1.jpg")
+                        .imageAsset(ImageAssetDto.builder()
+                                .id("yuding-custom-001")
+                                .url("/image/a1.jpg")
+                                .altText("Excursion Désert d'Agafay")
+                                .sourceType(ImageSourceType.YUDING_CURATED)
+                                .sourceProvider("YUDING")
+                                .role(ImageRole.ACTIVITY)
+                                .representsEntity(true)
+                                .build())
                         .description("Expérience exclusive Yuding: Balade à dos de chameau dans le désert d'Agafay suivie d'un dîner sous tente berbère traditionnelle.")
                         .build(),
                 ActivityOfferDto.builder()
@@ -278,6 +314,15 @@ public class HBXTravelProvider implements TravelProvider {
                         .price(BigDecimal.valueOf(30.00))
                         .currency("EUR")
                         .imageUrl("/image/a2.jpg")
+                        .imageAsset(ImageAssetDto.builder()
+                                .id("yuding-custom-002")
+                                .url("/image/a2.jpg")
+                                .altText("Visite Guidée des Palais et Médina Historique")
+                                .sourceType(ImageSourceType.YUDING_CURATED)
+                                .sourceProvider("YUDING")
+                                .role(ImageRole.ACTIVITY)
+                                .representsEntity(true)
+                                .build())
                         .description("Parcours culturel avec guide agréé à travers les ruelles historiques, souks d'artisanat et monuments emblématiques.")
                         .build()
         );

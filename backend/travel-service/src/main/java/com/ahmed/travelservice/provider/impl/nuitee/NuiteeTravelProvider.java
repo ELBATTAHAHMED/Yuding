@@ -8,6 +8,9 @@ import com.ahmed.travelservice.provider.TravelProvider;
 import com.ahmed.travelservice.provider.error.ProviderErrorCode;
 import com.ahmed.travelservice.provider.error.TravelProviderException;
 import com.ahmed.travelservice.provider.impl.nuitee.dto.*;
+import com.ahmed.travelservice.dto.image.ImageAssetDto;
+import com.ahmed.travelservice.dto.image.ImageRole;
+import com.ahmed.travelservice.dto.image.ImageSourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -274,6 +277,29 @@ public class NuiteeTravelProvider implements TravelProvider {
             String imageUrl = hotelMeta != null && hotelMeta.getMainPhoto() != null ? hotelMeta.getMainPhoto()
                     : (hotelMeta != null ? hotelMeta.getThumbnail() : null);
 
+            ImageAssetDto imageAsset;
+            if (imageUrl != null && !imageUrl.isBlank()) {
+                imageAsset = ImageAssetDto.builder()
+                        .id("nuitee-hotel-" + hotelId)
+                        .url(imageUrl)
+                        .altText("Photo de l'établissement " + hotelName)
+                        .sourceType(ImageSourceType.PROVIDER_ENTITY)
+                        .sourceProvider(METADATA.getProviderCode())
+                        .sourceAssetId(hotelId)
+                        .role(ImageRole.HOTEL)
+                        .representsEntity(true)
+                        .build();
+            } else {
+                imageAsset = ImageAssetDto.builder()
+                        .id("placeholder-hotel-" + hotelId)
+                        .altText("Photo non fournie pour " + hotelName)
+                        .sourceType(ImageSourceType.PLACEHOLDER)
+                        .sourceProvider("SYSTEM")
+                        .role(ImageRole.HOTEL)
+                        .representsEntity(false)
+                        .build();
+            }
+
             hotelOffers.add(HotelOfferDto.builder()
                     .offerId(primaryOfferId != null ? primaryOfferId : hotelId)
                     .provider(METADATA.getProviderCode())
@@ -297,6 +323,7 @@ public class NuiteeTravelProvider implements TravelProvider {
                     .reviewScore(reviewScore)
                     .reviewCount(reviewCount)
                     .imageUrl(imageUrl)
+                    .imageAsset(imageAsset)
                     .availabilityState("AVAILABLE_ON_PROVIDER")
                     .roomOffers(roomOffers)
                     .build());
