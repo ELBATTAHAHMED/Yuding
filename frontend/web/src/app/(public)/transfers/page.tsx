@@ -18,7 +18,7 @@ import { TransferLocationSelector, LocationSuggestion } from '@/components/trave
 import { TravelHero, TravelPage } from '@/components/travel';
 import { TransferSkeleton } from '@/components/travel/TransferSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
-import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
@@ -246,34 +246,20 @@ export default function TransfersPage() {
 
               {/* Passenger Count */}
               <div className="min-w-0">
-                <label
-                  htmlFor="transferPax"
-                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
-                >
+                <label className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left">
                   <i className="fas fa-users mr-1.5 text-[#02E0D5]" />
                   Passagers
                 </label>
-                <div className="travel-stepper" aria-label={`Passagers: ${passengers}`}>
-                  <button
-                    type="button"
-                    aria-label="Diminuer les passagers"
-                    onClick={() => setPassengers((value) => Math.max(1, value - 1))}
-                    disabled={passengers <= 1}
-                    className="travel-stepper__button"
-                  >
-                    −
-                  </button>
-                  <span className="travel-stepper__value" aria-live="polite">{passengers}</span>
-                  <button
-                    type="button"
-                    aria-label="Augmenter les passagers"
-                    onClick={() => setPassengers((value) => Math.min(16, value + 1))}
-                    disabled={passengers >= 16}
-                    className="travel-stepper__button"
-                  >
-                    +
-                  </button>
-                </div>
+                <TravelerStepper
+                  field
+                  value={passengers}
+                  min={1}
+                  max={16}
+                  label="Passagers"
+                  decrementLabel="Diminuer les passagers"
+                  incrementLabel="Augmenter les passagers"
+                  onChange={setPassengers}
+                />
               </div>
 
               {/* Submit Button */}

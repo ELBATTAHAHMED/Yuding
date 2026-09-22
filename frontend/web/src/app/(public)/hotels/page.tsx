@@ -14,7 +14,7 @@ import type { HotelSortKey } from '@/lib/search-ux';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, HotelSkeleton } from '@/components/travel';
 import { TravelHero, TravelPage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
-import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
@@ -398,49 +398,25 @@ export default function HotelsPage() {
                           {/* Adults counter */}
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-medium text-slate-200">Adultes</span>
-                            <div className="travel-stepper flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleAdultsChange(roomIdx, -1)}
-                                disabled={room.adults <= 1}
-                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
-                              >
-                                -
-                              </button>
-                              <span className="travel-stepper__value w-5 text-center font-bold text-xs text-white">{room.adults}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleAdultsChange(roomIdx, 1)}
-                                disabled={room.adults >= 4}
-                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
-                              >
-                                +
-                              </button>
-                            </div>
+                            <TravelerStepper
+                              value={room.adults}
+                              min={1}
+                              max={4}
+                              label="Adultes"
+                              onChange={(value) => handleAdultsChange(roomIdx, value - room.adults)}
+                            />
                           </div>
 
                           {/* Children counter */}
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-medium text-slate-200">Enfants (0-17 ans)</span>
-                            <div className="travel-stepper flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleChildrenCountChange(roomIdx, -1)}
-                                disabled={(room.childrenAges?.length || 0) <= 0}
-                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
-                              >
-                                -
-                              </button>
-                              <span className="travel-stepper__value w-5 text-center font-bold text-xs text-white">{room.childrenAges?.length || 0}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleChildrenCountChange(roomIdx, 1)}
-                                disabled={(room.childrenAges?.length || 0) >= 3}
-                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
-                              >
-                                +
-                              </button>
-                            </div>
+                            <TravelerStepper
+                              value={room.childrenAges?.length || 0}
+                              min={0}
+                              max={3}
+                              label="Enfants"
+                              onChange={(value) => handleChildrenCountChange(roomIdx, value - (room.childrenAges?.length || 0))}
+                            />
                           </div>
 
                           {/* Child ages */}

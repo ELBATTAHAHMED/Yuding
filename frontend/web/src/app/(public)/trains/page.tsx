@@ -8,7 +8,7 @@ import { StationSelector } from '@/components/travel/StationSelector';
 import { TravelHero, TravelPage } from '@/components/travel';
 import { TrainCard } from '@/components/travel/TrainCard';
 import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
-import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 
 const TODAY = new Date().toISOString().split('T')[0];
@@ -305,27 +305,14 @@ export default function TrainsPage() {
                   <i className="fas fa-users mr-1.5 text-[#02E0D5]" />
                   Passagers
                 </label>
-                <div className="travel-stepper flex items-center h-10 border border-[#01796F]/40 rounded-lg overflow-hidden bg-[#021817]">
-                  <button
-                    type="button"
-                    onClick={() => setPassengers((v) => Math.max(1, v - 1))}
-                    disabled={passengers <= 1}
-                    className="travel-stepper__button w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="travel-stepper__value flex-1 text-center font-bold text-xs text-white">
-                    {passengers}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPassengers((v) => Math.min(9, v + 1))}
-                    disabled={passengers >= 9}
-                    className="travel-stepper__button w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
+                <TravelerStepper
+                  field
+                  value={passengers}
+                  min={1}
+                  max={9}
+                  label="Passagers"
+                  onChange={setPassengers}
+                />
               </div>
 
               {/* Submit Button */}
