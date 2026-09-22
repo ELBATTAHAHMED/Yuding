@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
-import '@/styles/loginStyle.css';
 
 function LoginFormContent() {
   const router = useRouter();
