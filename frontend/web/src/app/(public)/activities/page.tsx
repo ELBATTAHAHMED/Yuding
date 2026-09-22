@@ -175,23 +175,23 @@ export default function ActivitiesPage() {
                   <i className="fas fa-user-friends mr-1.5 text-[#02E0D5]" />
                   Participants
                 </label>
-                <div className="flex items-center h-10 border border-[#01796F]/40 rounded-lg overflow-hidden bg-[#021817]">
+                <div className="travel-stepper flex items-center h-10 border border-[#01796F]/40 rounded-lg overflow-hidden bg-[#021817]">
                   <button
                     type="button"
                     onClick={() => setTravelers((v) => Math.max(1, v - 1))}
                     disabled={travelers <= 1}
-                    className="w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="travel-stepper__button w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     −
                   </button>
-                  <span className="flex-1 text-center font-bold text-xs text-white">
+                  <span className="travel-stepper__value flex-1 text-center font-bold text-xs text-white">
                     {travelers} pers.
                   </span>
                   <button
                     type="button"
                     onClick={() => setTravelers((v) => Math.min(20, v + 1))}
                     disabled={travelers >= 20}
-                    className="w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="travel-stepper__button w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     +
                   </button>

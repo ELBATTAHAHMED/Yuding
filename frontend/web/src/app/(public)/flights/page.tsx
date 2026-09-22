@@ -189,7 +189,7 @@ export default function FlightsPage() {
         subtitle="Comparez les itinéraires et les prix fournisseurs, en toute transparence."
         destination={selectedDestination?.city}
         country={selectedDestination?.country}
-        defaultImageQuery="airplane travel airport aviation"
+        defaultImageQuery="commercial passenger airplane runway"
         defaultImageIndex={2}
         icon="fas fa-plane-departure"
         compact={hasSearched}
@@ -284,7 +284,7 @@ export default function FlightsPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassengerDropdown((v) => !v)}
-                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all"
+                  className="travel-passenger-trigger w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all"
                 >
                   <span className="truncate">
                     {totalPassengers} pass. • {passengerSummary}
@@ -293,18 +293,18 @@ export default function FlightsPage() {
                 </button>
 
                 {showPassengerDropdown && (
-                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#062523] rounded-xl shadow-2xl border border-[#01796F]/40 p-4 min-w-[280px] text-white">
+                  <div className="travel-passenger-popover absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#062523] rounded-xl shadow-2xl border border-[#01796F]/40 p-4 min-w-[280px] text-white">
                     <PassengerSelector rows={passengerRows} onChange={handlePassengerChange} />
 
                     {/* Cabin class inside dropdown */}
-                    <div className="mt-3 pt-3 border-t border-[#01796F]/20">
-                      <label className="block text-[11px] font-medium text-[#b2dfdb] mb-1">
+                    <div className="travel-passenger-popover__section mt-3 pt-3 border-t border-[#01796F]/20">
+                      <label className="travel-passenger-popover__label block text-[11px] font-medium text-[#b2dfdb] mb-1">
                         Classe de voyage :
                       </label>
                       <select
                         value={cabinClass}
                         onChange={(e) => setCabinClass(e.target.value as FlightSearchRequest['travelClass'])}
-                        className="w-full px-2 py-1.5 rounded-lg border border-[#01796F]/40 text-xs bg-[#021817] text-white"
+                        className="travel-passenger-popover__select w-full px-2 py-1.5 rounded-lg border border-[#01796F]/40 text-xs bg-[#021817] text-white"
                       >
                         {CABIN_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
@@ -315,7 +315,7 @@ export default function FlightsPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassengerDropdown(false)}
-                      className="w-full py-2 mt-3 bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold rounded-lg transition-colors"
+                      className="travel-passenger-popover__apply w-full py-2 mt-3 bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold rounded-lg transition-colors"
                     >
                       Appliquer
                     </button>
