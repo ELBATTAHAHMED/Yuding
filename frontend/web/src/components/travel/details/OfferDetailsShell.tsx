@@ -22,7 +22,7 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
   mobileAction,
 }) => {
   return (
-    <div className="bg-slate-50 dark:bg-[#021817] min-h-screen py-8 px-4 pb-24 text-slate-900 dark:text-slate-100">
+    <div className="travel-details-shell bg-slate-50 dark:bg-[#021817] min-h-screen py-8 px-4 pb-24 text-slate-900 dark:text-slate-100">
       <div className="max-w-6xl mx-auto">
         {/* Breadcrumb / Back Link */}
         <div className="mb-6">
@@ -36,7 +36,7 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+        <div className="travel-details-shell__grid grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
           {/* Main Content Column */}
           <main className="flex flex-col gap-6 min-w-0">
             {children}

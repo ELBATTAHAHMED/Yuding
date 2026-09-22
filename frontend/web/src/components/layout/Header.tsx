@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
@@ -10,9 +10,17 @@ export const Header: React.FC = () => {
   const { user, isAuthenticated, isAdmin, isSupport, logout } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigation = [
+    { href: '/hotels', label: 'Hébergements' },
+    { href: '/flights', label: 'Vols' },
+    { href: '/activities', label: 'Activités' },
+    { href: '/transfers', label: 'Transferts' },
+    { href: '/trains', label: 'Trains' },
+  ];
 
   return (
-    <header className={`header ${isHome ? 'home-header' : 'subpage-header'}`}>
+    <header className={`header yuding-header ${isHome ? 'home-header' : 'subpage-header'}`}>
       <div className="header-top">
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link href="/" className="logo">
@@ -24,46 +32,13 @@ export const Header: React.FC = () => {
             />
           </Link>
 
-          {!isHome && (
-            <div className="navigation" style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
-              <Link
-                href="/hotels"
-                className={`nav-link ${pathname === '/hotels' ? 'active' : ''}`}
-              >
-                Hébergements
+          <nav className={`navigation yuding-navigation ${menuOpen ? 'is-open' : ''}`} aria-label="Navigation principale">
+            {navigation.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={`nav-link ${pathname.startsWith(item.href) ? 'active' : ''}`}>
+                {item.label}
               </Link>
-              <Link
-                href="/flights"
-                className={`nav-link ${pathname === '/flights' ? 'active' : ''}`}
-              >
-                Vols
-              </Link>
-              <Link
-                href="/transfers"
-                className={`nav-link ${pathname === '/transfers' ? 'active' : ''}`}
-              >
-                Taxi
-              </Link>
-              <Link
-                href="/hotels"
-                className={`nav-link ${pathname === '/hotels' ? 'active' : ''}`}
-              >
-                Location
-              </Link>
-              <Link
-                href="/activities"
-                className={`nav-link ${pathname === '/activities' ? 'active' : ''}`}
-              >
-                Activités
-              </Link>
-              <Link
-                href="/trains"
-                className={`nav-link ${pathname === '/trains' ? 'active' : ''}`}
-              >
-                Trains
-              </Link>
-            </div>
-          )}
+            ))}
+          </nav>
 
           <div className="header-btns" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
             <div className="booking" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -117,6 +92,9 @@ export const Header: React.FC = () => {
             </div>
 
             <DarkModeToggle />
+            <button type="button" className="yuding-menu-toggle" aria-expanded={menuOpen} aria-label="Ouvrir la navigation" onClick={() => setMenuOpen((open) => !open)}>
+              <i className={`fas ${menuOpen ? 'fa-times' : 'fa-bars'}`} aria-hidden="true" />
+            </button>
           </div>
         </div>
       </div>

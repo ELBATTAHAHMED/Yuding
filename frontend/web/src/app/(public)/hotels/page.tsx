@@ -12,6 +12,7 @@ import {
 import { sortHotels, buildActiveFilterChips } from '@/lib/search-ux';
 import type { HotelSortKey } from '@/lib/search-ux';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, HotelSkeleton } from '@/components/travel';
+import { TravelHero, TravelPage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
@@ -306,11 +307,19 @@ export default function HotelsPage() {
   const isInvalidDateRange = Boolean(checkIn && checkOut && checkOut <= checkIn);
 
   return (
-    <div>
+    <TravelPage page="hotels">
+      <TravelHero
+        title="Hébergements"
+        subtitle="Des séjours sélectionnés par nos partenaires, partout dans le monde."
+        destination={selectedCity || destinationInput || undefined}
+        country={selectedGeoPlace?.country}
+        icon="fas fa-bed"
+        compact={hasSearched}
+      />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
+      <section className="travel-search-panel bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-4">
+          <div className="travel-search-panel__heading mb-4">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Hébergements
             </h1>
@@ -1013,6 +1022,6 @@ export default function HotelsPage() {
           )}
         </div>
       </section>
-    </div>
+    </TravelPage>
   );
 }

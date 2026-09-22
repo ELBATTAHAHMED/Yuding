@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage, ActivitySkeleton } from '@/components/travel';
+import { TravelHero, TravelPage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
 import { sortActivities } from '@/lib/search-ux';
@@ -99,7 +100,7 @@ export default function ActivitiesPage() {
       } else if (msg.includes('TIMEOUT') || msg.toLowerCase().includes('délai')) {
         setErrorMessage('Délai d’attente dépassé. Veuillez réessayer.');
       } else {
-        setErrorMessage('Impossible de joindre le service d’activités. Vérifiez que la passerelle est active.');
+        setErrorMessage('Le fournisseur d’activités ne répond pas pour le moment. Veuillez réessayer ultérieurement.');
       }
     } finally {
       setLoading(false);
@@ -114,11 +115,19 @@ export default function ActivitiesPage() {
   const sortedActivities = useMemo(() => sortActivities(filtered, sortKey), [filtered, sortKey]);
 
   return (
-    <div>
+    <TravelPage page="activities">
+      <TravelHero
+        title="Activités & expériences"
+        subtitle="Des idées authentiques pour donner du relief à votre voyage."
+        destination={destination || undefined}
+        country={selectedGeoPlace?.country}
+        icon="fas fa-compass"
+        compact={hasSearched}
+      />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
+      <section className="travel-search-panel bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-4">
+          <div className="travel-search-panel__heading mb-4">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Activités &amp; Expériences
             </h1>
@@ -437,6 +446,6 @@ export default function ActivitiesPage() {
           )}
         </div>
       </section>
-    </div>
+    </TravelPage>
   );
 }
