@@ -20,4 +20,9 @@ public interface PaymentProvider {
      * Captures or finalizes a payment order with the provider.
      */
     PaymentCaptureResult capturePaymentOrder(PaymentCaptureCommand command);
+
+    /**
+     * Refunds a captured payment with the provider using a stable provider request ID.
+     */
+    PaymentRefundResult refundPayment(PaymentRefundCommand command);
 }

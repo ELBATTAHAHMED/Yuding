@@ -19,4 +19,5 @@ public class PaymentOrderCommand {
     private final String description;
     private final String returnUrl;
     private final String cancelUrl;
+    private final String providerRequestId;
 }

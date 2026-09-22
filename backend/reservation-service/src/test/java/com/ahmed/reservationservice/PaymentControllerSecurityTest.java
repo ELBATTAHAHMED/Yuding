@@ -85,6 +85,7 @@ class PaymentControllerSecurityTest {
         mockMvc.perform(post("/bookings/{reference}/payment/create-order", validRef)
                         .with(jwt().jwt(j -> j.subject(userUuid.toString()))
                                 .authorities(new SimpleGrantedAuthority("ROLE_USER")))
+                        .header("Idempotency-Key", UUID.randomUUID().toString())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bookingReference").value(validRef))
@@ -111,6 +112,7 @@ class PaymentControllerSecurityTest {
         mockMvc.perform(post("/bookings/{reference}/payment/create-order", validRef)
                         .with(jwt().jwt(j -> j.subject(userUuid.toString()))
                                 .authorities(new SimpleGrantedAuthority("ROLE_USER")))
+                        .header("Idempotency-Key", UUID.randomUUID().toString())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -135,6 +137,7 @@ class PaymentControllerSecurityTest {
         mockMvc.perform(post("/bookings/{reference}/payment/capture", validRef)
                         .with(jwt().jwt(j -> j.subject(userUuid.toString()))
                                 .authorities(new SimpleGrantedAuthority("ROLE_USER")))
+                        .header("Idempotency-Key", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"paymentReference\":\"" + validPayRef + "\"}")
                         .accept(MediaType.APPLICATION_JSON))
@@ -185,6 +188,7 @@ class PaymentControllerSecurityTest {
         mockMvc.perform(post("/bookings/{reference}/payment/capture", validRef)
                         .with(jwt().jwt(j -> j.subject(userUuid.toString()))
                                 .authorities(new SimpleGrantedAuthority("ROLE_USER")))
+                        .header("Idempotency-Key", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(forbiddenPayload)
                         .accept(MediaType.APPLICATION_JSON))

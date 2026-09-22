@@ -32,6 +32,7 @@ Phase 38 establishes a **provider-neutral payment architecture** for Yuding V2. 
 |       |             PaymentProvider                      |               |
 |       |  + createPaymentOrder(PaymentOrderCommand)       |               |
 |       |  + capturePaymentOrder(PaymentCaptureCommand)    |               |
+|       |  + refundPayment(PaymentRefundCommand)           |               |
 |       +--------------------------------------------------+               |
 |                     ^                             ^                      |
 |                     |                             |                      |
@@ -39,7 +40,8 @@ Phase 38 establishes a **provider-neutral payment architecture** for Yuding V2. 
 |        |PayPalSandboxPaymentProvider|  |   MockPaymentProvider    |      |
 |        | - https://api-m.sandbox...|  | - In-memory / tests      |      |
 |        | - OAuth2 client_cred      |  | - Deterministic capture  |      |
-|        | - v2/checkout/orders      |  +--------------------------+       |
+|        | - v2/checkout/orders      |  | - Deterministic refund   |      |
+|        | - PayPal-Request-Id       |  +--------------------------+       |
 |        +---------------------------+                                     |
 +--------------------------------------------------------------------------+
                                     |

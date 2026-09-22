@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { bookingService } from '@/services/booking.service';
 import {
@@ -45,6 +45,7 @@ export function useBookingFlow(): UseBookingFlowReturn {
   const [revalidationData, setRevalidationData] = useState<BookingRevalidationResponseDto | null>(null);
   const [pricingData, setPricingData] = useState<BookingPricingResponseDto | null>(null);
   const [isPriceChangeModalOpen, setIsPriceChangeModalOpen] = useState(false);
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   const resetFlow = useCallback(() => {
     setStage('idle');
@@ -54,6 +55,7 @@ export function useBookingFlow(): UseBookingFlowReturn {
     setRevalidationData(null);
     setPricingData(null);
     setIsPriceChangeModalOpen(false);
+    idempotencyKeyRef.current = null;
   }, []);
 
   /**
@@ -115,10 +117,20 @@ export function useBookingFlow(): UseBookingFlowReturn {
         setStage('creating_draft');
         setStatusMessage('Création du dossier de réservation...');
 
-        const booking = await bookingService.createDraftBooking({
-          productType,
-          selectionRef: selectionRef?.trim() ? selectionRef.trim() : undefined,
-        });
+        if (!idempotencyKeyRef.current) {
+          idempotencyKeyRef.current =
+            typeof crypto !== 'undefined' && crypto.randomUUID
+              ? crypto.randomUUID()
+              : `idemp-bk-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        }
+
+        const booking = await bookingService.createDraftBooking(
+          {
+            productType,
+            selectionRef: selectionRef?.trim() ? selectionRef.trim() : undefined,
+          },
+          idempotencyKeyRef.current
+        );
 
         const reference = booking.bookingReference;
         setBookingReference(reference);

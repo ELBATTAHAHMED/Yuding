@@ -14,9 +14,21 @@ export const bookingService = {
   /**
    * Creates a new DRAFT booking shell.
    * If selectionRef is present, attaches the trusted OfferSnapshot atomically.
+   * Protected by Idempotency-Key.
    */
-  async createDraftBooking(request: CreateDraftBookingRequest): Promise<BookingResponseDto> {
-    return apiClient.post<BookingResponseDto>('/bookings', request, true);
+  async createDraftBooking(
+    request: CreateDraftBookingRequest,
+    idempotencyKey?: string
+  ): Promise<BookingResponseDto> {
+    const key =
+      idempotencyKey ||
+      (typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
+
+    return apiClient.post<BookingResponseDto>('/bookings', request, true, {
+      idempotencyKey: key,
+    });
   },
 
   /**

@@ -15,4 +15,5 @@ public class PaymentCaptureCommand {
     private final String paymentReference;
     private final BigDecimal amount;
     private final String currency;
+    private final String providerRequestId;
 }

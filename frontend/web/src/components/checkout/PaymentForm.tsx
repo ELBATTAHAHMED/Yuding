@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { paymentService } from '@/services/payment.service';
@@ -32,6 +32,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const [pendingOrder, setPendingOrder] = useState<PaymentOrderResponseDto | null>(null);
   const [waitingForWebhook, setWaitingForWebhook] = useState(false);
   const [webhookTimeout, setWebhookTimeout] = useState(false);
+
+  // Stable idempotency keys per user attempt
+  const createOrderIdempotencyKeyRef = useRef<string | null>(null);
+  const captureIdempotencyKeyRef = useRef<string | null>(null);
 
   // Format authoritative total amount
   const formattedAmount = pricing.totalAmount != null
@@ -67,7 +71,18 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         ? `${window.location.origin}/booking/${bookingReference}`
         : undefined;
 
-      const order = await paymentService.initiatePaymentOrder(bookingReference, returnUrl, cancelUrl);
+      if (!createOrderIdempotencyKeyRef.current) {
+        createOrderIdempotencyKeyRef.current = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `idemp-ord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      }
+
+      const order = await paymentService.initiatePaymentOrder(
+        bookingReference,
+        returnUrl,
+        cancelUrl,
+        createOrderIdempotencyKeyRef.current
+      );
       setPendingOrder(order);
 
       // If provider provides an approval URL (e.g. PayPal sandbox popup/redirect), open it
@@ -76,10 +91,20 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       }
 
       // 2. Capture payment
-      const captureResult = await paymentService.capturePayment(bookingReference, {
-        paymentReference: order.paymentReference,
-        providerOrderId: order.providerOrderId,
-      });
+      if (!captureIdempotencyKeyRef.current) {
+        captureIdempotencyKeyRef.current = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `idemp-cap-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      }
+
+      const captureResult = await paymentService.capturePayment(
+        bookingReference,
+        {
+          paymentReference: order.paymentReference,
+          providerOrderId: order.providerOrderId,
+        },
+        captureIdempotencyKeyRef.current
+      );
 
       if (captureResult.paymentStatus === 'SUCCEEDED') {
         if (onPaymentSuccess) {

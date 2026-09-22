@@ -64,6 +64,9 @@ public class PayPalSandboxPaymentProvider implements PaymentProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(accessToken);
+            if (command.getProviderRequestId() != null && !command.getProviderRequestId().isBlank()) {
+                headers.set("PayPal-Request-Id", command.getProviderRequestId());
+            }
 
             // Construct PayPal v2 order request body
             Map<String, Object> amountMap = new HashMap<>();
@@ -139,6 +142,9 @@ public class PayPalSandboxPaymentProvider implements PaymentProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(accessToken);
+            if (command.getProviderRequestId() != null && !command.getProviderRequestId().isBlank()) {
+                headers.set("PayPal-Request-Id", command.getProviderRequestId());
+            }
 
             HttpEntity<String> entity = new HttpEntity<>("{}", headers);
             ResponseEntity<String> response = restTemplate.exchange(
@@ -178,6 +184,58 @@ public class PayPalSandboxPaymentProvider implements PaymentProvider {
             log.error("PayPalSandbox: Unexpected error capturing order [{}]: {}",
                     command.getProviderOrderId(), e.getMessage());
             return PaymentCaptureResult.failure("PayPal capture error: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public PaymentRefundResult refundPayment(PaymentRefundCommand command) {
+        String baseUrl = resolveBaseUrl();
+        log.info("PayPalSandbox: Refunding capture [{}] ref [{}] amount [{} {}] via [{}]",
+                command.getCaptureId(), command.getPaymentReference(), command.getAmount(), command.getCurrency(), baseUrl);
+
+        try {
+            String accessToken = getAccessToken();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(accessToken);
+            if (command.getProviderRequestId() != null && !command.getProviderRequestId().isBlank()) {
+                headers.set("PayPal-Request-Id", command.getProviderRequestId());
+            }
+
+            Map<String, Object> requestBody = new HashMap<>();
+            if (command.getAmount() != null && command.getCurrency() != null) {
+                Map<String, String> amountMap = new HashMap<>();
+                amountMap.put("value", command.getAmount().toPlainString());
+                amountMap.put("currency_code", command.getCurrency());
+                requestBody.put("amount", amountMap);
+            }
+            if (command.getReason() != null) {
+                requestBody.put("note_to_payer", command.getReason());
+            }
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    baseUrl + "/v2/payments/captures/" + command.getCaptureId() + "/refund",
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            String refundId = root.path("id").asText();
+            String status = root.path("status").asText();
+
+            log.info("PayPalSandbox: Refund processed successfully [refundId={}, status={}]", refundId, status);
+            return PaymentRefundResult.success(refundId, status);
+
+        } catch (HttpStatusCodeException e) {
+            log.error("PayPalSandbox: Failed to refund capture [{}]. Status: [{}], Response: [{}]",
+                    command.getCaptureId(), e.getStatusCode(), sanitizeError(e.getResponseBodyAsString()));
+            return PaymentRefundResult.failure("PayPal refund failed: " + e.getStatusCode());
+        } catch (Exception e) {
+            log.error("PayPalSandbox: Unexpected error refunding capture [{}]: {}",
+                    command.getCaptureId(), e.getMessage());
+            return PaymentRefundResult.failure("PayPal refund error: " + e.getMessage());
         }
     }
 
