@@ -77,6 +77,7 @@ export interface RequestOptions extends RequestInit {
   retryable?: boolean;
   requestId?: string;
   isRetry?: boolean;
+  idempotencyKey?: string;
 }
 
 import { env } from './env.ts';
@@ -215,6 +216,10 @@ export class ApiClient {
 
     if (options.requestId) {
       headers['X-Correlation-Id'] = options.requestId;
+    }
+
+    if (options.idempotencyKey) {
+      headers['Idempotency-Key'] = options.idempotencyKey;
     }
 
     // Configure AbortController for timeout handling

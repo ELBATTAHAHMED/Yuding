@@ -20,6 +20,8 @@ import com.ahmed.reservationservice.domain.payment.provider.PaymentOrderCommand;
 import com.ahmed.reservationservice.domain.payment.provider.PaymentOrderResult;
 import com.ahmed.reservationservice.domain.payment.provider.PaymentProvider;
 import com.ahmed.reservationservice.domain.payment.provider.PaymentProviderRegistry;
+import com.ahmed.reservationservice.domain.payment.provider.PaymentRefundCommand;
+import com.ahmed.reservationservice.domain.payment.provider.PaymentRefundResult;
 import com.ahmed.reservationservice.domain.repository.BookingRepository;
 import com.ahmed.reservationservice.domain.repository.OfferRevalidationRepository;
 import com.ahmed.reservationservice.domain.repository.PaymentRepository;
@@ -135,6 +137,7 @@ public class PaymentService {
 
         // 8. Generate unique payment reference (PAY-XXXXXXXX)
         String paymentReference = allocateUniquePaymentReference();
+        String providerRequestId = "ORD-" + paymentReference;
 
         // 9. Delegate to active PaymentProvider
         PaymentProvider activeProvider = providerRegistry.getActiveProvider();
@@ -146,6 +149,7 @@ public class PaymentService {
                 .description("Yuding booking " + bookingReference)
                 .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
+                .providerRequestId(providerRequestId)
                 .build();
 
         PaymentOrderResult orderResult = activeProvider.createPaymentOrder(orderCommand);
@@ -162,6 +166,7 @@ public class PaymentService {
                     .amount(amount)
                     .currency(currency)
                     .status(PaymentStatus.FAILED)
+                    .providerRequestId(providerRequestId)
                     .errorMessage(orderResult.getErrorMessage())
                     .build();
             paymentRepository.save(failedPayment);
@@ -181,6 +186,7 @@ public class PaymentService {
                 .pricingQuoteId(quote.getId())
                 .providerName(activeProvider.getProviderName())
                 .providerOrderId(orderResult.getProviderOrderId())
+                .providerRequestId(providerRequestId)
                 .amount(amount)
                 .currency(currency)
                 .status(initialStatus)
@@ -273,12 +279,14 @@ public class PaymentService {
         }
 
         // 5. Execute capture via provider
+        String captureRequestId = "CAP-" + payment.getPaymentReference();
         PaymentProvider provider = providerRegistry.getProvider(payment.getProviderName());
         PaymentCaptureCommand captureCommand = PaymentCaptureCommand.builder()
                 .providerOrderId(providerOrderId)
                 .paymentReference(payment.getPaymentReference())
                 .amount(payment.getAmount())
                 .currency(payment.getCurrency())
+                .providerRequestId(captureRequestId)
                 .build();
 
         PaymentCaptureResult captureResult = provider.capturePaymentOrder(captureCommand);
@@ -359,6 +367,49 @@ public class PaymentService {
         if (userId == null || booking.getUserId() == null || !booking.getUserId().toString().equals(userId)) {
             throw new BookingOwnershipException("Access denied: You do not have permission to access booking " + booking.getBookingReference());
         }
+    }
+
+    /**
+     * Executes a provider-level refund for a captured payment.
+     * Protected by stable provider request ID idempotency.
+     */
+    @Transactional
+    public PaymentRefundResult refundPayment(
+            String bookingReference,
+            String paymentReference,
+            BigDecimal amount,
+            String currency,
+            String reason,
+            String userId,
+            List<String> roles) {
+
+        log.info("PaymentService: Executing refund for booking [{}] ref [{}] amount [{} {}] by user [{}]",
+                bookingReference, paymentReference, amount, currency, userId);
+
+        Booking booking = bookingRepository.findByBookingReference(bookingReference)
+                .orElseThrow(() -> new BookingNotFoundException(bookingReference));
+        validateOwnershipOrAdmin(booking, userId, roles);
+
+        Payment payment = paymentRepository.findByPaymentReference(paymentReference)
+                .orElseThrow(() -> new BookingNotFoundException("Payment not found for reference: " + paymentReference));
+
+        if (payment.getProviderTransactionId() == null || payment.getProviderTransactionId().isBlank()) {
+            throw new BookingConflictException("CANNOT_REFUND: Payment has no provider capture transaction ID.");
+        }
+
+        String refundRequestId = "REF-" + payment.getPaymentReference();
+        PaymentProvider provider = providerRegistry.getProvider(payment.getProviderName());
+
+        PaymentRefundCommand command = PaymentRefundCommand.builder()
+                .captureId(payment.getProviderTransactionId())
+                .paymentReference(payment.getPaymentReference())
+                .amount(amount != null ? amount : payment.getAmount())
+                .currency(currency != null ? currency : payment.getCurrency())
+                .reason(reason)
+                .providerRequestId(refundRequestId)
+                .build();
+
+        return provider.refundPayment(command);
     }
 
     private boolean isPrivileged(List<String> roles) {

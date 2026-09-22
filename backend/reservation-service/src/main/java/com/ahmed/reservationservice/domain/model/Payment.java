@@ -77,6 +77,9 @@ public class Payment {
     @Column(name = "approval_url")
     private String approvalUrl;
 
+    @Column(name = "provider_request_id", length = 255)
+    private String providerRequestId;
+
     @Column(name = "error_message")
     private String errorMessage;
 

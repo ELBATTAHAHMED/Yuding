@@ -123,6 +123,7 @@ class BookingControllerSecurityTest {
         mockMvc.perform(post("/bookings")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString())))
+                        .header("Idempotency-Key", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())

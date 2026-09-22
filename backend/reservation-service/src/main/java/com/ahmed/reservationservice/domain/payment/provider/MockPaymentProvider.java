@@ -45,4 +45,17 @@ public class MockPaymentProvider implements PaymentProvider {
         String mockCaptureId = "MOCK-CAPTURE-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         return PaymentCaptureResult.success(mockCaptureId, "COMPLETED");
     }
+
+    @Override
+    public PaymentRefundResult refundPayment(PaymentRefundCommand command) {
+        log.info("MockPayment: Refunding mock capture [{}] ref [{}] amount [{} {}] reqId [{}]",
+                command.getCaptureId(), command.getPaymentReference(), command.getAmount(), command.getCurrency(), command.getProviderRequestId());
+
+        if (command.getCaptureId() != null && command.getCaptureId().contains("FAIL")) {
+            return PaymentRefundResult.failure("Mock refund simulated failure");
+        }
+
+        String mockRefundId = "MOCK-REFUND-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return PaymentRefundResult.success(mockRefundId, "COMPLETED");
+    }
 }

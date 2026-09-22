@@ -169,6 +169,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    @ExceptionHandler(com.ahmed.reservationservice.domain.idempotency.IdempotencyValidationException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyValidation(com.ahmed.reservationservice.domain.idempotency.IdempotencyValidationException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Idempotency validation failed on {}: {} - {}", requestId, request.getRequestURI(), ex.getErrorCode(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getErrorCode(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(com.ahmed.reservationservice.domain.idempotency.IdempotencyConflictException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyConflict(com.ahmed.reservationservice.domain.idempotency.IdempotencyConflictException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Idempotency conflict on {}: {} - {}", requestId, request.getRequestURI(), ex.getErrorCode(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.CONFLICT.value(),
+                ex.getErrorCode(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request) {
         String requestId = getOrGenerateRequestId(request);

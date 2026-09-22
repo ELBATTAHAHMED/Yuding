@@ -5,12 +5,15 @@ import com.ahmed.reservationservice.domain.dto.AttachOfferSnapshotRequest;
 import com.ahmed.reservationservice.domain.dto.BookingResponseDto;
 import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
 import com.ahmed.reservationservice.domain.dto.OfferSnapshotResponseDto;
+import com.ahmed.reservationservice.domain.idempotency.IdempotencyOperation;
+import com.ahmed.reservationservice.domain.idempotency.IdempotencyService;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,25 +36,41 @@ import java.util.UUID;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final IdempotencyService idempotencyService;
 
     /**
      * Creates a new DRAFT booking for the currently authenticated user.
      * Optionally attaches an offer snapshot atomically if selectionRef is provided.
+     * Protected by Idempotency-Key header.
      */
     @PostMapping
     public ResponseEntity<BookingResponseDto> createDraft(
             @RequestBody @Valid CreateDraftBookingRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID userId = resolveUserUuid(jwt);
         log.info("Received request to create DRAFT booking for user {} (product: {}, selectionRef: {})",
                 userId, request.getProductType(), request.getSelectionRef());
 
-        Booking booking = bookingService.createDraft(userId, request.getProductType(), request.getSelectionRef());
-        Optional<OfferSnapshot> snapshot = bookingService.getSnapshotByBookingReference(booking.getBookingReference(), userId, false);
+        BookingResponseDto response = idempotencyService.execute(
+                IdempotencyOperation.BOOKING_CREATE,
+                userId,
+                null,
+                idempotencyKey,
+                request,
+                BookingResponseDto.class,
+                () -> {
+                    Booking booking = bookingService.createDraft(userId, request.getProductType(), request.getSelectionRef());
+                    Optional<OfferSnapshot> snapshot = bookingService.getSnapshotByBookingReference(booking.getBookingReference(), userId, false);
+                    return BookingResponseDto.fromDomain(booking, snapshot.orElse(null));
+                },
+                BookingResponseDto::getBookingReference,
+                HttpStatus.CREATED.value()
+        );
 
-        URI location = URI.create("/bookings/" + booking.getBookingReference());
-        return ResponseEntity.created(location).body(BookingResponseDto.fromDomain(booking, snapshot.orElse(null)));
+        URI location = URI.create("/bookings/" + response.getBookingReference());
+        return ResponseEntity.created(location).body(response);
     }
 
     /**
