@@ -60,132 +60,75 @@ export default function BookingPaymentPage() {
     <ProtectedRoute>
       <div style={{ minHeight: '85vh', padding: '2.5rem 1rem 4rem', background: 'var(--bg, #f4f6f6)' }}>
         <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
-          {/* Top Bar: Breadcrumb & Dossier Badge */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              marginBottom: '1.75rem',
-            }}
-          >
-            <nav style={{ fontSize: '0.88rem', color: '#64748b' }}>
-              <Link href="/" style={{ color: '#01796F', textDecoration: 'none', fontWeight: 500 }}>
-                Accueil
-              </Link>
-              <span style={{ margin: '0 0.5rem', color: '#cbd5e1' }}>/</span>
-              <Link href={`/booking/${reference}`} style={{ color: '#01796F', textDecoration: 'none', fontWeight: 500 }}>
-                Dossier {reference}
-              </Link>
-              <span style={{ margin: '0 0.5rem', color: '#cbd5e1' }}>/</span>
-              <span style={{ fontWeight: 600, color: '#0f172a' }}>Paiement Sécurisé</span>
-            </nav>
-
+          {/* Top Bar: Breadcrumb, Session Badge & Retour Action */}
+          <div style={{ marginBottom: '1.75rem' }}>
             <div
               style={{
-                display: 'inline-flex',
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: '#0f766e',
-                background: '#ccfbf1',
-                padding: '0.35rem 0.85rem',
-                borderRadius: '20px',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                marginBottom: '0.85rem',
               }}
             >
-              <i className="fas fa-lock" />
-              <span>Session de paiement chiffrée</span>
-            </div>
-          </div>
+              <nav style={{ fontSize: '0.88rem', color: '#64748b' }}>
+                <Link href="/" style={{ color: '#01796F', textDecoration: 'none', fontWeight: 500 }}>
+                  Accueil
+                </Link>
+                <span style={{ margin: '0 0.5rem', color: '#cbd5e1' }}>/</span>
+                <Link href={`/booking/${reference}`} style={{ color: '#01796F', textDecoration: 'none', fontWeight: 500 }}>
+                  Dossier {reference}
+                </Link>
+                <span style={{ margin: '0 0.5rem', color: '#cbd5e1' }}>/</span>
+                <span style={{ fontWeight: 600, color: '#0f172a' }}>Paiement Sécurisé</span>
+              </nav>
 
-          {/* Checkout Steps Progress Bar (Inspired by Reference) */}
-          <div
-            style={{
-              background: '#ffffff',
-              borderRadius: '16px',
-              padding: '1rem 1.75rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '1rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div
                 style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  color: '#ffffff',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
+                  gap: '0.5rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: '#0f766e',
+                  background: '#ccfbf1',
+                  padding: '0.35rem 0.85rem',
+                  borderRadius: '20px',
                 }}
               >
-                <i className="fas fa-check" />
+                <i className="fas fa-lock" />
+                <span>Session de paiement chiffrée</span>
               </div>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
-                1. Sélection Offre
-              </span>
             </div>
 
-            <div style={{ flex: 1, minWidth: '30px', height: '2px', background: '#10b981' }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
+            {/* Clear, accessible Retour action using the canonical booking route */}
+            <div>
+              <Link
+                href={`/booking/${reference}`}
                 style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  color: '#ffffff',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
+                  gap: '0.5rem',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  color: '#475569',
+                  textDecoration: 'none',
+                  padding: '0.35rem 0',
+                  transition: 'color 0.2s ease, transform 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#01796F';
+                  e.currentTarget.style.transform = 'translateX(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#475569';
+                  e.currentTarget.style.transform = 'translateX(0)';
                 }}
               >
-                <i className="fas fa-check" />
-              </div>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
-                2. Coordonnées & Devis
-              </span>
-            </div>
-
-            <div style={{ flex: 1, minWidth: '30px', height: '2px', background: '#01796F' }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #01796F 0%, #005951 100%)',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  boxShadow: '0 0 0 3px rgba(1, 121, 111, 0.25)',
-                }}
-              >
-                3
-              </div>
-              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#01796F' }}>
-                3. Règlement Sécurisé
-              </span>
+                <i className="fas fa-arrow-left text-xs" />
+                <span>Retour au dossier</span>
+              </Link>
             </div>
           </div>
 
