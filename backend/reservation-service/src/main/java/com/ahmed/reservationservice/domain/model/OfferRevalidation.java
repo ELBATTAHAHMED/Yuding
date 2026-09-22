@@ -55,10 +55,10 @@ public class OfferRevalidation {
     @Column(name = "current_provider_currency", length = 3, updatable = false)
     private String currentProviderCurrency;
 
-    @Column(name = "provider_offer_id", length = 255, updatable = false)
+    @Column(name = "provider_offer_id", columnDefinition = "TEXT", updatable = false)
     private String providerOfferId;
 
-    @Column(name = "matched_provider_offer_id", length = 255, updatable = false)
+    @Column(name = "matched_provider_offer_id", columnDefinition = "TEXT", updatable = false)
     private String matchedProviderOfferId;
 
     @CreationTimestamp

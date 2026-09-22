@@ -39,7 +39,7 @@ public class OfferSnapshot {
     @Column(name = "provider", nullable = false, length = 64, updatable = false)
     private String provider;
 
-    @Column(name = "provider_offer_id", nullable = false, length = 255, updatable = false)
+    @Column(name = "provider_offer_id", nullable = false, columnDefinition = "TEXT", updatable = false)
     private String providerOfferId;
 
     @JdbcTypeCode(SqlTypes.JSON)
