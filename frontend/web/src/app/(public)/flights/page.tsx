@@ -495,7 +495,7 @@ export default function FlightsPage() {
                       </Link>
 
                       <Link
-                        href={`/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(
+                        href={`/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(flight.selectionRef || flight.offerId)}&serviceTitle=${encodeURIComponent(
                           `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
                         )}&price=${flight.price}`}
                         className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"

@@ -142,9 +142,10 @@ export default function HotelDetailsPage() {
   }
 
   const roomTitle = selectedRoom ? `${hotelDisplayName} - ${selectedRoom.roomName}` : hotelDisplayName;
+  const selRef = selectedRoom?.selectionRef || selectedRoom?.offerId || hotel.selectionRef || hotel.offerId;
   const bookingUrl = `/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(
     hotel.hotelId || hotel.offerId
-  )}&offerId=${encodeURIComponent(
+  )}&selectionRef=${encodeURIComponent(selRef)}&offerId=${encodeURIComponent(
     selectedRoom?.offerId || hotel.offerId
   )}&serviceTitle=${encodeURIComponent(roomTitle)}&price=${activePrice}&currency=${activeCurrency}`;
 

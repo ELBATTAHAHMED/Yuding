@@ -147,9 +147,10 @@ export default function FlightDetailsPage() {
   }
 
   const airlineDisplayName = flight.airlineName || flight.airlineCode || 'Compagnie aérienne';
+  const selRef = flight.selectionRef || flight.offerId;
   const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(
     flight.offerId
-  )}&serviceTitle=${encodeURIComponent(
+  )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(
     `${airlineDisplayName} (${flight.origin} → ${flight.destination})`
   )}&price=${flight.price}`;
 

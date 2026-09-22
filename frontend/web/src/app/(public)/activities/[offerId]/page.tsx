@@ -83,9 +83,10 @@ export default function ActivityDetailsPage() {
   }
 
   const isCustom = activity.source === 'YUDING_CUSTOM';
+  const selRef = activity.selectionRef || activity.offerId || activity.id || activity.title;
   const bookingUrl = `/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(
     activity.offerId || activity.id || activity.title
-  )}&serviceTitle=${encodeURIComponent(activity.title)}&price=${activity.price}`;
+  )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(activity.title)}&price=${activity.price}`;
 
   const badges = [activity.category || 'Excursion', isCustom ? 'Yuding Sélect' : 'Partenaire HBX'];
 

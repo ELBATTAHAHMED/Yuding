@@ -1,18 +1,21 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
-import { bookingService } from '@/services/booking.service';
-import { BookingRequest } from '@/types/booking.types';
+import { useBookingFlow } from '@/hooks/useBookingFlow';
+import { PriceChangeModal } from '@/components/checkout/PriceChangeModal';
+import { BookingProductType } from '@/types/booking.types';
 
 function BookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
 
-  const serviceType = (searchParams.get('serviceType') || 'HOTEL') as 'FLIGHT' | 'HOTEL' | 'ACTIVITY' | 'TRANSFER';
+  const serviceType = (searchParams.get('serviceType') || 'HOTEL').toUpperCase() as BookingProductType;
   const serviceId = searchParams.get('serviceId') || '101';
+  const selectionRef = searchParams.get('selectionRef') || searchParams.get('offerId') || searchParams.get('serviceId') || '';
   const serviceTitle = searchParams.get('serviceTitle') || 'Séjour Découverte Yuding';
   const basePrice = parseFloat(searchParams.get('price') || '120');
 
@@ -26,47 +29,35 @@ function BookingContent() {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phoneNumber || '');
   const [notes, setNotes] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
+  const {
+    isProcessing,
+    statusMessage,
+    error: flowError,
+    revalidationData,
+    isPriceChangeModalOpen,
+    startBookingFlow,
+    handleAcceptPriceChange,
+    handleCancelPriceChange,
+  } = useBookingFlow();
+
+  const [localError, setLocalError] = useState<string | null>(null);
+  const displayError = flowError || localError;
   const totalPrice = basePrice * quantity;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLocalError(null);
+
     if (!isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
 
-    setSubmitting(true);
-    setError(null);
-
-    const bookingPayload: BookingRequest = {
-      serviceType,
-      serviceId,
-      serviceTitle,
-      startDate,
-      endDate,
-      quantity,
-      totalPrice,
-      currency: 'EUR',
-      traveler: {
-        firstName,
-        lastName,
-        email,
-        phone,
-      },
-      specialRequests: notes,
-    };
-
-    try {
-      const response = await bookingService.createBooking(bookingPayload);
-      router.push(`/booking/confirmation?code=${response.confirmationCode}&id=${response.bookingId}&total=${response.totalPrice}`);
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue lors de la réservation.');
-    } finally {
-      setSubmitting(false);
-    }
+    await startBookingFlow({
+      productType: serviceType,
+      selectionRef: selectionRef || undefined,
+    });
   };
 
   return (
@@ -79,10 +70,53 @@ function BookingContent() {
           Veuillez renseigner les informations des voyageurs pour valider votre dossier
         </p>
 
-        {error && (
-          <div style={{ padding: '1rem', background: '#ffebee', color: '#c62828', borderRadius: '8px', marginBottom: '2rem' }}>
-            <i className="fas fa-exclamation-circle" style={{ marginRight: '0.5rem' }}></i>
-            {error}
+        {displayError && (
+          <div
+            style={{
+              padding: '1.25rem',
+              background: '#ffebee',
+              color: '#c62828',
+              borderRadius: '8px',
+              marginBottom: '2rem',
+              border: '1px solid #ffcdd2',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <i className="fas fa-exclamation-circle" style={{ fontSize: '1.2rem' }}></i>
+              <span style={{ fontWeight: 600 }}>{displayError}</span>
+            </div>
+            <div style={{ marginTop: '0.75rem' }}>
+              <Link
+                href="/"
+                style={{
+                  fontSize: '0.85rem',
+                  color: '#b71c1c',
+                  textDecoration: 'underline',
+                  fontWeight: 600,
+                }}
+              >
+                ← Retourner aux recherches de voyage
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {isProcessing && statusMessage && (
+          <div
+            style={{
+              padding: '1rem 1.25rem',
+              background: '#e0f2f1',
+              color: '#004d40',
+              borderRadius: '8px',
+              marginBottom: '2rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              fontWeight: 600,
+            }}
+          >
+            <i className="fas fa-spinner fa-spin" />
+            <span>{statusMessage}</span>
           </div>
         )}
 
@@ -191,12 +225,33 @@ function BookingContent() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={isProcessing}
                 className="btn-booking"
-                style={{ width: '100%', padding: '0.85rem', fontWeight: 700, borderRadius: '6px', cursor: 'pointer', color: '#fff' }}
+                style={{
+                  width: '100%',
+                  padding: '0.95rem',
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  cursor: isProcessing ? 'not-allowed' : 'pointer',
+                  color: '#fff',
+                  fontSize: '1.05rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
               >
-                {submitting ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check-circle" style={{ marginRight: '0.4rem' }}></i>}
-                Confirmer la Réservation ({totalPrice} €)
+                {isProcessing ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <span>{statusMessage || 'Traitement en cours...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-lock"></i>
+                    <span>Procéder au Paiement Sécurisé ({totalPrice} € estimé)</span>
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -217,7 +272,7 @@ function BookingContent() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
-              <span style={{ color: '#666' }}>Prix unitaire</span>
+              <span style={{ color: '#666' }}>Prix indicatif unitaire</span>
               <span style={{ fontWeight: 600 }}>{basePrice} €</span>
             </div>
 
@@ -245,16 +300,28 @@ function BookingContent() {
             </div>
 
             <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem', lineHeight: '1.4' }}>
-              * Estimation en direct affichée à titre indicatif. Le tarif final contractuel est certifié et validé côté serveur par le système de réservation.
+              * Estimation en direct affichée à titre indicatif. Le tarif final contractuel est certifié et validé côté serveur par le système de réservation avant tout paiement.
             </p>
 
             <div style={{ marginTop: '1.25rem', padding: '1rem', background: '#e0f2f1', borderRadius: '8px', color: '#004d40', fontSize: '0.85rem' }}>
-              <i className="fas fa-lock" style={{ marginRight: '0.4rem' }}></i>
-              Paiement sécurisé &amp; tarification certifiée.
+              <i className="fas fa-shield-alt" style={{ marginRight: '0.4rem' }}></i>
+              Paiement Sandbox sécurisé &amp; tarification certifiée côté serveur.
             </div>
           </div>
         </div>
       </div>
+
+      {/* Phase 36 Price Change Acknowledgement Modal */}
+      <PriceChangeModal
+        isOpen={isPriceChangeModalOpen}
+        previousAmount={revalidationData?.previousProviderAmount}
+        previousCurrency={revalidationData?.previousProviderCurrency}
+        currentAmount={revalidationData?.currentProviderAmount}
+        currentCurrency={revalidationData?.currentProviderCurrency}
+        isProcessing={isProcessing}
+        onAccept={handleAcceptPriceChange}
+        onCancel={handleCancelPriceChange}
+      />
     </div>
   );
 }

@@ -845,7 +845,7 @@ export default function HotelsPage() {
                               </button>
                             ) : (
                               <Link
-                                href={`/booking?serviceType=HOTEL&serviceId=${hotelId}&offerId=${item.offerId}&serviceTitle=${encodeURIComponent(item.name || 'Hôtel')}&price=${item.pricePerNight}&currency=${item.currency}`}
+                                href={`/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(hotelId)}&selectionRef=${encodeURIComponent(item.selectionRef || item.offerId || hotelId)}&offerId=${encodeURIComponent(item.offerId)}&serviceTitle=${encodeURIComponent(item.name || 'Hôtel')}&price=${item.pricePerNight}&currency=${item.currency}`}
                                 className="btn-booking"
                                 style={{
                                   padding: '0.65rem 1.25rem',
@@ -923,7 +923,7 @@ export default function HotelsPage() {
                                     </div>
                                   )}
                                   <Link
-                                    href={`/booking?serviceType=HOTEL&serviceId=${hotelId}&offerId=${encodeURIComponent(offer.offerId)}&serviceTitle=${encodeURIComponent((item.name || 'Hôtel') + ' - ' + offer.roomName)}&price=${offer.price}&currency=${offer.currency}`}
+                                    href={`/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(hotelId)}&selectionRef=${encodeURIComponent(offer.selectionRef || offer.offerId)}&offerId=${encodeURIComponent(offer.offerId)}&serviceTitle=${encodeURIComponent((item.name || 'Hôtel') + ' - ' + offer.roomName)}&price=${offer.price}&currency=${offer.currency}`}
                                     style={{
                                       display: 'inline-block',
                                       marginTop: '0.4rem',
