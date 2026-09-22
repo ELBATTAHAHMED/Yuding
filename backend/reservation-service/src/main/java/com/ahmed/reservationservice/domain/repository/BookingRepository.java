@@ -17,6 +17,10 @@ import java.util.UUID;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
+    Optional<Booking> findByBookingReference(String bookingReference);
+
+    boolean existsByBookingReference(String bookingReference);
+
     List<Booking> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
     Optional<Booking> findByIdAndUserId(UUID id, UUID userId);

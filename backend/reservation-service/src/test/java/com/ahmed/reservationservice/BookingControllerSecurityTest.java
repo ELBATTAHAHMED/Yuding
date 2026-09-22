@@ -3,6 +3,7 @@ package com.ahmed.reservationservice;
 import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
 import com.ahmed.reservationservice.domain.exception.BookingNotFoundException;
 import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
+import com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceException;
 import com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.BookingStatus;
@@ -30,12 +31,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,11 +79,12 @@ class BookingControllerSecurityTest {
     @MockBean
     private UtilisateurFeign utilisateurFeign;
 
-    private Booking createSampleBooking(UUID id, UUID userId, ProductType productType, BookingStatus status) {
+    private Booking createSampleBooking(UUID id, UUID userId, String reference, ProductType productType, BookingStatus status) {
         Instant now = Instant.now();
         return Booking.builder()
                 .id(id)
                 .userId(userId)
+                .bookingReference(reference)
                 .productType(productType)
                 .status(status)
                 .createdAt(now)
@@ -103,13 +107,14 @@ class BookingControllerSecurityTest {
     }
 
     @Test
-    @DisplayName("Authenticated user can create a DRAFT booking (201 Created)")
+    @DisplayName("Authenticated user can create a DRAFT booking (201 Created with Location header and bookingReference)")
     void authenticatedUser_createDraftBooking_returns201() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID bookingId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
         CreateDraftBookingRequest req = new CreateDraftBookingRequest(ProductType.HOTEL);
 
-        Booking booking = createSampleBooking(bookingId, userId, ProductType.HOTEL, BookingStatus.DRAFT);
+        Booking booking = createSampleBooking(bookingId, userId, reference, ProductType.HOTEL, BookingStatus.DRAFT);
         when(bookingService.createDraft(eq(userId), eq(ProductType.HOTEL))).thenReturn(booking);
 
         mockMvc.perform(post("/bookings")
@@ -118,67 +123,86 @@ class BookingControllerSecurityTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(bookingId.toString()))
+                .andExpect(header().string("Location", "/bookings/" + reference))
+                .andExpect(jsonPath("$.bookingReference").value(reference))
+                .andExpect(jsonPath("$.id").doesNotExist()) // Omit internal UUID
                 .andExpect(jsonPath("$.userId").value(userId.toString()))
                 .andExpect(jsonPath("$.productType").value("HOTEL"))
                 .andExpect(jsonPath("$.status").value("DRAFT"));
     }
 
     @Test
-    @DisplayName("User can retrieve their own booking on GET /bookings/{id} (200 OK)")
+    @DisplayName("User can retrieve their own booking on GET /bookings/{reference} (200 OK)")
     void user_canGetOwnBooking_returns200() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID bookingId = UUID.randomUUID();
-        Booking booking = createSampleBooking(bookingId, userId, ProductType.TRAIN, BookingStatus.DRAFT);
+        String reference = "YUD-K7M4P2Q8";
+        Booking booking = createSampleBooking(bookingId, userId, reference, ProductType.TRAIN, BookingStatus.DRAFT);
 
-        when(bookingService.getBooking(eq(bookingId), eq(userId), eq(false))).thenReturn(booking);
+        when(bookingService.getBookingByReference(eq(reference), eq(userId), eq(false))).thenReturn(booking);
 
-        mockMvc.perform(get("/bookings/" + bookingId)
+        mockMvc.perform(get("/bookings/" + reference)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(bookingId.toString()))
+                .andExpect(jsonPath("$.bookingReference").value(reference))
+                .andExpect(jsonPath("$.id").doesNotExist())
                 .andExpect(jsonPath("$.productType").value("TRAIN"));
     }
 
     @Test
-    @DisplayName("IDOR Defense: User cannot retrieve another user's booking (403 Forbidden)")
+    @DisplayName("IDOR Defense: User cannot retrieve another user's booking reference (403 Forbidden)")
     void idor_userCannotGetAnotherUsersBooking_returns403() throws Exception {
-        UUID userA = UUID.randomUUID();
         UUID userB = UUID.randomUUID();
-        UUID bookingId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
 
-        when(bookingService.getBooking(eq(bookingId), eq(userB), eq(false)))
-                .thenThrow(new BookingOwnershipException(bookingId, userB));
+        when(bookingService.getBookingByReference(eq(reference), eq(userB), eq(false)))
+                .thenThrow(new BookingOwnershipException(UUID.randomUUID(), userB));
 
-        mockMvc.perform(get("/bookings/" + bookingId)
+        mockMvc.perform(get("/bookings/" + reference)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userB.toString()))))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("GET /bookings/{id} returns 404 when booking is not found")
+    @DisplayName("GET /bookings/{reference} returns 404 when reference is not found")
     void bookingNotFound_returns404() throws Exception {
         UUID userId = UUID.randomUUID();
-        UUID bookingId = UUID.randomUUID();
+        String reference = "YUD-NTFND222";
 
-        when(bookingService.getBooking(eq(bookingId), eq(userId), eq(false)))
-                .thenThrow(new BookingNotFoundException(bookingId));
+        when(bookingService.getBookingByReference(eq(reference), eq(userId), eq(false)))
+                .thenThrow(new BookingNotFoundException(reference));
 
-        mockMvc.perform(get("/bookings/" + bookingId)
+        mockMvc.perform(get("/bookings/" + reference)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("GET /bookings/me lists all bookings belonging to the caller (200 OK)")
+    @DisplayName("GET /bookings/{reference} returns 400 Bad Request for malformed reference syntax")
+    void malformedReference_returns400() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String invalidReference = "invalid-ref-123";
+
+        when(bookingService.getBookingByReference(eq(invalidReference), eq(userId), eq(false)))
+                .thenThrow(new InvalidBookingReferenceException(invalidReference));
+
+        mockMvc.perform(get("/bookings/" + invalidReference)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"));
+    }
+
+    @Test
+    @DisplayName("GET /bookings/me lists all bookings belonging to the caller with bookingReference (200 OK)")
     void getMyBookings_returnsUserBookings() throws Exception {
         UUID userId = UUID.randomUUID();
         List<Booking> bookings = List.of(
-                createSampleBooking(UUID.randomUUID(), userId, ProductType.FLIGHT, BookingStatus.DRAFT),
-                createSampleBooking(UUID.randomUUID(), userId, ProductType.HOTEL, BookingStatus.CONFIRMED)
+                createSampleBooking(UUID.randomUUID(), userId, "YUD-AAAA2222", ProductType.FLIGHT, BookingStatus.DRAFT),
+                createSampleBooking(UUID.randomUUID(), userId, "YUD-BBBB3333", ProductType.HOTEL, BookingStatus.CONFIRMED)
         );
 
         when(bookingService.getUserBookings(userId)).thenReturn(bookings);
@@ -187,35 +211,39 @@ class BookingControllerSecurityTest {
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].bookingReference").value("YUD-AAAA2222"))
+                .andExpect(jsonPath("$[1].bookingReference").value("YUD-BBBB3333"));
     }
 
     @Test
-    @DisplayName("POST /bookings/{id}/cancel cancels booking when allowed (200 OK)")
+    @DisplayName("POST /bookings/{reference}/cancel cancels booking when allowed (200 OK)")
     void cancelBooking_success_returns200() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID bookingId = UUID.randomUUID();
-        Booking cancelled = createSampleBooking(bookingId, userId, ProductType.ACTIVITY, BookingStatus.CANCELLED);
+        String reference = "YUD-K7M4P2Q8";
+        Booking cancelled = createSampleBooking(bookingId, userId, reference, ProductType.ACTIVITY, BookingStatus.CANCELLED);
 
-        when(bookingService.cancel(eq(bookingId), eq(userId), eq(false))).thenReturn(cancelled);
+        when(bookingService.cancelByReference(eq(reference), eq(userId), eq(false))).thenReturn(cancelled);
 
-        mockMvc.perform(post("/bookings/" + bookingId + "/cancel")
+        mockMvc.perform(post("/bookings/" + reference + "/cancel")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookingReference").value(reference))
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
 
     @Test
-    @DisplayName("POST /bookings/{id}/cancel returns 409 Conflict when transition is forbidden")
+    @DisplayName("POST /bookings/{reference}/cancel returns 409 Conflict when transition is forbidden")
     void cancelBooking_forbiddenTransition_returns409() throws Exception {
         UUID userId = UUID.randomUUID();
-        UUID bookingId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
 
-        when(bookingService.cancel(eq(bookingId), eq(userId), eq(false)))
+        when(bookingService.cancelByReference(eq(reference), eq(userId), eq(false)))
                 .thenThrow(new InvalidBookingTransitionException(BookingStatus.REFUNDED, BookingStatus.CANCELLED));
 
-        mockMvc.perform(post("/bookings/" + bookingId + "/cancel")
+        mockMvc.perform(post("/bookings/" + reference + "/cancel")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isConflict())

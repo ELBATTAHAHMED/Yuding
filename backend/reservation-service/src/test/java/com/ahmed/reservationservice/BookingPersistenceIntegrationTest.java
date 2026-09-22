@@ -1,6 +1,5 @@
 package com.ahmed.reservationservice;
 
-import com.ahmed.reservationservice.domain.exception.BookingConflictException;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.BookingStatus;
 import com.ahmed.reservationservice.domain.model.ProductType;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,19 +61,23 @@ class BookingPersistenceIntegrationTest {
 
     @Test
     @Transactional
-    @DisplayName("Persist and reload Booking in PostgreSQL: validates UUID, strings, version and timestamps")
+    @DisplayName("Persist and reload Booking: validates UUID PK, YUD-XXXXXXXX reference, version and timestamps")
     void persistAndReload_success() {
         UUID userId = UUID.randomUUID();
         Booking draft = bookingService.createDraft(userId, ProductType.FLIGHT);
         UUID bookingId = draft.getId();
+        String ref = draft.getBookingReference();
 
         assertThat(bookingId).isNotNull();
+        assertThat(ref).isNotNull().startsWith("YUD-").hasSize(12);
         assertThat(draft.getVersion()).isZero();
 
-        Booking loaded = bookingRepository.findById(bookingId).orElseThrow();
+        Booking loaded = bookingRepository.findByBookingReference(ref).orElseThrow();
+        assertThat(loaded.getId()).isEqualTo(bookingId);
         assertThat(loaded.getUserId()).isEqualTo(userId);
         assertThat(loaded.getProductType()).isEqualTo(ProductType.FLIGHT);
         assertThat(loaded.getStatus()).isEqualTo(BookingStatus.DRAFT);
+        assertThat(loaded.getBookingReference()).isEqualTo(ref);
         assertThat(loaded.getCreatedAt()).isNotNull();
         assertThat(loaded.getUpdatedAt()).isNotNull();
         assertThat(loaded.getStatusChangedAt()).isNotNull();
@@ -82,7 +86,25 @@ class BookingPersistenceIntegrationTest {
         // Perform transition to PENDING_PAYMENT
         Booking pending = bookingService.markPendingPayment(bookingId, userId, false);
         assertThat(pending.getStatus()).isEqualTo(BookingStatus.PENDING_PAYMENT);
+        assertThat(pending.getBookingReference()).isEqualTo(ref); // Reference preserved
         assertThat(pending.getVersion()).isGreaterThan(0);
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Unique constraint on booking_reference prevents duplicate reference insertion")
+    void uniqueConstraint_preventsDuplicates() {
+        UUID userA = UUID.randomUUID();
+        UUID userB = UUID.randomUUID();
+        String duplicateRef = "YUD-DUP23456";
+        Instant now = Instant.now();
+
+        Booking b1 = Booking.createDraft(userA, ProductType.HOTEL, duplicateRef, now, null);
+        bookingRepository.saveAndFlush(b1);
+
+        Booking b2 = Booking.createDraft(userB, ProductType.TRAIN, duplicateRef, now, null);
+        assertThatThrownBy(() -> bookingRepository.saveAndFlush(b2))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
@@ -99,7 +121,7 @@ class BookingPersistenceIntegrationTest {
     }
 
     @Test
-    @DisplayName("Optimistic locking detection: Stale update triggers BookingConflictException")
+    @DisplayName("Optimistic locking detection: Stale update triggers conflict error")
     void optimisticLocking_conflictDetected() {
         UUID userId = UUID.randomUUID();
         Booking draft = bookingService.createDraft(userId, ProductType.ACTIVITY);
