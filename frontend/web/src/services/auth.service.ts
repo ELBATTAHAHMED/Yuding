@@ -1,5 +1,5 @@
-import { apiClient } from '@/lib/api-client';
-import {
+import { apiClient } from '../lib/api-client.ts';
+import type {
   ActiveSession,
   AuthResponse,
   LoginRequest,
@@ -7,7 +7,7 @@ import {
   RegisterRequest,
   SecurityEvent,
   UserProfile,
-} from '@/types/auth.types';
+} from '../types/auth.types.ts';
 
 export const authService = {
   async login(request: LoginRequest): Promise<AuthResponse> {
