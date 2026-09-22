@@ -307,493 +307,292 @@ export default function HotelsPage() {
 
   return (
     <div>
-      {/* ==================== HERO SECTION ==================== */}
-      <section
-        style={{
-          position: 'relative',
-          background: 'linear-gradient(135deg, #001b1a 0%, #00796b 100%)',
-          padding: '5rem 1rem 4rem',
-          color: '#fff',
-          textAlign: 'center',
-        }}
-      >
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h1
-            style={{
-              fontSize: '2.8rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              marginBottom: '0.75rem',
-            }}
-          >
-            Hébergements &amp; Riads
-          </h1>
-          <p style={{ fontSize: '1.15rem', color: '#b2dfdb', marginBottom: '2.5rem' }}>
-            Trouvez les meilleurs tarifs en direct avec Nuitee Connect parmi nos hôtels et riads partenaires
-          </p>
+      {/* ==================== COMPACT SEARCH HEADER ==================== */}
+      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+              Hébergements
+            </h1>
+            <p className="text-sm md:text-base text-slate-300">
+              Trouvez et réservez des hôtels et riads partenaires au meilleur tarif
+            </p>
+          </div>
 
           <form
             onSubmit={handleSearch}
-            style={{
-              background: 'var(--card, #fff)',
-              padding: '2rem',
-              borderRadius: '12px',
-              color: 'var(--text, #001b1a)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.25rem',
-              alignItems: 'flex-start',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-            }}
+            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
           >
-            {/* Destination Field with GeoPlaceSelector */}
-            <div style={{ textAlign: 'left', position: 'relative' }}>
-              <GeoPlaceSelector
-                id="hotel-destination"
-                label="Destination / Ville"
-                placeholder="Rechercher une ville dans le monde (ex: Marrakech, Paris, Rome, Tokyo)..."
-                type="city"
-                selectedPlace={selectedGeoPlace}
-                onSelect={handleGeoPlaceSelect}
-                error={validationError && !destinationInput.trim() ? validationError : null}
-                required
-              />
-
-              {/* Quick suggestion tags */}
-              <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
-                {PRESET_DESTINATIONS.slice(0, 4).map((preset) => (
-                  <button
-                    key={preset.city}
-                    type="button"
-                    onClick={() => handleDestinationSelect(preset)}
-                    style={{
-                      fontSize: '0.75rem',
-                      padding: '0.2rem 0.5rem',
-                      background: 'rgba(1, 121, 111, 0.08)',
-                      color: '#01796F',
-                      border: '1px solid rgba(1, 121, 111, 0.2)',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {preset.city}
-                  </button>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.3fr_auto] gap-3 items-end">
+              {/* Destination Field with GeoPlaceSelector */}
+              <div className="text-left relative min-w-0">
+                <GeoPlaceSelector
+                  id="hotel-destination"
+                  label="Destination / Ville"
+                  placeholder="Ville ou lieu (ex: Marrakech, Paris, Rome)..."
+                  type="city"
+                  selectedPlace={selectedGeoPlace}
+                  onSelect={handleGeoPlaceSelect}
+                  error={validationError && !destinationInput.trim() ? validationError : null}
+                  required
+                />
               </div>
-            </div>
 
-            {/* Check-In Date */}
-            <div style={{ textAlign: 'left' }}>
-              <label
-                htmlFor="hotel-checkin"
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  marginBottom: '0.4rem',
-                }}
-              >
-                <i className="fas fa-calendar-check" style={{ color: '#01796F', marginRight: '0.4rem' }} />
-                Arrivée
-              </label>
-              <input
-                id="hotel-checkin"
-                type="date"
-                min={today}
-                value={checkIn}
-                onChange={(e) => handleCheckInChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  boxSizing: 'border-box',
-                  fontSize: '0.95rem',
-                }}
-              />
-            </div>
-
-            {/* Check-Out Date */}
-            <div style={{ textAlign: 'left' }}>
-              <label
-                htmlFor="hotel-checkout"
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  marginBottom: '0.4rem',
-                }}
-              >
-                <i className="fas fa-calendar-times" style={{ color: '#01796F', marginRight: '0.4rem' }} />
-                Départ
-              </label>
-              <input
-                id="hotel-checkout"
-                type="date"
-                min={minCheckOut}
-                value={checkOut}
-                onChange={(e) => handleCheckOutChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: isInvalidDateRange ? '1px solid #ef5350' : '1px solid #ccc',
-                  boxSizing: 'border-box',
-                  fontSize: '0.95rem',
-                }}
-              />
-              {isInvalidDateRange && (
-                <span style={{ display: 'block', fontSize: '0.75rem', color: '#ef5350', marginTop: '0.25rem' }}>
-                  Min. 1 nuit requise
-                </span>
-              )}
-            </div>
-
-            {/* Rooms & Occupancy Trigger */}
-            <div style={{ textAlign: 'left', position: 'relative' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  marginBottom: '0.4rem',
-                }}
-              >
-                <i className="fas fa-user-friends" style={{ color: '#01796F', marginRight: '0.4rem' }} />
-                Chambres &amp; Voyageurs
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowOccupancyModal(!showOccupancyModal)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  background: '#fff',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span>
-                  {occupancies.length} ch., {totalAdults} ad.
-                  {totalChildren > 0 ? `, ${totalChildren} enf.` : ''}
-                </span>
-                <i className={`fas fa-chevron-${showOccupancyModal ? 'up' : 'down'}`} style={{ color: '#888' }} />
-              </button>
-
-              {/* Occupancy Dropdown Popover */}
-              {showOccupancyModal && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 50,
-                    marginTop: '0.5rem',
-                    background: '#fff',
-                    borderRadius: '8px',
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
-                    border: '1px solid #e0e0e0',
-                    padding: '1.25rem',
-                    minWidth: '280px',
-                  }}
+              {/* Check-In Date */}
+              <div className="text-left min-w-0">
+                <label
+                  htmlFor="hotel-checkin"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider"
                 >
-                  <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                    {occupancies.map((room, roomIdx) => (
-                      <div
-                        key={roomIdx}
-                        style={{
-                          paddingBottom: '1rem',
-                          marginBottom: '1rem',
-                          borderBottom: roomIdx < occupancies.length - 1 ? '1px solid #eee' : 'none',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#01796F' }}>
-                            Chambre {roomIdx + 1}
-                          </span>
-                          {occupancies.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRoom(roomIdx)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: '#e53935',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <i className="fas fa-trash-alt" /> Retirer
-                            </button>
-                          )}
-                        </div>
+                  <i className="fas fa-calendar-check mr-1.5 text-[#01796F]" />
+                  Arrivée
+                </label>
+                <input
+                  id="hotel-checkin"
+                  type="date"
+                  min={today}
+                  value={checkIn}
+                  onChange={(e) => handleCheckInChange(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
 
-                        {/* Adults counter */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          <span style={{ fontSize: '0.85rem' }}>Adultes</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleAdultsChange(roomIdx, -1)}
-                              disabled={room.adults <= 1}
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '4px',
-                                border: '1px solid #ccc',
-                                background: '#f5f5f5',
-                                cursor: room.adults <= 1 ? 'not-allowed' : 'pointer',
-                              }}
-                            >
-                              -
-                            </button>
-                            <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 600 }}>
-                              {room.adults}
+              {/* Check-Out Date */}
+              <div className="text-left min-w-0">
+                <label
+                  htmlFor="hotel-checkout"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider"
+                >
+                  <i className="fas fa-calendar-times mr-1.5 text-[#01796F]" />
+                  Départ
+                </label>
+                <input
+                  id="hotel-checkout"
+                  type="date"
+                  min={minCheckOut}
+                  value={checkOut}
+                  onChange={(e) => handleCheckOutChange(e.target.value)}
+                  className={`w-full h-11 px-3 rounded-lg border ${
+                    isInvalidDateRange ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+                  } bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all`}
+                />
+                {isInvalidDateRange && (
+                  <span className="block text-xs text-red-500 mt-1">Min. 1 nuit requise</span>
+                )}
+              </div>
+
+              {/* Rooms & Occupancy Trigger */}
+              <div className="text-left relative min-w-0">
+                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider">
+                  <i className="fas fa-user-friends mr-1.5 text-[#01796F]" />
+                  Voyageurs
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowOccupancyModal(!showOccupancyModal)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#01796F] transition-all"
+                >
+                  <span className="truncate">
+                    {occupancies.length} ch., {totalAdults} ad.
+                    {totalChildren > 0 ? `, ${totalChildren} enf.` : ''}
+                  </span>
+                  <i className={`fas fa-chevron-${showOccupancyModal ? 'up' : 'down'} text-slate-400 text-xs ml-1`} />
+                </button>
+
+                {/* Occupancy Dropdown Popover */}
+                {showOccupancyModal && (
+                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-4 min-w-[280px]">
+                    <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                      {occupancies.map((room, roomIdx) => (
+                        <div key={roomIdx} className="py-3 first:pt-0 last:pb-0">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-bold text-xs text-[#01796F] uppercase">
+                              Chambre {roomIdx + 1}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => handleAdultsChange(roomIdx, 1)}
-                              disabled={room.adults >= 4}
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '4px',
-                                border: '1px solid #ccc',
-                                background: '#f5f5f5',
-                                cursor: room.adults >= 4 ? 'not-allowed' : 'pointer',
-                              }}
-                            >
-                              +
-                            </button>
+                            {occupancies.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveRoom(roomIdx)}
+                                className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1"
+                              >
+                                <i className="fas fa-trash-alt text-[10px]" /> Retirer
+                              </button>
+                            )}
                           </div>
-                        </div>
 
-                        {/* Children counter */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          <span style={{ fontSize: '0.85rem' }}>Enfants (0-17 ans)</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleChildrenCountChange(roomIdx, -1)}
-                              disabled={(room.childrenAges?.length || 0) <= 0}
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '4px',
-                                border: '1px solid #ccc',
-                                background: '#f5f5f5',
-                                cursor: (room.childrenAges?.length || 0) <= 0 ? 'not-allowed' : 'pointer',
-                              }}
-                            >
-                              -
-                            </button>
-                            <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 600 }}>
-                              {room.childrenAges?.length || 0}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleChildrenCountChange(roomIdx, 1)}
-                              disabled={(room.childrenAges?.length || 0) >= 3}
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '4px',
-                                border: '1px solid #ccc',
-                                background: '#f5f5f5',
-                                cursor: (room.childrenAges?.length || 0) >= 3 ? 'not-allowed' : 'pointer',
-                              }}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Child ages */}
-                        {(room.childrenAges || []).length > 0 && (
-                          <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#f9f9f9', borderRadius: '4px' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#555' }}>
-                              Âge des enfants à l&apos;arrivée :
-                            </span>
-                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-                              {room.childrenAges!.map((age, childIdx) => (
-                                <div key={childIdx} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                  <span style={{ fontSize: '0.7rem' }}>Enf. {childIdx + 1} :</span>
-                                  <select
-                                    value={age}
-                                    onChange={(e) => handleChildAgeChange(roomIdx, childIdx, Number(e.target.value))}
-                                    style={{ padding: '0.2rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem' }}
-                                  >
-                                    {Array.from({ length: 18 }).map((_, a) => (
-                                      <option key={a} value={a}>
-                                        {a} an{a > 1 ? 's' : ''}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              ))}
+                          {/* Adults counter */}
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Adultes</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleAdultsChange(roomIdx, -1)}
+                                disabled={room.adults <= 1}
+                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                              >
+                                -
+                              </button>
+                              <span className="w-5 text-center font-bold text-xs">{room.adults}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleAdultsChange(roomIdx, 1)}
+                                disabled={room.adults >= 4}
+                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                              >
+                                +
+                              </button>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
 
-                  {occupancies.length < 4 && (
+                          {/* Children counter */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Enfants (0-17 ans)</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleChildrenCountChange(roomIdx, -1)}
+                                disabled={(room.childrenAges?.length || 0) <= 0}
+                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                              >
+                                -
+                              </button>
+                              <span className="w-5 text-center font-bold text-xs">{room.childrenAges?.length || 0}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleChildrenCountChange(roomIdx, 1)}
+                                disabled={(room.childrenAges?.length || 0) >= 3}
+                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Child ages */}
+                          {(room.childrenAges || []).length > 0 && (
+                            <div className="mt-2.5 p-2 bg-slate-50 dark:bg-slate-750 rounded border border-slate-200 dark:border-slate-700">
+                              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                                Âge des enfants à l&apos;arrivée :
+                              </span>
+                              <div className="flex gap-2 flex-wrap">
+                                {room.childrenAges!.map((age, childIdx) => (
+                                  <div key={childIdx} className="flex items-center gap-1">
+                                    <span className="text-[10px] text-slate-500">Enf. {childIdx + 1}:</span>
+                                    <select
+                                      value={age}
+                                      onChange={(e) => handleChildAgeChange(roomIdx, childIdx, Number(e.target.value))}
+                                      className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-800"
+                                    >
+                                      {Array.from({ length: 18 }).map((_, a) => (
+                                        <option key={a} value={a}>
+                                          {a} an{a > 1 ? 's' : ''}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {occupancies.length < 4 && (
+                      <button
+                        type="button"
+                        onClick={handleAddRoom}
+                        className="w-full py-1.5 mt-3 text-xs font-semibold text-[#01796F] bg-[#01796F]/10 hover:bg-[#01796F]/15 border border-dashed border-[#01796F]/30 rounded-lg transition-colors"
+                      >
+                        + Ajouter une chambre
+                      </button>
+                    )}
+
+                    {/* Nationality selector */}
+                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                      <label className="block text-[11px] font-medium text-slate-500 mb-1">
+                        Nationalité du voyageur :
+                      </label>
+                      <select
+                        value={guestNationality}
+                        onChange={(e) => setGuestNationality(e.target.value)}
+                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-800"
+                      >
+                        <option value="MA">Maroc (MA)</option>
+                        <option value="FR">France (FR)</option>
+                        <option value="ES">Espagne (ES)</option>
+                        <option value="US">États-Unis (US)</option>
+                        <option value="GB">Royaume-Uni (GB)</option>
+                        <option value="DE">Allemagne (DE)</option>
+                        <option value="AE">Émirats arabes unis (AE)</option>
+                      </select>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={handleAddRoom}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        marginTop: '0.5rem',
-                        background: 'rgba(1, 121, 111, 0.08)',
-                        color: '#01796F',
-                        border: '1px dashed #01796F',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                      }}
+                      onClick={() => setShowOccupancyModal(false)}
+                      className="w-full py-2 mt-3 bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold rounded-lg transition-colors"
                     >
-                      + Ajouter une chambre
+                      Appliquer
                     </button>
-                  )}
-
-                  {/* Nationality selector */}
-                  <div style={{ marginTop: '0.75rem', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#555', marginBottom: '0.2rem' }}>
-                      Nationalité du voyageur :
-                    </label>
-                    <select
-                      value={guestNationality}
-                      onChange={(e) => setGuestNationality(e.target.value)}
-                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem' }}
-                    >
-                      <option value="MA">Maroc (MA)</option>
-                      <option value="FR">France (FR)</option>
-                      <option value="ES">Espagne (ES)</option>
-                      <option value="US">États-Unis (US)</option>
-                      <option value="GB">Royaume-Uni (GB)</option>
-                      <option value="DE">Allemagne (DE)</option>
-                      <option value="AE">Émirats arabes unis (AE)</option>
-                    </select>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowOccupancyModal(false)}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      marginTop: '0.75rem',
-                      background: '#01796F',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Terminé
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Search Submit Button */}
-            <div style={{ alignSelf: 'flex-end', width: '100%' }}>
-              <button
-                type="submit"
-                className="btn-booking"
-                disabled={isSearching}
-                style={{
-                  width: '100%',
-                  padding: '0.85rem',
-                  fontWeight: 700,
-                  borderRadius: '6px',
-                  cursor: isSearching ? 'not-allowed' : 'pointer',
-                  opacity: isSearching ? 0.7 : 1,
-                  color: '#fff',
-                  border: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: '#01796F',
-                }}
-              >
-                {isSearching ? (
-                  <i className="fas fa-spinner fa-spin" />
-                ) : (
-                  <i className="fas fa-search" style={{ marginRight: '0.4rem' }} />
                 )}
-                {isSearching ? 'Recherche...' : 'Rechercher'}
-              </button>
+              </div>
+
+              {/* Search Submit Button */}
+              <div className="w-full lg:w-auto">
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSearching ? (
+                    <i className="fas fa-spinner fa-spin" />
+                  ) : (
+                    <i className="fas fa-search text-xs" />
+                  )}
+                  <span>{isSearching ? 'Recherche...' : 'Rechercher'}</span>
+                </button>
+              </div>
             </div>
           </form>
 
           {/* Validation Alert */}
           {validationError && (
-            <div
-              style={{
-                marginTop: '1rem',
-                padding: '0.75rem 1rem',
-                backgroundColor: 'rgba(239, 83, 80, 0.15)',
-                border: '1px solid #ef5350',
-                borderRadius: '8px',
-                color: '#ffebee',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <i className="fas fa-exclamation-circle" style={{ color: '#ef5350' }} />
-              {validationError}
+            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+              <i className="fas fa-exclamation-circle text-red-400" />
+              <span>{validationError}</span>
             </div>
           )}
+
+          {/* Popular Destination Quick Chips */}
+          <div className="mt-3.5 flex items-center gap-2 flex-wrap text-xs text-slate-300">
+            <span className="font-medium text-slate-400">Destinations populaires :</span>
+            {PRESET_DESTINATIONS.slice(0, 6).map((preset) => (
+              <button
+                key={preset.city}
+                type="button"
+                onClick={() => handleDestinationSelect(preset)}
+                className="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition-colors"
+              >
+                {preset.city}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ==================== DESTINATION GUIDE & MAP (PHASE 26) ==================== */}
       {selectedGeoPlace && selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide && (
-        <section style={{ padding: '2rem 1rem 0', background: 'var(--bg, #fcfcfc)' }}>
-          <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <section className="py-6 px-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-6xl mx-auto">
             <div
               style={{
-                background: '#fff',
+                background: 'var(--card, #fff)',
                 borderRadius: '16px',
-                border: '1px solid #e0e0e0',
+                border: '1px solid var(--border, #e2e8f0)',
                 padding: '1.5rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                 marginBottom: '1rem',
               }}
             >
@@ -863,10 +662,10 @@ export default function HotelsPage() {
       )}
 
       {/* ==================== FILTER TABS & RESULTS ==================== */}
-      <section style={{ padding: '3.5rem 1rem' }}>
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+        <div className="max-w-6xl mx-auto">
           {/* Filter Categories */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+          <div className="flex justify-center gap-2 mb-6 flex-wrap">
             {[
               { label: 'Tous les hébergements', value: 'ALL' as const },
               { label: 'Hôtels & Riads', value: 'HOTEL_RIAD' as const },
@@ -876,18 +675,11 @@ export default function HotelsPage() {
               <button
                 key={tab.value}
                 onClick={() => setFilterType(tab.value)}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  borderRadius: '30px',
-                  border: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  backgroundColor: filterType === tab.value ? '#01796F' : 'var(--card, #eee)',
-                  color: filterType === tab.value ? '#fff' : 'var(--text, #333)',
-                  boxShadow: filterType === tab.value ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
-                  transition: 'all 0.2s',
-                }}
+                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all border ${
+                  filterType === tab.value
+                    ? 'bg-[#01796F] text-white border-[#01796F] shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#01796F]/40'
+                }`}
               >
                 {tab.label}
               </button>

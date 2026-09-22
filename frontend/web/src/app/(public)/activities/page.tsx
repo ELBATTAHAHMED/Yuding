@@ -115,163 +115,107 @@ export default function ActivitiesPage() {
 
   return (
     <div>
-      {/* ==================== HERO & SEARCH FORM ==================== */}
-      <section
-        style={{
-          background: 'linear-gradient(135deg, #001b1a 0%, #00796b 100%)',
-          padding: '5rem 1rem 4rem',
-          color: '#fff',
-          textAlign: 'center',
-        }}
-      >
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '2.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-            Activités &amp; Expériences
-          </h1>
-          <p style={{ fontSize: '1.15rem', color: '#b2dfdb', marginBottom: '2.5rem' }}>
-            Explorez des aventures inoubliables, des excursions dans le désert et des visites culturelles guidées
-          </p>
+      {/* ==================== COMPACT SEARCH HEADER ==================== */}
+      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+              Activités &amp; Expériences
+            </h1>
+            <p className="text-sm md:text-base text-slate-300">
+              Explorez des visites guidées, excursions et aventures inoubliables
+            </p>
+          </div>
 
           <form
             onSubmit={handleSearch}
-            style={{
-              background: 'var(--card, #fff)',
-              padding: '1.75rem',
-              borderRadius: '12px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              color: 'var(--text, #333)',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              alignItems: 'flex-end',
-              textAlign: 'left',
-            }}
+            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
           >
-            <div style={{ flex: '2 1 220px' }}>
-              <GeoPlaceSelector
-                id="activity-destination"
-                label="Destination"
-                placeholder="Rechercher une ville dans le monde (ex: Paris, Marrakech, Rome, Barcelone)..."
-                type="city"
-                selectedPlace={selectedGeoPlace}
-                onSelect={handlePlaceSelect}
-                error={errorMessage && !destination.trim() ? errorMessage : null}
-                required
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1.2fr_auto] gap-3 items-end">
+              <div className="min-w-0">
+                <GeoPlaceSelector
+                  id="activity-destination"
+                  label="Destination"
+                  placeholder="Ville ou lieu (ex: Paris, Marrakech, Rome)..."
+                  type="city"
+                  selectedPlace={selectedGeoPlace}
+                  onSelect={handlePlaceSelect}
+                  error={errorMessage && !destination.trim() ? errorMessage : null}
+                  required
+                />
+              </div>
 
-            <div style={{ flex: '1 1 150px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-calendar-alt" style={{ marginRight: '0.4rem' }}></i>
-                Date de visite
-              </label>
-              <input
-                type="date"
-                min={today}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '0.95rem',
-                }}
-              />
-            </div>
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left">
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  Date de visite
+                </label>
+                <input
+                  type="date"
+                  min={today}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
 
-            <div style={{ flex: '1 1 110px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#01796F' }}>
-                <i className="fas fa-user-friends" style={{ marginRight: '0.4rem' }}></i>
-                Voyageurs
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' }}>
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left">
+                  <i className="fas fa-user-friends mr-1.5 text-[#01796F]" />
+                  Participants
+                </label>
+                <div className="flex items-center h-11 border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setTravelers((v) => Math.max(1, v - 1))}
+                    disabled={travelers <= 1}
+                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="flex-1 text-center font-bold text-sm text-slate-900 dark:text-white">
+                    {travelers} pers.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTravelers((v) => Math.min(20, v + 1))}
+                    disabled={travelers >= 20}
+                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-full lg:w-auto">
                 <button
-                  type="button"
-                  onClick={() => setTravelers((v) => Math.max(1, v - 1))}
-                  disabled={travelers <= 1}
-                  style={{
-                    width: '40px',
-                    height: '48px',
-                    border: 'none',
-                    background: '#f5f5f5',
-                    fontSize: '1.2rem',
-                    cursor: travelers <= 1 ? 'not-allowed' : 'pointer',
-                    opacity: travelers <= 1 ? 0.4 : 1,
-                  }}
+                  type="submit"
+                  disabled={loading}
+                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  −
-                </button>
-                <span style={{ flex: 1, textAlign: 'center', fontWeight: 700, fontSize: '1rem' }}>
-                  {travelers}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setTravelers((v) => Math.min(20, v + 1))}
-                  disabled={travelers >= 20}
-                  style={{
-                    width: '40px',
-                    height: '48px',
-                    border: 'none',
-                    background: '#f5f5f5',
-                    fontSize: '1.2rem',
-                    cursor: travelers >= 20 ? 'not-allowed' : 'pointer',
-                    opacity: travelers >= 20 ? 0.4 : 1,
-                  }}
-                >
-                  +
+                  {loading ? (
+                    <i className="fas fa-spinner fa-spin" />
+                  ) : (
+                    <i className="fas fa-search text-xs" />
+                  )}
+                  <span>{loading ? 'Recherche...' : 'Rechercher'}</span>
                 </button>
               </div>
-            </div>
-
-            <div style={{ flex: '1 1 160px' }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '0.85rem 1.5rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#01796F',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(1, 121, 111, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                {loading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i>
-                    Recherche...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-search"></i>
-                    Rechercher
-                  </>
-                )}
-              </button>
             </div>
           </form>
 
           {errorMessage && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', borderRadius: '8px', fontSize: '0.9rem' }}>
-              <i className="fas fa-exclamation-circle" style={{ marginRight: '0.5rem' }}></i>
-              {errorMessage}
+            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+              <i className="fas fa-exclamation-circle text-red-400" />
+              <span>{errorMessage}</span>
             </div>
           )}
         </div>
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section style={{ padding: '3.5rem 1rem' }}>
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+        <div className="max-w-6xl mx-auto">
           {/* Category Tabs */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
             {[

@@ -22,55 +22,28 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
   mobileAction,
 }) => {
   return (
-    <div style={{ background: 'var(--background, #f8fafc)', minHeight: '100vh', padding: '2rem 1rem 5rem' }}>
-      <div style={{ maxWidth: '1150px', margin: '0 auto' }}>
+    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen py-8 px-4 pb-24">
+      <div className="max-w-6xl mx-auto">
         {/* Breadcrumb / Back Link */}
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div className="mb-6">
           <Link
             href={backHref}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#01796F',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              textDecoration: 'none',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '6px',
-              background: 'rgba(1, 121, 111, 0.08)',
-              transition: 'background 0.2s ease',
-            }}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#01796F] hover:text-[#015f57] bg-[#01796F]/10 hover:bg-[#01796F]/15 px-3 py-1.5 rounded-lg transition-colors"
           >
-            <i className="fas fa-arrow-left" style={{ fontSize: '0.8rem' }} />
+            <i className="fas fa-arrow-left text-xs" />
             <span>{backLabel}</span>
           </Link>
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '2rem',
-            alignItems: 'start',
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
           {/* Main Content Column */}
-          <main style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+          <main className="flex flex-col gap-6 min-w-0">
             {children}
           </main>
 
           {/* Sticky Sidebar Column (Desktop) */}
-          <aside
-            style={{
-              position: 'sticky',
-              top: '2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1.25rem',
-            }}
-          >
+          <aside className="sticky top-6 flex flex-col gap-5">
             {sidebar}
           </aside>
         </div>

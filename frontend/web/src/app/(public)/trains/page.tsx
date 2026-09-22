@@ -184,307 +184,169 @@ export default function TrainsPage() {
 
   return (
     <div>
-      {/* ==================== HERO & SEARCH SECTION ==================== */}
-      <section
-        style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0284c7 100%)',
-          padding: '5rem 1rem 4rem',
-          color: '#ffffff',
-          textAlign: 'center',
-        }}
-      >
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h1
-            style={{
-              fontSize: '2.8rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              marginBottom: '0.75rem',
-              letterSpacing: '-0.5px',
-            }}
-          >
-            Horaires &amp; Trains
-          </h1>
-          <p
-            style={{
-              fontSize: '1.15rem',
-              color: '#93c5fd',
-              marginBottom: '2.5rem',
-              maxWidth: '750px',
-              margin: '0 auto 2.5rem',
-            }}
-          >
-            Consultez les liaisons ferroviaires et grilles horaires au Maroc (réseau ONCF) et dans le monde entier (Transitous)
-          </p>
+      {/* ==================== COMPACT SEARCH HEADER ==================== */}
+      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+              Trains
+            </h1>
+            <p className="text-sm md:text-base text-slate-300">
+              Consultez les liaisons ferroviaires et grilles horaires au Maroc (ONCF) et dans le monde (Transitous)
+            </p>
+          </div>
 
           <form
             onSubmit={handleSearch}
-            style={{
-              background: '#ffffff',
-              padding: '1.75rem',
-              borderRadius: '16px',
-              boxShadow: '0 12px 35px rgba(0, 0, 0, 0.25)',
-              color: '#1e293b',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              alignItems: 'flex-end',
-              textAlign: 'left',
-            }}
+            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
           >
-            {/* Origin Station */}
-            <div style={{ flex: '3 1 240px' }}>
-              <StationSelector
-                id="originStation"
-                label="Gare de départ"
-                icon="fas fa-train"
-                placeholder={loadingStations ? 'Chargement des gares...' : 'Gare de départ (ex: Casa, Paris, Lyon, Madrid)'}
-                stations={stations}
-                selectedStation={originStation}
-                onSelect={(st) => {
-                  setOriginStation(st);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                disabled={loadingStations}
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_auto_1.4fr_1fr_0.9fr_0.8fr_auto] gap-2.5 items-end">
+              {/* Origin Station */}
+              <div className="min-w-0">
+                <StationSelector
+                  id="originStation"
+                  label="Gare de départ"
+                  icon="fas fa-train"
+                  placeholder={loadingStations ? 'Chargement...' : 'Gare de départ (ex: Casa, Paris, Lyon)...'}
+                  stations={stations}
+                  selectedStation={originStation}
+                  onSelect={(st) => {
+                    setOriginStation(st);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  disabled={loadingStations}
+                />
+              </div>
 
-            {/* Swap Button */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '4px',
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleSwap}
-                disabled={!originStation && !destinationStation}
-                title="Inverser les gares"
-                style={{
-                  background: '#f1f5f9',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '50%',
-                  width: '42px',
-                  height: '42px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: originStation || destinationStation ? 'pointer' : 'not-allowed',
-                  color: '#2563eb',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <i className="fas fa-exchange-alt" />
-              </button>
-            </div>
-
-            {/* Destination Station */}
-            <div style={{ flex: '3 1 240px' }}>
-              <StationSelector
-                id="destinationStation"
-                label="Gare d’arrivée"
-                icon="fas fa-map-marker-alt"
-                placeholder={loadingStations ? 'Chargement des gares...' : 'Gare d’arrivée (ex: Rabat, Tanger, Barcelone)'}
-                stations={stations}
-                selectedStation={destinationStation}
-                onSelect={(st) => {
-                  setDestinationStation(st);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                disabled={loadingStations}
-              />
-            </div>
-
-            {/* Departure Date */}
-            <div style={{ flex: '2 1 150px' }}>
-              <label
-                htmlFor="trainDate"
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.4rem',
-                  color: '#334155',
-                }}
-              >
-                <i className="fas fa-calendar-alt" style={{ marginRight: '6px', color: '#2563eb' }} />
-                Date de voyage
-              </label>
-              <input
-                id="trainDate"
-                type="date"
-                value={date}
-                min={TODAY}
-                onChange={(e) => {
-                  setDate(e.target.value);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '0.65rem 0.8rem',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  color: '#1e293b',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            {/* Optional Time */}
-            <div style={{ flex: '1 1 120px' }}>
-              <label
-                htmlFor="trainTime"
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.4rem',
-                  color: '#334155',
-                }}
-              >
-                <i className="fas fa-clock" style={{ marginRight: '6px', color: '#2563eb' }} />
-                À partir de
-              </label>
-              <input
-                id="trainTime"
-                type="time"
-                value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.65rem 0.8rem',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  color: '#1e293b',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            {/* Passengers */}
-            <div style={{ flex: '1 1 110px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.4rem',
-                  color: '#334155',
-                }}
-              >
-                <i className="fas fa-users" style={{ marginRight: '6px', color: '#2563eb' }} />
-                Passagers
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#fff', height: '42px' }}>
+              {/* Swap Button */}
+              <div className="hidden lg:flex items-center justify-center pb-0.5">
                 <button
                   type="button"
-                  onClick={() => setPassengers((v) => Math.max(1, v - 1))}
-                  disabled={passengers <= 1}
-                  style={{
-                    width: '36px',
-                    height: '100%',
-                    border: 'none',
-                    background: '#f1f5f9',
-                    fontSize: '1.1rem',
-                    cursor: passengers <= 1 ? 'not-allowed' : 'pointer',
-                    opacity: passengers <= 1 ? 0.4 : 1,
-                  }}
+                  onClick={handleSwap}
+                  disabled={!originStation && !destinationStation}
+                  title="Inverser les gares"
+                  className="w-10 h-10 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-[#01796F] hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  −
-                </button>
-                <span style={{ flex: 1, textAlign: 'center', fontWeight: 700, fontSize: '0.95rem' }}>
-                  {passengers}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPassengers((v) => Math.min(9, v + 1))}
-                  disabled={passengers >= 9}
-                  style={{
-                    width: '36px',
-                    height: '100%',
-                    border: 'none',
-                    background: '#f1f5f9',
-                    fontSize: '1.1rem',
-                    cursor: passengers >= 9 ? 'not-allowed' : 'pointer',
-                    opacity: passengers >= 9 ? 0.4 : 1,
-                  }}
-                >
-                  +
+                  <i className="fas fa-exchange-alt text-xs" />
                 </button>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <div style={{ flex: '1 1 140px' }}>
-              <button
-                type="submit"
-                disabled={loading || !originStation || !destinationStation || !date}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1.5rem',
-                  background:
-                    loading || !originStation || !destinationStation || !date
-                      ? '#94a3b8'
-                      : '#2563eb',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  cursor:
-                    loading || !originStation || !destinationStation || !date
-                      ? 'not-allowed'
-                      : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  boxSizing: 'border-box',
-                  transition: 'background 0.2s ease',
-                }}
-              >
-                {loading ? (
-                  <>
+              {/* Destination Station */}
+              <div className="min-w-0">
+                <StationSelector
+                  id="destinationStation"
+                  label="Gare d’arrivée"
+                  icon="fas fa-map-marker-alt"
+                  placeholder={loadingStations ? 'Chargement...' : 'Gare d’arrivée (ex: Rabat, Tanger)...'}
+                  stations={stations}
+                  selectedStation={destinationStation}
+                  onSelect={(st) => {
+                    setDestinationStation(st);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  disabled={loadingStations}
+                />
+              </div>
+
+              {/* Departure Date */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="trainDate"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                >
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  Date
+                </label>
+                <input
+                  id="trainDate"
+                  type="date"
+                  value={date}
+                  min={TODAY}
+                  onChange={(e) => {
+                    setDate(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
+
+              {/* Optional Time */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="trainTime"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                >
+                  <i className="fas fa-clock mr-1.5 text-[#01796F]" />
+                  Heure
+                </label>
+                <input
+                  id="trainTime"
+                  type="time"
+                  value={departureTime}
+                  onChange={(e) => setDepartureTime(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
+
+              {/* Passengers */}
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left">
+                  <i className="fas fa-users mr-1.5 text-[#01796F]" />
+                  Passagers
+                </label>
+                <div className="flex items-center h-11 border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setPassengers((v) => Math.max(1, v - 1))}
+                    disabled={passengers <= 1}
+                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="flex-1 text-center font-bold text-sm text-slate-900 dark:text-white">
+                    {passengers}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPassengers((v) => Math.min(9, v + 1))}
+                    disabled={passengers >= 9}
+                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="w-full lg:w-auto">
+                <button
+                  type="submit"
+                  disabled={loading || !originStation || !destinationStation || !date}
+                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
                     <i className="fas fa-spinner fa-spin" />
-                    <span>Recherche...</span>
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-search" />
-                    <span>Rechercher</span>
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <i className="fas fa-search text-xs" />
+                  )}
+                  <span>{loading ? 'Recherche...' : 'Rechercher'}</span>
+                </button>
+              </div>
             </div>
           </form>
 
           {errorMessage && (
-            <div
-              style={{
-                marginTop: '1rem',
-                background: '#fef2f2',
-                color: '#b91c1c',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid #fca5a5',
-                fontSize: '0.9rem',
-                textAlign: 'left',
-              }}
-            >
-              <i className="fas fa-exclamation-circle" style={{ marginRight: '8px' }} />
-              {errorMessage}
+            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+              <i className="fas fa-exclamation-circle text-red-400" />
+              <span>{errorMessage}</span>
             </div>
           )}
         </div>
       </section>
 
-      {/* ==================== RESULTS SECTION ==================== */}
-      <section style={{ padding: '3rem 1rem', maxWidth: '1100px', margin: '0 auto' }}>
+      {/* ==================== CONTENT SECTION ==================== */}
+      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+        <div className="max-w-6xl mx-auto">
         {/* Freshness Gate Alert (Outdated Schedule Rejection) */}
         {outdatedNotice && (
           <div
@@ -716,6 +578,7 @@ export default function TrainsPage() {
               </a>{' '}
               (moteur libre MOTIS, données OpenStreetMap / GTFS / NeTEx). Les tarifs ne sont pas fournis par cette source.
             </div>
+          </div>
           </div>
         </div>
       </section>

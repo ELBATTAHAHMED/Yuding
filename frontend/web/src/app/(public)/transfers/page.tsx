@@ -134,259 +134,156 @@ export default function TransfersPage() {
 
   return (
     <div>
-      {/* ==================== HERO & SEARCH SECTION ==================== */}
-      <section
-        style={{
-          background: 'linear-gradient(135deg, #001b1a 0%, #00796b 100%)',
-          padding: '5rem 1rem 4rem',
-          color: '#fff',
-          textAlign: 'center',
-        }}
-      >
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '2.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-            Taxi, Navettes &amp; Transferts
-          </h1>
-          <p style={{ fontSize: '1.15rem', color: '#b2dfdb', marginBottom: '2.5rem' }}>
-            Réservez vos navettes aéroport, chauffeurs privés et transferts interurbains en toute sérénité
-          </p>
+      {/* ==================== COMPACT SEARCH HEADER ==================== */}
+      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+              Transferts &amp; VTC
+            </h1>
+            <p className="text-sm md:text-base text-slate-300">
+              Réservez vos navettes aéroport, chauffeurs privés et transferts interurbains
+            </p>
+          </div>
 
           <form
             onSubmit={handleSearch}
-            style={{
-              background: '#ffffff',
-              padding: '1.75rem',
-              borderRadius: '16px',
-              boxShadow: '0 12px 35px rgba(0, 0, 0, 0.25)',
-              color: '#1e293b',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              alignItems: 'flex-end',
-              textAlign: 'left',
-            }}
+            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
           >
-            {/* Origin Airport / Location */}
-            <div style={{ flex: '3 1 230px' }}>
-              <TransferLocationSelector
-                id="pickupLocation"
-                label="Point de départ"
-                icon="fas fa-plane-departure"
-                placeholder="Aéroport ou code IATA (ex: RAK, CMN, CDG, BCN...)"
-                value={pickup}
-                onChange={(val) => {
-                  setPickup(val);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                suggestions={POPULAR_AIRPORTS}
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_auto_1.4fr_1fr_0.9fr_0.8fr_auto] gap-2.5 items-end">
+              {/* Origin Airport / Location */}
+              <div className="min-w-0">
+                <TransferLocationSelector
+                  id="pickupLocation"
+                  label="Point de départ"
+                  icon="fas fa-plane-departure"
+                  placeholder="Aéroport ou code IATA (ex: RAK, CMN)..."
+                  value={pickup}
+                  onChange={(val) => {
+                    setPickup(val);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  suggestions={POPULAR_AIRPORTS}
+                />
+              </div>
 
-            {/* Swap Button */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '4px',
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleSwap}
-                disabled={!pickup && !dropoff}
-                title="Inverser les points de transfert"
-                aria-label="Inverser le départ et l'arrivée"
-                style={{
-                  background: '#f1f5f9',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '50%',
-                  width: '42px',
-                  height: '42px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: pickup || dropoff ? 'pointer' : 'not-allowed',
-                  color: '#01796F',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
-              >
-                <i className="fas fa-exchange-alt" />
-              </button>
-            </div>
+              {/* Swap Button */}
+              <div className="hidden lg:flex items-center justify-center pb-0.5">
+                <button
+                  type="button"
+                  onClick={handleSwap}
+                  disabled={!pickup && !dropoff}
+                  title="Inverser les points de transfert"
+                  aria-label="Inverser le départ et l'arrivée"
+                  className="w-10 h-10 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-[#01796F] hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <i className="fas fa-exchange-alt text-xs" />
+                </button>
+              </div>
 
-            {/* Destination Location / Hotel */}
-            <div style={{ flex: '3 1 230px' }}>
-              <TransferLocationSelector
-                id="dropoffLocation"
-                label="Destination"
-                icon="fas fa-map-marker-alt"
-                placeholder="Hôtel, coordonnées ou ville (ex: Centre-ville, Médina...)"
-                value={dropoff}
-                onChange={(val) => {
-                  setDropoff(val);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                suggestions={POPULAR_DESTINATIONS}
-              />
-            </div>
+              {/* Destination Location / Hotel */}
+              <div className="min-w-0">
+                <TransferLocationSelector
+                  id="dropoffLocation"
+                  label="Destination"
+                  icon="fas fa-map-marker-alt"
+                  placeholder="Hôtel, ville ou adresse (ex: Centre-ville)..."
+                  value={dropoff}
+                  onChange={(val) => {
+                    setDropoff(val);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  suggestions={POPULAR_DESTINATIONS}
+                />
+              </div>
 
-            {/* Departure Date */}
-            <div style={{ flex: '2 1 140px' }}>
-              <label
-                htmlFor="transferDate"
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  marginBottom: '0.4rem',
-                  color: '#01796F',
-                }}
-              >
-                <i className="fas fa-calendar-alt" style={{ marginRight: '6px' }}></i>
-                Date
-              </label>
-              <input
-                id="transferDate"
-                type="date"
-                value={date}
-                min={today}
-                onChange={(e) => setDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.72rem 1rem',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  background: '#fff',
-                  color: '#1e293b',
-                }}
-              />
-            </div>
+              {/* Departure Date */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="transferDate"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                >
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  Date
+                </label>
+                <input
+                  id="transferDate"
+                  type="date"
+                  value={date}
+                  min={today}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
 
-            {/* Departure Time */}
-            <div style={{ flex: '1 1 110px' }}>
-              <label
-                htmlFor="transferTime"
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  marginBottom: '0.4rem',
-                  color: '#01796F',
-                }}
-              >
-                <i className="fas fa-clock" style={{ marginRight: '6px' }}></i>
-                Heure
-              </label>
-              <input
-                id="transferTime"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.72rem 1rem',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  background: '#fff',
-                  color: '#1e293b',
-                }}
-              />
-            </div>
+              {/* Departure Time */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="transferTime"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                >
+                  <i className="fas fa-clock mr-1.5 text-[#01796F]" />
+                  Heure
+                </label>
+                <input
+                  id="transferTime"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
 
-            {/* Passenger Count */}
-            <div style={{ flex: '1 1 90px' }}>
-              <label
-                htmlFor="transferPax"
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  marginBottom: '0.4rem',
-                  color: '#01796F',
-                }}
-              >
-                <i className="fas fa-users" style={{ marginRight: '6px' }}></i>
-                Passagers
-              </label>
-              <input
-                id="transferPax"
-                type="number"
-                min="1"
-                max="16"
-                value={passengers}
-                onChange={(e) => setPassengers(parseInt(e.target.value, 10) || 1)}
-                style={{
-                  width: '100%',
-                  padding: '0.72rem 1rem',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  background: '#fff',
-                  color: '#1e293b',
-                }}
-              />
-            </div>
+              {/* Passenger Count */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="transferPax"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                >
+                  <i className="fas fa-users mr-1.5 text-[#01796F]" />
+                  Passagers
+                </label>
+                <input
+                  id="transferPax"
+                  type="number"
+                  min="1"
+                  max="16"
+                  value={passengers}
+                  onChange={(e) => setPassengers(parseInt(e.target.value, 10) || 1)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
 
-            {/* Submit Button */}
-            <div style={{ flex: '1 1 160px' }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '0.78rem 1.5rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#01796F',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(1, 121, 111, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  transition: 'background-color 0.2s ease, transform 0.1s ease',
-                }}
-              >
-                {loading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i>
-                    Recherche...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-search"></i>
-                    Rechercher
-                  </>
-                )}
-              </button>
+              {/* Submit Button */}
+              <div className="w-full lg:w-auto">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <i className="fas fa-spinner fa-spin" />
+                  ) : (
+                    <i className="fas fa-search text-xs" />
+                  )}
+                  <span>{loading ? 'Recherche...' : 'Rechercher'}</span>
+                </button>
+              </div>
             </div>
           </form>
 
           {errorMessage && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', borderRadius: '8px', fontSize: '0.9rem' }}>
-              <i className="fas fa-exclamation-circle" style={{ marginRight: '0.5rem' }}></i>
-              {errorMessage}
+            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+              <i className="fas fa-exclamation-circle text-red-400" />
+              <span>{errorMessage}</span>
             </div>
           )}
         </div>
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section style={{ padding: '3.5rem 1rem' }}>
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+        <div className="max-w-6xl mx-auto">
           {/* Mode Selector Tabs */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: transportType !== 'ALL' ? '1rem' : '2.5rem', flexWrap: 'wrap' }}>
             <button
