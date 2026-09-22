@@ -135,20 +135,20 @@ export default function TransfersPage() {
   return (
     <div>
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-5">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+          <div className="mb-4">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Transferts &amp; VTC
             </h1>
-            <p className="text-sm md:text-base text-slate-300">
+            <p className="text-xs md:text-sm text-[#b2dfdb]">
               Réservez vos navettes aéroport, chauffeurs privés et transferts interurbains
             </p>
           </div>
 
           <form
             onSubmit={handleSearch}
-            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+            className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_auto_1.4fr_1fr_0.9fr_0.8fr_auto] gap-2.5 items-end">
               {/* Origin Airport / Location */}
@@ -175,7 +175,7 @@ export default function TransfersPage() {
                   disabled={!pickup && !dropoff}
                   title="Inverser les points de transfert"
                   aria-label="Inverser le départ et l'arrivée"
-                  className="w-10 h-10 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-[#01796F] hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="w-10 h-10 rounded-full border border-[#01796F]/40 bg-[#021817] text-[#02E0D5] hover:bg-[#01796F]/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <i className="fas fa-exchange-alt text-xs" />
                 </button>
@@ -201,9 +201,9 @@ export default function TransfersPage() {
               <div className="min-w-0">
                 <label
                   htmlFor="transferDate"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
                 >
-                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#02E0D5]" />
                   Date
                 </label>
                 <input
@@ -212,7 +212,7 @@ export default function TransfersPage() {
                   value={date}
                   min={today}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
@@ -220,9 +220,9 @@ export default function TransfersPage() {
               <div className="min-w-0">
                 <label
                   htmlFor="transferTime"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
                 >
-                  <i className="fas fa-clock mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-clock mr-1.5 text-[#02E0D5]" />
                   Heure
                 </label>
                 <input
@@ -230,7 +230,7 @@ export default function TransfersPage() {
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
@@ -238,9 +238,9 @@ export default function TransfersPage() {
               <div className="min-w-0">
                 <label
                   htmlFor="transferPax"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
                 >
-                  <i className="fas fa-users mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-users mr-1.5 text-[#02E0D5]" />
                   Passagers
                 </label>
                 <input
@@ -250,7 +250,7 @@ export default function TransfersPage() {
                   max="16"
                   value={passengers}
                   onChange={(e) => setPassengers(parseInt(e.target.value, 10) || 1)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
@@ -259,7 +259,7 @@ export default function TransfersPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-wider"
                 >
                   {loading ? (
                     <i className="fas fa-spinner fa-spin" />
@@ -273,7 +273,7 @@ export default function TransfersPage() {
           </form>
 
           {errorMessage && (
-            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+            <div className="mt-2.5 p-2.5 bg-red-950/60 border border-red-500/50 rounded-lg text-red-200 text-xs flex items-center gap-2">
               <i className="fas fa-exclamation-circle text-red-400" />
               <span>{errorMessage}</span>
             </div>
@@ -282,97 +282,59 @@ export default function TransfersPage() {
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
         <div className="max-w-6xl mx-auto">
           {/* Mode Selector Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: transportType !== 'ALL' ? '1rem' : '2.5rem', flexWrap: 'wrap' }}>
+          <div className="flex justify-center gap-3 mb-6 flex-wrap">
             <button
               type="button"
               onClick={() => setTransportType((prev) => (prev === 'TAXI' ? 'ALL' : 'TAXI'))}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '8px',
-                border: 'none',
-                fontWeight: 700,
-                cursor: 'pointer',
-                backgroundColor: transportType === 'TAXI' ? '#01796F' : 'var(--card, #eee)',
-                color: transportType === 'TAXI' ? '#fff' : 'var(--text, #333)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: transportType === 'TAXI' ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
-                transition: 'all 0.2s ease',
-              }}
+              className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
+                transportType === 'TAXI'
+                  ? 'bg-[#01796F] text-white shadow-md'
+                  : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
+              }`}
             >
-              <i className="fas fa-taxi"></i>
+              <i className="fas fa-taxi" />
               Transfert Privé &amp; VTC {hasSearched && transfers.length > 0 && `(${categoryCounts.private})`}
             </button>
 
             <button
               type="button"
               onClick={() => setTransportType((prev) => (prev === 'TRAIN' ? 'ALL' : 'TRAIN'))}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '8px',
-                border: 'none',
-                fontWeight: 700,
-                cursor: 'pointer',
-                backgroundColor: transportType === 'TRAIN' ? '#01796F' : 'var(--card, #eee)',
-                color: transportType === 'TRAIN' ? '#fff' : 'var(--text, #333)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: transportType === 'TRAIN' ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
-                transition: 'all 0.2s ease',
-              }}
+              className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
+                transportType === 'TRAIN'
+                  ? 'bg-[#01796F] text-white shadow-md'
+                  : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
+              }`}
             >
-              <i className="fas fa-train"></i>
+              <i className="fas fa-train" />
               Trains &amp; Navettes {hasSearched && transfers.length > 0 && `(${categoryCounts.shared})`}
             </button>
 
             <button
               type="button"
               onClick={() => setTransportType((prev) => (prev === 'CAR_RENTAL' ? 'ALL' : 'CAR_RENTAL'))}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '8px',
-                border: 'none',
-                fontWeight: 700,
-                cursor: 'pointer',
-                backgroundColor: transportType === 'CAR_RENTAL' ? '#01796F' : 'var(--card, #eee)',
-                color: transportType === 'CAR_RENTAL' ? '#fff' : 'var(--text, #333)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: transportType === 'CAR_RENTAL' ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
-                transition: 'all 0.2s ease',
-              }}
+              className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
+                transportType === 'CAR_RENTAL'
+                  ? 'bg-[#01796F] text-white shadow-md'
+                  : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
+              }`}
             >
-              <i className="fas fa-car"></i>
+              <i className="fas fa-car" />
               Location &amp; Minibus {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
             </button>
           </div>
 
           {/* Active filter badge / reset option */}
           {hasSearched && transfers.length > 0 && transportType !== 'ALL' && (
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div className="text-center mb-6">
               <button
                 type="button"
                 onClick={() => setTransportType('ALL')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#01796F',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                }}
+                className="text-[#01796F] dark:text-[#02E0D5] font-semibold text-xs hover:underline inline-flex items-center gap-1.5"
               >
-                <i className="fas fa-undo-alt"></i>
+                <i className="fas fa-undo-alt" />
                 Afficher tous les transferts ({transfers.length})
               </button>
             </div>
@@ -418,7 +380,7 @@ export default function TransfersPage() {
                 onSortChange={setSortKey}
               />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="flex flex-col gap-4">
               {sortedTransfers.map((item) => {
                 const offerKey = item.offerId || item.id || `trf-${item.price}`;
                 const isPrivate = isPrivateTransfer(item);
@@ -442,177 +404,88 @@ export default function TransfersPage() {
                 return (
                   <div
                     key={offerKey}
-                    style={{
-                      background: 'var(--card, #fff)',
-                      padding: '1.5rem 2rem',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      flexWrap: 'wrap',
-                      gap: '1.5rem',
-                      border: '1px solid rgba(0,0,0,0.06)',
-                    }}
+                    className="bg-white dark:bg-[#062523] p-5 rounded-xl shadow-md border border-slate-200 dark:border-[#01796F]/30 flex justify-between items-center flex-wrap gap-5 text-slate-900 dark:text-slate-100 transition-all hover:border-[#01796F]/50"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                      <div
-                        style={{
-                          width: '64px',
-                          height: '64px',
-                          borderRadius: '12px',
-                          background: 'rgba(1, 121, 111, 0.1)',
-                          color: '#01796F',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.8rem',
-                        }}
-                      >
-                        <i className={vehicleIcon}></i>
-                      </div>
-                      <div>
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' }}>
-                          <span
-                            style={{
-                              background: badgeBg,
-                              color: '#fff',
-                              fontSize: '0.72rem',
-                              fontWeight: 700,
-                              padding: '0.25rem 0.6rem',
-                              borderRadius: '12px',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {badgeLabel}
-                          </span>
-                          <span
-                            style={{
-                              background: '#E5E7EB',
-                              color: '#374151',
-                              fontSize: '0.72rem',
-                              fontWeight: 600,
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '12px',
-                            }}
-                          >
-                            Partenaire HBX
-                          </span>
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-2xl shrink-0">
+                          <i className={vehicleIcon} />
                         </div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.3rem 0' }}>
-                          {item.vehicleModel || 'Berline Confort'}
-                        </h3>
-                        <p style={{ color: '#666', fontSize: '0.9rem', margin: 0 }}>
-                          <i className="fas fa-route" style={{ marginRight: '0.4rem', color: '#01796F' }}></i>
-                          {item.pickup || item.departureCity || 'Aéroport'} → {item.dropoff || item.arrivalCity || 'Destination'}
-                        </p>
-                        {item.capacity && (
-                          <span style={{ fontSize: '0.82rem', color: '#888', marginTop: '0.25rem', display: 'inline-block' }}>
-                            <i className="fas fa-users" style={{ marginRight: '0.3rem' }}></i>
-                            Jusqu&apos;à {item.capacity} passagers
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
-                          <PriceDisplay conversion={item.priceConversion} amount={item.price} currency={item.currency} />
+                        <div>
+                          <div className="flex gap-2 items-center mb-1">
+                            <span
+                              style={{ background: badgeBg }}
+                              className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                            >
+                              {badgeLabel}
+                            </span>
+                            <span className="bg-slate-200 dark:bg-[#0a302d] text-slate-700 dark:text-slate-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                              Partenaire HBX
+                            </span>
+                          </div>
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
+                            {item.vehicleModel || 'Berline Confort'}
+                          </h3>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 m-0">
+                            <i className="fas fa-route mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
+                            {item.pickup || item.departureCity || 'Aéroport'} → {item.dropoff || item.arrivalCity || 'Destination'}
+                          </p>
+                          {item.capacity && (
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 inline-block">
+                              <i className="fas fa-users mr-1" />
+                              Jusqu&apos;à {item.capacity} passagers
+                            </span>
+                          )}
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: '#888' }}>Tarif garanti par véhicule</div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Link
-                          href={`/transfers/${encodeURIComponent(offerKey)}`}
-                          style={{
-                            padding: '0.65rem 1.1rem',
-                            borderRadius: '6px',
-                            border: '1.5px solid #01796F',
-                            color: '#01796F',
-                            background: '#fff',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                            fontSize: '0.9rem',
-                          }}
-                        >
-                          Détails
-                        </Link>
-                        <Link
-                          href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
-                          className="btn-booking"
-                          style={{
-                            padding: '0.65rem 1.25rem',
-                            borderRadius: '6px',
-                            backgroundColor: '#01796F',
-                            color: '#fff',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                            fontSize: '0.9rem',
-                          }}
-                        >
-                          Réserver
-                        </Link>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-[#01796F] dark:text-[#02E0D5]">
+                            <PriceDisplay conversion={item.priceConversion} amount={item.price} currency={item.currency} />
+                          </div>
+                          <div className="text-[11px] text-slate-400">Tarif garanti par véhicule</div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/transfers/${encodeURIComponent(offerKey)}`}
+                            className="px-3.5 py-2 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
+                          >
+                            Détails
+                          </Link>
+                          <Link
+                            href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
+                            className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
+                          >
+                            Réserver
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
           {/* Filter empty state: has search results, but none match current filter */}
           {hasSearched && transfers.length > 0 && sortedTransfers.length === 0 && !loading && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(1, 121, 111, 0.1)',
-                  color: '#01796F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-filter"></i>
+            <div className="text-center py-12 px-4 bg-white dark:bg-[#062523] rounded-xl shadow-md border border-slate-200 dark:border-[#01796F]/30 text-slate-900 dark:text-slate-100">
+              <div className="w-14 h-14 rounded-full bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-2xl mx-auto mb-4">
+                <i className="fas fa-filter" />
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              <h3 className="text-lg font-bold mb-2">
                 Aucun transfert dans cette catégorie
               </h3>
-              <p style={{ color: '#666', maxWidth: '550px', margin: '0 auto 1.5rem', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-5 leading-relaxed">
                 Aucun véhicule ne correspond au filtre sélectionné pour ce trajet. {transfers.length} option(s) disponible(s) dans les autres catégories.
               </p>
               <button
                 type="button"
                 onClick={() => setTransportType('ALL')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#01796F',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(1, 121, 111, 0.3)',
-                }}
+                className="px-5 py-2.5 rounded-lg bg-[#01796F] hover:bg-[#015f57] text-white font-bold text-xs transition-colors shadow-sm"
               >
-                <i className="fas fa-th-large" style={{ marginRight: '0.5rem' }}></i>
+                <i className="fas fa-th-large mr-2" />
                 Afficher tous les transferts ({transfers.length})
               </button>
             </div>

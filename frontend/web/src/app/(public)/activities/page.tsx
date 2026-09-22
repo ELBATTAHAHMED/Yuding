@@ -116,22 +116,22 @@ export default function ActivitiesPage() {
   return (
     <div>
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-5">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+          <div className="mb-4">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Activités &amp; Expériences
             </h1>
-            <p className="text-sm md:text-base text-slate-300">
+            <p className="text-xs md:text-sm text-[#b2dfdb]">
               Explorez des visites guidées, excursions et aventures inoubliables
             </p>
           </div>
 
           <form
             onSubmit={handleSearch}
-            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+            className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1.2fr_auto] gap-3 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1.2fr_auto] gap-2.5 items-end">
               <div className="min-w-0">
                 <GeoPlaceSelector
                   id="activity-destination"
@@ -146,8 +146,8 @@ export default function ActivitiesPage() {
               </div>
 
               <div className="min-w-0">
-                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left">
-                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                <label className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left">
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#02E0D5]" />
                   Date de visite
                 </label>
                 <input
@@ -155,32 +155,32 @@ export default function ActivitiesPage() {
                   min={today}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
               <div className="min-w-0">
-                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left">
-                  <i className="fas fa-user-friends mr-1.5 text-[#01796F]" />
+                <label className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left">
+                  <i className="fas fa-user-friends mr-1.5 text-[#02E0D5]" />
                   Participants
                 </label>
-                <div className="flex items-center h-11 border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-700">
+                <div className="flex items-center h-10 border border-[#01796F]/40 rounded-lg overflow-hidden bg-[#021817]">
                   <button
                     type="button"
                     onClick={() => setTravelers((v) => Math.max(1, v - 1))}
                     disabled={travelers <= 1}
-                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     −
                   </button>
-                  <span className="flex-1 text-center font-bold text-sm text-slate-900 dark:text-white">
+                  <span className="flex-1 text-center font-bold text-xs text-white">
                     {travelers} pers.
                   </span>
                   <button
                     type="button"
                     onClick={() => setTravelers((v) => Math.min(20, v + 1))}
                     disabled={travelers >= 20}
-                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     +
                   </button>
@@ -191,7 +191,7 @@ export default function ActivitiesPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-wider"
                 >
                   {loading ? (
                     <i className="fas fa-spinner fa-spin" />
@@ -205,7 +205,7 @@ export default function ActivitiesPage() {
           </form>
 
           {errorMessage && (
-            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+            <div className="mt-2.5 p-2.5 bg-red-950/60 border border-red-500/50 rounded-lg text-red-200 text-xs flex items-center gap-2">
               <i className="fas fa-exclamation-circle text-red-400" />
               <span>{errorMessage}</span>
             </div>
@@ -214,10 +214,10 @@ export default function ActivitiesPage() {
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
         <div className="max-w-6xl mx-auto">
           {/* Category Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+          <div className="flex justify-center gap-2.5 mb-6 flex-wrap">
             {[
               { label: 'Toutes les activités', value: 'ALL' },
               { label: 'Aventure & Désert', value: 'Aventure' },
@@ -227,17 +227,11 @@ export default function ActivitiesPage() {
               <button
                 key={tab.value}
                 onClick={() => setCategory(tab.value)}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  borderRadius: '30px',
-                  border: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  backgroundColor: category === tab.value ? '#01796F' : 'var(--card, #eee)',
-                  color: category === tab.value ? '#fff' : 'var(--text, #333)',
-                  boxShadow: category === tab.value ? '0 4px 10px rgba(1, 121, 111, 0.3)' : 'none',
-                }}
+                className={`px-4 py-2 rounded-full font-semibold text-xs transition-all ${
+                  category === tab.value
+                    ? 'bg-[#01796F] text-white shadow-md'
+                    : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
+                }`}
               >
                 {tab.label}
               </button>
@@ -373,17 +367,9 @@ export default function ActivitiesPage() {
                   return (
                     <div
                       key={offerKey}
-                      style={{
-                        background: 'var(--card, #fff)',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        border: '1px solid rgba(0,0,0,0.06)',
-                      }}
+                      className="bg-white dark:bg-[#062523] rounded-xl overflow-hidden shadow-md border border-slate-200 dark:border-[#01796F]/30 flex flex-col transition-all hover:border-[#01796F]/50"
                     >
-                      <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
+                      <div className="h-48 overflow-hidden relative">
                         <SafeEntityImage
                           src={act.imageUrl}
                           alt={act.title}
@@ -391,93 +377,52 @@ export default function ActivitiesPage() {
                           className="w-full h-full object-cover"
                         />
                         <span
-                          style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            background: isCustom ? '#D97706' : '#01796F',
-                            color: '#fff',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            padding: '0.3rem 0.65rem',
-                            borderRadius: '20px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-                          }}
+                          className={`absolute top-3 right-3 text-white text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md ${
+                            isCustom ? 'bg-amber-600' : 'bg-[#01796F]'
+                          }`}
                         >
                           {isCustom ? 'Yuding Sélect' : 'Partenaire HBX'}
                         </span>
                       </div>
 
-                      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#01796F', textTransform: 'uppercase' }}>
+                      <div className="p-4 flex-1 flex flex-col text-slate-900 dark:text-slate-100">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[11px] font-bold text-[#01796F] dark:text-[#02E0D5] uppercase tracking-wider">
                             {act.category || 'Excursion'}
                           </span>
                           {act.durationHours && (
-                            <span style={{ fontSize: '0.85rem', color: '#888' }}>
-                              <i className="fas fa-clock" style={{ marginRight: '0.3rem' }}></i>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              <i className="fas fa-clock mr-1" />
                               {act.durationHours}h
                             </span>
                           )}
                         </div>
 
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: '1.4' }}>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1.5 line-clamp-1">
                           {act.title}
                         </h3>
-                        <p
-                          style={{
-                            color: '#666',
-                            fontSize: '0.88rem',
-                            marginBottom: '1.25rem',
-                            lineHeight: '1.5',
-                            flexGrow: 1,
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
-                        >
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 line-clamp-2 flex-grow">
                           {act.description}
                         </p>
 
-                        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f0f0f0', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div className="mt-auto flex justify-between items-center pt-3 border-t border-slate-100 dark:border-[#01796F]/20 flex-wrap gap-2">
                           <div>
-                            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
+                            <span className="text-lg font-bold text-[#01796F] dark:text-[#02E0D5]">
                               <PriceDisplay conversion={act.priceConversion} amount={act.price} currency={act.currency} />
                             </span>
-                            <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400"> / pers.</span>
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div className="flex items-center gap-2">
                             <Link
                               href={`/activities/${encodeURIComponent(offerKey)}`}
-                              style={{
-                                padding: '0.6rem 0.95rem',
-                                borderRadius: '6px',
-                                border: '1.5px solid #01796F',
-                                color: '#01796F',
-                                background: '#fff',
-                                textDecoration: 'none',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                              }}
+                              className="px-3 py-1.5 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
                             >
                               Détails
                             </Link>
                             <Link
                               href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
-                              className="btn-booking"
-                              style={{
-                                padding: '0.65rem 1.15rem',
-                                borderRadius: '6px',
-                                backgroundColor: '#01796F',
-                                color: '#fff',
-                                textDecoration: 'none',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                              }}
+                              className="btn-booking px-3.5 py-1.5 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
                             >
                               Réserver
                             </Link>

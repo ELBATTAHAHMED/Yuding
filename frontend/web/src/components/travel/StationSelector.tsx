@@ -187,20 +187,10 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   };
 
   const renderBadge = (station: TrainStation) => {
-    const isOncf = station.provider === 'ONCF_GTFS' || station.countryCode === 'MA' || (!station.provider && station.country === 'Maroc');
-    if (isOncf) {
+    const isMoroccan = station.provider === 'ONCF_GTFS' || station.countryCode === 'MA' || (!station.provider && station.country === 'Maroc');
+    if (isMoroccan) {
       return (
-        <span
-          style={{
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            background: '#e0e7ff',
-            color: '#4338ca',
-            padding: '2px 7px',
-            borderRadius: '4px',
-            letterSpacing: '0.02em',
-          }}
-        >
+        <span className="text-[10px] font-bold bg-[#01796F] text-white px-2 py-0.5 rounded tracking-wider shrink-0">
           ONCF
         </span>
       );
@@ -209,53 +199,26 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
     const label = station.countryCode || (station.country ? station.country.substring(0, 2).toUpperCase() : 'INTL');
     return (
       <span
-        style={{
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          background: '#f1f5f9',
-          color: '#0f766e',
-          border: '1px solid #cbd5e1',
-          padding: '2px 7px',
-          borderRadius: '4px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-        }}
+        className="text-[10px] font-semibold bg-[#01796F]/15 text-[#01796F] dark:text-[#02E0D5] border border-[#01796F]/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0"
         title="Transitous International"
       >
-        <i className="fas fa-globe-europe" style={{ fontSize: '0.65rem' }} />
+        <i className="fas fa-globe-europe text-[9px]" />
         {label}
       </span>
     );
   };
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.4rem',
-        flex: 1,
-      }}
-    >
+    <div ref={containerRef} className="relative w-full">
       <label
         htmlFor={id}
-        style={{
-          fontSize: '0.85rem',
-          fontWeight: 600,
-          color: '#334155',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
+        className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
       >
-        <i className={icon} style={{ color: '#2563eb' }} />
+        <i className={`${icon} mr-1.5 text-[#02E0D5]`} />
         {label}
       </label>
 
-      <div style={{ position: 'relative' }}>
+      <div className="relative flex items-center">
         <input
           ref={inputRef}
           id={id}
@@ -271,42 +234,16 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           autoComplete="off"
-          style={{
-            width: '100%',
-            padding: '0.65rem 2.2rem 0.65rem 2.2rem',
-            border: `1.5px solid ${error ? '#ef4444' : '#cbd5e1'}`,
-            borderRadius: '8px',
-            fontSize: '0.95rem',
-            background: disabled ? '#f1f5f9' : '#ffffff',
-            color: '#1e293b',
-            outline: 'none',
-            boxSizing: 'border-box',
-          }}
+          className={`w-full h-10 pl-8 pr-8 rounded-lg border text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all ${
+            error
+              ? 'border-red-500 bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-100'
+              : 'border-[#01796F]/40 bg-white dark:bg-[#021817] text-slate-900 dark:text-white'
+          }`}
         />
-        <i
-          className={icon}
-          style={{
-            position: 'absolute',
-            left: '0.75rem',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: '#94a3b8',
-            fontSize: '0.9rem',
-            pointerEvents: 'none',
-          }}
-        />
+        <i className={`${icon} absolute left-2.5 top-1/2 -translate-y-1/2 text-[#02E0D5] text-xs pointer-events-none`} />
+
         {isLoading && (
-          <i
-            className="fas fa-spinner fa-spin"
-            style={{
-              position: 'absolute',
-              right: selectedStation ? '2rem' : '0.75rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#3b82f6',
-              fontSize: '0.85rem',
-            }}
-          />
+          <i className="fas fa-spinner fa-spin absolute right-8 top-1/2 -translate-y-1/2 text-[#02E0D5] text-xs" />
         )}
         {selectedStation && (
           <button
@@ -317,17 +254,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
               setRemoteResults(null);
               inputRef.current?.focus();
             }}
-            style={{
-              position: 'absolute',
-              right: '0.65rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              padding: '2px',
-            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 flex items-center justify-center transition-colors"
             title="Effacer"
             aria-label="Effacer la sélection"
           >
@@ -336,41 +263,17 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
         )}
       </div>
 
-      {error && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{error}</span>}
+      {error && <span className="block text-[11px] text-red-400 mt-1 text-left">{error}</span>}
 
       {/* Autocomplete Dropdown */}
       {isOpen && (
         <ul
           id={`${id}-listbox`}
           role="listbox"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            marginTop: '4px',
-            maxHeight: '270px',
-            overflowY: 'auto',
-            background: '#ffffff',
-            border: '1px solid #cbd5e1',
-            borderRadius: '8px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            listStyle: 'none',
-            padding: '4px 0',
-            margin: '4px 0 0 0',
-          }}
+          className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-white dark:bg-[#062523] border border-slate-200 dark:border-[#01796F]/40 rounded-xl shadow-2xl p-1.5 list-none m-0 max-h-[270px] overflow-y-auto"
         >
           {displayedStations.length === 0 ? (
-            <li
-              style={{
-                padding: '0.75rem 1rem',
-                fontSize: '0.875rem',
-                color: '#64748b',
-                fontStyle: 'italic',
-                textAlign: 'center',
-              }}
-            >
+            <li className="p-3 text-center text-xs text-slate-500 dark:text-slate-400 italic">
               {isLoading ? 'Recherche des gares...' : 'Aucune gare trouvée'}
             </li>
           ) : (
@@ -383,31 +286,17 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
                   aria-selected={isHighlighted}
                   onClick={() => handleSelectStation(station)}
                   onMouseEnter={() => setHighlightedIndex(index)}
-                  style={{
-                    padding: '0.65rem 1rem',
-                    cursor: 'pointer',
-                    background: isHighlighted ? '#eff6ff' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderBottom: '1px solid #f1f5f9',
-                    gap: '8px',
-                  }}
+                  className={`p-2 rounded-lg cursor-pointer flex items-center justify-between gap-2.5 transition-colors ${
+                    isHighlighted
+                      ? 'bg-[#01796F]/20 text-[#02E0D5]'
+                      : 'hover:bg-slate-100 dark:hover:bg-[#0a302d] text-slate-800 dark:text-slate-200'
+                  }`}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        color: '#1e293b',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="font-semibold text-xs truncate">
                       {station.name}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {station.city ? `${station.city}, ` : ''}{station.country || 'International'}
                     </div>
                   </div>

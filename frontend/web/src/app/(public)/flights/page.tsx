@@ -179,13 +179,13 @@ export default function FlightsPage() {
   return (
     <div>
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-5">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+          <div className="mb-4">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Vols
             </h1>
-            <p className="text-sm md:text-base text-slate-300">
+            <p className="text-xs md:text-sm text-[#b2dfdb]">
               Recherchez et comparez les offres de vols aux meilleurs tarifs
             </p>
           </div>
@@ -193,9 +193,9 @@ export default function FlightsPage() {
           {/* Search Form */}
           <form
             onSubmit={handleSearch}
-            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+            className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1.3fr_auto] gap-3 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1.3fr_auto] gap-2.5 items-end">
               {/* Origin Airport Selector */}
               <div className="min-w-0">
                 <AirportSelector
@@ -232,9 +232,9 @@ export default function FlightsPage() {
               <div className="min-w-0">
                 <label
                   htmlFor="departure-date"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
                 >
-                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#02E0D5]" />
                   Départ
                 </label>
                 <input
@@ -243,40 +243,40 @@ export default function FlightsPage() {
                   min={today}
                   value={departureDate}
                   onChange={(e) => setDepartureDate(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Passengers dropdown */}
               <div className="text-left relative min-w-0">
-                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider">
-                  <i className="fas fa-users mr-1.5 text-[#01796F]" />
+                <label className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider">
+                  <i className="fas fa-users mr-1.5 text-[#02E0D5]" />
                   Passagers &amp; Classe
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowPassengerDropdown((v) => !v)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#01796F] transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all"
                 >
                   <span className="truncate">
                     {totalPassengers} pass. • {passengerSummary}
                   </span>
-                  <i className={`fas fa-chevron-${showPassengerDropdown ? 'up' : 'down'} text-slate-400 text-xs ml-1`} />
+                  <i className={`fas fa-chevron-${showPassengerDropdown ? 'up' : 'down'} text-[#02E0D5] text-xs ml-1`} />
                 </button>
 
                 {showPassengerDropdown && (
-                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-4 min-w-[280px]">
+                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#062523] rounded-xl shadow-2xl border border-[#01796F]/40 p-4 min-w-[280px] text-white">
                     <PassengerSelector rows={passengerRows} onChange={handlePassengerChange} />
 
                     {/* Cabin class inside dropdown */}
-                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                      <label className="block text-[11px] font-medium text-slate-500 mb-1">
+                    <div className="mt-3 pt-3 border-t border-[#01796F]/20">
+                      <label className="block text-[11px] font-medium text-[#b2dfdb] mb-1">
                         Classe de voyage :
                       </label>
                       <select
                         value={cabinClass}
                         onChange={(e) => setCabinClass(e.target.value as FlightSearchRequest['travelClass'])}
-                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-800"
+                        className="w-full px-2 py-1.5 rounded-lg border border-[#01796F]/40 text-xs bg-[#021817] text-white"
                       >
                         {CABIN_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
@@ -300,7 +300,7 @@ export default function FlightsPage() {
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-wider"
                 >
                   {isSearching ? (
                     <i className="fas fa-spinner fa-spin" />
@@ -315,7 +315,7 @@ export default function FlightsPage() {
 
           {/* Validation Alert */}
           {validationError && (
-            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+            <div className="mt-2.5 p-2.5 bg-red-950/60 border border-red-500/50 rounded-lg text-red-200 text-xs flex items-center gap-2">
               <i className="fas fa-exclamation-circle text-red-400" />
               <span>{validationError}</span>
             </div>
@@ -324,7 +324,7 @@ export default function FlightsPage() {
       </section>
 
       {/* ==================== FLIGHT RESULTS ==================== */}
-      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
         <div className="max-w-6xl mx-auto">
           <div className="results-header" style={{ marginBottom: '2rem' }}>
             <h2 className="results-title" style={{ fontSize: '2rem', fontWeight: 800 }}>
@@ -389,47 +389,23 @@ export default function FlightsPage() {
               sortedFlights.map((flight) => (
                 <div
                   key={flight.offerId}
-                  style={{
-                    background: 'var(--card, #fff)',
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '1.5rem',
-                    border: '1px solid rgba(0,0,0,0.05)',
-                  }}
+                  className="bg-white dark:bg-[#062523] p-5 rounded-xl shadow-md border border-slate-200 dark:border-[#01796F]/30 flex justify-between items-center flex-wrap gap-5 text-slate-900 dark:text-slate-100 transition-all hover:border-[#01796F]/50"
                 >
                   {/* Airline info */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', minWidth: '200px' }}>
-                    <div
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: '50%',
-                        background: 'rgba(1, 121, 111, 0.1)',
-                        color: '#01796F',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem',
-                        flexShrink: 0,
-                      }}
-                    >
+                  <div className="flex items-center gap-3.5 min-w-[200px]">
+                    <div className="w-12 h-12 rounded-full bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-xl shrink-0">
                       <i className="fas fa-plane" />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.15rem' }}>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
                         {flight.airlineName || flight.airlineCode || '—'}
                       </h3>
-                      <span style={{ fontSize: '0.82rem', color: '#888' }}>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
                         {flight.airlineCode}
                         {flight.flightNumber ? ` · Vol ${flight.flightNumber}` : ''}
                       </span>
                       {flight.provider && (
-                        <div style={{ fontSize: '0.75rem', color: '#01796F', marginTop: '0.1rem', fontWeight: 600 }}>
+                        <div className="text-[11px] text-[#01796F] dark:text-[#02E0D5] mt-0.5 font-semibold">
                           via {flight.provider}
                         </div>
                       )}
@@ -437,36 +413,36 @@ export default function FlightsPage() {
                   </div>
 
                   {/* Route + Timing */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                  <div className="flex items-center gap-5 flex-wrap">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-slate-900 dark:text-white">
                         {flight.departureTime ? flight.departureTime.replace('T', ' ').substring(11, 16) : '—'}
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 600 }}>{flight.origin}</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{flight.origin}</div>
                       {flight.departureTime && (
-                        <div style={{ fontSize: '0.72rem', color: '#999' }}>
+                        <div className="text-[11px] text-slate-400">
                           {flight.departureTime.substring(0, 10)}
                         </div>
                       )}
                     </div>
 
-                    <div style={{ textAlign: 'center', color: '#01796F', minWidth: '100px' }}>
-                      <i className="fas fa-long-arrow-alt-right fa-2x" />
-                      <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '0.2rem', fontWeight: 600 }}>
+                    <div className="text-center text-[#01796F] dark:text-[#02E0D5] min-w-[90px]">
+                      <i className="fas fa-long-arrow-alt-right text-xl" />
+                      <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 font-semibold">
                         {flight.totalDurationMinutes ? formatDuration(flight.totalDurationMinutes) : ''}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: flight.stops === 0 ? '#2e7d32' : '#d32f2f', fontWeight: 600 }}>
+                      <div className={`text-[11px] font-semibold ${flight.stops === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                         {formatStops(flight.stops)}
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-slate-900 dark:text-white">
                         {flight.arrivalTime ? flight.arrivalTime.replace('T', ' ').substring(11, 16) : '—'}
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 600 }}>{flight.destination}</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{flight.destination}</div>
                       {flight.arrivalTime && (
-                        <div style={{ fontSize: '0.72rem', color: '#999' }}>
+                        <div className="text-[11px] text-slate-400">
                           {flight.arrivalTime.substring(0, 10)}
                         </div>
                       )}
@@ -474,35 +450,25 @@ export default function FlightsPage() {
                   </div>
 
                   {/* Price + Action hierarchy */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-[#01796F] dark:text-[#02E0D5]">
                         <PriceDisplay conversion={flight.priceConversion} amount={flight.price} currency={flight.currency} />
                       </div>
                       {flight.priceType === 'round_trip_starting' && (
-                        <div style={{ fontSize: '0.75rem', color: '#888' }}>à partir de (A/R)</div>
+                        <div className="text-[11px] text-slate-400">à partir de (A/R)</div>
                       )}
                       {flight.cabinClass && (
-                        <div style={{ fontSize: '0.78rem', color: '#aaa', textTransform: 'capitalize' }}>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 capitalize">
                           {flight.cabinClass}
                         </div>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/flights/${encodeURIComponent(flight.offerId)}`}
-                        style={{
-                          padding: '0.65rem 1.1rem',
-                          borderRadius: '6px',
-                          border: '1.5px solid #01796F',
-                          color: '#01796F',
-                          fontWeight: 700,
-                          fontSize: '0.88rem',
-                          textDecoration: 'none',
-                          whiteSpace: 'nowrap',
-                          background: '#fff',
-                        }}
+                        className="px-3.5 py-2 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
                       >
                         Voir détails
                       </Link>
@@ -511,16 +477,7 @@ export default function FlightsPage() {
                         href={`/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(
                           `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
                         )}&price=${flight.price}`}
-                        className="btn-booking"
-                        style={{
-                          padding: '0.65rem 1.25rem',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: '0.88rem',
-                          textDecoration: 'none',
-                          whiteSpace: 'nowrap',
-                        }}
+                        className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
                       >
                         Réserver
                       </Link>

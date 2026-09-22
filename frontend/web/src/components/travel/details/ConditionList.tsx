@@ -34,43 +34,26 @@ export const ConditionList: React.FC<ConditionListProps> = ({
   };
 
   return (
-    <div
-      style={{
-        background: 'var(--card, #ffffff)',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        border: '1px solid rgba(0, 0, 0, 0.06)',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-      }}
-    >
-      <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 1.25rem 0', color: 'var(--text, #0f172a)' }}>
+    <div className="bg-white dark:bg-[#062523] rounded-xl p-6 border border-slate-200 dark:border-white/10 shadow-sm">
+      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
         {title}
       </h3>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {visibleItems.map((item, idx) => {
-          const colors = getStatusColors(item.status);
           return (
             <div
               key={idx}
-              style={{
-                background: colors.bg,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '8px',
-                padding: '1rem',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-              }}
+              className="bg-slate-50 dark:bg-[#021817] border border-slate-200 dark:border-white/10 rounded-lg p-4 flex items-start gap-3"
             >
-              <div style={{ color: colors.iconColor, fontSize: '1.1rem', marginTop: '2px', flexShrink: 0 }}>
+              <div className="text-[#01796F] dark:text-[#02E0D5] text-lg mt-0.5 shrink-0">
                 <i className={item.icon || 'fas fa-info-circle'} />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', marginBottom: '0.2rem' }}>
+                <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">
                   {item.title}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.4 }}>
+                <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {item.description}
                 </div>
               </div>

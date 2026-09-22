@@ -24,40 +24,19 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
   badges = [],
 }) => {
   return (
-    <div
-      style={{
-        background: 'var(--card, #ffffff)',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        border: '1px solid rgba(0, 0, 0, 0.06)',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '240px' }}>
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '10px',
-              background: 'rgba(1, 121, 111, 0.1)',
-              color: '#01796F',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.35rem',
-              flexShrink: 0,
-            }}
-          >
+    <div className="bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4 flex-1 min-w-[240px]">
+          <div className="w-12 h-12 rounded-xl bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-xl shrink-0">
             <i className={icon} />
           </div>
 
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #0f172a)', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-1 leading-snug">
               {title}
             </h1>
             {subtitle && (
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>
+              <p className="m-0 text-xs md:text-sm text-slate-500 dark:text-slate-300 font-medium">
                 {subtitle}
               </p>
             )}
@@ -65,21 +44,9 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
         </div>
 
         {/* Provider & Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="flex items-center gap-2 flex-wrap">
           {provider && (
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#01796F',
-                background: 'rgba(1, 121, 111, 0.08)',
-                padding: '0.3rem 0.65rem',
-                borderRadius: '6px',
-                border: '1px solid rgba(1, 121, 111, 0.2)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.3px',
-              }}
-            >
+            <span className="text-[11px] font-bold text-[#01796F] dark:text-[#02E0D5] bg-[#01796F]/10 dark:bg-[#01796F]/20 border border-[#01796F]/30 px-2.5 py-1 rounded-md uppercase tracking-wider">
               {sourceLabel ? `${sourceLabel}: ${provider}` : `Fournisseur : ${provider}`}
             </span>
           )}
@@ -87,14 +54,7 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
           {badges.map((b, idx) => (
             <span
               key={idx}
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: '#475569',
-                background: '#f1f5f9',
-                padding: '0.3rem 0.6rem',
-                borderRadius: '6px',
-              }}
+              className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#0a302d] border border-slate-200 dark:border-[#01796F]/20 px-2.5 py-1 rounded-md"
             >
               {b}
             </span>
