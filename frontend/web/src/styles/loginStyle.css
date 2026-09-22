@@ -818,7 +818,7 @@ header.header,
     min-height: 100px !important;
     max-height: 100px !important;
     z-index: 100 !important;
-    background: rgba(255, 255, 255, 0.82) !important;
+    background: rgba(255, 255, 255, 0.88) !important;
     backdrop-filter: blur(18px) !important;
     -webkit-backdrop-filter: blur(18px) !important;
     border-bottom: 1px solid var(--border-color) !important;
@@ -844,7 +844,7 @@ header.header,
 .dark .header,
 .dark header.header,
 .dark .header.subpage-header {
-    background: rgba(15, 23, 42, 0.85) !important;
+    background: rgba(15, 23, 42, 0.88) !important;
     border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45) !important;
 }
@@ -855,13 +855,13 @@ header.header,
 }
 
 .header .header-top {
-    padding: 10px clamp(20px, 3.5vw, 50px) !important;
+    padding: 0 clamp(24px, 3.5vw, 60px) !important;
     height: 100% !important;
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
     position: relative !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     box-sizing: border-box !important;
 }
 
@@ -885,36 +885,41 @@ header.header,
 .header .header-top .container,
 .header .header-top .header-inner {
     display: grid !important;
-    grid-template-columns: auto 1fr auto !important;
+    grid-template-columns: 1fr auto 1fr !important;
     align-items: center !important;
     width: 100% !important;
     height: 100% !important;
-    max-width: 100% !important;
+    max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
     position: relative !important;
 }
 
+/* Unclipped Logo Slot (Left Column) */
 .header .header-top .logo,
 .header .header-top .container1 .logo,
 .header .header-top .container .logo {
     grid-column: 1 !important;
     justify-self: start !important;
-    height: 80px !important;
-    display: flex !important;
+    height: 75px !important;
+    min-width: 175px !important;
+    width: auto !important;
+    max-width: none !important;
+    display: inline-flex !important;
     align-items: center !important;
+    justify-content: flex-start !important;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     position: relative !important;
-    padding: 8px !important;
+    padding: 4px 8px !important;
     border-radius: 14px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     flex-shrink: 0 !important;
 }
 
 .header .header-top .logo:hover,
 .header .header-top .container1 .logo:hover,
 .header .header-top .container .logo:hover {
-    transform: scale(1.05) translateY(-1px) !important;
+    transform: scale(1.04) translateY(-1px) !important;
     background: rgba(15, 118, 110, 0.08) !important;
     box-shadow: var(--shadow-light) !important;
 }
@@ -922,17 +927,18 @@ header.header,
 .header .header-top .logo img,
 .header .header-top .container1 .logo img,
 .header .header-top .container .logo img {
-    height: 100% !important;
+    height: 56px !important;
     width: auto !important;
     max-width: none !important;
     object-fit: contain !important;
-    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15)) brightness(1.05) !important;
+    display: block !important;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12)) brightness(1.05) !important;
     transition: all 0.3s ease !important;
     z-index: 2 !important;
     position: relative !important;
 }
 
-/* Mathematically Centered Navigation */
+/* Mathematically Centered Navigation (Middle Column) */
 .header-nav,
 .header .navigation,
 .header .yuding-navigation {
@@ -941,7 +947,7 @@ header.header,
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: clamp(8px, 1.4vw, 20px) !important;
+    gap: clamp(8px, 1.2vw, 18px) !important;
     margin: 0 auto !important;
     position: relative !important;
 }
@@ -1036,7 +1042,7 @@ header.header,
     font-weight: 600 !important;
 }
 
-/* Right Actions Area */
+/* Right Actions Area (Right Column) */
 .header-btns {
     grid-column: 3 !important;
     justify-self: end !important;
