@@ -157,7 +157,7 @@ html[data-theme="dark"] .travel-search-panel form button[type="button"] { backgr
 .travel-search-panel [role="listbox"],
 .travel-search-panel [role="dialog"],
 .travel-search-panel .absolute { z-index: 60; }
-.travel-search-panel button[type="submit"] { min-height: 48px; border-radius: 11px !important; box-shadow: 0 8px 18px rgba(3, 102, 90, .22); }
+.travel-search-panel button[type="submit"] { min-height: 46px; border-radius: 11px !important; box-shadow: 0 8px 18px rgba(3, 102, 90, .22); }
 
 /* Shared traveler / guest control system. Keeps every count readable in both themes. */
 .travel-passenger-trigger {
