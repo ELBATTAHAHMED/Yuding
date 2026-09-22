@@ -1,4 +1,5 @@
 import React from 'react';
+import { TravelerStepper } from './TravelerStepper';
 
 export interface PassengerRow {
   /** Internal key, unique per row */
@@ -30,8 +31,6 @@ export const PassengerSelector: React.FC<PassengerSelectorProps> = ({
   return (
     <div className={`travel-passenger-selector ${className}`}>
       {rows.map((row) => {
-        const atMin = row.value <= row.min;
-        const atMax = row.value >= row.max;
         return (
           <div
             key={row.key}
@@ -50,34 +49,13 @@ export const PassengerSelector: React.FC<PassengerSelectorProps> = ({
             </div>
 
             {/* Stepper */}
-            <div className="travel-stepper" aria-label={`${row.label}: ${row.value}`}>
-              <button
-                type="button"
-                aria-label={`Diminuer ${row.label}`}
-                disabled={atMin}
-                onClick={() => !atMin && onChange(row.key, row.value - 1)}
-                className="travel-stepper__button"
-              >
-                −
-              </button>
-
-              <span
-                aria-live="polite"
-                className="travel-stepper__value"
-              >
-                {row.value}
-              </span>
-
-              <button
-                type="button"
-                aria-label={`Augmenter ${row.label}`}
-                disabled={atMax}
-                onClick={() => !atMax && onChange(row.key, row.value + 1)}
-                className="travel-stepper__button"
-              >
-                +
-              </button>
-            </div>
+            <TravelerStepper
+              value={row.value}
+              min={row.min}
+              max={row.max}
+              label={row.label}
+              onChange={(value) => onChange(row.key, value)}
+            />
           </div>
         );
       })}

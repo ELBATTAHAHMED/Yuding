@@ -8,4 +8,5 @@ export * from './LoadingSkeleton';
 export * from './ErrorState';
 export * from './EmptyState';
 export * from './PassengerSelector';
+export * from './TravelerStepper';
 export * from './SortBar';

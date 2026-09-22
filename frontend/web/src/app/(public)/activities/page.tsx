@@ -7,7 +7,7 @@ import { ActivityOffer } from '@/types/travel.types';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage, ActivitySkeleton } from '@/components/travel';
 import { TravelHero, TravelPage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
-import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { sortActivities } from '@/lib/search-ux';
 import { saveSearchOffers } from '@/lib/offer-store';
 import type { ActivitySortKey } from '@/lib/search-ux';
@@ -175,27 +175,15 @@ export default function ActivitiesPage() {
                   <i className="fas fa-user-friends mr-1.5 text-[#02E0D5]" />
                   Participants
                 </label>
-                <div className="travel-stepper flex items-center h-10 border border-[#01796F]/40 rounded-lg overflow-hidden bg-[#021817]">
-                  <button
-                    type="button"
-                    onClick={() => setTravelers((v) => Math.max(1, v - 1))}
-                    disabled={travelers <= 1}
-                    className="travel-stepper__button w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="travel-stepper__value flex-1 text-center font-bold text-xs text-white">
-                    {travelers} pers.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setTravelers((v) => Math.min(20, v + 1))}
-                    disabled={travelers >= 20}
-                    className="travel-stepper__button w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
+                <TravelerStepper
+                  field
+                  value={travelers}
+                  min={1}
+                  max={20}
+                  label="Participants"
+                  valueLabel={(value) => `${value} pers.`}
+                  onChange={setTravelers}
+                />
               </div>
 
               <div className="w-full lg:w-auto">

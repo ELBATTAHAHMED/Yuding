@@ -169,6 +169,10 @@ html[data-theme="dark"] .travel-search-panel form button[type="button"] { backgr
   min-height: 56px !important;
   padding-inline: .75rem !important;
 }
+html.dark .travel-search-panel form .travel-passenger-trigger[type="button"],
+html.dark .travel-search-panel .travel-stepper--field,
+html[data-theme="dark"] .travel-search-panel form .travel-passenger-trigger[type="button"],
+html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background: var(--travel-bg) !important; }
 .travel-passenger-popover {
   background: var(--travel-surface-elevated) !important;
   border-color: var(--travel-line) !important;
@@ -183,14 +187,13 @@ html[data-theme="dark"] .travel-search-panel form button[type="button"] { backgr
 .travel-passenger-row__label { flex: 1; min-width: 0; }
 .travel-passenger-row__title { color: var(--travel-text); display: block; font-size: .9rem; font-weight: 750; }
 .travel-passenger-row__subtitle { color: var(--travel-text-muted); display: block; font-size: .75rem; margin-top: .1rem; }
-.travel-stepper { align-items: center; background: var(--travel-surface); border: 1px solid var(--travel-line); border-radius: 10px; color: var(--travel-text); display: inline-flex; flex-shrink: 0; gap: .2rem; min-height: 36px; padding: 3px; }
-.travel-search-panel .travel-stepper { background: var(--travel-input-bg) !important; border: 1px solid var(--travel-line) !important; border-radius: .5rem !important; justify-content: space-between; min-height: 56px !important; padding: 5px !important; width: 100%; }
-.travel-stepper__button { align-items: center; background: var(--travel-surface-elevated) !important; border: 1px solid var(--travel-line) !important; border-radius: 7px !important; color: var(--travel-primary) !important; cursor: pointer; display: inline-flex; flex-shrink: 0; font-size: 1rem; font-weight: 800; height: 28px !important; justify-content: center; transition: background-color .15s ease, border-color .15s ease, color .15s ease; width: 28px !important; }
-.travel-search-panel .travel-stepper__button { height: 42px !important; width: 42px !important; }
+.travel-stepper { align-items: center; background: var(--travel-surface); border: 1px solid var(--travel-line); border-radius: 10px; color: var(--travel-text); display: inline-flex; flex-shrink: 0; gap: .45rem; min-height: 38px; padding: 2px; }
+.travel-stepper--field { background: var(--travel-input-bg) !important; border: 1px solid var(--travel-line) !important; border-radius: .5rem !important; display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; gap: .5rem; min-height: 56px !important; padding: 8px 9px !important; width: 100%; }
+.travel-stepper--field:focus-within { border-color: var(--travel-teal) !important; box-shadow: 0 0 0 3px rgba(34,199,184,.2) !important; }
+.travel-stepper__button { align-items: center; background: var(--travel-surface-elevated) !important; border: 1px solid var(--travel-line) !important; border-radius: 7px !important; color: var(--travel-primary) !important; cursor: pointer; display: inline-flex; flex-shrink: 0; font-size: 1rem; font-weight: 800; height: 34px !important; justify-content: center; min-height: 34px !important; transition: background-color .15s ease, border-color .15s ease, color .15s ease; width: 34px !important; }
 .travel-stepper__button:hover:not(:disabled) { background: color-mix(in srgb, var(--travel-primary) 12%, var(--travel-surface-elevated)) !important; border-color: var(--travel-primary) !important; }
 .travel-stepper__button:disabled { cursor: not-allowed; opacity: .38; }
-.travel-stepper__value { color: var(--travel-text) !important; font-size: .85rem !important; font-weight: 800 !important; min-width: 28px; text-align: center; }
-.travel-search-panel .travel-stepper__value { flex: 1; }
+.travel-stepper__value { color: var(--travel-text) !important; font-size: .85rem !important; font-weight: 800 !important; min-width: 32px; text-align: center; }
 .travel-passenger-popover__section { border-color: var(--travel-line) !important; }
 .travel-passenger-popover__label { color: var(--travel-text-muted) !important; }
 .travel-passenger-popover__select { background: var(--travel-input-bg) !important; border-color: var(--travel-line) !important; color: var(--travel-input-text) !important; }
