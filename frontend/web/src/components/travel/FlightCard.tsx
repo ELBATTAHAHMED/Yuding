@@ -11,7 +11,8 @@ export interface FlightCardProps {
 
 export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }) => {
   const displayName = flight.airlineName || flight.airlineCode || '—';
-  const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(
+  const selRef = flight.selectionRef || flight.offerId;
+  const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(
     `${displayName} (${flight.origin} → ${flight.destination})`
   )}&price=${flight.price}`;
 

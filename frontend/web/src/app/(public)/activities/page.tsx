@@ -422,7 +422,7 @@ export default function ActivitiesPage() {
                               Détails
                             </Link>
                             <Link
-                              href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
+                              href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(act.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
                               className="btn-booking px-3.5 py-1.5 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
                             >
                               Réserver

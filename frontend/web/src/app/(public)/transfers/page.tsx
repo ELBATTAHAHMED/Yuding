@@ -464,7 +464,7 @@ export default function TransfersPage() {
                             Détails
                           </Link>
                           <Link
-                            href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
+                            href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(item.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
                             className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
                           >
                             Réserver

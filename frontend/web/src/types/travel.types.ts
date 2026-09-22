@@ -43,6 +43,7 @@ export interface PriceConversionSnapshot {
 
 export interface FlightOffer {
   offerId: string;
+  selectionRef?: string;
   /** Provider code, e.g. "SCRAPPA". */
   provider?: string;
   /** IATA airline code of primary carrier. */
@@ -77,6 +78,7 @@ export interface FlightOffer {
 
 export interface HotelRoomOffer {
   offerId: string;
+  selectionRef?: string;
   rateId?: string;
   roomTypeId?: string;
   roomName: string;
@@ -99,6 +101,7 @@ export interface HotelRoomOffer {
 export interface HotelOffer {
   id?: string;
   offerId: string;
+  selectionRef?: string;
   provider?: string;
   hotelId?: string;
   hotelName?: string;
@@ -131,6 +134,7 @@ export interface HotelOffer {
 export interface ActivityOffer {
   id?: string;
   offerId?: string;
+  selectionRef?: string;
   provider?: string;
   source?: string;
   title: string;
@@ -149,6 +153,7 @@ export interface ActivityOffer {
 export interface TransferOffer {
   id?: string;
   offerId?: string;
+  selectionRef?: string;
   provider?: string;
   type?: 'TAXI' | 'TRAIN' | 'CAR_RENTAL' | string;
   transferType?: string;
@@ -257,6 +262,7 @@ export interface TrainLeg {
 
 export interface TrainOffer {
   offerId: string;
+  selectionRef?: string;
   provider: string;
   source: string;
   operator: string;

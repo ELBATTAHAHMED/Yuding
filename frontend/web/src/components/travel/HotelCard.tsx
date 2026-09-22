@@ -12,7 +12,8 @@ export interface HotelCardProps {
 
 export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) => {
   const hotelDisplayName = hotel.name || hotel.hotelName || 'Hôtel';
-  const bookingUrl = `/booking?serviceType=HOTEL&serviceId=${hotel.id || hotel.hotelId}&serviceTitle=${encodeURIComponent(
+  const selRef = hotel.selectionRef || hotel.offerId || hotel.id || hotel.hotelId || '';
+  const bookingUrl = `/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(hotel.id || hotel.hotelId || '')}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(
     hotelDisplayName
   )}&price=${hotel.pricePerNight}`;
 
