@@ -178,255 +178,154 @@ export default function FlightsPage() {
 
   return (
     <div>
-      {/* ==================== HERO & SEARCH SECTION ==================== */}
-      <section
-        className="home vol-hero"
-        style={{
-          position: 'relative',
-          background: 'linear-gradient(135deg, #001b1a 0%, #00796b 100%)',
-          padding: '5rem 1rem 4rem',
-          color: '#fff',
-        }}
-      >
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-          <div className="search-header" style={{ marginBottom: '2.5rem' }}>
-            <h2
-              className="search-title"
-              style={{ fontSize: '2.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.75rem' }}
-            >
-              Découvrez le Monde en Vol
-            </h2>
-            <p className="search-subtitle" style={{ fontSize: '1.15rem', color: '#b2dfdb' }}>
-              Comparez et réservez vos billets d&apos;avion aux meilleurs tarifs du marché
+      {/* ==================== COMPACT SEARCH HEADER ==================== */}
+      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+              Vols
+            </h1>
+            <p className="text-sm md:text-base text-slate-300">
+              Recherchez et comparez les offres de vols aux meilleurs tarifs
             </p>
           </div>
 
           {/* Search Form */}
           <form
             onSubmit={handleSearch}
-            className="form"
-            style={{
-              background: 'var(--card, #fff)',
-              padding: '2rem',
-              borderRadius: '12px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              color: 'var(--text, #001b1a)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.25rem',
-              alignItems: 'flex-start',
-            }}
+            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
           >
-            {/* Origin Airport Selector */}
-            <AirportSelector
-              id="origin-airport"
-              label="Origine"
-              icon="fa-plane-departure"
-              placeholder="Ville ou aéroport"
-              airports={airports}
-              selectedAirport={selectedOrigin}
-              onSelect={(airport) => {
-                setSelectedOrigin(airport);
-                setValidationError(null);
-              }}
-            />
-
-            {/* Destination Airport Selector */}
-            <AirportSelector
-              id="destination-airport"
-              label="Destination"
-              icon="fa-plane-arrival"
-              placeholder="Ville ou aéroport"
-              airports={airports}
-              selectedAirport={selectedDestination}
-              onSelect={(airport) => {
-                setSelectedDestination(airport);
-                setValidationError(null);
-              }}
-            />
-
-            {/* Date field */}
-            <div>
-              <label
-                htmlFor="departure-date"
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  marginBottom: '0.4rem',
-                  textAlign: 'left',
-                  fontSize: '0.9rem',
-                }}
-              >
-                <i className="fas fa-calendar-alt" style={{ marginRight: '0.4rem', color: '#01796F' }} />
-                Date de départ
-              </label>
-              <input
-                type="date"
-                id="departure-date"
-                className="input-field"
-                min={today}
-                value={departureDate}
-                onChange={(e) => setDepartureDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  boxSizing: 'border-box',
-                  fontSize: '0.95rem',
-                }}
-              />
-            </div>
-
-            {/* Passengers dropdown */}
-            <div style={{ textAlign: 'left', position: 'relative' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  marginBottom: '0.4rem',
-                  fontSize: '0.9rem',
-                }}
-              >
-                <i className="fas fa-users" style={{ marginRight: '0.4rem', color: '#01796F' }} />
-                Passagers
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPassengerDropdown((v) => !v)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc',
-                  background: '#fff',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span>
-                  {totalPassengers} passager{totalPassengers > 1 ? 's' : ''} — {passengerSummary}
-                </span>
-                <i className={`fas fa-chevron-${showPassengerDropdown ? 'up' : 'down'}`} style={{ color: '#888' }} />
-              </button>
-
-              {showPassengerDropdown && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 50,
-                    marginTop: '0.4rem',
-                    background: '#fff',
-                    borderRadius: '8px',
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.18)',
-                    border: '1px solid #e0e0e0',
-                    padding: '1.25rem',
-                    minWidth: '240px',
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1.3fr_auto] gap-3 items-end">
+              {/* Origin Airport Selector */}
+              <div className="min-w-0">
+                <AirportSelector
+                  id="origin-airport"
+                  label="Origine"
+                  icon="fa-plane-departure"
+                  placeholder="Ville ou aéroport"
+                  airports={airports}
+                  selectedAirport={selectedOrigin}
+                  onSelect={(airport) => {
+                    setSelectedOrigin(airport);
+                    setValidationError(null);
                   }}
+                />
+              </div>
+
+              {/* Destination Airport Selector */}
+              <div className="min-w-0">
+                <AirportSelector
+                  id="destination-airport"
+                  label="Destination"
+                  icon="fa-plane-arrival"
+                  placeholder="Ville ou aéroport"
+                  airports={airports}
+                  selectedAirport={selectedDestination}
+                  onSelect={(airport) => {
+                    setSelectedDestination(airport);
+                    setValidationError(null);
+                  }}
+                />
+              </div>
+
+              {/* Date field */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="departure-date"
+                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
                 >
-                  <PassengerSelector rows={passengerRows} onChange={handlePassengerChange} />
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  Départ
+                </label>
+                <input
+                  type="date"
+                  id="departure-date"
+                  min={today}
+                  value={departureDate}
+                  onChange={(e) => setDepartureDate(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                />
+              </div>
 
-                  {/* Cabin class inside dropdown */}
-                  <div style={{ marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#555', marginBottom: '0.3rem' }}>
-                      Classe de voyage
-                    </label>
-                    <select
-                      value={cabinClass}
-                      onChange={(e) => setCabinClass(e.target.value as FlightSearchRequest['travelClass'])}
-                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', fontSize: '0.85rem' }}
+              {/* Passengers dropdown */}
+              <div className="text-left relative min-w-0">
+                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider">
+                  <i className="fas fa-users mr-1.5 text-[#01796F]" />
+                  Passagers &amp; Classe
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassengerDropdown((v) => !v)}
+                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#01796F] transition-all"
+                >
+                  <span className="truncate">
+                    {totalPassengers} pass. • {passengerSummary}
+                  </span>
+                  <i className={`fas fa-chevron-${showPassengerDropdown ? 'up' : 'down'} text-slate-400 text-xs ml-1`} />
+                </button>
+
+                {showPassengerDropdown && (
+                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-4 min-w-[280px]">
+                    <PassengerSelector rows={passengerRows} onChange={handlePassengerChange} />
+
+                    {/* Cabin class inside dropdown */}
+                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                      <label className="block text-[11px] font-medium text-slate-500 mb-1">
+                        Classe de voyage :
+                      </label>
+                      <select
+                        value={cabinClass}
+                        onChange={(e) => setCabinClass(e.target.value as FlightSearchRequest['travelClass'])}
+                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-800"
+                      >
+                        {CABIN_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassengerDropdown(false)}
+                      className="w-full py-2 mt-3 bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold rounded-lg transition-colors"
                     >
-                      {CABIN_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
+                      Appliquer
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassengerDropdown(false)}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      marginTop: '0.75rem',
-                      background: '#01796F',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Terminé
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <div style={{ alignSelf: 'flex-end', width: '100%' }}>
-              <button
-                type="submit"
-                className="btn-booking search-btn"
-                disabled={isSearching}
-                style={{
-                  width: '100%',
-                  padding: '0.85rem',
-                  fontWeight: 700,
-                  borderRadius: '6px',
-                  cursor: isSearching ? 'not-allowed' : 'pointer',
-                  opacity: isSearching ? 0.7 : 1,
-                  color: '#fff',
-                  border: 'none',
-                  transition: 'opacity 0.2s ease, transform 0.1s ease',
-                }}
-              >
-                {isSearching ? (
-                  <i className="fas fa-spinner fa-spin" />
-                ) : (
-                  <i className="fas fa-search" style={{ marginRight: '0.4rem' }} />
                 )}
-                {isSearching ? 'Recherche...' : 'Rechercher'}
-              </button>
+              </div>
+
+              {/* Submit Button */}
+              <div className="w-full lg:w-auto">
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSearching ? (
+                    <i className="fas fa-spinner fa-spin" />
+                  ) : (
+                    <i className="fas fa-search text-xs" />
+                  )}
+                  <span>{isSearching ? 'Recherche...' : 'Rechercher'}</span>
+                </button>
+              </div>
             </div>
           </form>
 
           {/* Validation Alert */}
           {validationError && (
-            <div
-              style={{
-                marginTop: '1rem',
-                padding: '0.75rem 1rem',
-                backgroundColor: 'rgba(239, 83, 80, 0.15)',
-                border: '1px solid #ef5350',
-                borderRadius: '8px',
-                color: '#ffebee',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <i className="fas fa-exclamation-circle" style={{ color: '#ef5350' }} />
-              {validationError}
+            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+              <i className="fas fa-exclamation-circle text-red-400" />
+              <span>{validationError}</span>
             </div>
           )}
         </div>
       </section>
 
       {/* ==================== FLIGHT RESULTS ==================== */}
-      <section className="search-results" style={{ padding: '4rem 1rem' }}>
-        <div className="container" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+        <div className="max-w-6xl mx-auto">
           <div className="results-header" style={{ marginBottom: '2rem' }}>
             <h2 className="results-title" style={{ fontSize: '2rem', fontWeight: 800 }}>
               Vols Disponibles
