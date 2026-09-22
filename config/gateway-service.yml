@@ -17,6 +17,10 @@ spring:
             key-resolver: "#{@ipKeyResolver}"
             redis-rate-limiter.replenishRate: 50
             redis-rate-limiter.burstCapacity: 100
+        - name: DedupeResponseHeader
+          args:
+            name: Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Allow-Methods Vary
+            strategy: RETAIN_FIRST
       routes:
         - id: reservation-route
           uri: lb://RESERVATION-SERVICE
