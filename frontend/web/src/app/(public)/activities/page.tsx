@@ -228,6 +228,7 @@ export default function ActivitiesPage() {
       <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
           {/* Category Tabs */}
+          {hasSearched && sortedActivities.length > 0 && (
           <div className="flex justify-center gap-2.5 mb-6 flex-wrap">
             {[
               { label: 'Toutes les activités', value: 'ALL' },
@@ -248,6 +249,7 @@ export default function ActivitiesPage() {
               </button>
             ))}
           </div>
+          )}
 
           {/* Destination Guide & Map (Phase 26) */}
           {selectedGeoPlace && selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide && (

@@ -139,7 +139,7 @@ export default function TransfersPage() {
         title="Transferts"
         subtitle="Reliez aéroport, gare et destination avec des offres fournisseur vérifiables."
         destination={dropoff || pickup || undefined}
-        defaultImageQuery="chauffeur airport transfer car"
+        defaultImageQuery="airport transfer van passengers"
         defaultImageIndex={0}
         icon="fas fa-route"
         compact={hasSearched}
@@ -253,15 +253,27 @@ export default function TransfersPage() {
                   <i className="fas fa-users mr-1.5 text-[#02E0D5]" />
                   Passagers
                 </label>
-                <input
-                  id="transferPax"
-                  type="number"
-                  min="1"
-                  max="16"
-                  value={passengers}
-                  onChange={(e) => setPassengers(parseInt(e.target.value, 10) || 1)}
-                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
-                />
+                <div className="travel-stepper" aria-label={`Passagers: ${passengers}`}>
+                  <button
+                    type="button"
+                    aria-label="Diminuer les passagers"
+                    onClick={() => setPassengers((value) => Math.max(1, value - 1))}
+                    disabled={passengers <= 1}
+                    className="travel-stepper__button"
+                  >
+                    −
+                  </button>
+                  <span className="travel-stepper__value" aria-live="polite">{passengers}</span>
+                  <button
+                    type="button"
+                    aria-label="Augmenter les passagers"
+                    onClick={() => setPassengers((value) => Math.min(16, value + 1))}
+                    disabled={passengers >= 16}
+                    className="travel-stepper__button"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               {/* Submit Button */}
@@ -295,6 +307,7 @@ export default function TransfersPage() {
       <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
           {/* Mode Selector Tabs */}
+          {hasSearched && transfers.length > 0 && (
           <div className="flex justify-center gap-3 mb-6 flex-wrap">
             <button
               type="button"
@@ -335,6 +348,7 @@ export default function TransfersPage() {
               Minibus &amp; véhicules {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
             </button>
           </div>
+          )}
 
           {/* Active filter badge / reset option */}
           {hasSearched && transfers.length > 0 && transportType !== 'ALL' && (
