@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import type { TrainOffer, TrainLeg } from '@/types/travel.types';
 
 export interface TrainCardProps {
@@ -271,38 +272,59 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
             Tarif non disponible via cette source
           </div>
 
-          <button
-            type="button"
-            onClick={() => setSelected((prev) => !prev)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '0.5rem 1rem',
-              borderRadius: '6px',
-              background: selected ? '#16a34a' : '#2563eb',
-              color: '#ffffff',
-              border: 'none',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              marginBottom: '0.5rem',
-              transition: 'background 0.2s ease',
-            }}
-            title="Mémoriser ce trajet pour votre itinéraire Yuding"
-          >
-            {selected ? (
-              <>
-                <i className="fas fa-check-circle" />
-                <span>Trajet sélectionné</span>
-              </>
-            ) : (
-              <>
-                <i className="fas fa-hand-pointer" />
-                <span>Choisir ce trajet</span>
-              </>
-            )}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <Link
+              href={`/trains/${encodeURIComponent(offer.offerId)}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '0.5rem 0.85rem',
+                borderRadius: '6px',
+                background: '#ffffff',
+                border: '1.5px solid #2563eb',
+                color: '#2563eb',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <span>Détails</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setSelected((prev) => !prev)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                background: selected ? '#16a34a' : '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'background 0.2s ease',
+              }}
+              title="Mémoriser ce trajet pour votre itinéraire Yuding"
+            >
+              {selected ? (
+                <>
+                  <i className="fas fa-check-circle" />
+                  <span>Sélectionné</span>
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-hand-pointer" />
+                  <span>Choisir</span>
+                </>
+              )}
+            </button>
+          </div>
 
           {offer.officialScheduleUrl && (
             <a

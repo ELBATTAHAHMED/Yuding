@@ -8,6 +8,7 @@ import { StationSelector } from '@/components/travel/StationSelector';
 import { TrainCard } from '@/components/travel/TrainCard';
 import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { saveSearchOffers } from '@/lib/offer-store';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -117,7 +118,9 @@ export default function TrainsPage() {
         setProviderMessage(response.message);
         setTrains([]);
       } else {
-        setTrains(response.results || []);
+        const results = response.results || [];
+        setTrains(results);
+        saveSearchOffers('TRAIN', results);
       }
     } catch (err: unknown) {
       setTrains([]);

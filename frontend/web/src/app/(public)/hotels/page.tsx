@@ -14,6 +14,7 @@ import type { HotelSortKey } from '@/lib/search-ux';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, HotelSkeleton } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { saveSearchOffers } from '@/lib/offer-store';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -255,6 +256,7 @@ export default function HotelsPage() {
       });
 
       setAllHotels(data.results || []);
+      saveSearchOffers('HOTEL', data.results || []);
       setSearchStatus(data.status);
       setSearchMessage(data.message);
     } catch (err: unknown) {
@@ -1072,43 +1074,61 @@ export default function HotelsPage() {
                             <span style={{ fontSize: '0.8rem', color: '#888' }}> / nuit</span>
                           </div>
 
-                          {roomOffers.length > 0 ? (
-                            <button
-                              type="button"
-                              onClick={() => toggleExpandHotel(hotelId)}
-                              style={{
-                                padding: '0.65rem 1.1rem',
-                                borderRadius: '6px',
-                                background: isExpanded ? '#eee' : '#01796F',
-                                color: isExpanded ? '#333' : '#fff',
-                                border: 'none',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                              }}
-                            >
-                              <span>{isExpanded ? 'Masquer offres' : `Offres (${roomOffers.length})`}</span>
-                              <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`} />
-                            </button>
-                          ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <Link
-                              href={`/booking?serviceType=HOTEL&serviceId=${hotelId}&offerId=${item.offerId}&serviceTitle=${encodeURIComponent(item.name || 'Hôtel')}&price=${item.pricePerNight}&currency=${item.currency}`}
-                              className="btn-booking"
+                              href={`/hotels/${encodeURIComponent(item.offerId || hotelId)}`}
                               style={{
-                                padding: '0.65rem 1.25rem',
+                                padding: '0.6rem 0.95rem',
                                 borderRadius: '6px',
-                                color: '#fff',
+                                border: '1.5px solid #01796F',
+                                color: '#01796F',
+                                background: '#fff',
                                 textDecoration: 'none',
                                 fontWeight: 700,
                                 fontSize: '0.85rem',
                               }}
                             >
-                              Réserver
+                              Détails
                             </Link>
-                          )}
+
+                            {roomOffers.length > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandHotel(hotelId)}
+                                style={{
+                                  padding: '0.65rem 1.1rem',
+                                  borderRadius: '6px',
+                                  background: isExpanded ? '#eee' : '#01796F',
+                                  color: isExpanded ? '#333' : '#fff',
+                                  border: 'none',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  fontSize: '0.85rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                }}
+                              >
+                                <span>{isExpanded ? 'Masquer offres' : `Offres (${roomOffers.length})`}</span>
+                                <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`} />
+                              </button>
+                            ) : (
+                              <Link
+                                href={`/booking?serviceType=HOTEL&serviceId=${hotelId}&offerId=${item.offerId}&serviceTitle=${encodeURIComponent(item.name || 'Hôtel')}&price=${item.pricePerNight}&currency=${item.currency}`}
+                                className="btn-booking"
+                                style={{
+                                  padding: '0.65rem 1.25rem',
+                                  borderRadius: '6px',
+                                  color: '#fff',
+                                  textDecoration: 'none',
+                                  fontWeight: 700,
+                                  fontSize: '0.85rem',
+                                }}
+                              >
+                                Réserver
+                              </Link>
+                            )}
+                          </div>
                         </div>
 
                         {/* Expanded Room Offers List */}

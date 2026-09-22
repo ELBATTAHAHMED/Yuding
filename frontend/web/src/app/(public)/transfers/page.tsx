@@ -18,6 +18,7 @@ import { TransferLocationSelector, LocationSuggestion } from '@/components/trave
 import { TransferSkeleton } from '@/components/travel/TransferSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { saveSearchOffers } from '@/lib/offer-store';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -110,6 +111,7 @@ export default function TransfersPage() {
       });
 
       setTransfers(data.results || []);
+      saveSearchOffers('TRANSFER', data.results || []);
       if (data.status === 'PROVIDER_UNAVAILABLE') {
         setProviderMessage(data.message);
       }
@@ -616,7 +618,7 @@ export default function TransfersPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
                           <PriceDisplay conversion={item.priceConversion} amount={item.price} currency={item.currency} />
@@ -624,21 +626,38 @@ export default function TransfersPage() {
                         <div style={{ fontSize: '0.78rem', color: '#888' }}>Tarif garanti par véhicule</div>
                       </div>
 
-                      <Link
-                        href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
-                        className="btn-booking"
-                        style={{
-                          padding: '0.75rem 1.5rem',
-                          borderRadius: '6px',
-                          backgroundColor: '#01796F',
-                          color: '#fff',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          fontSize: '0.95rem',
-                        }}
-                      >
-                        Réserver
-                      </Link>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Link
+                          href={`/transfers/${encodeURIComponent(offerKey)}`}
+                          style={{
+                            padding: '0.65rem 1.1rem',
+                            borderRadius: '6px',
+                            border: '1.5px solid #01796F',
+                            color: '#01796F',
+                            background: '#fff',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            fontSize: '0.9rem',
+                          }}
+                        >
+                          Détails
+                        </Link>
+                        <Link
+                          href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
+                          className="btn-booking"
+                          style={{
+                            padding: '0.65rem 1.25rem',
+                            borderRadius: '6px',
+                            backgroundColor: '#01796F',
+                            color: '#fff',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            fontSize: '0.9rem',
+                          }}
+                        >
+                          Réserver
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );

@@ -8,6 +8,7 @@ import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, Destinati
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
 import { sortActivities } from '@/lib/search-ux';
+import { saveSearchOffers } from '@/lib/offer-store';
 import type { ActivitySortKey } from '@/lib/search-ux';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
@@ -86,6 +87,7 @@ export default function ActivitiesPage() {
       });
 
       setActivities(data.results || []);
+      saveSearchOffers('ACTIVITY', data.results || []);
       if (data.status === 'PROVIDER_UNAVAILABLE') {
         setProviderMessage(data.message);
       }
@@ -480,11 +482,23 @@ export default function ActivitiesPage() {
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: '1.4' }}>
                           {act.title}
                         </h3>
-                        <p style={{ color: '#666', fontSize: '0.88rem', marginBottom: '1.25rem', lineHeight: '1.5', flexGrow: 1 }}>
+                        <p
+                          style={{
+                            color: '#666',
+                            fontSize: '0.88rem',
+                            marginBottom: '1.25rem',
+                            lineHeight: '1.5',
+                            flexGrow: 1,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
                           {act.description}
                         </p>
 
-                        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
+                        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f0f0f0', flexWrap: 'wrap', gap: '0.5rem' }}>
                           <div>
                             <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
                               <PriceDisplay conversion={act.priceConversion} amount={act.price} currency={act.currency} />
@@ -492,21 +506,38 @@ export default function ActivitiesPage() {
                             <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
                           </div>
 
-                          <Link
-                            href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
-                            className="btn-booking"
-                            style={{
-                              padding: '0.65rem 1.25rem',
-                              borderRadius: '6px',
-                              backgroundColor: '#01796F',
-                              color: '#fff',
-                              textDecoration: 'none',
-                              fontWeight: 700,
-                              fontSize: '0.9rem',
-                            }}
-                          >
-                            Réserver
-                          </Link>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Link
+                              href={`/activities/${encodeURIComponent(offerKey)}`}
+                              style={{
+                                padding: '0.6rem 0.95rem',
+                                borderRadius: '6px',
+                                border: '1.5px solid #01796F',
+                                color: '#01796F',
+                                background: '#fff',
+                                textDecoration: 'none',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              Détails
+                            </Link>
+                            <Link
+                              href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
+                              className="btn-booking"
+                              style={{
+                                padding: '0.65rem 1.15rem',
+                                borderRadius: '6px',
+                                backgroundColor: '#01796F',
+                                color: '#fff',
+                                textDecoration: 'none',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              Réserver
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>

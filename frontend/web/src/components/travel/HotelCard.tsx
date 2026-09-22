@@ -57,13 +57,21 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
             <span className="text-xs text-gray-500 dark:text-gray-400"> / nuit</span>
           </div>
 
-          <Link
-            href={bookingUrl}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#01796F] hover:bg-[#005951] text-white text-sm font-semibold transition-colors shadow-sm hover:shadow"
-          >
-            <i className="fas fa-calendar-check text-xs" />
-            <span>Réserver</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/hotels/${encodeURIComponent(hotel.offerId || hotel.hotelId || hotel.id || '')}`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] hover:bg-[#01796F]/10 text-xs font-semibold transition-colors"
+            >
+              <span>Détails</span>
+            </Link>
+            <Link
+              href={bookingUrl}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-[#01796F] hover:bg-[#005951] text-white text-xs font-semibold transition-colors shadow-sm hover:shadow"
+            >
+              <i className="fas fa-calendar-check text-xs" />
+              <span>Réserver</span>
+            </Link>
+          </div>
         </div>
       </div>
     </Card>
