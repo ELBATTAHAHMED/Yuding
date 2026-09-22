@@ -1,21 +1,41 @@
 package com.ahmed.travelservice.service;
 
+import com.ahmed.travelservice.cache.CacheKeyBuilder;
+import com.ahmed.travelservice.cache.ExternalApiCache;
+import com.ahmed.travelservice.cache.ExternalApiCacheProperties;
 import com.ahmed.travelservice.config.OpenMeteoProperties;
 import com.ahmed.travelservice.dto.weather.WeatherResponseDto;
 import com.ahmed.travelservice.exception.TravelValidationException;
 import com.ahmed.travelservice.provider.weather.WeatherProvider;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/** Validates weather requests before delegating to the configured weather provider. */
+/**
+ * Validates weather requests before delegating to the configured weather provider.
+ * Integrates with ExternalApiCache to protect Open-Meteo quotas with short TTL.
+ */
 @Service
-@RequiredArgsConstructor
 public class WeatherService {
     private static final int MIN_FORECAST_DAYS = 1;
     private static final int MAX_FORECAST_DAYS = 16;
 
     private final WeatherProvider weatherProvider;
     private final OpenMeteoProperties properties;
+    private final ExternalApiCache cache;
+    private final ExternalApiCacheProperties cacheProperties;
+
+    @Autowired
+    public WeatherService(WeatherProvider weatherProvider, OpenMeteoProperties properties,
+                          ExternalApiCache cache, ExternalApiCacheProperties cacheProperties) {
+        this.weatherProvider = weatherProvider;
+        this.properties = properties;
+        this.cache = cache;
+        this.cacheProperties = cacheProperties;
+    }
+
+    public WeatherService(WeatherProvider weatherProvider, OpenMeteoProperties properties) {
+        this(weatherProvider, properties, null, null);
+    }
 
     public WeatherResponseDto getWeather(Double latitude, Double longitude, Integer forecastDays) {
         validateCoordinates(latitude, longitude);
@@ -24,6 +44,16 @@ public class WeatherService {
             throw new TravelValidationException("INVALID_FORECAST_DAYS", "forecastDays",
                     "forecastDays must be between 1 and 16 days");
         }
+
+        if (cache != null && cache.isEnabled()) {
+            String providerCode = (weatherProvider != null && weatherProvider.getMetadata() != null)
+                    ? weatherProvider.getMetadata().getProviderCode()
+                    : "openmeteo";
+            String key = CacheKeyBuilder.weather(providerCode, cacheProperties.getVersion(), latitude, longitude, days);
+            return cache.getOrLoad(key, WeatherResponseDto.class, cacheProperties.getTtl().getWeather(),
+                    () -> weatherProvider.getWeather(latitude, longitude, days));
+        }
+
         return weatherProvider.getWeather(latitude, longitude, days);
     }
 

@@ -25,16 +25,35 @@ import java.util.Map;
 public class CurrencyService {
     private final CurrencyProvider currencyProvider;
     private final CurrencyProperties properties;
+    private final com.ahmed.travelservice.cache.ExternalApiCache cache;
+    private final com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties;
 
-    public CurrencyService(CurrencyProvider currencyProvider, CurrencyProperties properties) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public CurrencyService(CurrencyProvider currencyProvider, CurrencyProperties properties,
+                           com.ahmed.travelservice.cache.ExternalApiCache cache,
+                           com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties) {
         this.currencyProvider = currencyProvider;
         this.properties = properties;
+        this.cache = cache;
+        this.cacheProperties = cacheProperties;
+    }
+
+    public CurrencyService(CurrencyProvider currencyProvider, CurrencyProperties properties) {
+        this(currencyProvider, properties, null, null);
     }
 
     public ExchangeRateQuote getExchangeRate(String fromCurrency, String toCurrency) {
         String from = normalizeCurrency(fromCurrency);
         String to = normalizeCurrency(toCurrency);
         if (from.equals(to)) return new ExchangeRateQuote(from, to, BigDecimal.ONE, LocalDate.now(), "IDENTITY");
+
+        if (cache != null && cache.isEnabled()) {
+            String providerCode = currencyProvider != null ? currencyProvider.getProviderCode() : "frankfurter";
+            String key = com.ahmed.travelservice.cache.CacheKeyBuilder.currency(providerCode, cacheProperties.getVersion(), from, to);
+            return cache.getOrLoad(key, ExchangeRateQuote.class, cacheProperties.getTtl().getCurrency(),
+                    () -> currencyProvider.getExchangeRate(from, to));
+        }
+
         return currencyProvider.getExchangeRate(from, to);
     }
 

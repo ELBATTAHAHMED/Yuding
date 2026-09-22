@@ -28,18 +28,32 @@ public class TravelSearchService {
     private final TravelProviderRegistry providerRegistry;
     private final TrainRoutingService trainRoutingService;
     private final CurrencyService currencyService;
+    private final com.ahmed.travelservice.cache.ExternalApiCache cache;
+    private final com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService, CurrencyService currencyService) {
+    public TravelSearchService(TravelProviderRegistry providerRegistry,
+                               TrainRoutingService trainRoutingService,
+                               CurrencyService currencyService,
+                               com.ahmed.travelservice.cache.ExternalApiCache cache,
+                               com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties) {
         this.providerRegistry = providerRegistry;
         this.trainRoutingService = trainRoutingService;
         this.currencyService = currencyService;
+        this.cache = cache;
+        this.cacheProperties = cacheProperties;
     }
 
-    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService) { this(providerRegistry, trainRoutingService, null); }
+    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService, CurrencyService currencyService) {
+        this(providerRegistry, trainRoutingService, currencyService, null, null);
+    }
+
+    public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService) {
+        this(providerRegistry, trainRoutingService, null, null, null);
+    }
 
     public TravelSearchService(TravelProviderRegistry providerRegistry) {
-        this(providerRegistry, null, null);
+        this(providerRegistry, null, null, null, null);
     }
 
     public SearchResponse<FlightOfferDto> searchFlights(FlightSearchRequest request) {
@@ -50,7 +64,16 @@ public class TravelSearchService {
 
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.FLIGHTS);
-            List<FlightOfferDto> offers = provider.searchFlights(query);
+            List<FlightOfferDto> offers;
+            if (cache != null && cache.isEnabled()) {
+                String providerCode = getProviderCode(provider, "scrappa");
+                String key = com.ahmed.travelservice.cache.CacheKeyBuilder.flightSearch(providerCode, cacheProperties.getVersion(), query);
+                offers = cache.getOrLoad(key, new com.fasterxml.jackson.core.type.TypeReference<List<FlightOfferDto>>() {},
+                        cacheProperties.getTtl().getFlightSearch(),
+                        () -> provider.searchFlights(query));
+            } else {
+                offers = provider.searchFlights(query);
+            }
             applyFlightConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
@@ -70,7 +93,16 @@ public class TravelSearchService {
 
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.HOTELS);
-            List<HotelOfferDto> offers = provider.searchHotels(query);
+            List<HotelOfferDto> offers;
+            if (cache != null && cache.isEnabled()) {
+                String providerCode = getProviderCode(provider, "nuitee");
+                String key = com.ahmed.travelservice.cache.CacheKeyBuilder.hotelSearch(providerCode, cacheProperties.getVersion(), query);
+                offers = cache.getOrLoad(key, new com.fasterxml.jackson.core.type.TypeReference<List<HotelOfferDto>>() {},
+                        cacheProperties.getTtl().getHotelSearch(),
+                        () -> provider.searchHotels(query));
+            } else {
+                offers = provider.searchHotels(query);
+            }
             applyHotelConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
@@ -90,7 +122,16 @@ public class TravelSearchService {
 
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.ACTIVITIES);
-            List<ActivityOfferDto> offers = provider.searchActivities(query);
+            List<ActivityOfferDto> offers;
+            if (cache != null && cache.isEnabled()) {
+                String providerCode = getProviderCode(provider, "hbx");
+                String key = com.ahmed.travelservice.cache.CacheKeyBuilder.activitySearch(providerCode, cacheProperties.getVersion(), query);
+                offers = cache.getOrLoad(key, new com.fasterxml.jackson.core.type.TypeReference<List<ActivityOfferDto>>() {},
+                        cacheProperties.getTtl().getActivitySearch(),
+                        () -> provider.searchActivities(query));
+            } else {
+                offers = provider.searchActivities(query);
+            }
             applyActivityConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
@@ -110,7 +151,16 @@ public class TravelSearchService {
 
         try {
             TravelProvider provider = providerRegistry.getProviderForProduct(TravelProduct.TRANSFERS);
-            List<TransferOfferDto> offers = provider.searchTransfers(query);
+            List<TransferOfferDto> offers;
+            if (cache != null && cache.isEnabled()) {
+                String providerCode = getProviderCode(provider, "hbx");
+                String key = com.ahmed.travelservice.cache.CacheKeyBuilder.transferSearch(providerCode, cacheProperties.getVersion(), query);
+                offers = cache.getOrLoad(key, new com.fasterxml.jackson.core.type.TypeReference<List<TransferOfferDto>>() {},
+                        cacheProperties.getTtl().getTransferSearch(),
+                        () -> provider.searchTransfers(query));
+            } else {
+                offers = provider.searchTransfers(query);
+            }
             applyTransferConversions(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
@@ -140,9 +190,19 @@ public class TravelSearchService {
                 searchId, query.getOriginStation(), query.getDestinationStation(), query.getDate(), query.getDepartureTime());
 
         try {
-            List<TrainOfferDto> offers = (trainRoutingService != null)
-                    ? trainRoutingService.searchTrains(query)
-                    : providerRegistry.getProviderForProduct(TravelProduct.TRAINS).searchTrains(query);
+            List<TrainOfferDto> offers;
+            if (cache != null && cache.isEnabled()) {
+                String key = com.ahmed.travelservice.cache.CacheKeyBuilder.trainSearch("trains", cacheProperties.getVersion(), query);
+                offers = cache.getOrLoad(key, new com.fasterxml.jackson.core.type.TypeReference<List<TrainOfferDto>>() {},
+                        cacheProperties.getTtl().getTrainSearch(),
+                        () -> (trainRoutingService != null)
+                                ? trainRoutingService.searchTrains(query)
+                                : providerRegistry.getProviderForProduct(TravelProduct.TRAINS).searchTrains(query));
+            } else {
+                offers = (trainRoutingService != null)
+                        ? trainRoutingService.searchTrains(query)
+                        : providerRegistry.getProviderForProduct(TravelProduct.TRAINS).searchTrains(query);
+            }
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -169,8 +229,14 @@ public class TravelSearchService {
         return getTrainStations(null);
     }
 
+    /**
+     * CRITICAL PHASE 30 INVARIANT:
+     * Offer revalidation MUST NEVER be cached.
+     * Cached search offers are discovery/browsing data only and are strictly non-authoritative.
+     * Real price, availability, and booking rules must always be validated live with the provider.
+     */
     public OfferRevalidationResult revalidateOffer(RevalidateOfferRequest request) {
-        log.info("TravelSearch: Revalidating offer [offerId={}, product={}, provider={}]",
+        log.info("TravelSearch: Revalidating offer [offerId={}, product={}, provider={}] (live provider call, cache bypassed)",
                 request.getOfferId(), request.getProductType(), request.getProvider());
 
         RevalidateOfferQuery query = RevalidateOfferQuery.builder()
@@ -273,5 +339,12 @@ public class TravelSearchService {
         result.sort(java.util.Comparator.comparing(AirportDto::getCity, java.util.Comparator.nullsLast(String::compareToIgnoreCase)));
         cachedAirports.set(java.util.Collections.unmodifiableList(result));
         return result;
+    }
+
+    private String getProviderCode(TravelProvider provider, String defaultCode) {
+        if (provider != null && provider.getMetadata() != null && provider.getMetadata().getProviderCode() != null) {
+            return provider.getMetadata().getProviderCode();
+        }
+        return defaultCode;
     }
 }

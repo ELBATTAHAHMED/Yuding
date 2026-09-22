@@ -1,12 +1,16 @@
 package com.ahmed.travelservice.service;
 
+import com.ahmed.travelservice.cache.CacheKeyBuilder;
+import com.ahmed.travelservice.cache.ExternalApiCache;
+import com.ahmed.travelservice.cache.ExternalApiCacheProperties;
 import com.ahmed.travelservice.dto.geo.*;
 import com.ahmed.travelservice.exception.TravelValidationException;
 import com.ahmed.travelservice.provider.error.TravelProviderException;
 import com.ahmed.travelservice.provider.geo.GeoProvider;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -15,14 +19,27 @@ import java.util.List;
 /**
  * Service orchestrating provider-neutral geographic operations:
  * autocomplete, forward/reverse geocoding, nearby POIs, and static map generation.
+ * Integrates with centralized ExternalApiCache for quota protection.
  */
 @Service
-@RequiredArgsConstructor
 public class TravelGeoService {
 
     private static final Logger log = LoggerFactory.getLogger(TravelGeoService.class);
 
     private final GeoProvider geoProvider;
+    private final ExternalApiCache cache;
+    private final ExternalApiCacheProperties cacheProperties;
+
+    @Autowired
+    public TravelGeoService(GeoProvider geoProvider, ExternalApiCache cache, ExternalApiCacheProperties cacheProperties) {
+        this.geoProvider = geoProvider;
+        this.cache = cache;
+        this.cacheProperties = cacheProperties;
+    }
+
+    public TravelGeoService(GeoProvider geoProvider) {
+        this(geoProvider, null, null);
+    }
 
     public List<GeoPlaceDto> autocomplete(GeoAutocompleteRequest request) {
         if (request == null || request.getText() == null || request.getText().trim().length() < 2) {
@@ -30,6 +47,13 @@ public class TravelGeoService {
         }
 
         log.debug("TravelGeoService: Autocomplete requested for '{}' (type={})", request.getText(), request.getType());
+        if (cache != null && cache.isEnabled()) {
+            String key = CacheKeyBuilder.geoAutocomplete(getProviderCode(), cacheProperties.getVersion(), request);
+            return cache.getOrLoad(key, new TypeReference<List<GeoPlaceDto>>() {},
+                    cacheProperties.getTtl().getGeoAutocomplete(),
+                    () -> geoProvider.autocomplete(request));
+        }
+
         try {
             return geoProvider.autocomplete(request);
         } catch (TravelProviderException ex) {
@@ -44,6 +68,13 @@ public class TravelGeoService {
         }
 
         log.debug("TravelGeoService: Forward geocode requested for '{}'", request.getText());
+        if (cache != null && cache.isEnabled()) {
+            String key = CacheKeyBuilder.geoGeocode(getProviderCode(), cacheProperties.getVersion(), request);
+            return cache.getOrLoad(key, new TypeReference<List<GeoPlaceDto>>() {},
+                    cacheProperties.getTtl().getGeoGeocode(),
+                    () -> geoProvider.geocode(request));
+        }
+
         try {
             return geoProvider.geocode(request);
         } catch (TravelProviderException ex) {
@@ -59,6 +90,13 @@ public class TravelGeoService {
         validateCoordinates(request.getLatitude(), request.getLongitude());
 
         log.debug("TravelGeoService: Reverse geocode requested for [{}, {}]", request.getLatitude(), request.getLongitude());
+        if (cache != null && cache.isEnabled()) {
+            String key = CacheKeyBuilder.geoReverse(getProviderCode(), cacheProperties.getVersion(), request);
+            return cache.getOrLoad(key, GeoPlaceDto.class,
+                    cacheProperties.getTtl().getGeoGeocode(),
+                    () -> geoProvider.reverseGeocode(request));
+        }
+
         try {
             return geoProvider.reverseGeocode(request);
         } catch (TravelProviderException ex) {
@@ -79,6 +117,13 @@ public class TravelGeoService {
 
         log.debug("TravelGeoService: Nearby places search for [{}, {}], radius={}m",
                 request.getLatitude(), request.getLongitude(), request.getRadiusMeters());
+        if (cache != null && cache.isEnabled()) {
+            String key = CacheKeyBuilder.geoPoi(getProviderCode(), cacheProperties.getVersion(), request);
+            return cache.getOrLoad(key, new TypeReference<List<NearbyPlaceDto>>() {},
+                    cacheProperties.getTtl().getGeoPoi(),
+                    () -> geoProvider.findNearbyPlaces(request));
+        }
+
         try {
             return geoProvider.findNearbyPlaces(request);
         } catch (TravelProviderException ex) {
@@ -99,6 +144,13 @@ public class TravelGeoService {
             log.warn("TravelGeoService: Static map request failed [code={}]: {}", ex.getErrorCode(), ex.getMessage());
             throw ex;
         }
+    }
+
+    private String getProviderCode() {
+        if (geoProvider != null && geoProvider.getMetadata() != null && geoProvider.getMetadata().getProviderCode() != null) {
+            return geoProvider.getMetadata().getProviderCode();
+        }
+        return "geoapify";
     }
 
     private void validateCoordinates(Double lat, Double lon) {
