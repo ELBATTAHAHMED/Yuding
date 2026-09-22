@@ -15,13 +15,18 @@ export function formatMoney(amount: number, currency: string, locale = 'fr-MA'):
   }).format(amount);
 }
 
-/** Chooses the normalized display price, with a truthful provider-price fallback. */
 export function getPricePresentation(
   conversion: PriceConversionSnapshot | undefined,
-  fallbackAmount: number,
+  fallbackAmount: number | null | undefined,
   fallbackCurrency: string,
 ): PricePresentation {
-  if (conversion?.displayAmount != null && conversion.conversionStatus !== 'UNAVAILABLE') {
+  if (fallbackAmount == null || isNaN(fallbackAmount) || fallbackAmount <= 0) {
+    return {
+      primary: 'Tarif indisponible',
+      conversionUnavailable: false,
+    };
+  }
+  if (conversion?.displayAmount != null && conversion.conversionStatus !== 'UNAVAILABLE' && conversion.displayAmount > 0) {
     return {
       primary: formatMoney(conversion.displayAmount, conversion.displayCurrency),
       original: formatMoney(conversion.providerAmount, conversion.providerCurrency),

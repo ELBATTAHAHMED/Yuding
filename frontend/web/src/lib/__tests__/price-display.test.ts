@@ -29,4 +29,15 @@ describe('Phase 28 price presentation', () => {
     assert.match(result.primary, /49/);
     assert.equal(result.conversionUnavailable, true);
   });
+
+  it('returns Tarif indisponible when amount is 0, null, or negative', () => {
+    const res0 = getPricePresentation(undefined, 0, 'EUR');
+    assert.equal(res0.primary, 'Tarif indisponible');
+
+    const resNull = getPricePresentation(undefined, null, 'EUR');
+    assert.equal(resNull.primary, 'Tarif indisponible');
+
+    const resNeg = getPricePresentation(undefined, -10, 'EUR');
+    assert.equal(resNeg.primary, 'Tarif indisponible');
+  });
 });

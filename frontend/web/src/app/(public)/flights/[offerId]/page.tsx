@@ -146,13 +146,14 @@ export default function FlightDetailsPage() {
     );
   }
 
+  const isPriced = flight.price != null && flight.price > 0;
   const airlineDisplayName = flight.airlineName || flight.airlineCode || 'Compagnie aérienne';
   const selRef = flight.selectionRef || flight.offerId;
   const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(
     flight.offerId
   )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(
     `${airlineDisplayName} (${flight.origin} → ${flight.destination})`
-  )}&price=${flight.price}`;
+  )}${isPriced ? `&price=${flight.price}` : ''}&currency=${encodeURIComponent(flight.currency || 'EUR')}`;
 
   return (
     <OfferDetailsShell
@@ -165,8 +166,8 @@ export default function FlightDetailsPage() {
           conversion={flight.priceConversion}
           unitLabel="par passager"
           priceType={flight.priceType}
-          bookingHref={bookingUrl}
-          bookingLabel="Sélectionner ce vol"
+          bookingHref={isPriced ? bookingUrl : undefined}
+          bookingLabel={isPriced ? 'Sélectionner ce vol' : 'Tarif indisponible'}
         />
       }
       mobileAction={
@@ -174,23 +175,38 @@ export default function FlightDetailsPage() {
           <div>
             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tarif par passager</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#01796F' }}>
-              {flight.price} {flight.currency}
+              {isPriced ? `${flight.price} ${flight.currency}` : 'Tarif indisponible'}
             </div>
           </div>
-          <a
-            href={bookingUrl}
-            style={{
-              padding: '0.65rem 1.25rem',
-              borderRadius: '6px',
-              background: '#01796F',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              textDecoration: 'none',
-            }}
-          >
-            Sélectionner
-          </a>
+          {isPriced ? (
+            <a
+              href={bookingUrl}
+              style={{
+                padding: '0.65rem 1.25rem',
+                borderRadius: '6px',
+                background: '#01796F',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                textDecoration: 'none',
+              }}
+            >
+              Sélectionner
+            </a>
+          ) : (
+            <span
+              style={{
+                padding: '0.65rem 1.25rem',
+                borderRadius: '6px',
+                background: '#e2e8f0',
+                color: '#64748b',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+              }}
+            >
+              Indisponible
+            </span>
+          )}
         </div>
       }
     >

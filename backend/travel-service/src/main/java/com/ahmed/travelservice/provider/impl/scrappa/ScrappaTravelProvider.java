@@ -180,8 +180,10 @@ public class ScrappaTravelProvider implements TravelProvider {
         Integer totalDuration = resolveEffectiveDuration(raw);
         Integer totalStops = resolveEffectiveStops(raw);
 
-        // Price — must be BigDecimal; Scrappa returns as JSON number
-        BigDecimal price = raw.getPrice() != null ? raw.getPrice() : BigDecimal.ZERO;
+        // Price — must be BigDecimal; Scrappa returns as JSON number (null if unavailable or non-positive)
+        BigDecimal price = (raw.getPrice() != null && raw.getPrice().compareTo(BigDecimal.ZERO) > 0)
+                ? raw.getPrice()
+                : null;
         String currency = raw.getCurrency() != null ? raw.getCurrency()
                 : (query.getCurrency() != null ? query.getCurrency() : "EUR");
 

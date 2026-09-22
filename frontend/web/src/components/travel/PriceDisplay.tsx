@@ -4,7 +4,7 @@ import { getPricePresentation } from '@/lib/price-display';
 
 export interface PriceDisplayProps {
   conversion?: PriceConversionSnapshot;
-  amount: number;
+  amount?: number | null;
   currency: string;
   className?: string;
 }

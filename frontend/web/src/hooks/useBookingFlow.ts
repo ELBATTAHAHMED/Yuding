@@ -75,10 +75,15 @@ export function useBookingFlow(): UseBookingFlowReturn {
         router.push(`/booking/${reference}/payment`);
       } else {
         setStage('error');
-        setError(
-          pricing.message ||
-            'Ce dossier ne peut pas faire l’objet d’un règlement en ligne immédiat.'
-        );
+        const fallbackMsg =
+          pricing.pricingStatus === 'NOT_PRICED' || pricing.pricingStatus === 'NOT_APPLICABLE'
+            ? 'Cette prestation ne dispose pas d’un tarif monétaire payable en ligne.'
+            : 'Ce dossier ne peut pas faire l’objet d’un règlement en ligne immédiat.';
+        const displayMsg =
+          pricing.message && !pricing.message.toLowerCase().includes('successfully')
+            ? pricing.message
+            : fallbackMsg;
+        setError(displayMsg);
       }
     },
     [router]

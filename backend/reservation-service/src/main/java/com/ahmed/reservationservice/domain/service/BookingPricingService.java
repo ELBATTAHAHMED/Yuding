@@ -113,9 +113,14 @@ public class BookingPricingService {
         // 8. Evaluate readiness for Phase 38 Payment Preparation
         boolean canProceedToPayment = paymentReadinessPolicy.canProceedToPaymentPreparation(booking, quote, latestRevalidation);
 
-        String message = quote.getPricingStatus() == com.ahmed.reservationservice.domain.model.PricingStatus.PRICED
-                ? "Server-authoritative pricing established successfully."
-                : "Product is not priced with a monetary fare.";
+        String message;
+        if (quote.getPricingStatus() == com.ahmed.reservationservice.domain.model.PricingStatus.PRICED) {
+            message = canProceedToPayment
+                    ? "Server-authoritative pricing established successfully."
+                    : "Authoritative pricing established but booking is not eligible for payment preparation.";
+        } else {
+            message = "Product is not priced with a monetary fare.";
+        }
 
         return BookingPricingResponseDto.fromDomain(bookingReference, quote, canProceedToPayment, message);
     }

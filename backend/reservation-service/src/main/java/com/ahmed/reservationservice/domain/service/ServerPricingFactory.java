@@ -56,8 +56,10 @@ public class ServerPricingFactory {
 
         String priceStatus = revalidation.getPriceStatus() != null ? revalidation.getPriceStatus().toUpperCase() : "UNKNOWN";
 
-        // Handle products without monetary fare (e.g., ONCF / Transitous schedule trains)
-        if ("NOT_APPLICABLE".equals(priceStatus) || revalidation.getCurrentProviderAmount() == null) {
+        // Handle products without monetary fare (e.g., ONCF / Transitous schedule trains, or unpriced offers)
+        if ("NOT_APPLICABLE".equals(priceStatus)
+                || revalidation.getCurrentProviderAmount() == null
+                || revalidation.getCurrentProviderAmount().compareTo(BigDecimal.ZERO) <= 0) {
             pricingStatus = "NOT_APPLICABLE".equals(priceStatus) ? PricingStatus.NOT_APPLICABLE : PricingStatus.NOT_PRICED;
             log.info("ServerPricingFactory: Product [{}] from [{}] is [{}]; no monetary total fabricated.",
                     productType, provider, pricingStatus);
