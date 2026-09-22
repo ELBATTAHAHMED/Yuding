@@ -1,18 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
+import '@/styles/loginStyle.css';
 
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get('redirect') || '/';
+  const redirectParam = searchParams.get('redirect') || searchParams.get('returnUrl');
   const initialMode = searchParams.get('mode') === 'signup';
 
   const { login, register, isAuthenticated, isAdmin, isSupport } = useAuth();
 
   const [isFlipped, setIsFlipped] = useState<boolean>(initialMode);
+  const [isDark, setIsDark] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -25,28 +28,68 @@ function LoginFormContent() {
   const [signupFirstName, setSignupFirstName] = useState('');
   const [signupLastName, setSignupLastName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupPasswordConfirm, setSignupPasswordConfirm] = useState('');
+
+  // Initialize and listen to Dark Mode
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+
+    setIsDark(darkActive);
+    applyTheme(darkActive);
+  }, []);
+
+  const applyTheme = (dark: boolean) => {
+    const html = document.documentElement;
+    const body = document.body;
+    if (dark) {
+      html.classList.add('dark');
+      html.setAttribute('data-theme', 'dark');
+      body.setAttribute('data-theme', 'dark');
+    } else {
+      html.classList.remove('dark');
+      html.removeAttribute('data-theme');
+      body.setAttribute('data-theme', 'light');
+    }
+  };
+
+  const toggleDarkMode = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    applyTheme(nextDark);
+    localStorage.setItem('theme', nextDark ? 'dark' : 'light');
+  };
+
+  // Safe redirect URL calculation
+  const getSafeRedirectUrl = () => {
+    if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+      return redirectParam;
+    }
+    if (isAdmin || isSupport) {
+      return '/admin';
+    }
+    return '/';
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (isAdmin || isSupport) {
-        router.push(redirectPath !== '/' ? redirectPath : '/admin');
-      } else {
-        router.push(redirectPath !== '/' ? redirectPath : '/account');
-      }
+      router.push(getSafeRedirectUrl());
     }
-  }, [isAuthenticated, isAdmin, isSupport, router, redirectPath]);
+  }, [isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
     setLoading(true);
 
     try {
-      await login({ email: loginEmail, password: loginPassword });
+      await login({ email: loginEmail.trim(), password: loginPassword });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Identifiants invalides. Veuillez réessayer.');
+      setErrorMessage(err.message || 'Identifiants invalides. Veuillez vérifier votre email et mot de passe.');
     } finally {
       setLoading(false);
     }
@@ -56,331 +99,326 @@ function LoginFormContent() {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+
+    if (signupPassword !== signupPasswordConfirm) {
+      setErrorMessage('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    if (signupPassword.length < 8) {
+      setErrorMessage('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await register({
-        email: signupEmail,
+        email: signupEmail.trim(),
         password: signupPassword,
-        firstName: signupFirstName,
-        lastName: signupLastName,
-        phoneNumber: signupPhone || undefined,
+        firstName: signupFirstName.trim(),
+        lastName: signupLastName.trim(),
+        phoneNumber: signupPhone.trim() || undefined,
       });
-      setSuccessMessage('Compte créé avec succès ! Un email de confirmation vous a été envoyé.');
+      setSuccessMessage('Compte créé avec succès ! Bienvenue sur YUDING !');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Erreur lors de la création du compte.');
+      setErrorMessage(err.message || 'Échec de l\'inscription. Veuillez vérifier vos informations et réessayer.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '90vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
-      <video
-        src="/image/video1.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: 0,
-          filter: 'brightness(0.5)',
-        }}
-      />
+    <>
+      {/* ==================== HEADER ==================== */}
+      <header className="header">
+        <div className="header-top">
+          <div className="container1">
+            <Link href="/" className="logo">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={isDark ? '/image/logo1.png' : '/image/logodark.png'}
+                alt="Yuding Logo"
+                id="headerLogo"
+              />
+            </Link>
 
-      <div
-        className="container"
-        style={{
-          position: 'relative',
-          zIndex: 2,
-          maxWidth: '850px',
-          width: '100%',
-          background: 'var(--card, #fff)',
-          borderRadius: '16px',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
-          overflow: 'hidden',
-          display: 'flex',
-          minHeight: '520px',
-        }}
-      >
-        {/* Cover side */}
-        <div
-          style={{
-            flex: '1 1 45%',
-            background: 'linear-gradient(135deg, #001b1a 0%, #00796b 100%)',
-            color: '#fff',
-            padding: '3rem 2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            textAlign: 'center',
-            position: 'relative',
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/image/logo1.png" alt="Logo" style={{ maxHeight: '60px', marginBottom: '1.5rem' }} />
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '1px' }}>
-            {isFlipped ? 'REJOIGNEZ YUDING' : 'WELCOME TO YUDING'}
-          </h2>
-          <p style={{ fontSize: '1rem', color: '#b2dfdb', lineHeight: '1.6', maxWidth: '300px' }}>
-            {isFlipped
-              ? 'Créez votre compte en quelques clics pour débloquer les meilleures offres et gérer vos voyages.'
-              : 'Connectez-vous pour accéder à vos réservations, vos offres personnalisées et votre historique.'}
-          </p>
+            <nav className="header-nav">
+              <Link href="/" className="nav-item">
+                <i className="fas fa-home"></i> Accueil
+              </Link>
+              <Link href="/hotels" className="nav-item">
+                <i className="fas fa-bed"></i> Hébergements
+              </Link>
+              <Link href="/#gallery" className="nav-item">
+                <i className="fas fa-images"></i> Galerie
+              </Link>
+            </nav>
+
+            {/* Bouton Dark Mode */}
+            <button
+              id="darkModeToggle"
+              className={`dark-mode-toggle ${isDark ? 'active' : ''}`}
+              title="Basculer le mode sombre"
+              onClick={toggleDarkMode}
+              type="button"
+            >
+              <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`} id="darkModeIcon"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ==================== VIDEO BACKGROUND ==================== */}
+      <section className="home" id="home">
+        <video
+          src="/image/video1.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="video"
+        ></video>
+      </section>
+
+      {/* ==================== 3D FLIP CONTAINER ==================== */}
+      <div className="container">
+        {/* Checkbox pour l'effet flip */}
+        <input
+          type="checkbox"
+          id="flip"
+          checked={isFlipped}
+          onChange={(e) => setIsFlipped(e.target.checked)}
+        />
+
+        {/* Couverture (images + textes) */}
+        <div className="cover">
+          <div className="front">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={isDark ? '/image/pic2.jpg' : '/image/pic1.jpg'}
+              alt="Image Front"
+              id="coverFrontImage"
+            />
+            <div className="text">
+              <span className="text-1">WELCOME TO<br /> YUDDING</span>
+              <span className="text-2">Let&apos;s get connected</span>
+            </div>
+          </div>
+          <div className="back">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="backImg"
+              src={isDark ? '/image/img1.png' : '/image/img.png'}
+              alt="Image Back"
+              id="coverBackImage"
+            />
+            <div className="text">
+              <span className="text-1">WELCOME TO<br />YUDDING</span>
+              <span className="text-2">Signup Now</span>
+            </div>
+          </div>
         </div>
 
-        {/* Form side */}
-        <div
-          style={{
-            flex: '1 1 55%',
-            padding: '2.5rem 2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            background: 'var(--card, #fff)',
-          }}
-        >
-          {errorMessage && (
-            <div
-              style={{
-                padding: '0.75rem 1rem',
-                backgroundColor: '#ffebee',
-                color: '#c62828',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <i className="fas fa-exclamation-circle"></i>
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {successMessage && (
-            <div
-              style={{
-                padding: '0.75rem 1rem',
-                backgroundColor: '#e8f5e9',
-                color: '#2e7d32',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <i className="fas fa-check-circle"></i>
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          {!isFlipped ? (
-            /* ==================== LOGIN FORM ==================== */
-            <div>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text, #001b1a)', marginBottom: '1.5rem' }}>
-                Connexion
-              </h3>
-              <form onSubmit={handleLogin}>
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
-                    Email ou Identifiant
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <i
-                      className="fas fa-user-circle"
-                      style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }}
-                    ></i>
+        {/* Zone des formulaires */}
+        <div className="forms">
+          <div className="form-content">
+            {/* =========== LOGIN FORM =========== */}
+            <div className="login-form">
+              <div className="title">Login</div>
+              <form id="login-form" onSubmit={handleLogin}>
+                <div className="input-boxes">
+                  {errorMessage && !isFlipped && (
+                    <div className="auth-alert auth-alert-error" role="alert">
+                      <i className="fas fa-exclamation-circle"></i>
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+                  {successMessage && !isFlipped && (
+                    <div className="auth-alert auth-alert-success" role="alert">
+                      <i className="fas fa-check-circle"></i>
+                      <span>{successMessage}</span>
+                    </div>
+                  )}
+                  <div className="input-box">
+                    <i className="fas fa-envelope"></i>
                     <input
-                      type="text"
-                      required
-                      placeholder="votre@email.com"
+                      type="email"
+                      id="login-email"
+                      name="email"
+                      placeholder="Enter your email"
+                      autoComplete="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                        borderRadius: '6px',
-                        border: '1px solid #ccc',
-                      }}
+                      required
                     />
                   </div>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
-                    Mot de passe
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <i
-                      className="fas fa-lock"
-                      style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }}
-                    ></i>
+                  <div className="input-box">
+                    <i className="fas fa-lock"></i>
                     <input
                       type="password"
-                      required
-                      placeholder="••••••••"
+                      id="login-password"
+                      name="password"
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                        borderRadius: '6px',
-                        border: '1px solid #ccc',
-                      }}
+                      required
                     />
+                  </div>
+                  <div className="button input-box">
+                    <input
+                      type="submit"
+                      value={loading ? 'Connexion en cours...' : 'Submit'}
+                      className="btn"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="text sign-up-text">
+                    Don&apos;t have an account?{' '}
+                    <label
+                      htmlFor="flip"
+                      onClick={() => {
+                        setIsFlipped(true);
+                        setErrorMessage(null);
+                        setSuccessMessage(null);
+                      }}
+                    >
+                      Signup now
+                    </label>
                   </div>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-booking"
-                  style={{
-                    width: '100%',
-                    padding: '0.85rem',
-                    fontWeight: 700,
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                  }}
-                >
-                  {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Se connecter'}
-                </button>
               </form>
-
-              <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
-                Pas encore de compte ?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsFlipped(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#00796b',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    padding: 0,
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Inscrivez-vous maintenant
-                </button>
-              </div>
             </div>
-          ) : (
-            /* ==================== SIGNUP FORM ==================== */
-            <div>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text, #001b1a)', marginBottom: '1.25rem' }}>
-                Créer un compte
-              </h3>
-              <form onSubmit={handleSignup}>
-                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <div style={{ flex: 1 }}>
+
+            {/* =========== SIGNUP FORM =========== */}
+            <div className="signup-form">
+              <div className="title">Signup</div>
+              <form id="signup-form" onSubmit={handleSignup}>
+                <div className="input-boxes">
+                  {errorMessage && isFlipped && (
+                    <div className="auth-alert auth-alert-error" role="alert">
+                      <i className="fas fa-exclamation-circle"></i>
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+                  {successMessage && isFlipped && (
+                    <div className="auth-alert auth-alert-success" role="alert">
+                      <i className="fas fa-check-circle"></i>
+                      <span>{successMessage}</span>
+                    </div>
+                  )}
+                  {/* Nom */}
+                  <div className="input-box">
+                    <i className="fas fa-user"></i>
                     <input
                       type="text"
-                      required
-                      placeholder="Prénom"
-                      value={signupFirstName}
-                      onChange={(e) => setSignupFirstName(e.target.value)}
-                      style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <input
-                      type="text"
-                      required
+                      name="nom_utilisateur"
                       placeholder="Nom"
+                      autoComplete="family-name"
                       value={signupLastName}
                       onChange={(e) => setSignupLastName(e.target.value)}
-                      style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
+                      required
                     />
                   </div>
+                  {/* Prénom */}
+                  <div className="input-box">
+                    <i className="fas fa-user"></i>
+                    <input
+                      type="text"
+                      name="prenom_utilisateur"
+                      placeholder="Prénom"
+                      autoComplete="given-name"
+                      value={signupFirstName}
+                      onChange={(e) => setSignupFirstName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {/* Email */}
+                  <div className="input-box">
+                    <i className="fas fa-envelope"></i>
+                    <input
+                      type="email"
+                      name="email_utilisateur"
+                      placeholder="Email"
+                      autoComplete="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {/* Téléphone */}
+                  <div className="input-box">
+                    <i className="fas fa-phone"></i>
+                    <input
+                      type="tel"
+                      name="num_tele"
+                      placeholder="Téléphone"
+                      autoComplete="tel"
+                      value={signupPhone}
+                      onChange={(e) => setSignupPhone(e.target.value)}
+                    />
+                  </div>
+                  {/* Password */}
+                  <div className="input-box">
+                    <i className="fas fa-lock"></i>
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="Password (min. 8 caractères)"
+                      autoComplete="new-password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      minLength={8}
+                      required
+                    />
+                  </div>
+                  {/* Confirmer Password */}
+                  <div className="input-box">
+                    <i className="fas fa-lock"></i>
+                    <input
+                      type="password"
+                      name="password_confirm"
+                      placeholder="Confirmer Password"
+                      autoComplete="new-password"
+                      value={signupPasswordConfirm}
+                      onChange={(e) => setSignupPasswordConfirm(e.target.value)}
+                      minLength={8}
+                      required
+                    />
+                  </div>
+                  {/* Bouton Submit */}
+                  <div className="button input-box">
+                    <input
+                      type="submit"
+                      value={loading ? 'Inscription en cours...' : 'Submit'}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="text sign-up-text">
+                    Already have an account?{' '}
+                    <label
+                      htmlFor="flip"
+                      onClick={() => {
+                        setIsFlipped(false);
+                        setErrorMessage(null);
+                        setSuccessMessage(null);
+                      }}
+                    >
+                      Login now
+                    </label>
+                  </div>
                 </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <input
-                    type="email"
-                    required
-                    placeholder="Adresse email"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    placeholder="Mot de passe (8+ caractères)"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <input
-                    type="tel"
-                    placeholder="Numéro de téléphone"
-                    value={signupPhone}
-                    onChange={(e) => setSignupPhone(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-booking"
-                  style={{
-                    width: '100%',
-                    padding: '0.85rem',
-                    fontWeight: 700,
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                  }}
-                >
-                  {loading ? <i className="fas fa-spinner fa-spin"></i> : "S'inscrire"}
-                </button>
               </form>
-
-              <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.9rem', color: '#666' }}>
-                Vous avez déjà un compte ?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsFlipped(false)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#00796b',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    padding: 0,
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Connectez-vous
-                </button>
-              </div>
             </div>
-          )}
+            {/* /signup-form */}
+          </div>
+          {/* /form-content */}
         </div>
+        {/* /forms */}
       </div>
-    </div>
+      {/* /container */}
+    </>
   );
 }
 
@@ -388,8 +426,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#00796b' }}></i>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#0f766e' }}></i>
         </div>
       }
     >

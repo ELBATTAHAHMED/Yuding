@@ -81,7 +81,8 @@
     box-sizing: border-box;
     font-family: "Space Grotesk", sans-serif;
 }
-body {
+body,
+.auth-layout-root {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -259,6 +260,7 @@ body::before {
     object-fit: cover;
     z-index: 10;
     border-radius: 28px;
+    max-width: none;
 }
 .cover .text {
     position: absolute;
@@ -765,6 +767,7 @@ label:hover::after {
     width: 100vw;
     height: 100vh;
     z-index: -1;
+    max-width: none;
 }
 
 .header {
@@ -947,4 +950,41 @@ label:hover::after {
     100% {
         left: 100%;
     }
+}
+
+/* ==================== AUTH ALERTS ==================== */
+.auth-alert {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeInDown 0.4s ease forwards;
+}
+
+.auth-alert-error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+}
+
+[data-theme="dark"] .auth-alert-error {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+.auth-alert-success {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #0f766e;
+}
+
+[data-theme="dark"] .auth-alert-success {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
 }
