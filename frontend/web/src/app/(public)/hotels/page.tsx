@@ -9,7 +9,7 @@ import {
   filterHotels,
   type HotelCategoryFilter,
 } from '@/lib/hotel-filters';
-import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel } from '@/components/travel';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
@@ -816,6 +816,14 @@ export default function HotelsPage() {
                   latitude={selectedGeoPlace.latitude}
                   longitude={selectedGeoPlace.longitude}
                   destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.25rem' }}>
+                <DestinationImageGallery
+                  city={selectedGeoPlace.city || selectedGeoPlace.name}
+                  country={selectedGeoPlace.country}
+                  countryCode={selectedGeoPlace.countryCode}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>

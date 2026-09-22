@@ -25,6 +25,8 @@ Write-Host "  ONCF_GTFS_ENABLED=$env:ONCF_GTFS_ENABLED"
 Write-Host "  ONCF_GTFS_DATA_PATH=$env:ONCF_GTFS_DATA_PATH"
 $geoConfigured = if ([string]::IsNullOrWhiteSpace($env:GEOAPIFY_API_KEY)) { "NO" } else { "YES" }
 Write-Host "  Geoapify configured: $geoConfigured"
+$pexelsConfigured = if ([string]::IsNullOrWhiteSpace($env:PEXELS_API_KEY)) { "NO" } else { "YES" }
+Write-Host "  Pexels configured: $pexelsConfigured"
 Write-Host ""
 
 $jar = Join-Path $PSScriptRoot "target\travel-service-0.0.1-SNAPSHOT.jar"

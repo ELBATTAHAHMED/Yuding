@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import com.ahmed.travelservice.dto.image.ImageAssetDto;
 
 /**
  * Normalized provider-neutral hotel offer returned to the Yuding frontend.
@@ -85,6 +86,9 @@ public class HotelOfferDto {
 
     /** Primary image URL of the hotel. */
     private String imageUrl;
+
+    /** Provenance-aware image asset containing source attribution and entity-authenticity flag. */
+    private ImageAssetDto imageAsset;
 
     /** Availability state (e.g. "AVAILABLE_ON_PROVIDER"). */
     private String availabilityState;

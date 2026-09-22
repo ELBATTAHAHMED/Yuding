@@ -11,3 +11,5 @@ export * from './GeoMap';
 export * from './NearbyPoiPanel';
 export * from './DestinationWeather';
 export * from './PriceDisplay';
+export * from './SafeEntityImage';
+export * from './DestinationImageGallery';

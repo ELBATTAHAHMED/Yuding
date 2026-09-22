@@ -38,5 +38,7 @@ export const queryKeys = {
       [...queryKeys.travel.all, 'activities', filter || {}] as const,
     weather: (lat: number, lon: number, forecastDays?: number) =>
       [...queryKeys.travel.all, 'weather', lat, lon, forecastDays ?? 7] as const,
+    destinationImages: (city: string, country?: string, limit?: number) =>
+      [...queryKeys.travel.all, 'destination-images', city.toLowerCase().trim(), (country || '').toLowerCase().trim(), limit ?? 3] as const,
   },
 } as const;

@@ -17,5 +17,6 @@ public class TravelProviderProperties {
     private String geo = "none";
     private String weather = "open-meteo";
     private String currency = "frankfurter";
+    private String images = "pexels";
     private String defaultProvider = "none";
 }
