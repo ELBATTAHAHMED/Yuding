@@ -314,6 +314,7 @@ export default function HotelsPage() {
         destination={selectedCity || undefined}
         country={selectedGeoPlace?.country}
         defaultImageQuery="hotel resort travel accommodation"
+        defaultImageIndex={3}
         icon="fas fa-bed"
         compact={hasSearched}
       />

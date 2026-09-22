@@ -122,6 +122,7 @@ export default function ActivitiesPage() {
         destination={selectedGeoPlace ? destination || undefined : undefined}
         country={selectedGeoPlace?.country}
         defaultImageQuery="travel adventure activity excursion"
+        defaultImageIndex={3}
         icon="fas fa-compass"
         compact={hasSearched}
       />

@@ -190,6 +190,7 @@ export default function FlightsPage() {
         destination={selectedDestination?.city}
         country={selectedDestination?.country}
         defaultImageQuery="airplane travel airport aviation"
+        defaultImageIndex={2}
         icon="fas fa-plane-departure"
         compact={hasSearched}
       />
