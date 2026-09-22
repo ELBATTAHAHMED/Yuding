@@ -238,23 +238,16 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="airport-selector-wrapper" style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} className="airport-selector-wrapper relative w-full">
       <label
         htmlFor={id}
-        style={{
-          display: 'block',
-          fontWeight: 600,
-          marginBottom: '0.4rem',
-          textAlign: 'left',
-          fontSize: '0.9rem',
-          color: 'var(--text, #001b1a)',
-        }}
+        className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
       >
-        <i className={`fas ${icon}`} style={{ marginRight: '0.4rem', color: '#01796F' }} />
+        <i className={`fas ${icon} mr-1.5 text-[#02E0D5]`} />
         {label}
       </label>
 
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+      <div className="relative flex items-center">
         <input
           ref={inputRef}
           type="text"
@@ -270,17 +263,11 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
           aria-expanded={isOpen}
           aria-autocomplete="list"
           aria-controls={`${id}-listbox`}
-          style={{
-            width: '100%',
-            padding: '0.75rem 2.2rem 0.75rem 0.75rem',
-            borderRadius: '6px',
-            border: error ? '2px solid #e53935' : '1px solid #ccc',
-            boxSizing: 'border-box',
-            fontSize: '0.95rem',
-            color: '#111',
-            backgroundColor: '#fff',
-            outline: 'none',
-          }}
+          className={`w-full h-10 px-3 pr-8 rounded-lg border text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all ${
+            error
+              ? 'border-red-500 bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-100'
+              : 'border-[#01796F]/40 bg-white dark:bg-[#021817] text-slate-900 dark:text-white'
+          }`}
         />
 
         {/* Clear button */}
@@ -289,21 +276,7 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
             type="button"
             onClick={handleClear}
             aria-label="Effacer la sélection"
-            style={{
-              position: 'absolute',
-              right: '0.6rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#888',
-              fontSize: '1rem',
-              padding: '0.2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 flex items-center justify-center transition-colors"
           >
             <i className="fas fa-times-circle" />
           </button>
@@ -311,7 +284,7 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
       </div>
 
       {error && (
-        <span style={{ color: '#e53935', fontSize: '0.78rem', marginTop: '0.25rem', display: 'block' }}>
+        <span className="block text-[11px] text-red-400 mt-1 text-left">
           {error}
         </span>
       )}
@@ -321,22 +294,10 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
         <div
           id={`${id}-listbox`}
           role="listbox"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            background: '#ffffff',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-            border: '1px solid #e0e0e0',
-            zIndex: 1000,
-            maxHeight: '280px',
-            overflowY: 'auto',
-          }}
+          className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-[#062523] border border-slate-200 dark:border-[#01796F]/40 rounded-xl shadow-2xl z-50 max-h-[280px] overflow-y-auto p-1.5"
         >
           {filteredAirports.length === 0 ? (
-            <div style={{ padding: '1rem', textAlign: 'center', color: '#777', fontSize: '0.88rem' }}>
+            <div className="p-3 text-center text-slate-500 dark:text-slate-400 text-xs">
               Aucun aéroport trouvé pour &quot;{query}&quot;
             </div>
           ) : (
@@ -351,45 +312,30 @@ export const AirportSelector: React.FC<AirportSelectorProps> = ({
                   aria-selected={isSelected}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   onClick={() => handleSelectAirport(airport)}
-                  style={{
-                    padding: '0.65rem 0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '0.75rem',
-                    backgroundColor: isHighlighted ? '#e0f2f1' : isSelected ? '#f5f5f5' : 'transparent',
-                    borderBottom: '1px solid #f0f0f0',
-                    transition: 'background-color 0.15s ease',
-                  }}
+                  className={`p-2 rounded-lg cursor-pointer flex items-center justify-between gap-2 transition-colors ${
+                    isHighlighted
+                      ? 'bg-[#01796F]/20 text-[#02E0D5]'
+                      : isSelected
+                      ? 'bg-[#01796F]/10 text-slate-900 dark:text-white'
+                      : 'hover:bg-slate-100 dark:hover:bg-[#0a302d] text-slate-800 dark:text-slate-200'
+                  }`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                    <span
-                      style={{
-                        padding: '0.2rem 0.45rem',
-                        backgroundColor: '#01796F',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        borderRadius: '4px',
-                        letterSpacing: '0.5px',
-                        flexShrink: 0,
-                      }}
-                    >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="px-1.5 py-0.5 bg-[#01796F] text-white font-bold text-[11px] rounded tracking-wide shrink-0">
                       {airport.code}
                     </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div className="min-w-0 text-left">
+                      <div className="font-semibold text-xs truncate">
                         {airport.city} — {airport.name}
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#666' }}>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
                         {airport.country}
                       </div>
                     </div>
                   </div>
 
                   {isSelected && (
-                    <i className="fas fa-check" style={{ color: '#01796F', fontSize: '0.85rem', flexShrink: 0 }} />
+                    <i className="fas fa-check text-[#02E0D5] text-xs shrink-0" />
                   )}
                 </div>
               );

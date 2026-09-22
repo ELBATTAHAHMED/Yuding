@@ -151,32 +151,16 @@ export const TransferLocationSelector: React.FC<TransferLocationSelectorProps> =
   };
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.4rem',
-        flex: 1,
-      }}
-    >
+    <div ref={containerRef} className="relative w-full">
       <label
         htmlFor={id}
-        style={{
-          fontSize: '0.85rem',
-          fontWeight: 700,
-          color: '#01796F',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
+        className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
       >
-        <i className={icon} style={{ color: '#01796F' }} />
+        <i className={`${icon} mr-1.5 text-[#02E0D5]`} />
         {label}
       </label>
 
-      <div style={{ position: 'relative' }}>
+      <div className="relative flex items-center">
         <input
           ref={inputRef}
           id={id}
@@ -195,33 +179,15 @@ export const TransferLocationSelector: React.FC<TransferLocationSelectorProps> =
           placeholder={placeholder}
           disabled={disabled}
           autoComplete="off"
-          style={{
-            width: '100%',
-            padding: '0.75rem 2.4rem 0.75rem 2.4rem',
-            border: `1.5px solid ${error ? '#ef4444' : '#cbd5e1'}`,
-            borderRadius: '8px',
-            fontSize: '0.95rem',
-            background: disabled ? '#f1f5f9' : '#ffffff',
-            color: '#1e293b',
-            outline: 'none',
-            boxSizing: 'border-box',
-            transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-          }}
+          className={`w-full h-10 pl-8 pr-8 rounded-lg border text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all ${
+            error
+              ? 'border-red-500 bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-100'
+              : 'border-[#01796F]/40 bg-white dark:bg-[#021817] text-slate-900 dark:text-white'
+          }`}
         />
 
         {/* Leading icon */}
-        <i
-          className={icon}
-          style={{
-            position: 'absolute',
-            left: '0.85rem',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: '#01796F',
-            fontSize: '0.95rem',
-            pointerEvents: 'none',
-          }}
-        />
+        <i className={`${icon} absolute left-2.5 top-1/2 -translate-y-1/2 text-[#02E0D5] text-xs pointer-events-none`} />
 
         {/* Clear button */}
         {value && (
@@ -231,21 +197,7 @@ export const TransferLocationSelector: React.FC<TransferLocationSelectorProps> =
               onChange('');
               inputRef.current?.focus();
             }}
-            style={{
-              position: 'absolute',
-              right: '0.75rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              padding: '2px',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 flex items-center justify-center transition-colors"
             title="Effacer"
             aria-label="Effacer la sélection"
           >
@@ -254,41 +206,17 @@ export const TransferLocationSelector: React.FC<TransferLocationSelectorProps> =
         )}
       </div>
 
-      {error && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{error}</span>}
+      {error && <span className="block text-[11px] text-red-400 mt-1 text-left">{error}</span>}
 
       {/* Autocomplete Dropdown Popup */}
       {isOpen && (
         <ul
           id={`${id}-listbox`}
           role="listbox"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            marginTop: '6px',
-            maxHeight: '280px',
-            overflowY: 'auto',
-            background: '#ffffff',
-            border: '1px solid #cbd5e1',
-            borderRadius: '10px',
-            boxShadow: '0 12px 25px -4px rgba(0, 0, 0, 0.15)',
-            listStyle: 'none',
-            padding: '6px 0',
-            margin: '0',
-          }}
+          className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-white dark:bg-[#062523] border border-slate-200 dark:border-[#01796F]/40 rounded-xl shadow-2xl p-1.5 list-none m-0 max-h-[280px] overflow-y-auto"
         >
           {filteredSuggestions.length === 0 ? (
-            <li
-              style={{
-                padding: '0.85rem 1rem',
-                fontSize: '0.85rem',
-                color: '#64748b',
-                fontStyle: 'italic',
-                textAlign: 'center',
-              }}
-            >
+            <li className="p-3 text-center text-xs text-slate-500 dark:text-slate-400 italic">
               Vous pouvez saisir librement votre adresse ou hôtel
             </li>
           ) : (
@@ -301,51 +229,25 @@ export const TransferLocationSelector: React.FC<TransferLocationSelectorProps> =
                   aria-selected={isHighlighted}
                   onClick={() => handleSelect(item)}
                   onMouseEnter={() => setHighlightedIndex(index)}
-                  style={{
-                    padding: '0.7rem 1rem',
-                    cursor: 'pointer',
-                    background: isHighlighted ? '#f0fdfa' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderBottom: index === filteredSuggestions.length - 1 ? 'none' : '1px solid #f1f5f9',
-                    gap: '10px',
-                    transition: 'background-color 0.15s ease',
-                  }}
+                  className={`p-2 rounded-lg cursor-pointer flex items-center justify-between gap-2.5 transition-colors ${
+                    isHighlighted
+                      ? 'bg-[#01796F]/20 text-[#02E0D5]'
+                      : 'hover:bg-slate-100 dark:hover:bg-[#0a302d] text-slate-800 dark:text-slate-200'
+                  }`}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: '0.92rem',
-                        color: isHighlighted ? '#01796F' : '#1e293b',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="font-semibold text-xs truncate">
                       {item.code ? `${item.code} — ` : ''}{item.title}
                     </div>
                     {item.subtitle && (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '1px' }}>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                         {item.subtitle}
                       </div>
                     )}
                   </div>
 
                   {item.badge && (
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        background: item.badgeColor || '#ccfbf1',
-                        color: '#0f766e',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        letterSpacing: '0.03em',
-                        flexShrink: 0,
-                      }}
-                    >
+                    <span className="text-[10px] font-bold bg-[#01796F]/15 text-[#01796F] dark:text-[#02E0D5] px-1.5 py-0.5 rounded tracking-wider shrink-0">
                       {item.badge}
                     </span>
                   )}

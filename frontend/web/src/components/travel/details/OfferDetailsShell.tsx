@@ -22,13 +22,13 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
   mobileAction,
 }) => {
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen py-8 px-4 pb-24">
+    <div className="bg-slate-50 dark:bg-[#021817] min-h-screen py-8 px-4 pb-24 text-slate-900 dark:text-slate-100">
       <div className="max-w-6xl mx-auto">
         {/* Breadcrumb / Back Link */}
         <div className="mb-6">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#01796F] hover:text-[#015f57] bg-[#01796F]/10 hover:bg-[#01796F]/15 px-3 py-1.5 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-bold text-[#01796F] dark:text-[#02E0D5] bg-[#01796F]/10 dark:bg-[#01796F]/20 hover:bg-[#01796F]/20 dark:hover:bg-[#01796F]/30 px-3.5 py-2 rounded-lg transition-colors"
           >
             <i className="fas fa-arrow-left text-xs" />
             <span>{backLabel}</span>
@@ -51,20 +51,7 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
 
       {/* Mobile Sticky Bottom Action Bar (if provided) */}
       {mobileAction && (
-        <div
-          className="md:hidden"
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'var(--card, #ffffff)',
-            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-            padding: '0.75rem 1rem',
-            zIndex: 40,
-            boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.08)',
-          }}
-        >
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-[#062523] border-t border-slate-200 dark:border-[#01796F]/30 p-3 z-40 shadow-2xl">
           {mobileAction}
         </div>
       )}

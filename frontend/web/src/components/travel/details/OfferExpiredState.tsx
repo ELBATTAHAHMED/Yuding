@@ -13,59 +13,22 @@ export const OfferExpiredState: React.FC<OfferExpiredStateProps> = ({
   searchLabel = 'Relancer une recherche',
 }) => {
   return (
-    <div
-      style={{
-        maxWidth: '600px',
-        margin: '4rem auto',
-        padding: '3rem 2rem',
-        background: 'var(--card, #ffffff)',
-        borderRadius: '16px',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
-        border: '1px solid rgba(0, 0, 0, 0.08)',
-        textAlign: 'center',
-      }}
-    >
-      <div
-        style={{
-          width: '72px',
-          height: '72px',
-          borderRadius: '50%',
-          background: 'rgba(217, 119, 6, 0.1)',
-          color: '#d97706',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '2rem',
-          margin: '0 auto 1.5rem',
-        }}
-      >
+    <div className="max-w-xl mx-auto my-16 p-8 md:p-12 bg-white dark:bg-[#062523] rounded-2xl shadow-lg border border-slate-200 dark:border-white/10 text-center">
+      <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center text-3xl mx-auto mb-6">
         <i className="fas fa-clock" />
       </div>
 
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text, #0f172a)', margin: '0 0 0.75rem 0' }}>
+      <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-3">
         Détails de l&apos;offre non disponibles
       </h2>
 
-      <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 2rem 0' }}>
+      <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-8">
         Les informations pour {productLabel} ne sont plus disponibles dans la session de recherche actuelle ou ont expiré. Veuillez relancer une recherche pour actualiser les disponibilités en temps réel auprès de nos partenaires.
       </p>
 
       <Link
         href={searchHref}
-        className="btn-booking"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.8rem 1.75rem',
-          borderRadius: '8px',
-          backgroundColor: '#01796F',
-          color: '#ffffff',
-          fontWeight: 700,
-          fontSize: '0.95rem',
-          textDecoration: 'none',
-          boxShadow: '0 4px 12px rgba(1, 121, 111, 0.3)',
-        }}
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#01796F] hover:bg-[#02E0D5] text-white hover:text-slate-950 font-bold text-sm transition shadow-md shadow-[#01796F]/20"
       >
         <i className="fas fa-search" />
         <span>{searchLabel}</span>

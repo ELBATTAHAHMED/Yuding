@@ -48,46 +48,30 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
   const hasTransfers = (offer.numberOfTransfers ?? 0) > 0;
 
   const renderModeIcon = (mode?: string) => {
-    if (!mode) return <i className="fas fa-train" />;
+    if (!mode) return <i className="fas fa-train text-[#01796F] dark:text-[#02E0D5]" />;
     switch (mode.toUpperCase()) {
       case 'WALK':
-        return <i className="fas fa-walking" style={{ color: '#64748b' }} />;
+        return <i className="fas fa-walking text-slate-400" />;
       case 'SUBWAY':
-        return <i className="fas fa-subway" style={{ color: '#0284c7' }} />;
+        return <i className="fas fa-subway text-teal-500" />;
       case 'TRAM':
-        return <i className="fas fa-tram" style={{ color: '#059669' }} />;
+        return <i className="fas fa-tram text-emerald-500" />;
       default:
-        return <i className="fas fa-train" style={{ color: '#2563eb' }} />;
+        return <i className="fas fa-train text-[#01796F] dark:text-[#02E0D5]" />;
     }
   };
 
   return (
     <div
-      style={{
-        background: '#ffffff',
-        borderRadius: '12px',
-        border: selected ? '2px solid #2563eb' : '1px solid #e2e8f0',
-        padding: '1.25rem',
-        boxShadow: selected ? '0 4px 12px rgba(37, 99, 235, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem',
-        transition: 'all 0.2s ease',
-      }}
+      className={`bg-white dark:bg-[#062523] rounded-xl p-5 shadow-md flex flex-col gap-4 transition-all text-slate-900 dark:text-slate-100 ${
+        selected
+          ? 'border-2 border-[#02E0D5] shadow-lg shadow-[#02E0D5]/10'
+          : 'border border-slate-200 dark:border-[#01796F]/30 hover:border-[#01796F]/50'
+      }`}
     >
       {/* Header bar: Product badge + Operator + Source Badge */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          borderBottom: '1px solid #f1f5f9',
-          paddingBottom: '0.75rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="flex justify-between items-center flex-wrap gap-2 border-b border-slate-100 dark:border-[#01796F]/20 pb-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <span
             style={{
               padding: '3px 8px',
@@ -99,50 +83,38 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
               border: `1px solid ${badgeStyle.border}`,
             }}
           >
-            {offer.productType || 'Train'}
+            {offer.productType || 'TRAIN'}
           </span>
+
           {offer.trainNumber && (
-            <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>
-              {offer.trainNumber}
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+              N° {offer.trainNumber}
             </span>
           )}
-          <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>•</span>
-          <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>
-            {offer.operator}
-          </span>
+
+          {offer.operator && (
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              · {offer.operator}
+            </span>
+          )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Source provenance badge */}
+        <div>
           {isTransitous ? (
             <span
-              style={{
-                fontSize: '0.7rem',
-                color: '#0f766e',
-                background: '#f0fdfa',
-                padding: '2px 8px',
-                borderRadius: '4px',
-                border: '1px solid #99f6e4',
-                fontWeight: 600,
-              }}
+              className="text-[11px] text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/40 px-2 py-0.5 rounded font-semibold flex items-center gap-1"
               title="Données horaires mondiales Transitous (NeTEx / GTFS)"
             >
-              <i className="fas fa-globe-europe" style={{ marginRight: '4px', color: '#0f766e' }} />
+              <i className="fas fa-globe-europe text-teal-600 dark:text-teal-400" />
               Transitous Global
             </span>
           ) : (
             <span
-              style={{
-                fontSize: '0.7rem',
-                color: '#059669',
-                background: '#ecfdf5',
-                padding: '2px 8px',
-                borderRadius: '4px',
-                border: '1px solid #a7f3d0',
-                fontWeight: 600,
-              }}
+              className="text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 px-2 py-0.5 rounded font-semibold flex items-center gap-1"
               title="Données horaires ONCF vérifiées"
             >
-              <i className="fas fa-database" style={{ marginRight: '4px', color: '#059669' }} />
+              <i className="fas fa-database text-emerald-600 dark:text-emerald-400" />
               GTFS communautaire ONCF
             </span>
           )}
@@ -150,87 +122,34 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
       </div>
 
       {/* Main schedule layout: Origin -> Duration / Transfers -> Destination */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
+      <div className="flex justify-between items-center flex-wrap gap-4">
         {/* Origin */}
-        <div style={{ minWidth: '130px' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>
+        <div className="min-w-[130px]">
+          <div className="text-xl font-bold text-slate-900 dark:text-white">
             {formatTime(offer.departureTime)}
           </div>
-          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
+          <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
             {offer.originStation}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Départ prévu</div>
+          <div className="text-[11px] text-slate-400">Départ prévu</div>
         </div>
 
         {/* Journey Duration & Route Indicator */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            minWidth: '150px',
-          }}
-        >
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>
+        <div className="flex-1 flex flex-col items-center min-w-[150px]">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
             {formatDuration(offer.durationMinutes) || 'Direct'}
           </span>
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '190px',
-              height: '2px',
-              background: '#cbd5e1',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: '#2563eb',
-              }}
-            />
-            <div
-              style={{
-                background: '#eff6ff',
-                padding: '2px 6px',
-                borderRadius: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              <i className="fas fa-train" style={{ fontSize: '0.75rem', color: '#2563eb' }} />
+          <div className="w-full max-w-[180px] h-0.5 bg-slate-300 dark:bg-[#01796F]/40 relative flex items-center justify-between">
+            <div className="w-2 h-2 rounded-full bg-[#01796F] dark:bg-[#02E0D5]" />
+            <div className="bg-[#01796F]/10 dark:bg-[#01796F]/30 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+              <i className="fas fa-train text-[10px] text-[#01796F] dark:text-[#02E0D5]" />
             </div>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: '#2563eb',
-              }}
-            />
+            <div className="w-2 h-2 rounded-full bg-[#01796F] dark:bg-[#02E0D5]" />
           </div>
           <span
-            style={{
-              fontSize: '0.75rem',
-              color: hasTransfers ? '#d97706' : '#16a34a',
-              fontWeight: 600,
-              marginTop: '4px',
-            }}
+            className={`text-[11px] font-semibold mt-1 ${
+              hasTransfers ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+            }`}
           >
             {hasTransfers
               ? `${offer.numberOfTransfers} correspondance${offer.numberOfTransfers! > 1 ? 's' : ''}`
@@ -239,77 +158,36 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
         </div>
 
         {/* Destination */}
-        <div style={{ minWidth: '130px', textAlign: 'right' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>
+        <div className="min-w-[130px] text-right">
+          <div className="text-xl font-bold text-slate-900 dark:text-white">
             {formatTime(offer.arrivalTime)}
           </div>
-          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
+          <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
             {offer.destinationStation}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Arrivée prévue</div>
+          <div className="text-[11px] text-slate-400">Arrivée prévue</div>
         </div>
 
         {/* Pricing & Selection */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            minWidth: '190px',
-            borderLeft: '1px solid #f1f5f9',
-            paddingLeft: '1rem',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '0.8rem',
-              color: '#64748b',
-              fontStyle: 'italic',
-              textAlign: 'right',
-              marginBottom: '0.5rem',
-            }}
-          >
+        <div className="flex flex-col items-end min-w-[180px] lg:border-l border-slate-100 dark:border-[#01796F]/20 lg:pl-4">
+          <div className="text-xs text-slate-400 italic text-right mb-2">
             Tarif non disponible via cette source
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div className="flex gap-2 mb-2 flex-wrap justify-end">
             <Link
               href={`/trains/${encodeURIComponent(offer.offerId)}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '0.5rem 0.85rem',
-                borderRadius: '6px',
-                background: '#ffffff',
-                border: '1.5px solid #2563eb',
-                color: '#2563eb',
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
+              className="px-3 py-1.5 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
             >
-              <span>Détails</span>
+              Détails
             </Link>
 
             <button
               type="button"
               onClick={() => setSelected((prev) => !prev)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                background: selected ? '#16a34a' : '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'background 0.2s ease',
-              }}
+              className={`px-3.5 py-1.5 rounded-lg font-bold text-xs text-white flex items-center gap-1.5 transition-colors shadow-sm ${
+                selected ? 'bg-emerald-600' : 'bg-[#01796F] hover:bg-[#015f57]'
+              }`}
               title="Mémoriser ce trajet pour votre itinéraire Yuding"
             >
               {selected ? (
@@ -331,23 +209,10 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
               href={offer.officialScheduleUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '0.45rem 0.9rem',
-                borderRadius: '6px',
-                background: '#f8fafc',
-                border: '1px solid #cbd5e1',
-                color: '#1e293b',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#0a302d] border border-slate-200 dark:border-[#01796F]/30 text-slate-700 dark:text-slate-300 text-[11px] font-medium hover:text-[#01796F] dark:hover:text-[#02E0D5] transition-colors"
             >
               <span>Vérifier sur le site officiel</span>
-              <i className="fas fa-external-link-alt" style={{ fontSize: '0.7rem' }} />
+              <i className="fas fa-external-link-alt text-[9px]" />
             </a>
           )}
         </div>
@@ -359,18 +224,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
           <button
             type="button"
             onClick={() => setShowDetails(!showDetails)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#2563eb',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              padding: '4px 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
+            className="text-xs font-semibold text-[#01796F] dark:text-[#02E0D5] flex items-center gap-1 hover:underline p-0 bg-transparent border-none cursor-pointer"
           >
             <span>
               {showDetails
@@ -379,63 +233,44 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
                 ? `Voir les ${offer.legs?.length || 2} étapes du trajet`
                 : `Voir le parcours (${offer.intermediateStops?.length || 0} gares)`}
             </span>
-            <i className={`fas fa-chevron-${showDetails ? 'up' : 'down'}`} style={{ fontSize: '0.75rem' }} />
+            <i className={`fas fa-chevron-${showDetails ? 'up' : 'down'} text-[10px]`} />
           </button>
 
           {showDetails && (
-            <div
-              style={{
-                marginTop: '0.5rem',
-                padding: '1rem',
-                background: '#f8fafc',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-              }}
-            >
+            <div className="mt-2 p-3 bg-slate-50 dark:bg-[#021817] rounded-lg border border-slate-200 dark:border-[#01796F]/30 flex flex-col gap-2">
               {/* If structured multi-leg journey */}
               {offer.legs && offer.legs.length > 0 ? (
                 <div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                    Étapes de l'itinéraire :
+                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                    Étapes de l&apos;itinéraire :
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="flex flex-col gap-2">
                     {offer.legs.map((leg: TrainLeg, idx: number) => (
                       <div
                         key={idx}
-                        style={{
-                          background: '#ffffff',
-                          borderRadius: '6px',
-                          border: '1px solid #e2e8f0',
-                          padding: '0.75rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '4px',
-                        }}
+                        className="bg-white dark:bg-[#062523] rounded-lg border border-slate-200 dark:border-[#01796F]/20 p-2.5 flex flex-col gap-1 text-xs"
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
                             {renderModeIcon(leg.mode)}
                             <span>{leg.serviceName || leg.mode}</span>
-                            {leg.operator && <span style={{ color: '#64748b', fontSize: '0.75rem' }}>({leg.operator})</span>}
+                            {leg.operator && <span className="text-slate-400 font-normal">({leg.operator})</span>}
                           </div>
                           {leg.durationMinutes && (
-                            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                            <span className="text-[11px] text-slate-400">
                               {formatDuration(leg.durationMinutes)}
                             </span>
                           )}
                         </div>
 
-                        <div style={{ fontSize: '0.8rem', color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
+                        <div className="text-slate-600 dark:text-slate-300 flex justify-between">
                           <span>{leg.origin} ({formatTime(leg.departureTime)})</span>
                           <span>→</span>
                           <span>{leg.destination} ({formatTime(leg.arrivalTime)})</span>
                         </div>
 
                         {leg.intermediateStops && leg.intermediateStops.length > 0 && (
-                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
                             {leg.intermediateStops.length} arrêt(s) intermédiaire(s)
                           </div>
                         )}
@@ -446,15 +281,15 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
               ) : (
                 /* Standard intermediate stops list for single train */
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Gares desservies sur ce trajet :
                   </div>
-                  <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.8rem', color: '#334155' }}>
+                  <ul className="m-0 pl-4 text-xs text-slate-600 dark:text-slate-300 space-y-1">
                     {offer.intermediateStops?.map((st, idx) => (
-                      <li key={idx} style={{ marginBottom: '4px' }}>
+                      <li key={idx}>
                         <strong>{st.stationName}</strong>
                         {st.departureTime && (
-                          <span style={{ color: '#64748b', marginLeft: '6px' }}>
+                          <span className="text-slate-400 ml-1.5">
                             (Départ: {formatTime(st.departureTime)})
                           </span>
                         )}

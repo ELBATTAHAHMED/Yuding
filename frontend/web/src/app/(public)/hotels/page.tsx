@@ -308,22 +308,22 @@ export default function HotelsPage() {
   return (
     <div>
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-5">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+          <div className="mb-4">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Hébergements
             </h1>
-            <p className="text-sm md:text-base text-slate-300">
+            <p className="text-xs md:text-sm text-[#b2dfdb]">
               Trouvez et réservez des hôtels et riads partenaires au meilleur tarif
             </p>
           </div>
 
           <form
             onSubmit={handleSearch}
-            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+            className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.3fr_auto] gap-3 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.3fr_auto] gap-2.5 items-end">
               {/* Destination Field with GeoPlaceSelector */}
               <div className="text-left relative min-w-0">
                 <GeoPlaceSelector
@@ -342,9 +342,9 @@ export default function HotelsPage() {
               <div className="text-left min-w-0">
                 <label
                   htmlFor="hotel-checkin"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider"
                 >
-                  <i className="fas fa-calendar-check mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-calendar-check mr-1.5 text-[#02E0D5]" />
                   Arrivée
                 </label>
                 <input
@@ -353,7 +353,7 @@ export default function HotelsPage() {
                   min={today}
                   value={checkIn}
                   onChange={(e) => handleCheckInChange(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
@@ -361,9 +361,9 @@ export default function HotelsPage() {
               <div className="text-left min-w-0">
                 <label
                   htmlFor="hotel-checkout"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider"
                 >
-                  <i className="fas fa-calendar-times mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-calendar-times mr-1.5 text-[#02E0D5]" />
                   Départ
                 </label>
                 <input
@@ -372,48 +372,48 @@ export default function HotelsPage() {
                   min={minCheckOut}
                   value={checkOut}
                   onChange={(e) => handleCheckOutChange(e.target.value)}
-                  className={`w-full h-11 px-3 rounded-lg border ${
-                    isInvalidDateRange ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
-                  } bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all`}
+                  className={`w-full h-10 px-3 rounded-lg border ${
+                    isInvalidDateRange ? 'border-red-500' : 'border-[#01796F]/40'
+                  } bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all`}
                 />
                 {isInvalidDateRange && (
-                  <span className="block text-xs text-red-500 mt-1">Min. 1 nuit requise</span>
+                  <span className="block text-[11px] text-red-400 mt-0.5">Min. 1 nuit</span>
                 )}
               </div>
 
               {/* Rooms & Occupancy Trigger */}
               <div className="text-left relative min-w-0">
-                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider">
-                  <i className="fas fa-user-friends mr-1.5 text-[#01796F]" />
+                <label className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider">
+                  <i className="fas fa-user-friends mr-1.5 text-[#02E0D5]" />
                   Voyageurs
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowOccupancyModal(!showOccupancyModal)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#01796F] transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all"
                 >
                   <span className="truncate">
                     {occupancies.length} ch., {totalAdults} ad.
                     {totalChildren > 0 ? `, ${totalChildren} enf.` : ''}
                   </span>
-                  <i className={`fas fa-chevron-${showOccupancyModal ? 'up' : 'down'} text-slate-400 text-xs ml-1`} />
+                  <i className={`fas fa-chevron-${showOccupancyModal ? 'up' : 'down'} text-[#80cbc4] text-xs ml-1`} />
                 </button>
 
                 {/* Occupancy Dropdown Popover */}
                 {showOccupancyModal && (
-                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-4 min-w-[280px]">
-                    <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#062523] text-white rounded-xl shadow-2xl border border-[#01796F]/40 p-4 min-w-[280px]">
+                    <div className="max-h-64 overflow-y-auto divide-y divide-[#01796F]/20">
                       {occupancies.map((room, roomIdx) => (
-                        <div key={roomIdx} className="py-3 first:pt-0 last:pb-0">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-bold text-xs text-[#01796F] uppercase">
+                        <div key={roomIdx} className="py-2.5 first:pt-0 last:pb-0">
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className="font-bold text-xs text-[#02E0D5] uppercase">
                               Chambre {roomIdx + 1}
                             </span>
                             {occupancies.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => handleRemoveRoom(roomIdx)}
-                                className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1"
+                                className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
                               >
                                 <i className="fas fa-trash-alt text-[10px]" /> Retirer
                               </button>
@@ -422,22 +422,22 @@ export default function HotelsPage() {
 
                           {/* Adults counter */}
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Adultes</span>
+                            <span className="text-xs font-medium text-slate-200">Adultes</span>
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleAdultsChange(roomIdx, -1)}
                                 disabled={room.adults <= 1}
-                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 -
                               </button>
-                              <span className="w-5 text-center font-bold text-xs">{room.adults}</span>
+                              <span className="w-5 text-center font-bold text-xs text-white">{room.adults}</span>
                               <button
                                 type="button"
                                 onClick={() => handleAdultsChange(roomIdx, 1)}
                                 disabled={room.adults >= 4}
-                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 +
                               </button>
@@ -446,22 +446,22 @@ export default function HotelsPage() {
 
                           {/* Children counter */}
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Enfants (0-17 ans)</span>
+                            <span className="text-xs font-medium text-slate-200">Enfants (0-17 ans)</span>
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleChildrenCountChange(roomIdx, -1)}
                                 disabled={(room.childrenAges?.length || 0) <= 0}
-                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 -
                               </button>
-                              <span className="w-5 text-center font-bold text-xs">{room.childrenAges?.length || 0}</span>
+                              <span className="w-5 text-center font-bold text-xs text-white">{room.childrenAges?.length || 0}</span>
                               <button
                                 type="button"
                                 onClick={() => handleChildrenCountChange(roomIdx, 1)}
                                 disabled={(room.childrenAges?.length || 0) >= 3}
-                                className="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 +
                               </button>
@@ -470,18 +470,18 @@ export default function HotelsPage() {
 
                           {/* Child ages */}
                           {(room.childrenAges || []).length > 0 && (
-                            <div className="mt-2.5 p-2 bg-slate-50 dark:bg-slate-750 rounded border border-slate-200 dark:border-slate-700">
-                              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
-                                Âge des enfants à l&apos;arrivée :
+                            <div className="mt-2 p-2 bg-[#021817] rounded border border-[#01796F]/30">
+                              <span className="text-[10px] font-semibold text-[#80cbc4] block mb-1">
+                                Âge des enfants :
                               </span>
                               <div className="flex gap-2 flex-wrap">
                                 {room.childrenAges!.map((age, childIdx) => (
                                   <div key={childIdx} className="flex items-center gap-1">
-                                    <span className="text-[10px] text-slate-500">Enf. {childIdx + 1}:</span>
+                                    <span className="text-[10px] text-slate-300">Enf. {childIdx + 1}:</span>
                                     <select
                                       value={age}
                                       onChange={(e) => handleChildAgeChange(roomIdx, childIdx, Number(e.target.value))}
-                                      className="px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-800"
+                                      className="px-1.5 py-0.5 rounded border border-[#01796F]/40 text-xs bg-[#062523] text-white"
                                     >
                                       {Array.from({ length: 18 }).map((_, a) => (
                                         <option key={a} value={a}>
@@ -502,21 +502,21 @@ export default function HotelsPage() {
                       <button
                         type="button"
                         onClick={handleAddRoom}
-                        className="w-full py-1.5 mt-3 text-xs font-semibold text-[#01796F] bg-[#01796F]/10 hover:bg-[#01796F]/15 border border-dashed border-[#01796F]/30 rounded-lg transition-colors"
+                        className="w-full py-1.5 mt-2.5 text-xs font-semibold text-[#02E0D5] bg-[#02E0D5]/10 hover:bg-[#02E0D5]/15 border border-dashed border-[#02E0D5]/30 rounded-lg transition-colors"
                       >
                         + Ajouter une chambre
                       </button>
                     )}
 
                     {/* Nationality selector */}
-                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                      <label className="block text-[11px] font-medium text-slate-500 mb-1">
-                        Nationalité du voyageur :
+                    <div className="mt-2.5 pt-2.5 border-t border-[#01796F]/20">
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                        Nationalité :
                       </label>
                       <select
                         value={guestNationality}
                         onChange={(e) => setGuestNationality(e.target.value)}
-                        className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-800"
+                        className="w-full px-2 py-1.5 rounded-lg border border-[#01796F]/40 text-xs bg-[#021817] text-white"
                       >
                         <option value="MA">Maroc (MA)</option>
                         <option value="FR">France (FR)</option>
@@ -531,7 +531,7 @@ export default function HotelsPage() {
                     <button
                       type="button"
                       onClick={() => setShowOccupancyModal(false)}
-                      className="w-full py-2 mt-3 bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold rounded-lg transition-colors"
+                      className="w-full py-2 mt-2.5 bg-[#01796F] hover:bg-[#005951] text-white text-xs font-semibold rounded-lg transition-colors"
                     >
                       Appliquer
                     </button>
@@ -544,7 +544,7 @@ export default function HotelsPage() {
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#005951] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSearching ? (
                     <i className="fas fa-spinner fa-spin" />
@@ -559,21 +559,21 @@ export default function HotelsPage() {
 
           {/* Validation Alert */}
           {validationError && (
-            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+            <div className="mt-2.5 px-3 py-1.5 bg-red-950/60 border border-red-500/50 rounded-md text-red-200 text-xs flex items-center gap-2">
               <i className="fas fa-exclamation-circle text-red-400" />
               <span>{validationError}</span>
             </div>
           )}
 
-          {/* Popular Destination Quick Chips */}
-          <div className="mt-3.5 flex items-center gap-2 flex-wrap text-xs text-slate-300">
-            <span className="font-medium text-slate-400">Destinations populaires :</span>
-            {PRESET_DESTINATIONS.slice(0, 6).map((preset) => (
+          {/* Popular Destinations subtle helper */}
+          <div className="mt-2.5 flex items-center gap-1.5 flex-wrap text-[11px] text-[#80cbc4]/80">
+            <span className="font-medium text-slate-400">Suggestions :</span>
+            {PRESET_DESTINATIONS.slice(0, 5).map((preset) => (
               <button
                 key={preset.city}
                 type="button"
                 onClick={() => handleDestinationSelect(preset)}
-                className="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition-colors"
+                className="hover:text-white underline underline-offset-2 transition-colors mr-1 bg-transparent border-none p-0 cursor-pointer text-[#80cbc4]"
               >
                 {preset.city}
               </button>

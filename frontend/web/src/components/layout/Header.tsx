@@ -70,7 +70,7 @@ export const Header: React.FC = () => {
               {isAuthenticated ? (
                 <>
                   <Link href="/account">
-                    <button className="btn-booking" style={{ color: 'white', minWidth: 'auto', padding: '0.6rem 1.4rem' }}>
+                    <button className="btn-booking" style={{ color: 'white', minWidth: 'auto', padding: '0.45rem 1.1rem', fontSize: '0.85rem', borderRadius: '6px', backgroundColor: '#01796F' }}>
                       <i className="fas fa-user-circle" style={{ marginRight: '6px' }} />
                       {user?.firstName || user?.email?.split('@')[0] || 'Mon Compte'}
                     </button>
@@ -78,7 +78,7 @@ export const Header: React.FC = () => {
 
                   {(isAdmin || isSupport) && (
                     <Link href="/admin">
-                      <button className="btn-booking" style={{ color: 'white', background: '#e11d48', minWidth: 'auto', padding: '0.6rem 1rem' }}>
+                      <button className="btn-booking" style={{ color: 'white', background: '#e11d48', minWidth: 'auto', padding: '0.45rem 0.8rem', fontSize: '0.85rem', borderRadius: '6px' }}>
                         Admin
                       </button>
                     </Link>
@@ -87,7 +87,7 @@ export const Header: React.FC = () => {
                   <button
                     onClick={() => logout()}
                     className="h-btn"
-                    style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px', padding: '6px' }}
+                    style={{ background: 'transparent', border: 'none', color: '#80cbc4', cursor: 'pointer', fontSize: '14px', padding: '6px' }}
                     title="Déconnexion"
                     type="button"
                   >
@@ -95,11 +95,24 @@ export const Header: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <button className="btn-booking" id="loginBtn" style={{ minWidth: 'auto', padding: '0.6rem 1.8rem' }}>
-                  <Link href="/login" style={{ color: 'white', textDecoration: 'none' }}>
-                    log-in
-                  </Link>
-                </button>
+                <Link
+                  href="/login"
+                  id="loginBtn"
+                  style={{
+                    color: 'white',
+                    textDecoration: 'none',
+                    backgroundColor: '#01796F',
+                    padding: '0.45rem 1.25rem',
+                    borderRadius: '6px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                >
+                  Connexion
+                </Link>
               )}
             </div>
 

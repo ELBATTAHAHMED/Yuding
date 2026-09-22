@@ -185,20 +185,20 @@ export default function TrainsPage() {
   return (
     <div>
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800">
+      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-5">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-1">
+          <div className="mb-4">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Trains
             </h1>
-            <p className="text-sm md:text-base text-slate-300">
+            <p className="text-xs md:text-sm text-[#b2dfdb]">
               Consultez les liaisons ferroviaires et grilles horaires au Maroc (ONCF) et dans le monde (Transitous)
             </p>
           </div>
 
           <form
             onSubmit={handleSearch}
-            className="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+            className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_auto_1.4fr_1fr_0.9fr_0.8fr_auto] gap-2.5 items-end">
               {/* Origin Station */}
@@ -225,7 +225,7 @@ export default function TrainsPage() {
                   onClick={handleSwap}
                   disabled={!originStation && !destinationStation}
                   title="Inverser les gares"
-                  className="w-10 h-10 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-[#01796F] hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="w-10 h-10 rounded-full border border-[#01796F]/40 bg-[#021817] text-[#02E0D5] hover:bg-[#01796F]/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <i className="fas fa-exchange-alt text-xs" />
                 </button>
@@ -252,9 +252,9 @@ export default function TrainsPage() {
               <div className="min-w-0">
                 <label
                   htmlFor="trainDate"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
                 >
-                  <i className="fas fa-calendar-alt mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-calendar-alt mr-1.5 text-[#02E0D5]" />
                   Date
                 </label>
                 <input
@@ -266,7 +266,7 @@ export default function TrainsPage() {
                     setDate(e.target.value);
                     if (errorMessage) setErrorMessage(null);
                   }}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
@@ -274,9 +274,9 @@ export default function TrainsPage() {
               <div className="min-w-0">
                 <label
                   htmlFor="trainTime"
-                  className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left"
+                  className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
                 >
-                  <i className="fas fa-clock mr-1.5 text-[#01796F]" />
+                  <i className="fas fa-clock mr-1.5 text-[#02E0D5]" />
                   Heure
                 </label>
                 <input
@@ -284,33 +284,33 @@ export default function TrainsPage() {
                   type="time"
                   value={departureTime}
                   onChange={(e) => setDepartureTime(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#01796F] focus:border-transparent transition-all"
+                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Passengers */}
               <div className="min-w-0">
-                <label className="block text-xs font-bold text-[#01796F] mb-1.5 uppercase tracking-wider text-left">
-                  <i className="fas fa-users mr-1.5 text-[#01796F]" />
+                <label className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left">
+                  <i className="fas fa-users mr-1.5 text-[#02E0D5]" />
                   Passagers
                 </label>
-                <div className="flex items-center h-11 border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-700">
+                <div className="flex items-center h-10 border border-[#01796F]/40 rounded-lg overflow-hidden bg-[#021817]">
                   <button
                     type="button"
                     onClick={() => setPassengers((v) => Math.max(1, v - 1))}
                     disabled={passengers <= 1}
-                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     −
                   </button>
-                  <span className="flex-1 text-center font-bold text-sm text-slate-900 dark:text-white">
+                  <span className="flex-1 text-center font-bold text-xs text-white">
                     {passengers}
                   </span>
                   <button
                     type="button"
                     onClick={() => setPassengers((v) => Math.min(9, v + 1))}
                     disabled={passengers >= 9}
-                    className="w-10 h-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-9 h-full bg-[#062523] text-white font-bold text-xs hover:bg-[#01796F]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     +
                   </button>
@@ -322,7 +322,7 @@ export default function TrainsPage() {
                 <button
                   type="submit"
                   disabled={loading || !originStation || !destinationStation || !date}
-                  className="w-full lg:w-auto h-11 px-7 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-wider"
                 >
                   {loading ? (
                     <i className="fas fa-spinner fa-spin" />
@@ -336,7 +336,7 @@ export default function TrainsPage() {
           </form>
 
           {errorMessage && (
-            <div className="mt-3 p-3 bg-red-500/15 border border-red-500 rounded-lg text-red-100 text-xs font-medium flex items-center gap-2">
+            <div className="mt-2.5 p-2.5 bg-red-950/60 border border-red-500/50 rounded-lg text-red-200 text-xs flex items-center gap-2">
               <i className="fas fa-exclamation-circle text-red-400" />
               <span>{errorMessage}</span>
             </div>
@@ -345,7 +345,7 @@ export default function TrainsPage() {
       </section>
 
       {/* ==================== CONTENT SECTION ==================== */}
-      <section className="py-8 px-4 bg-slate-50 dark:bg-slate-950 min-h-[60vh]">
+      <section className="py-6 px-4 bg-slate-50 dark:bg-[#021817] min-h-[50vh]">
         <div className="max-w-6xl mx-auto">
         {/* Freshness Gate Alert (Outdated Schedule Rejection) */}
         {outdatedNotice && (
@@ -442,41 +442,24 @@ export default function TrainsPage() {
             />
 
             {/* Sub-filters row (direct only checkbox and product select) */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.5rem',
-                flexWrap: 'wrap',
-                marginBottom: '1rem',
-                padding: '0.5rem 1rem',
-                background: '#f8fafc',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-              }}
-            >
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 600 }}>
+            <div className="flex items-center gap-6 flex-wrap mb-4 px-4 py-2 bg-white dark:bg-[#062523] rounded-lg border border-slate-200 dark:border-[#01796F]/30 text-slate-800 dark:text-slate-200 text-xs">
+              <label className="flex items-center gap-2 cursor-pointer font-semibold">
                 <input
                   type="checkbox"
                   checked={directOnly}
                   onChange={(e) => setDirectOnly(e.target.checked)}
+                  className="rounded border-slate-300 text-[#01796F] focus:ring-[#02E0D5]"
                 />
                 <span>Directs uniquement</span>
               </label>
 
               {availableProducts.length > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}>
-                  <span style={{ fontWeight: 600 }}>Type de train :</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Type de train :</span>
                   <select
                     value={selectedProduct}
                     onChange={(e) => setSelectedProduct(e.target.value)}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.85rem',
-                      background: '#ffffff',
-                    }}
+                    className="px-2 py-1 rounded-md border border-slate-300 dark:border-[#01796F]/40 text-xs bg-white dark:bg-[#021817] text-slate-900 dark:text-white"
                   >
                     <option value="ALL">Tous les trains</option>
                     {availableProducts.map((p) => (
@@ -493,7 +476,7 @@ export default function TrainsPage() {
 
         {/* Results List */}
         {!loading && filteredTrains.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex flex-col gap-4">
             {filteredTrains.map((train) => (
               <TrainCard key={train.offerId} offer={train} />
             ))}
@@ -528,29 +511,18 @@ export default function TrainsPage() {
         )}
 
         {/* Attribution & Legal disclaimer */}
-        <div
-          style={{
-            marginTop: '3.5rem',
-            padding: '1.25rem',
-            background: '#f8fafc',
-            borderTop: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '0.78rem',
-            color: '#64748b',
-            lineHeight: 1.5,
-          }}
-        >
-          <div style={{ fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+        <div className="mt-12 p-4 bg-white dark:bg-[#062523] border border-slate-200 dark:border-[#01796F]/20 rounded-xl text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="font-bold text-slate-800 dark:text-slate-200 mb-1.5">
             Attribution &amp; Informations de source :
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="flex flex-col gap-2">
             <div>
-              <strong>Réseau Maroc (ONCF) :</strong> Données issues du jeu GTFS communautaire (
+              <strong className="text-slate-700 dark:text-slate-300">Réseau Maroc (ONCF) :</strong> Données issues du jeu GTFS communautaire (
               <a
                 href="https://github.com/orhazal/oncf-gtfs-unofficial"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'underline' }}
+                className="text-[#01796F] dark:text-[#02E0D5] underline hover:no-underline"
               >
                 orhazal/oncf-gtfs-unofficial
               </a>
@@ -560,26 +532,26 @@ export default function TrainsPage() {
                 href="https://www.oncf-voyages.ma"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'underline' }}
+                className="text-[#01796F] dark:text-[#02E0D5] underline hover:no-underline"
               >
                 oncf-voyages.ma
               </a>
               .
             </div>
             <div>
-              <strong>Réseau International :</strong> Planification d&apos;itinéraires ferroviaires et multimodaux propulsée par{' '}
+              <strong className="text-slate-700 dark:text-slate-300">Réseau International :</strong> Planification d&apos;itinéraires ferroviaires et multimodaux propulsée par{' '}
               <a
                 href="https://transitous.org"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'underline' }}
+                className="text-[#01796F] dark:text-[#02E0D5] underline hover:no-underline"
               >
                 Transitous
               </a>{' '}
               (moteur libre MOTIS, données OpenStreetMap / GTFS / NeTEx). Les tarifs ne sont pas fournis par cette source.
             </div>
           </div>
-          </div>
+        </div>
         </div>
       </section>
     </div>

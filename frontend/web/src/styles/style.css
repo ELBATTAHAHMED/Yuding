@@ -1,54 +1,56 @@
 /* ==================== VARIABLES CSS POUR MODE SOMBRE ==================== */
 :root {
     /* Mode clair (par défaut) */
-    --bg: #ffffff;
+    --bg: #f8faf9;
     --text: #0b1c1b;
     --card: #ffffff;
+    --card-surface: #ffffff;
     --border: rgba(1, 121, 111, 0.15);
     --accent: #02E0D5;
     --accent-strong: #01796F;
-    --header-bg: rgba(255, 255, 255, 0.95);
-    --shadow: rgba(0, 0, 0, 0.1);
+    --header-bg: rgba(255, 255, 255, 0.98);
+    --shadow: rgba(0, 0, 0, 0.06);
     --input-bg: #ffffff;
     --placeholder: rgba(11, 28, 27, 0.6);
     --hover-bg: rgba(2, 224, 213, 0.1);
-    --focus-ring: rgba(2, 224, 213, 0.3);
+    --focus-ring: rgba(1, 121, 111, 0.3);
 }
 
-/* Mode sombre */
+/* Mode sombre - Identité verte Yuding */
 .dark {
-    --bg: #0c1414;
+    --bg: #021817;
     --text: #e9f5f4;
-    --card: #121c1c;
-    --border: rgba(2, 224, 213, 0.25);
+    --card: #062523;
+    --card-surface: #0a302d;
+    --border: rgba(2, 224, 213, 0.2);
     --accent: #02E0D5;
-    --accent-strong: #22b3ab;
-    --header-bg: rgba(12, 20, 20, 0.95);
-    --shadow: rgba(0, 0, 0, 0.3);
-    --input-bg: #1a2525;
-    --placeholder: rgba(233, 245, 244, 0.6);
-    --hover-bg: rgba(2, 224, 213, 0.15);
+    --accent-strong: #01796F;
+    --header-bg: rgba(2, 24, 23, 0.98);
+    --shadow: rgba(0, 0, 0, 0.4);
+    --input-bg: #031c1b;
+    --placeholder: rgba(233, 245, 244, 0.5);
+    --hover-bg: rgba(2, 224, 213, 0.12);
     --focus-ring: rgba(2, 224, 213, 0.4);
     
-    /* Variables supplémentaires pour compatibilité avec location.html */
-    --glass-bg: rgba(18, 28, 28, 0.95);
-    --border-color: rgba(2, 224, 213, 0.25);
+    /* Variables de compatibilité */
+    --glass-bg: rgba(6, 37, 35, 0.95);
+    --border-color: rgba(2, 224, 213, 0.2);
     --primary-color: #02E0D5;
-    --accent-color: #22b3ab;
+    --accent-color: #01796F;
     --text-white: #ffffff;
     --text-primary: #e9f5f4;
     --text-secondary: rgba(233, 245, 244, 0.7);
-    --overlay-light: rgba(255, 255, 255, 0.1);
-    --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.3);
-    --shadow-medium: 0 10px 25px rgba(0, 0, 0, 0.2);
-    --bg-primary: #0A0E1A;
-    --bg-secondary: #1A1F2E;
-    --bg-tertiary: #252B3D;
-    --bg-accent: #00D4AA;
-    --card-bg: #1A1F2E;
-    --accent-glow: rgba(0, 212, 170, 0.3);
-    --shadow-glow: 0 0 20px rgba(0, 212, 170, 0.4);
-    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --overlay-light: rgba(255, 255, 255, 0.08);
+    --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.4);
+    --shadow-medium: 0 10px 25px rgba(0, 0, 0, 0.25);
+    --bg-primary: #021817;
+    --bg-secondary: #062523;
+    --bg-tertiary: #0a302d;
+    --bg-accent: #01796F;
+    --card-bg: #062523;
+    --accent-glow: rgba(2, 224, 213, 0.25);
+    --shadow-glow: 0 0 20px rgba(2, 224, 213, 0.25);
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* ==================== BODY ET SECTIONS DARK MODE ==================== */
@@ -552,7 +554,6 @@ section .heading .desc-heading {
     left: 0;
     width: 100%;
     z-index: 100;
-    /* Header complètement transparent au début - pas de blur */
     background: transparent;
     transition: all 0.3s ease;
     display: flex;
@@ -561,42 +562,75 @@ section .heading .desc-heading {
     min-height: 120px;
 }
 
+/* ==================== SUBPAGE HEADER (NON-OVERLAPPING) ==================== */
+.header.subpage-header {
+    position: relative !important;
+    min-height: 70px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid rgba(1, 121, 111, 0.15) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.dark .header.subpage-header {
+    background: #021817 !important;
+    border-bottom: 1px solid rgba(2, 224, 213, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.subpage-header .header-top .container {
+    min-height: 70px !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.subpage-header .logo {
+    height: 42px !important;
+}
+
+.subpage-header .navigation .nav-link {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1e3a38;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.dark .subpage-header .navigation .nav-link {
+    color: #b2dfdb !important;
+}
+
+.subpage-header .navigation .nav-link:hover,
+.subpage-header .navigation .nav-link.active {
+    color: #01796F !important;
+    background: rgba(1, 121, 111, 0.08);
+}
+
+.dark .subpage-header .navigation .nav-link:hover,
+.dark .subpage-header .navigation .nav-link.active {
+    color: #02E0D5 !important;
+    background: rgba(2, 224, 213, 0.12);
+}
+
 .header.scrolled {
     position: fixed;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.9) 45%, rgba(15, 118, 110, 0.85) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.9) 45%, rgba(1, 121, 111, 0.85) 100%);
     backdrop-filter: blur(18px);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-    border-bottom: 1px solid rgba(15, 118, 110, 0.18);
+    box-shadow: 0 12px 28px rgba(0, 27, 26, 0.12);
+    border-bottom: 1px solid rgba(1, 121, 111, 0.18);
 }
 
 /* ==================== HEADER DARK MODE ==================== */
-.dark .header {
+.dark .header.home-header {
     background: transparent;
     backdrop-filter: none;
 }
 
-.dark .header.scrolled {
-    background: linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 45%, #00D4AA 100%);
+.dark .header.home-header.scrolled {
+    background: linear-gradient(135deg, #021817 0%, #062523 45%, #01796F 100%);
     backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(0, 212, 170, 0.3);
+    border-bottom: 1px solid rgba(2, 224, 213, 0.3);
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
-}
-
-.dark .header .header-bottom {
-    border-bottom: 1px solid var(--border-color);
-}
-
-.dark .header.scrolled .header-bottom {
-    border-bottom: none;
-}
-
-.dark .header .navigation li a {
-    color: var(--text-white);
-}
-
-.dark .header .navigation li a:hover {
-    color: var(--text-white);
-    border-top: 2px solid var(--text-white);
 }
 
 /* ==================== SECTIONS DARK MODE ==================== */

@@ -184,35 +184,19 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'relative',
-        width: '100%',
-      }}
-    >
+    <div ref={containerRef} className="relative w-full">
       {label && (
         <label
           htmlFor={id}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            fontSize: '0.85rem',
-            fontWeight: 700,
-            color: '#01796F',
-            marginBottom: '0.35rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.04em',
-          }}
+          className="block text-xs font-bold text-[#02E0D5] mb-1 uppercase tracking-wider text-left"
         >
-          {icon && <i className={icon} style={{ fontSize: '0.85rem' }} />}
+          {icon && <i className={`${icon} mr-1.5 text-[#02E0D5]`} />}
           {label}
-          {required && <span style={{ color: '#e53935' }}>*</span>}
+          {required && <span className="text-red-400 ml-0.5">*</span>}
         </label>
       )}
 
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+      <div className="relative flex items-center">
         <input
           ref={inputRef}
           id={id}
@@ -238,54 +222,32 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
             }
           }}
           onKeyDown={handleKeyDown}
-          style={{
-            width: '100%',
-            padding: '0.75rem 2.2rem 0.75rem 1rem',
-            borderRadius: '8px',
-            border: error ? '1.5px solid #e53935' : '1px solid #ccc',
-            fontSize: '0.95rem',
-            outline: 'none',
-            background: disabled ? '#f5f5f5' : '#fff',
-            color: '#222',
-            transition: 'border-color 0.2s, box-shadow 0.2s',
-          }}
+          className={`w-full h-10 px-3 pr-8 rounded-lg border text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all ${
+            error
+              ? 'border-red-500 bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-100'
+              : 'border-[#01796F]/40 bg-white dark:bg-[#021817] text-slate-900 dark:text-white'
+          }`}
         />
 
         {/* Loading Spinner or Clear Button */}
-        <div
-          style={{
-            position: 'absolute',
-            right: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            color: '#888',
-          }}
-        >
+        <div className="absolute right-2.5 flex items-center text-slate-400">
           {isLoading ? (
-            <i className="fas fa-spinner fa-spin" style={{ fontSize: '0.85rem', color: '#01796F' }} />
+            <i className="fas fa-spinner fa-spin text-xs text-[#02E0D5]" />
           ) : query ? (
             <button
               type="button"
               onClick={handleClear}
               aria-label="Effacer le lieu"
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '0.2rem',
-                cursor: 'pointer',
-                color: '#999',
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 flex items-center justify-center transition-colors"
             >
-              <i className="fas fa-times-circle" style={{ fontSize: '0.9rem' }} />
+              <i className="fas fa-times-circle" />
             </button>
           ) : null}
         </div>
       </div>
 
       {error && (
-        <span style={{ display: 'block', fontSize: '0.78rem', color: '#e53935', marginTop: '0.25rem' }}>
+        <span className="block text-[11px] text-red-400 mt-1 text-left">
           {error}
         </span>
       )}
@@ -295,22 +257,7 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
         <ul
           id={`${id}-suggestions`}
           role="listbox"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            zIndex: 999,
-            background: '#fff',
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-            maxHeight: '260px',
-            overflowY: 'auto',
-            margin: 0,
-            padding: '0.25rem 0',
-            listStyle: 'none',
-          }}
+          className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-[#062523] border border-slate-200 dark:border-[#01796F]/40 rounded-xl shadow-2xl z-50 max-h-[260px] overflow-y-auto p-1.5 list-none m-0"
         >
           {suggestions.map((place, index) => {
             const isHighlighted = index === highlightedIndex;
@@ -324,72 +271,29 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
                 aria-selected={isHighlighted}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onClick={() => handleSelect(place)}
-                style={{
-                  padding: '0.65rem 1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  cursor: 'pointer',
-                  background: isHighlighted ? '#e0f2f1' : 'transparent',
-                  borderBottom: index < suggestions.length - 1 ? '1px solid #f0f0f0' : 'none',
-                  transition: 'background 0.15s',
-                }}
+                className={`p-2 rounded-lg cursor-pointer flex items-center gap-2.5 transition-colors ${
+                  isHighlighted
+                    ? 'bg-[#01796F]/20 text-[#02E0D5]'
+                    : 'hover:bg-slate-100 dark:hover:bg-[#0a302d] text-slate-800 dark:text-slate-200'
+                }`}
               >
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: isHighlighted ? '#01796F' : '#f0f4f4',
-                    color: isHighlighted ? '#fff' : '#01796F',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.85rem',
-                    flexShrink: 0,
-                  }}
-                >
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 ${
+                  isHighlighted ? 'bg-[#01796F] text-white' : 'bg-[#01796F]/15 text-[#01796F] dark:text-[#02E0D5]'
+                }`}>
                   <i className={place.type === 'city' ? 'fas fa-city' : 'fas fa-map-pin'} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: '0.95rem',
-                      fontWeight: 600,
-                      color: '#222',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="font-semibold text-xs truncate">
                     {place.city || place.name}
                   </div>
                   {regionContext && (
-                    <div
-                      style={{
-                        fontSize: '0.8rem',
-                        color: '#666',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {regionContext}
                     </div>
                   )}
                 </div>
                 {place.countryCode && (
-                  <span
-                    style={{
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      background: '#e8f5e9',
-                      color: '#2e7d32',
-                      padding: '0.15rem 0.4rem',
-                      borderRadius: '4px',
-                      textTransform: 'uppercase',
-                    }}
-                  >
+                  <span className="text-[10px] font-bold bg-[#01796F]/15 text-[#01796F] dark:text-[#02E0D5] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
                     {place.countryCode}
                   </span>
                 )}
@@ -401,24 +305,8 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
 
       {/* No results message */}
       {isOpen && !isLoading && query.trim().length >= 2 && suggestions.length === 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            zIndex: 999,
-            background: '#fff',
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-            padding: '1rem',
-            textAlign: 'center',
-            fontSize: '0.85rem',
-            color: '#777',
-          }}
-        >
-          <i className="fas fa-search" style={{ marginRight: '0.4rem', color: '#aaa' }} />
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-white dark:bg-[#062523] border border-slate-200 dark:border-[#01796F]/40 rounded-xl shadow-2xl p-3 text-center text-xs text-slate-500 dark:text-slate-400">
+          <i className="fas fa-search mr-1.5 text-slate-400" />
           Aucun lieu trouvé pour « {query} »
         </div>
       )}
