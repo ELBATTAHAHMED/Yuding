@@ -1,12 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
 import { AirportSelector } from '@/components/travel/AirportSelector';
+import { FlightSkeleton } from '@/components/travel/FlightSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
-import type { Airport, FlightOffer } from '@/types/travel.types';
+import { EmptyState, ErrorState, PassengerSelector, SortBar } from '@/components/ui';
+import { sortFlights, buildActiveFilterChips } from '@/lib/search-ux';
+import type { FlightSortKey } from '@/lib/search-ux';
+import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDuration(minutes?: number | null): string {
   if (!minutes) return '';
@@ -21,23 +27,79 @@ function formatStops(stops?: number | null): string {
   return `${stops} escale${stops > 1 ? 's' : ''}`;
 }
 
+const CABIN_OPTIONS: { value: FlightSearchRequest['travelClass']; label: string }[] = [
+  { value: 'ECONOMY', label: 'Économique' },
+  { value: 'PREMIUM_ECONOMY', label: 'Premium Éco.' },
+  { value: 'BUSINESS', label: 'Affaires' },
+  { value: 'FIRST', label: 'Première' },
+];
+
+const SORT_OPTIONS: { value: FlightSortKey; label: string }[] = [
+  { value: 'PRICE_ASC', label: 'Prix croissant' },
+  { value: 'PRICE_DESC', label: 'Prix décroissant' },
+  { value: 'DURATION_ASC', label: 'Durée la plus courte' },
+  { value: 'DEPARTURE_ASC', label: 'Départ le plus tôt' },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function FlightsPage() {
   const { data: airports = [] } = useAirportsQuery();
 
   const [selectedOrigin, setSelectedOrigin] = useState<Airport | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<Airport | null>(null);
   const [departureDate, setDepartureDate] = useState('');
-  const [adults, setAdults] = useState(1);
 
+  // Passenger counts
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
+  const [showPassengerDropdown, setShowPassengerDropdown] = useState(false);
+
+  // Cabin class
+  const [cabinClass, setCabinClass] = useState<FlightSearchRequest['travelClass']>('ECONOMY');
+
+  // Result & UI state
   const [validationError, setValidationError] = useState<string | null>(null);
   const [flights, setFlights] = useState<FlightOffer[]>([]);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-
+  const [sortKey, setSortKey] = useState<FlightSortKey>('PRICE_ASC');
 
   const today = new Date().toISOString().split('T')[0];
+
+  // ── Passenger dropdown rows ──────────────────────────────────────────────
+  const passengerRows = [
+    { key: 'adults', label: 'Adultes', subLabel: '12 ans et plus', value: adults, min: 1, max: 9 },
+    { key: 'children', label: 'Enfants', subLabel: '2–11 ans', value: children, min: 0, max: 8 },
+    { key: 'infants', label: 'Nourrissons', subLabel: 'moins de 2 ans', value: infants, min: 0, max: adults },
+  ];
+
+  const handlePassengerChange = useCallback((key: string, value: number) => {
+    if (key === 'adults') setAdults(value);
+    else if (key === 'children') setChildren(value);
+    else if (key === 'infants') setInfants(Math.min(value, adults));
+  }, [adults]);
+
+  const totalPassengers = adults + children + infants;
+  const passengerSummary = `${adults} ad.${children > 0 ? `, ${children} enf.` : ''}${infants > 0 ? `, ${infants} nourr.` : ''}`;
+
+  // ── Active chips ─────────────────────────────────────────────────────────
+  const activeChips = useMemo(() => buildActiveFilterChips([
+    {
+      key: 'cabin',
+      label: CABIN_OPTIONS.find(o => o.value === cabinClass)?.label ?? cabinClass ?? '',
+      active: cabinClass !== 'ECONOMY',
+    },
+    { key: 'non_stop', label: 'Direct uniquement', active: false },
+  ]), [cabinClass]);
+
+  // ── Sorted flights ───────────────────────────────────────────────────────
+  const sortedFlights = useMemo(() => sortFlights(flights, sortKey), [flights, sortKey]);
+
+  // ── Form validation ──────────────────────────────────────────────────────
   const isFormValid = Boolean(
     selectedOrigin &&
     selectedDestination &&
@@ -50,9 +112,8 @@ export default function FlightsPage() {
     e.preventDefault();
     setValidationError(null);
 
-    // Validation rules: Origin and destination must be valid selected airports
     if (!selectedOrigin) {
-      setValidationError('Veuillez sélectionner un aéroport d\'origine valide dans la liste.');
+      setValidationError("Veuillez sélectionner un aéroport d'origine valide dans la liste.");
       return;
     }
     if (!selectedDestination) {
@@ -60,7 +121,7 @@ export default function FlightsPage() {
       return;
     }
     if (selectedOrigin.code === selectedDestination.code) {
-      setValidationError('L\'aéroport d\'origine et de destination doivent être différents.');
+      setValidationError("L'aéroport d'origine et de destination doivent être différents.");
       return;
     }
     if (!departureDate) {
@@ -68,23 +129,23 @@ export default function FlightsPage() {
       return;
     }
     if (departureDate < today) {
-      setValidationError('La date de départ doit être aujourd\'hui ou dans le futur.');
+      setValidationError("La date de départ doit être aujourd'hui ou dans le futur.");
       return;
     }
 
     setIsSearching(true);
     setHasSearched(true);
+    setShowPassengerDropdown(false);
 
     try {
-      // Must send ONLY the selected IATA codes to backend
       const data = await travelService.searchFlights({
         origin: selectedOrigin.code,
         destination: selectedDestination.code,
         departureDate: departureDate,
-        adults: adults,
-        children: 0,
-        infants: 0,
-        travelClass: 'ECONOMY',
+        adults,
+        children,
+        infants,
+        travelClass: cabinClass,
         nonStop: false,
         currency: 'EUR',
       });
@@ -105,6 +166,13 @@ export default function FlightsPage() {
       setIsSearching(false);
     }
   };
+
+  const handleRetry = useCallback(() => {
+    setSearchStatus(null);
+    setSearchMessage(null);
+    setFlights([]);
+    setHasSearched(false);
+  }, []);
 
   return (
     <div>
@@ -208,38 +276,97 @@ export default function FlightsPage() {
               />
             </div>
 
-            {/* Passengers field */}
-            <div>
+            {/* Passengers dropdown */}
+            <div style={{ textAlign: 'left', position: 'relative' }}>
               <label
-                htmlFor="adults-count"
                 style={{
                   display: 'block',
                   fontWeight: 600,
                   marginBottom: '0.4rem',
-                  textAlign: 'left',
                   fontSize: '0.9rem',
                 }}
               >
-                <i className="fas fa-user" style={{ marginRight: '0.4rem', color: '#01796F' }} />
-                Passagers adultes
+                <i className="fas fa-users" style={{ marginRight: '0.4rem', color: '#01796F' }} />
+                Passagers
               </label>
-              <input
-                type="number"
-                id="adults-count"
-                className="input-field"
-                min={1}
-                max={9}
-                value={adults}
-                onChange={(e) => setAdults(Number(e.target.value))}
+              <button
+                type="button"
+                onClick={() => setShowPassengerDropdown((v) => !v)}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
                   borderRadius: '6px',
                   border: '1px solid #ccc',
-                  boxSizing: 'border-box',
-                  fontSize: '0.95rem',
+                  background: '#fff',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
-              />
+              >
+                <span>
+                  {totalPassengers} passager{totalPassengers > 1 ? 's' : ''} — {passengerSummary}
+                </span>
+                <i className={`fas fa-chevron-${showPassengerDropdown ? 'up' : 'down'}`} style={{ color: '#888' }} />
+              </button>
+
+              {showPassengerDropdown && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 50,
+                    marginTop: '0.4rem',
+                    background: '#fff',
+                    borderRadius: '8px',
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.18)',
+                    border: '1px solid #e0e0e0',
+                    padding: '1.25rem',
+                    minWidth: '240px',
+                  }}
+                >
+                  <PassengerSelector rows={passengerRows} onChange={handlePassengerChange} />
+
+                  {/* Cabin class inside dropdown */}
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#555', marginBottom: '0.3rem' }}>
+                      Classe de voyage
+                    </label>
+                    <select
+                      value={cabinClass}
+                      onChange={(e) => setCabinClass(e.target.value as FlightSearchRequest['travelClass'])}
+                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', fontSize: '0.85rem' }}
+                    >
+                      {CABIN_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassengerDropdown(false)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      marginTop: '0.75rem',
+                      background: '#01796F',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Terminé
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -310,106 +437,55 @@ export default function FlightsPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Sort toolbar — only when results exist */}
+            {sortedFlights.length > 0 && (
+              <SortBar
+                count={sortedFlights.length}
+                resultLabel="vol"
+                sortOptions={SORT_OPTIONS}
+                currentSort={sortKey}
+                onSortChange={setSortKey}
+                activeChips={activeChips}
+                onChipRemove={(key) => {
+                  if (key === 'cabin') setCabinClass('ECONOMY');
+                }}
+              />
+            )}
+
             {!hasSearched ? (
-              // Initial state
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '3rem 1.5rem',
-                  background: 'var(--card, #fff)',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                }}
-              >
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(1, 121, 111, 0.1)',
-                    color: '#01796F',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.8rem',
-                    margin: '0 auto 1.25rem',
-                  }}
-                >
-                  <i className="fas fa-search" />
-                </div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  Recherchez vos vols en temps réel
-                </h3>
-                <p style={{ color: '#666', maxWidth: '500px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  Recherchez par ville (ex: Casablanca, Paris, Marrakech) ou par aéroport pour afficher les vols réels disponibles.
-                </p>
-              </div>
+              // Initial idle state
+              <EmptyState
+                icon="fa-search"
+                title="Recherchez vos vols en temps réel"
+                description="Recherchez par ville (ex: Casablanca, Paris, Marrakech) ou par aéroport pour afficher les vols réels disponibles."
+              />
             ) : isSearching ? (
-              // Loading state
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '3.5rem',
-                  background: 'var(--card, #fff)',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                }}
-              >
-                <i className="fas fa-spinner fa-spin" style={{ fontSize: '2.5rem', color: '#01796F', marginBottom: '1.2rem', display: 'block' }} />
-                <p style={{ color: '#555', fontWeight: 600, fontSize: '1.05rem' }}>
-                  Recherche des vols en cours via Scrappa...
-                </p>
-                <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '0.3rem' }}>
-                  {selectedOrigin?.city} ({selectedOrigin?.code}) → {selectedDestination?.city} ({selectedDestination?.code})
-                </p>
-              </div>
-            ) : flights.length === 0 ? (
-              // Empty State (clean provider result or error)
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '3.5rem 1.5rem',
-                  background: 'var(--card, #fff)',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                }}
-              >
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'rgba(1, 121, 111, 0.1)',
-                    color: '#01796F',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.8rem',
-                    margin: '0 auto 1.25rem',
-                  }}
-                >
-                  <i className="fas fa-plane-slash" />
-                </div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  {searchStatus === 'ERROR'
-                    ? 'Erreur de recherche'
-                    : searchStatus === 'PROVIDER_UNAVAILABLE'
-                    ? 'Service temporairement indisponible'
-                    : 'Aucun vol trouvé'}
-                </h3>
-                <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                  {searchStatus === 'PROVIDER_UNAVAILABLE'
-                    ? searchMessage || 'Le fournisseur de vols est temporairement indisponible.'
-                    : searchStatus === 'ERROR'
-                    ? searchMessage || 'Une erreur est survenue lors de la recherche.'
-                    : `Aucun vol direct ou avec escale n'a été trouvé entre ${selectedOrigin?.city} (${selectedOrigin?.code}) et ${selectedDestination?.city} (${selectedDestination?.code}) pour la date du ${departureDate}. Veuillez essayer une autre date.`}
-                </p>
-              </div>
+              // Loading skeleton
+              <FlightSkeleton count={5} />
+            ) : searchStatus === 'ERROR' ? (
+              // Error state
+              <ErrorState
+                title="Erreur de recherche"
+                message={searchMessage || 'Une erreur est survenue lors de la recherche.'}
+                onRetry={handleRetry}
+              />
+            ) : searchStatus === 'PROVIDER_UNAVAILABLE' && flights.length === 0 ? (
+              // Provider unavailable
+              <ErrorState
+                title="Service temporairement indisponible"
+                message={searchMessage || 'Le fournisseur de vols est temporairement indisponible.'}
+                onRetry={handleRetry}
+              />
+            ) : sortedFlights.length === 0 ? (
+              // No results
+              <EmptyState
+                icon="fa-plane-slash"
+                title="Aucun vol trouvé"
+                description={`Aucun vol n'a été trouvé entre ${selectedOrigin?.city} (${selectedOrigin?.code}) et ${selectedDestination?.city} (${selectedDestination?.code}) pour le ${departureDate}. Essayez une autre date.`}
+              />
             ) : (
               // Real flight results list
-              flights.map((flight) => (
+              sortedFlights.map((flight) => (
                 <div
                   key={flight.offerId}
                   style={{

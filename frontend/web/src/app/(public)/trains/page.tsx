@@ -6,6 +6,8 @@ import { travelService } from '@/services/travel.service';
 import type { TrainOffer, TrainStation } from '@/types/travel.types';
 import { StationSelector } from '@/components/travel/StationSelector';
 import { TrainCard } from '@/components/travel/TrainCard';
+import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
+import { EmptyState, ErrorState, SortBar } from '@/components/ui';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -15,6 +17,7 @@ export default function TrainsPage() {
   const [destinationStation, setDestinationStation] = useState<TrainStation | null>(null);
   const [date, setDate] = useState(TODAY);
   const [departureTime, setDepartureTime] = useState('');
+  const [passengers, setPassengers] = useState(1);
 
   const [trains, setTrains] = useState<TrainOffer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -360,6 +363,59 @@ export default function TrainsPage() {
               />
             </div>
 
+            {/* Passengers */}
+            <div style={{ flex: '1 1 110px' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  marginBottom: '0.4rem',
+                  color: '#334155',
+                }}
+              >
+                <i className="fas fa-users" style={{ marginRight: '6px', color: '#2563eb' }} />
+                Passagers
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#fff', height: '42px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPassengers((v) => Math.max(1, v - 1))}
+                  disabled={passengers <= 1}
+                  style={{
+                    width: '36px',
+                    height: '100%',
+                    border: 'none',
+                    background: '#f1f5f9',
+                    fontSize: '1.1rem',
+                    cursor: passengers <= 1 ? 'not-allowed' : 'pointer',
+                    opacity: passengers <= 1 ? 0.4 : 1,
+                  }}
+                >
+                  −
+                </button>
+                <span style={{ flex: 1, textAlign: 'center', fontWeight: 700, fontSize: '0.95rem' }}>
+                  {passengers}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPassengers((v) => Math.min(9, v + 1))}
+                  disabled={passengers >= 9}
+                  style={{
+                    width: '36px',
+                    height: '100%',
+                    border: 'none',
+                    background: '#f1f5f9',
+                    fontSize: '1.1rem',
+                    cursor: passengers >= 9 ? 'not-allowed' : 'pointer',
+                    opacity: passengers >= 9 ? 0.4 : 1,
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             {/* Submit Button */}
             <div style={{ flex: '1 1 140px' }}>
               <button
@@ -495,30 +551,46 @@ export default function TrainsPage() {
           </div>
         )}
 
-        {/* Filters and sorting bar when results exist */}
-        {hasSearched && trains.length > 0 && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              background: '#ffffff',
-              padding: '1rem 1.25rem',
-              borderRadius: '10px',
-              border: '1px solid #e2e8f0',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <div style={{ fontWeight: 700, color: '#1e293b' }}>
-              {filteredTrains.length} liaison{filteredTrains.length > 1 ? 's' : ''} disponible
-              {filteredTrains.length > 1 ? 's' : ''}
-            </div>
+        {/* Loading skeleton */}
+        {loading && <TrainSkeleton count={5} />}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-              {/* Direct only toggle */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem', cursor: 'pointer' }}>
+        {/* Filters and sorting bar when results exist */}
+        {!loading && hasSearched && trains.length > 0 && (
+          <div>
+            <SortBar
+              count={filteredTrains.length}
+              resultLabel="liaison"
+              sortOptions={[
+                { value: 'DEPARTURE', label: 'Heure de départ' },
+                { value: 'DURATION', label: 'Durée la plus courte' },
+              ]}
+              currentSort={sortBy}
+              onSortChange={(val) => setSortBy(val as 'DEPARTURE' | 'DURATION')}
+              activeChips={[
+                ...(directOnly ? [{ key: 'directOnly', label: 'Directs uniquement' }] : []),
+                ...(selectedProduct !== 'ALL' ? [{ key: 'product', label: `Type: ${selectedProduct}` }] : []),
+              ]}
+              onChipRemove={(key) => {
+                if (key === 'directOnly') setDirectOnly(false);
+                if (key === 'product') setSelectedProduct('ALL');
+              }}
+            />
+
+            {/* Sub-filters row (direct only checkbox and product select) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1.5rem',
+                flexWrap: 'wrap',
+                marginBottom: '1rem',
+                padding: '0.5rem 1rem',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 600 }}>
                 <input
                   type="checkbox"
                   checked={directOnly}
@@ -527,10 +599,9 @@ export default function TrainsPage() {
                 <span>Directs uniquement</span>
               </label>
 
-              {/* Product filter */}
               {availableProducts.length > 1 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}>
-                  <span>Type :</span>
+                  <span style={{ fontWeight: 600 }}>Type de train :</span>
                   <select
                     value={selectedProduct}
                     onChange={(e) => setSelectedProduct(e.target.value)}
@@ -551,31 +622,12 @@ export default function TrainsPage() {
                   </select>
                 </div>
               )}
-
-              {/* Sort by */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}>
-                <span>Trier par :</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'DEPARTURE' | 'DURATION')}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.85rem',
-                    background: '#ffffff',
-                  }}
-                >
-                  <option value="DEPARTURE">Heure de départ</option>
-                  <option value="DURATION">Durée la plus courte</option>
-                </select>
-              </div>
             </div>
           </div>
         )}
 
         {/* Results List */}
-        {filteredTrains.length > 0 && (
+        {!loading && filteredTrains.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {filteredTrains.map((train) => (
               <TrainCard key={train.offerId} offer={train} />
@@ -583,62 +635,31 @@ export default function TrainsPage() {
           </div>
         )}
 
+        {/* Empty Filter State */}
+        {!loading && hasSearched && trains.length > 0 && filteredTrains.length === 0 && (
+          <EmptyState
+            icon="fa-filter"
+            title="Aucune liaison ne correspond à vos filtres"
+            description="Essayez de désactiver le filtre 'Directs uniquement' ou de sélectionner 'Tous les trains'."
+          />
+        )}
+
         {/* Empty Search State */}
-        {hasSearched && !loading && trains.length === 0 && !outdatedNotice && !providerMessage && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '4rem 1rem',
-              background: '#ffffff',
-              borderRadius: '12px',
-              border: '1px solid #e2e8f0',
-            }}
-          >
-            <i className="fas fa-train" style={{ fontSize: '3rem', color: '#cbd5e1', marginBottom: '1rem' }} />
-            <h3 style={{ fontSize: '1.25rem', color: '#1e293b', marginBottom: '0.5rem' }}>
-              Aucun train trouvé pour cette liaison
-            </h3>
-            <p style={{ color: '#64748b', maxWidth: '500px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
-              Aucune circulation directe ou horaire correspondant n’a été identifiée pour cette date ou cet horaire.
-            </p>
-            <a
-              href="https://www.oncf-voyages.ma"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#2563eb',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
-              <span>Vérifier directement sur le site de l’ONCF</span>
-              <i className="fas fa-external-link-alt" />
-            </a>
-          </div>
+        {!loading && hasSearched && trains.length === 0 && !outdatedNotice && !providerMessage && (
+          <EmptyState
+            icon="fa-train"
+            title="Aucun train trouvé pour cette liaison"
+            description="Aucune circulation directe ou horaire correspondant n’a été identifiée pour cette date ou cet horaire."
+          />
         )}
 
         {/* Initial Prompt State (before search) */}
         {!hasSearched && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '3rem 1rem',
-              background: '#f8fafc',
-              borderRadius: '12px',
-              border: '1px dashed #cbd5e1',
-            }}
-          >
-            <i className="fas fa-route" style={{ fontSize: '2.5rem', color: '#94a3b8', marginBottom: '0.75rem' }} />
-            <h3 style={{ fontSize: '1.1rem', color: '#334155', marginBottom: '0.25rem' }}>
-              Recherchez votre itinéraire en train
-            </h3>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>
-              Sélectionnez une gare de départ, une gare d’arrivée et votre date de départ pour afficher les horaires.
-            </p>
-          </div>
+          <EmptyState
+            icon="fa-route"
+            title="Recherchez votre itinéraire en train"
+            description="Sélectionnez une gare de départ, une gare d’arrivée et votre date de départ pour afficher les horaires."
+          />
         )}
 
         {/* Attribution & Legal disclaimer */}

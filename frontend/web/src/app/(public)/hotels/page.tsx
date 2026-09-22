@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ApiError } from '@/lib/api-client';
@@ -9,8 +9,11 @@ import {
   filterHotels,
   type HotelCategoryFilter,
 } from '@/lib/hotel-filters';
-import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery } from '@/components/travel';
+import { sortHotels, buildActiveFilterChips } from '@/lib/search-ux';
+import type { HotelSortKey } from '@/lib/search-ux';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, HotelSkeleton } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
+import { EmptyState, ErrorState, SortBar } from '@/components/ui';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -73,6 +76,7 @@ export default function HotelsPage() {
   const [allHotels, setAllHotels] = useState<HotelOffer[]>([]);
   const [expandedHotelId, setExpandedHotelId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<HotelCategoryFilter>('ALL');
+  const [sortKey, setSortKey] = useState<HotelSortKey>('PRICE_ASC');
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
@@ -284,7 +288,14 @@ export default function HotelsPage() {
     }
   };
 
-  const filteredHotels = filterHotels(allHotels, filterType);
+  const filteredHotels = useMemo(() => filterHotels(allHotels, filterType), [allHotels, filterType]);
+  const sortedHotels = useMemo(() => sortHotels(filteredHotels, sortKey), [filteredHotels, sortKey]);
+
+  const hotelActiveChips = useMemo(() => buildActiveFilterChips([
+    { key: 'HOTEL_RIAD', label: 'Hôtels & Riads', active: filterType === 'HOTEL_RIAD' },
+    { key: 'VILLA_HOUSE', label: 'Villas & Maisons', active: filterType === 'VILLA_HOUSE' },
+    { key: 'APARTMENT', label: 'Appartements', active: filterType === 'APARTMENT' },
+  ]), [filterType]);
 
   const toggleExpandHotel = (hotelId: string) => {
     setExpandedHotelId((prev) => (prev === hotelId ? null : hotelId));
@@ -883,124 +894,50 @@ export default function HotelsPage() {
 
           {/* Results State Management */}
           {!hasSearched ? (
-            /* Initial State */
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(1, 121, 111, 0.1)',
-                  color: '#01796F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-hotel" />
-              </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Recherchez vos hébergements en temps réel
-              </h3>
-              <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                Renseignez votre destination et vos dates de séjour ci-dessus pour accéder aux disponibilités et tarifs réels en direct via le réseau Nuitee Connect.
-              </p>
-            </div>
+            <EmptyState
+              icon="fa-hotel"
+              title="Recherchez vos hébergements en temps réel"
+              description="Renseignez votre destination et vos dates de séjour ci-dessus pour accéder aux disponibilités et tarifs réels en direct via le réseau Nuitee Connect."
+            />
           ) : isSearching ? (
-            /* Loading State */
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-              }}
-            >
-              <i className="fas fa-spinner fa-spin" style={{ fontSize: '2.5rem', color: '#01796F', marginBottom: '1.2rem', display: 'block' }} />
-              <p style={{ color: '#555', fontWeight: 600, fontSize: '1.05rem' }}>
-                Recherche des hébergements en direct via Nuitee Connect...
-              </p>
-              <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '0.4rem' }}>
-                Interrogation des disponibilités et des tarifs fournisseurs en temps réel
-              </p>
-            </div>
+            <HotelSkeleton count={6} />
+          ) : searchStatus === 'ERROR' ? (
+            <ErrorState
+              title="Erreur de recherche"
+              message={searchMessage || 'Une erreur est survenue lors de la recherche des hébergements.'}
+              onRetry={() => { setHasSearched(false); setSearchStatus(null); setAllHotels([]); }}
+            />
           ) : filteredHotels.length === 0 ? (
-            /* Empty State */
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(239, 83, 80, 0.1)',
-                  color: '#e53935',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-bed" />
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Aucun hébergement trouvé pour ces critères
-              </h3>
-              <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                {allHotels.length > 0 && filterType !== 'ALL'
-                  ? 'Aucun hébergement de cette catégorie dans les résultats.'
-                  : searchMessage ||
-                  'Aucun hôtel disponible pour cette destination et ces dates auprès du fournisseur Nuitee Connect. Essayez d\'autres dates ou une autre ville.'}
-              </p>
-              {searchStatus === 'PROVIDER_UNAVAILABLE' && (
-                <div style={{ marginTop: '1rem', color: '#e65100', fontSize: '0.85rem', fontWeight: 600 }}>
-                  <i className="fas fa-exclamation-triangle" style={{ marginRight: '0.4rem' }} />
-                  Le service Nuitee Connect est temporairement indisponible.
-                </div>
-              )}
-            </div>
+            <EmptyState
+              icon="fa-bed"
+              title="Aucun hébergement trouvé"
+              description={
+                allHotels.length > 0 && filterType !== 'ALL'
+                  ? 'Aucun hébergement de cette catégorie dans les résultats. Essayez "Tous les hébergements".'
+                  : searchStatus === 'PROVIDER_UNAVAILABLE'
+                  ? (searchMessage || 'Le service Nuitee Connect est temporairement indisponible.')
+                  : (searchMessage || "Aucun hôtel disponible pour cette destination et ces dates. Essayez d'autres dates ou une autre ville.")
+              }
+            />
           ) : (
             /* Results Grid */
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-                  {filteredHotels.length} hébergement{filteredHotels.length > 1 ? 's' : ''} disponible{filteredHotels.length > 1 ? 's' : ''}
-                </h2>
-                <span
-                  style={{
-                    background: 'rgba(1, 121, 111, 0.1)',
-                    color: '#01796F',
-                    padding: '0.35rem 0.85rem',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  <i className="fas fa-check-circle" style={{ marginRight: '0.35rem' }} />
-                  Tarifs vérifiés Nuitee Connect
-                </span>
-              </div>
+              {/* Sort + chips toolbar */}
+              <SortBar
+                count={sortedHotels.length}
+                resultLabel="hébergement"
+                sortOptions={[
+                  { value: 'PRICE_ASC' as HotelSortKey, label: 'Prix croissant' },
+                  { value: 'PRICE_DESC' as HotelSortKey, label: 'Prix décroissant' },
+                  { value: 'STARS_DESC' as HotelSortKey, label: 'Étoiles (meilleures)' },
+                ]}
+                currentSort={sortKey}
+                onSortChange={setSortKey}
+                activeChips={hotelActiveChips}
+                onChipRemove={(key) => {
+                  if (key === filterType) setFilterType('ALL');
+                }}
+              />
 
               <div
                 style={{
@@ -1009,7 +946,7 @@ export default function HotelsPage() {
                   gap: '2rem',
                 }}
               >
-                {filteredHotels.map((item) => {
+                {sortedHotels.map((item) => {
                   const hotelId = item.hotelId || item.id || item.offerId;
                   const isExpanded = expandedHotelId === hotelId;
                   const roomOffers = item.roomOffers || [];

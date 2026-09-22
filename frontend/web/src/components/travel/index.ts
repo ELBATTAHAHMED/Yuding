@@ -13,3 +13,8 @@ export * from './DestinationWeather';
 export * from './PriceDisplay';
 export * from './SafeEntityImage';
 export * from './DestinationImageGallery';
+export * from './FlightSkeleton';
+export * from './HotelSkeleton';
+export * from './ActivitySkeleton';
+export * from './TrainSkeleton';
+export * from './TransferSkeleton';
