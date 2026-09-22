@@ -12,4 +12,8 @@ public interface TravelOfferResolverClient {
 
     @GetMapping("/internal/travel/offers/resolve/{selectionRef}")
     Optional<ResolvedOfferDto> resolveOfferSelection(@PathVariable("selectionRef") String selectionRef);
+
+    @org.springframework.web.bind.annotation.PostMapping("/internal/travel/offers/revalidate")
+    com.ahmed.reservationservice.domain.dto.InternalRevalidationResultDto revalidateOffer(
+            @org.springframework.web.bind.annotation.RequestBody com.ahmed.reservationservice.domain.dto.InternalRevalidateOfferRequest request);
 }
