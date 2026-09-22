@@ -91,13 +91,21 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
           )}
         </div>
 
-        <Link
-          href={bookingUrl}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-md bg-[#01796F] hover:bg-[#005951] text-white text-sm font-semibold transition-colors shadow-sm hover:shadow shrink-0"
-        >
-          <i className="fas fa-ticket-alt text-xs" />
-          <span>Réserver</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/flights/${encodeURIComponent(flight.offerId)}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] hover:bg-[#01796F]/10 text-sm font-semibold transition-colors shrink-0"
+          >
+            <span>Détails</span>
+          </Link>
+          <Link
+            href={bookingUrl}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-[#01796F] hover:bg-[#005951] text-white text-sm font-semibold transition-colors shadow-sm hover:shadow shrink-0"
+          >
+            <i className="fas fa-ticket-alt text-xs" />
+            <span>Réserver</span>
+          </Link>
+        </div>
       </div>
     </Card>
   );

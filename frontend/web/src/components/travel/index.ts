@@ -18,3 +18,4 @@ export * from './HotelSkeleton';
 export * from './ActivitySkeleton';
 export * from './TrainSkeleton';
 export * from './TransferSkeleton';
+export * from './details';

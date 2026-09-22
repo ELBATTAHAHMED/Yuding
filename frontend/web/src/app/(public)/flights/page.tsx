@@ -9,6 +9,7 @@ import { FlightSkeleton } from '@/components/travel/FlightSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, PassengerSelector, SortBar } from '@/components/ui';
 import { sortFlights, buildActiveFilterChips } from '@/lib/search-ux';
+import { saveSearchOffers } from '@/lib/offer-store';
 import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
 
@@ -151,6 +152,7 @@ export default function FlightsPage() {
       });
 
       setFlights(data.results || []);
+      saveSearchOffers('FLIGHT', data.results || []);
       setSearchStatus(data.status);
       setSearchMessage(data.message);
     } catch (err: unknown) {
@@ -572,8 +574,8 @@ export default function FlightsPage() {
                     </div>
                   </div>
 
-                  {/* Price + Booking action */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  {/* Price + Action hierarchy */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>
                         <PriceDisplay conversion={flight.priceConversion} amount={flight.price} currency={flight.currency} />
@@ -588,22 +590,42 @@ export default function FlightsPage() {
                       )}
                     </div>
 
-                    <Link
-                      href={`/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(
-                        `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
-                      )}&price=${flight.price}`}
-                      className="btn-booking"
-                      style={{
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontWeight: 700,
-                        textDecoration: 'none',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Réserver
-                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Link
+                        href={`/flights/${encodeURIComponent(flight.offerId)}`}
+                        style={{
+                          padding: '0.65rem 1.1rem',
+                          borderRadius: '6px',
+                          border: '1.5px solid #01796F',
+                          color: '#01796F',
+                          fontWeight: 700,
+                          fontSize: '0.88rem',
+                          textDecoration: 'none',
+                          whiteSpace: 'nowrap',
+                          background: '#fff',
+                        }}
+                      >
+                        Voir détails
+                      </Link>
+
+                      <Link
+                        href={`/booking?serviceType=FLIGHT&serviceId=${flight.offerId}&serviceTitle=${encodeURIComponent(
+                          `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
+                        )}&price=${flight.price}`}
+                        className="btn-booking"
+                        style={{
+                          padding: '0.65rem 1.25rem',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '0.88rem',
+                          textDecoration: 'none',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Réserver
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))
