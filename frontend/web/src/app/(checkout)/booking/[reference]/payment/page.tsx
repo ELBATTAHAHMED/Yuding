@@ -26,7 +26,7 @@ export default function BookingPaymentPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // First try to fetch existing pricing
+        // First try to fetch existing pricing quote
         let p: BookingPricingResponseDto;
         try {
           p = await bookingService.getAuthoritativePricing(reference);
@@ -58,127 +58,275 @@ export default function BookingPaymentPage() {
 
   return (
     <ProtectedRoute>
-      <div style={{ minHeight: '80vh', padding: '3.5rem 1rem', background: 'var(--bg, #f4f6f6)' }}>
-        <div style={{ maxWidth: '850px', margin: '0 auto' }}>
-          {/* Breadcrumb */}
-          <nav style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: '#666' }}>
-            <Link href="/" style={{ color: '#01796F', textDecoration: 'none' }}>
-              Accueil
-            </Link>
-            <span style={{ margin: '0 0.5rem' }}>/</span>
-            <Link href={`/booking/${reference}`} style={{ color: '#01796F', textDecoration: 'none' }}>
-              Dossier {reference}
-            </Link>
-            <span style={{ margin: '0 0.5rem' }}>/</span>
-            <span style={{ fontWeight: 600 }}>Paiement Sécurisé</span>
-          </nav>
-
+      <div style={{ minHeight: '85vh', padding: '2.5rem 1rem 4rem', background: 'var(--bg, #f4f6f6)' }}>
+        <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
+          {/* Top Bar: Breadcrumb & Dossier Badge */}
           <div
             style={{
-              background: 'var(--card, #fff)',
-              borderRadius: '20px',
-              padding: '2.5rem',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '1.75rem',
             }}
           >
-            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  padding: '0.3rem 0.9rem',
-                  background: '#e0f2f1',
-                  color: '#004d40',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.5px',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                Étape 2 / 2 — Règlement Sécurisé
-              </span>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text, #001b1a)' }}>
-                Finaliser votre Réservation
-              </h1>
-              <p style={{ color: '#666', fontSize: '1rem', marginTop: '0.5rem' }}>
-                Référence dossier : <strong>{reference}</strong>
-              </p>
+            <nav style={{ fontSize: '0.88rem', color: '#64748b' }}>
+              <Link href="/" style={{ color: '#01796F', textDecoration: 'none', fontWeight: 500 }}>
+                Accueil
+              </Link>
+              <span style={{ margin: '0 0.5rem', color: '#cbd5e1' }}>/</span>
+              <Link href={`/booking/${reference}`} style={{ color: '#01796F', textDecoration: 'none', fontWeight: 500 }}>
+                Dossier {reference}
+              </Link>
+              <span style={{ margin: '0 0.5rem', color: '#cbd5e1' }}>/</span>
+              <span style={{ fontWeight: 600, color: '#0f172a' }}>Paiement Sécurisé</span>
+            </nav>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: '#0f766e',
+                background: '#ccfbf1',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '20px',
+              }}
+            >
+              <i className="fas fa-lock" />
+              <span>Session de paiement chiffrée</span>
             </div>
+          </div>
 
-            {isLoading && (
-              <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-                <i className="fas fa-spinner fa-spin" style={{ fontSize: '2.5rem', color: '#01796F', marginBottom: '1rem' }} />
-                <p style={{ color: '#666' }}>Chargement de la tarification autoritaire du serveur...</p>
-              </div>
-            )}
-
-            {error && (
+          {/* Checkout Steps Progress Bar (Inspired by Reference) */}
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              padding: '1rem 1.75rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.04)',
+              border: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div
                 style={{
-                  padding: '1.25rem',
-                  borderRadius: '10px',
-                  background: '#ffebee',
-                  color: '#c62828',
-                  marginBottom: '1.5rem',
-                  textAlign: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: '#10b981',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
                 }}
               >
-                <i className="fas fa-exclamation-circle" style={{ marginRight: '0.5rem', fontSize: '1.2rem' }} />
-                <span>{error}</span>
-                <div style={{ marginTop: '1rem' }}>
-                  <button
-                    onClick={() => router.refresh()}
-                    className="btn-connexion"
-                    type="button"
-                    style={{ background: '#01796F' }}
-                  >
-                    Réessayer
-                  </button>
-                </div>
+                <i className="fas fa-check" />
               </div>
-            )}
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
+                1. Sélection Offre
+              </span>
+            </div>
 
-            {!isLoading && !error && pricing && (
-              <>
-                {pricing.canProceedToPayment ? (
-                  <PaymentForm bookingReference={reference} pricing={pricing} />
-                ) : (
+            <div style={{ flex: 1, minWidth: '30px', height: '2px', background: '#10b981' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: '#10b981',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                }}
+              >
+                <i className="fas fa-check" />
+              </div>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
+                2. Coordonnées & Devis
+              </span>
+            </div>
+
+            <div style={{ flex: 1, minWidth: '30px', height: '2px', background: '#01796F' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #01796F 0%, #005951 100%)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  boxShadow: '0 0 0 3px rgba(1, 121, 111, 0.25)',
+                }}
+              >
+                3
+              </div>
+              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#01796F' }}>
+                3. Règlement Sécurisé
+              </span>
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {isLoading && (
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '20px',
+                padding: '4rem 2rem',
+                textAlign: 'center',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: '2.5rem', color: '#01796F', marginBottom: '1.25rem' }} />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>
+                Établissement du tarif autoritaire...
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                Connexion sécurisée aux services de réservation Yuding V2.
+              </p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '20px',
+                padding: '2.5rem',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                border: '1px solid #fecaca',
+                textAlign: 'center',
+              }}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: '#fee2e2',
+                  color: '#dc2626',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem',
+                  margin: '0 auto 1.25rem',
+                }}
+              >
+                <i className="fas fa-triangle-exclamation" />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.5rem' }}>
+                Impossible de charger le dossier
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '500px', margin: '0 auto 1.5rem' }}>
+                {error}
+              </p>
+              <button
+                onClick={() => router.refresh()}
+                type="button"
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '10px',
+                  background: '#01796F',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                }}
+              >
+                <i className="fas fa-rotate-right" style={{ marginRight: '0.5rem' }} />
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          {/* Main Content: Render PaymentForm if Authoritative Pricing is Ready */}
+          {!isLoading && !error && pricing && (
+            <>
+              {pricing.canProceedToPayment ? (
+                <PaymentForm bookingReference={reference} pricing={pricing} />
+              ) : (
+                <div
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '20px',
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                    border: '1px solid #fed7aa',
+                  }}
+                >
                   <div
                     style={{
-                      padding: '2rem',
-                      borderRadius: '12px',
-                      background: '#fff8e1',
-                      border: '1px solid #ffe082',
-                      textAlign: 'center',
-                      color: '#b78103',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: '#ffedd5',
+                      color: '#ea580c',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.75rem',
+                      margin: '0 auto 1.25rem',
                     }}
                   >
-                    <i className="fas fa-exclamation-triangle" style={{ fontSize: '2.5rem', marginBottom: '1rem' }} />
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                      Paiement Non Disponible
-                    </h3>
-                    <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem', color: '#555' }}>
-                      {pricing.message || 'Ce dossier ne peut pas faire l&apos;objet d&apos;un règlement immédiat (tarification expirée ou produit non monétisé).'}
-                    </p>
-                    <Link
-                      href={`/booking/${reference}`}
-                      style={{
-                        display: 'inline-block',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '6px',
-                        background: '#01796F',
-                        color: '#fff',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      Retourner au dossier
-                    </Link>
+                    <i className="fas fa-triangle-exclamation" />
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#9a3412', marginBottom: '0.5rem' }}>
+                    Paiement en Ligne Non Disponible
+                  </h3>
+                  <p style={{ maxWidth: '520px', margin: '0 auto 1.75rem', color: '#64748b', fontSize: '0.95rem' }}>
+                    {pricing.message ||
+                      'Cette prestation ne peut pas faire l’objet d’un règlement en ligne immédiat (tarif non monétisé ou devis expiré).'}
+                  </p>
+                  <Link
+                    href={`/booking/${reference}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.8rem 1.6rem',
+                      borderRadius: '10px',
+                      background: '#01796F',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      fontSize: '0.95rem',
+                      boxShadow: '0 4px 12px rgba(1, 121, 111, 0.25)',
+                    }}
+                  >
+                    <i className="fas fa-arrow-left" />
+                    <span>Retourner aux détails du dossier</span>
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </ProtectedRoute>
