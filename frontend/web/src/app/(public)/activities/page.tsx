@@ -1,15 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
-import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage } from '@/components/travel';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage, ActivitySkeleton } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
+import { EmptyState, ErrorState, SortBar } from '@/components/ui';
+import { sortActivities } from '@/lib/search-ux';
+import type { ActivitySortKey } from '@/lib/search-ux';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
 export default function ActivitiesPage() {
+  const today = new Date().toISOString().split('T')[0];
+
   const [destination, setDestination] = useState('');
   const [selectedGeoPlace, setSelectedGeoPlace] = useState<GeoPlace | null>(null);
   const [destinationPois, setDestinationPois] = useState<NearbyPlace[]>([]);
@@ -19,6 +24,7 @@ export default function ActivitiesPage() {
   const [date, setDate] = useState('');
   const [travelers, setTravelers] = useState(1);
   const [category, setCategory] = useState('ALL');
+  const [sortKey, setSortKey] = useState<ActivitySortKey>('PRICE_ASC');
 
   const handlePlaceSelect = async (place: GeoPlace | null) => {
     setSelectedGeoPlace(place);
@@ -98,10 +104,12 @@ export default function ActivitiesPage() {
     }
   };
 
-  const filtered = activities.filter((act) => {
+  const filtered = useMemo(() => activities.filter((act) => {
     if (category === 'ALL') return true;
     return act.category?.toLowerCase().includes(category.toLowerCase());
-  });
+  }), [activities, category]);
+
+  const sortedActivities = useMemo(() => sortActivities(filtered, sortKey), [filtered, sortKey]);
 
   return (
     <div>
@@ -157,6 +165,7 @@ export default function ActivitiesPage() {
               </label>
               <input
                 type="date"
+                min={today}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 style={{
@@ -174,20 +183,43 @@ export default function ActivitiesPage() {
                 <i className="fas fa-user-friends" style={{ marginRight: '0.4rem' }}></i>
                 Voyageurs
               </label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={travelers}
-                onChange={(e) => setTravelers(parseInt(e.target.value, 10) || 1)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  fontSize: '0.95rem',
-                }}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' }}>
+                <button
+                  type="button"
+                  onClick={() => setTravelers((v) => Math.max(1, v - 1))}
+                  disabled={travelers <= 1}
+                  style={{
+                    width: '40px',
+                    height: '48px',
+                    border: 'none',
+                    background: '#f5f5f5',
+                    fontSize: '1.2rem',
+                    cursor: travelers <= 1 ? 'not-allowed' : 'pointer',
+                    opacity: travelers <= 1 ? 0.4 : 1,
+                  }}
+                >
+                  −
+                </button>
+                <span style={{ flex: 1, textAlign: 'center', fontWeight: 700, fontSize: '1rem' }}>
+                  {travelers}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTravelers((v) => Math.min(20, v + 1))}
+                  disabled={travelers >= 20}
+                  style={{
+                    width: '40px',
+                    height: '48px',
+                    border: 'none',
+                    background: '#f5f5f5',
+                    fontSize: '1.2rem',
+                    cursor: travelers >= 20 ? 'not-allowed' : 'pointer',
+                    opacity: travelers >= 20 ? 0.4 : 1,
+                  }}
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             <div style={{ flex: '1 1 160px' }}>
@@ -342,177 +374,145 @@ export default function ActivitiesPage() {
           )}
 
           {!hasSearched && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(1, 121, 111, 0.1)',
-                  color: '#01796F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-compass"></i>
-              </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Prêt à explorer votre prochaine destination ?
-              </h3>
-              <p style={{ color: '#666', maxWidth: '550px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                Indiquez une ville ou un code IATA ci-dessus (par exemple <strong>Paris</strong>, <strong>Barcelone</strong>, <strong>Rome</strong> ou <strong>Marrakech</strong>) et cliquez sur Rechercher pour découvrir les offres en direct.
-              </p>
-            </div>
+            <EmptyState
+              icon="fa-compass"
+              title="Prêt à explorer votre prochaine destination ?"
+              description="Indiquez une ville ci-dessus (ex: Paris, Barcelone, Rome ou Marrakech) et cliquez sur Rechercher pour découvrir les offres en direct."
+            />
           )}
 
-          {hasSearched && filtered.length === 0 && !loading && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(1, 121, 111, 0.1)',
-                  color: '#01796F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-search-location"></i>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Aucune activité disponible pour le moment
-              </h3>
-              <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                {providerMessage || 'Aucune offre trouvée pour cette sélection. Essayez une autre ville ou date.'}
-              </p>
-            </div>
+          {hasSearched && loading && <ActivitySkeleton count={6} />}
+
+          {hasSearched && !loading && errorMessage && (
+            <ErrorState
+              title="Erreur de recherche"
+              message={errorMessage}
+              onRetry={() => { setHasSearched(false); setErrorMessage(null); setActivities([]); }}
+            />
           )}
 
-          {hasSearched && filtered.length > 0 && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: '2rem',
-              }}
-            >
-              {filtered.map((act) => {
-                const isCustom = act.source === 'YUDING_CUSTOM';
-                const offerKey = act.offerId || act.id || act.title;
+          {hasSearched && !loading && !errorMessage && sortedActivities.length === 0 && (
+            <EmptyState
+              icon="fa-search-location"
+              title="Aucune activité disponible pour le moment"
+              description={providerMessage || 'Aucune offre trouvée pour cette sélection. Essayez une autre ville ou date.'}
+            />
+          )}
 
-                return (
-                  <div
-                    key={offerKey}
-                    style={{
-                      background: 'var(--card, #fff)',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      border: '1px solid rgba(0,0,0,0.06)',
-                    }}
-                  >
-                    <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
-                      <SafeEntityImage
-                        src={act.imageUrl}
-                        alt={act.title}
-                        entityType="ACTIVITY"
-                        className="w-full h-full object-cover"
-                      />
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          background: isCustom ? '#D97706' : '#01796F',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          padding: '0.3rem 0.65rem',
-                          borderRadius: '20px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-                        }}
-                      >
-                        {isCustom ? 'Yuding Sélect' : 'Partenaire HBX'}
-                      </span>
-                    </div>
+          {hasSearched && sortedActivities.length > 0 && (
+            <div>
+              {/* Sort toolbar */}
+              <SortBar
+                count={sortedActivities.length}
+                resultLabel="activité"
+                sortOptions={[
+                  { value: 'PRICE_ASC' as ActivitySortKey, label: 'Prix croissant' },
+                  { value: 'PRICE_DESC' as ActivitySortKey, label: 'Prix décroissant' },
+                ]}
+                currentSort={sortKey}
+                onSortChange={setSortKey}
+              />
 
-                    <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#01796F', textTransform: 'uppercase' }}>
-                          {act.category || 'Excursion'}
-                        </span>
-                        {act.durationHours && (
-                          <span style={{ fontSize: '0.85rem', color: '#888' }}>
-                            <i className="fas fa-clock" style={{ marginRight: '0.3rem' }}></i>
-                            {act.durationHours}h
-                          </span>
-                        )}
-                      </div>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: '2rem',
+                }}
+              >
+                {sortedActivities.map((act) => {
+                  const isCustom = act.source === 'YUDING_CUSTOM';
+                  const offerKey = act.offerId || act.id || act.title;
 
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: '1.4' }}>
-                        {act.title}
-                      </h3>
-                      <p style={{ color: '#666', fontSize: '0.88rem', marginBottom: '1.25rem', lineHeight: '1.5', flexGrow: 1 }}>
-                        {act.description}
-                      </p>
-
-                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
-                        <div>
-                          <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
-                            <PriceDisplay conversion={act.priceConversion} amount={act.price} currency={act.currency} />
-                          </span>
-                          <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
-                        </div>
-
-                        <Link
-                          href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
-                          className="btn-booking"
+                  return (
+                    <div
+                      key={offerKey}
+                      style={{
+                        background: 'var(--card, #fff)',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        border: '1px solid rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
+                        <SafeEntityImage
+                          src={act.imageUrl}
+                          alt={act.title}
+                          entityType="ACTIVITY"
+                          className="w-full h-full object-cover"
+                        />
+                        <span
                           style={{
-                            padding: '0.65rem 1.25rem',
-                            borderRadius: '6px',
-                            backgroundColor: '#01796F',
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            background: isCustom ? '#D97706' : '#01796F',
                             color: '#fff',
-                            textDecoration: 'none',
+                            fontSize: '0.75rem',
                             fontWeight: 700,
-                            fontSize: '0.9rem',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '20px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
                           }}
                         >
-                          Réserver
-                        </Link>
+                          {isCustom ? 'Yuding Sélect' : 'Partenaire HBX'}
+                        </span>
+                      </div>
+
+                      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#01796F', textTransform: 'uppercase' }}>
+                            {act.category || 'Excursion'}
+                          </span>
+                          {act.durationHours && (
+                            <span style={{ fontSize: '0.85rem', color: '#888' }}>
+                              <i className="fas fa-clock" style={{ marginRight: '0.3rem' }}></i>
+                              {act.durationHours}h
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: '1.4' }}>
+                          {act.title}
+                        </h3>
+                        <p style={{ color: '#666', fontSize: '0.88rem', marginBottom: '1.25rem', lineHeight: '1.5', flexGrow: 1 }}>
+                          {act.description}
+                        </p>
+
+                        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
+                          <div>
+                            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
+                              <PriceDisplay conversion={act.priceConversion} amount={act.price} currency={act.currency} />
+                            </span>
+                            <span style={{ fontSize: '0.8rem', color: '#888' }}> / pers.</span>
+                          </div>
+
+                          <Link
+                            href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
+                            className="btn-booking"
+                            style={{
+                              padding: '0.65rem 1.25rem',
+                              borderRadius: '6px',
+                              backgroundColor: '#01796F',
+                              color: '#fff',
+                              textDecoration: 'none',
+                              fontWeight: 700,
+                              fontSize: '0.9rem',
+                            }}
+                          >
+                            Réserver
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

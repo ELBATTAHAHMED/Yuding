@@ -12,8 +12,12 @@ import {
   isMinibusOrRental,
   type TransferCategoryFilter,
 } from '@/lib/transfer-filters';
+import { sortTransfers } from '@/lib/search-ux';
+import type { TransferSortKey } from '@/lib/search-ux';
 import { TransferLocationSelector, LocationSuggestion } from '@/components/travel/TransferLocationSelector';
+import { TransferSkeleton } from '@/components/travel/TransferSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
+import { EmptyState, ErrorState, SortBar } from '@/components/ui';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -58,9 +62,11 @@ export default function TransfersPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [sortKey, setSortKey] = useState<TransferSortKey>('PRICE_ASC');
 
   const categoryCounts = useMemo(() => getTransferCategoryCounts(transfers), [transfers]);
   const filteredTransfers = useMemo(() => filterTransfers(transfers, transportType), [transfers, transportType]);
+  const sortedTransfers = useMemo(() => sortTransfers(filteredTransfers, sortKey), [filteredTransfers, sortKey]);
 
   const handleSwap = () => {
     const temp = pickup;
@@ -474,81 +480,47 @@ export default function TransfersPage() {
           )}
 
           {!hasSearched && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(1, 121, 111, 0.1)',
-                  color: '#01796F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-route"></i>
-              </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Trouvez votre transfert direct depuis l&apos;aéroport
-              </h3>
-              <p style={{ color: '#666', maxWidth: '550px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                Entrez votre aéroport d&apos;arrivée (ex: <strong>CDG</strong> pour Paris, <strong>BCN</strong> pour Barcelone, <strong>RAK</strong> pour Marrakech) et votre destination pour afficher les véhicules et tarifs en direct.
-              </p>
-            </div>
+            <EmptyState
+              icon="fa-route"
+              title="Trouvez votre transfert depuis l'aéroport"
+              description="Entrez votre aéroport d'arrivée (ex: CDG pour Paris, BCN pour Barcelone, RAK pour Marrakech) et votre destination pour afficher les véhicules et tarifs en direct."
+            />
           )}
 
-          {hasSearched && transfers.length === 0 && !loading && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '3.5rem 1.5rem',
-                background: 'var(--card, #fff)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(1, 121, 111, 0.1)',
-                  color: '#01796F',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.8rem',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
-                <i className="fas fa-car-side"></i>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Aucun moyen de transport disponible pour le moment
-              </h3>
-              <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                {providerMessage || 'Aucune offre trouvée pour ce trajet. Vérifiez vos aéroports et dates de voyage.'}
-              </p>
-            </div>
+          {hasSearched && loading && <TransferSkeleton count={5} />}
+
+          {hasSearched && !loading && errorMessage && (
+            <ErrorState
+              title="Erreur de recherche"
+              message={errorMessage}
+              onRetry={() => { setHasSearched(false); setErrorMessage(null); setTransfers([]); }}
+            />
           )}
 
-          {/* Render filtered transfers list */}
-          {hasSearched && transfers.length > 0 && filteredTransfers.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {filteredTransfers.map((item) => {
+          {hasSearched && !loading && !errorMessage && transfers.length === 0 && (
+            <EmptyState
+              icon="fa-car-side"
+              title="Aucun moyen de transport disponible"
+              description={providerMessage || 'Aucune offre trouvée pour ce trajet. Vérifiez vos aéroports et dates de voyage.'}
+            />
+          )}
+
+          {/* Render sorted + filtered transfers list */}
+          {hasSearched && transfers.length > 0 && sortedTransfers.length > 0 && (
+            <div>
+              <SortBar
+                count={sortedTransfers.length}
+                resultLabel="transfert"
+                sortOptions={[
+                  { value: 'PRICE_ASC' as TransferSortKey, label: 'Prix croissant' },
+                  { value: 'PRICE_DESC' as TransferSortKey, label: 'Prix décroissant' },
+                ]}
+                currentSort={sortKey}
+                onSortChange={setSortKey}
+              />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {sortedTransfers.map((item) => {
                 const offerKey = item.offerId || item.id || `trf-${item.price}`;
                 const isPrivate = isPrivateTransfer(item);
                 const isShuttle = isSharedNavette(item);
@@ -672,10 +644,11 @@ export default function TransfersPage() {
                 );
               })}
             </div>
+            </div>
           )}
 
           {/* Filter empty state: has search results, but none match current filter */}
-          {hasSearched && transfers.length > 0 && filteredTransfers.length === 0 && !loading && (
+          {hasSearched && transfers.length > 0 && sortedTransfers.length === 0 && !loading && (
             <div
               style={{
                 textAlign: 'center',
