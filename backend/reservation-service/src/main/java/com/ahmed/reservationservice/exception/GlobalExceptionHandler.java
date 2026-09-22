@@ -99,6 +99,62 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatusCode()).body(response);
     }
 
+    @ExceptionHandler(com.ahmed.reservationservice.domain.exception.BookingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotFound(com.ahmed.reservationservice.domain.exception.BookingNotFoundException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Booking not found on {}: {}", requestId, request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(com.ahmed.reservationservice.domain.exception.BookingOwnershipException.class)
+    public ResponseEntity<ErrorResponse> handleBookingOwnership(com.ahmed.reservationservice.domain.exception.BookingOwnershipException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Booking ownership violation on {}: {}", requestId, request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "You do not have permission to access or modify this booking",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransition(com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Invalid booking transition on {}: {}", requestId, request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(com.ahmed.reservationservice.domain.exception.BookingConflictException.class)
+    public ResponseEntity<ErrorResponse> handleBookingConflict(com.ahmed.reservationservice.domain.exception.BookingConflictException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Booking conflict on {}: {}", requestId, request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request) {
         String requestId = getOrGenerateRequestId(request);

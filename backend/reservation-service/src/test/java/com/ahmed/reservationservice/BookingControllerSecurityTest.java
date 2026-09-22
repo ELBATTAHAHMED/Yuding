@@ -1,0 +1,224 @@
+package com.ahmed.reservationservice;
+
+import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
+import com.ahmed.reservationservice.domain.exception.BookingNotFoundException;
+import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
+import com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException;
+import com.ahmed.reservationservice.domain.model.Booking;
+import com.ahmed.reservationservice.domain.model.BookingStatus;
+import com.ahmed.reservationservice.domain.model.ProductType;
+import com.ahmed.reservationservice.domain.service.BookingService;
+import com.ahmed.reservationservice.feigh.UtilisateurFeign;
+import com.ahmed.reservationservice.repositories.ReservationRepository;
+import com.ahmed.reservationservice.services.ActiviteesServices;
+import com.ahmed.reservationservice.services.HebergementsServices;
+import com.ahmed.reservationservice.services.ReservationServices;
+import com.ahmed.reservationservice.services.TransportsServices;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "spring.cloud.config.enabled=false",
+        "eureka.client.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=none"
+})
+class BookingControllerSecurityTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private BookingService bookingService;
+
+    // Legacy mock beans to prevent application context startup failures
+    @MockBean
+    private ReservationServices reservationServices;
+
+    @MockBean
+    private ReservationRepository reservationRepository;
+
+    @MockBean
+    private HebergementsServices hebergementsServices;
+
+    @MockBean
+    private TransportsServices transportsServices;
+
+    @MockBean
+    private ActiviteesServices activiteesServices;
+
+    @MockBean
+    private UtilisateurFeign utilisateurFeign;
+
+    private Booking createSampleBooking(UUID id, UUID userId, ProductType productType, BookingStatus status) {
+        Instant now = Instant.now();
+        return Booking.builder()
+                .id(id)
+                .userId(userId)
+                .productType(productType)
+                .status(status)
+                .createdAt(now)
+                .updatedAt(now)
+                .statusChangedAt(now)
+                .expiresAt(status.canExpire() ? now.plusSeconds(1800) : null)
+                .version(0)
+                .build();
+    }
+
+    @Test
+    @DisplayName("Anonymous access to POST /bookings is rejected with 401 Unauthorized")
+    void anonymous_createBooking_rejectedWith401() throws Exception {
+        CreateDraftBookingRequest req = new CreateDraftBookingRequest(ProductType.FLIGHT);
+
+        mockMvc.perform(post("/bookings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Authenticated user can create a DRAFT booking (201 Created)")
+    void authenticatedUser_createDraftBooking_returns201() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID bookingId = UUID.randomUUID();
+        CreateDraftBookingRequest req = new CreateDraftBookingRequest(ProductType.HOTEL);
+
+        Booking booking = createSampleBooking(bookingId, userId, ProductType.HOTEL, BookingStatus.DRAFT);
+        when(bookingService.createDraft(eq(userId), eq(ProductType.HOTEL))).thenReturn(booking);
+
+        mockMvc.perform(post("/bookings")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(bookingId.toString()))
+                .andExpect(jsonPath("$.userId").value(userId.toString()))
+                .andExpect(jsonPath("$.productType").value("HOTEL"))
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    @Test
+    @DisplayName("User can retrieve their own booking on GET /bookings/{id} (200 OK)")
+    void user_canGetOwnBooking_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID bookingId = UUID.randomUUID();
+        Booking booking = createSampleBooking(bookingId, userId, ProductType.TRAIN, BookingStatus.DRAFT);
+
+        when(bookingService.getBooking(eq(bookingId), eq(userId), eq(false))).thenReturn(booking);
+
+        mockMvc.perform(get("/bookings/" + bookingId)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(bookingId.toString()))
+                .andExpect(jsonPath("$.productType").value("TRAIN"));
+    }
+
+    @Test
+    @DisplayName("IDOR Defense: User cannot retrieve another user's booking (403 Forbidden)")
+    void idor_userCannotGetAnotherUsersBooking_returns403() throws Exception {
+        UUID userA = UUID.randomUUID();
+        UUID userB = UUID.randomUUID();
+        UUID bookingId = UUID.randomUUID();
+
+        when(bookingService.getBooking(eq(bookingId), eq(userB), eq(false)))
+                .thenThrow(new BookingOwnershipException(bookingId, userB));
+
+        mockMvc.perform(get("/bookings/" + bookingId)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userB.toString()))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /bookings/{id} returns 404 when booking is not found")
+    void bookingNotFound_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID bookingId = UUID.randomUUID();
+
+        when(bookingService.getBooking(eq(bookingId), eq(userId), eq(false)))
+                .thenThrow(new BookingNotFoundException(bookingId));
+
+        mockMvc.perform(get("/bookings/" + bookingId)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /bookings/me lists all bookings belonging to the caller (200 OK)")
+    void getMyBookings_returnsUserBookings() throws Exception {
+        UUID userId = UUID.randomUUID();
+        List<Booking> bookings = List.of(
+                createSampleBooking(UUID.randomUUID(), userId, ProductType.FLIGHT, BookingStatus.DRAFT),
+                createSampleBooking(UUID.randomUUID(), userId, ProductType.HOTEL, BookingStatus.CONFIRMED)
+        );
+
+        when(bookingService.getUserBookings(userId)).thenReturn(bookings);
+
+        mockMvc.perform(get("/bookings/me")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("POST /bookings/{id}/cancel cancels booking when allowed (200 OK)")
+    void cancelBooking_success_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID bookingId = UUID.randomUUID();
+        Booking cancelled = createSampleBooking(bookingId, userId, ProductType.ACTIVITY, BookingStatus.CANCELLED);
+
+        when(bookingService.cancel(eq(bookingId), eq(userId), eq(false))).thenReturn(cancelled);
+
+        mockMvc.perform(post("/bookings/" + bookingId + "/cancel")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
+    @DisplayName("POST /bookings/{id}/cancel returns 409 Conflict when transition is forbidden")
+    void cancelBooking_forbiddenTransition_returns409() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID bookingId = UUID.randomUUID();
+
+        when(bookingService.cancel(eq(bookingId), eq(userId), eq(false)))
+                .thenThrow(new InvalidBookingTransitionException(BookingStatus.REFUNDED, BookingStatus.CANCELLED));
+
+        mockMvc.perform(post("/bookings/" + bookingId + "/cancel")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"));
+    }
+}

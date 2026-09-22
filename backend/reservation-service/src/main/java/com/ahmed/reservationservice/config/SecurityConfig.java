@@ -71,8 +71,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/apir/hebergements/**", "/apir/transports/**", "/apir/activities/**").hasAnyRole("ADMIN", "CONTENT_MANAGER")
                         .requestMatchers(HttpMethod.DELETE, "/apir/hebergements/**", "/apir/transports/**", "/apir/activities/**").hasAnyRole("ADMIN", "CONTENT_MANAGER")
 
-                        // Reservations & Payments require authentication
-                        .requestMatchers("/apir/reservations/**", "/apir/paiements/**").authenticated()
+                        // Reservations, Bookings & Payments require authentication
+                        .requestMatchers("/apir/reservations/**", "/apir/paiements/**", "/bookings/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
