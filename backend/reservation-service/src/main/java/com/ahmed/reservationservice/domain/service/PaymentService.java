@@ -248,6 +248,21 @@ public class PaymentService {
                     .build();
         }
 
+        if (payment.getStatus() == PaymentStatus.AWAITING_WEBHOOK) {
+            log.info("PaymentService: Payment [{}] is already awaiting webhook confirmation for booking [{}]",
+                    payment.getPaymentReference(), bookingReference);
+            return PaymentCaptureResponseDto.builder()
+                    .bookingReference(bookingReference)
+                    .paymentReference(payment.getPaymentReference())
+                    .providerTransactionId(payment.getProviderTransactionId())
+                    .paymentStatus(PaymentStatus.AWAITING_WEBHOOK.name())
+                    .bookingStatus(booking.getStatus().name())
+                    .amount(payment.getAmount())
+                    .currency(payment.getCurrency())
+                    .message("Payment capture already submitted. Awaiting webhook confirmation.")
+                    .build();
+        }
+
         // 4. Resolve provider order id
         String providerOrderId = (request != null && request.getProviderOrderId() != null && !request.getProviderOrderId().isBlank())
                 ? request.getProviderOrderId()
@@ -270,24 +285,25 @@ public class PaymentService {
         Instant now = Instant.now(clock);
 
         if (captureResult.isSuccess()) {
-            // Succeeded: mark payment and booking
-            payment.markSucceeded(captureResult.getProviderTransactionId(), now);
+            // Synchronous capture submitted: record captureId and transition payment to AWAITING_WEBHOOK.
+            // DO NOT mark Booking PAID! Final authority belongs strictly to verified webhook (Phase 40).
+            payment.setProviderTransactionId(captureResult.getProviderTransactionId());
+            payment.setStatus(PaymentStatus.AWAITING_WEBHOOK);
+            payment.setUpdatedAt(now);
             paymentRepository.save(payment);
 
-            booking = bookingService.markPaid(booking.getId());
-
-            log.info("PaymentService: Payment [{}] captured successfully for booking [{}] (captureId={})",
-                    payment.getPaymentReference(), bookingReference, captureResult.getProviderTransactionId());
+            log.info("PaymentService: Payment [{}] capture submitted (captureId={}) for booking [{}]. Status is AWAITING_WEBHOOK.",
+                    payment.getPaymentReference(), captureResult.getProviderTransactionId(), bookingReference);
 
             return PaymentCaptureResponseDto.builder()
                     .bookingReference(bookingReference)
                     .paymentReference(payment.getPaymentReference())
                     .providerTransactionId(captureResult.getProviderTransactionId())
-                    .paymentStatus(PaymentStatus.SUCCEEDED.name())
+                    .paymentStatus(PaymentStatus.AWAITING_WEBHOOK.name())
                     .bookingStatus(booking.getStatus().name())
                     .amount(payment.getAmount())
                     .currency(payment.getCurrency())
-                    .message("Payment captured successfully. Booking is now PAID.")
+                    .message("Payment capture submitted successfully. Awaiting trusted webhook confirmation.")
                     .build();
         } else {
             // Failed: mark payment and booking

@@ -7,6 +7,7 @@ package com.ahmed.reservationservice.domain.model;
 public enum PaymentStatus {
     INITIATED,
     REQUIRES_ACTION,
+    AWAITING_WEBHOOK,
     SUCCEEDED,
     FAILED,
     REFUNDED;

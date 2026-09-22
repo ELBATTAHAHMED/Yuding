@@ -41,12 +41,13 @@ public class PaymentProviderRegistry {
 
         if ("paypal-sandbox".equals(configuredName)) {
             if (!paymentProperties.getPaypal().isConfigured()) {
-                log.warn("PAYPAL SANDBOX NOT CONFIGURED: Falling back to MockPaymentProvider. Add credentials to .env.local to enable real PayPal Sandbox.");
-                PaymentProvider mock = providers.get(MockPaymentProvider.PROVIDER_NAME);
-                if (mock != null) {
-                    return mock;
-                }
+                throw new IllegalStateException("PayPal Sandbox is configured as active provider, but PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET are not set. Explicitly set PAYMENT_PROVIDER=mock if mock mode is desired.");
             }
+            PaymentProvider paypal = providers.get(PayPalSandboxPaymentProvider.PROVIDER_NAME);
+            if (paypal != null) {
+                return paypal;
+            }
+            throw new IllegalStateException("PayPal Sandbox provider bean not found in application context.");
         }
 
         PaymentProvider provider = providers.get(configuredName);
@@ -54,8 +55,7 @@ public class PaymentProviderRegistry {
             return provider;
         }
 
-        log.warn("Requested provider [{}] not found. Falling back to MockPaymentProvider.", configuredName);
-        return providers.getOrDefault(MockPaymentProvider.PROVIDER_NAME, providers.values().stream().findFirst().orElseThrow());
+        throw new IllegalArgumentException("Unknown payment provider configured: " + configuredName);
     }
 
     /**

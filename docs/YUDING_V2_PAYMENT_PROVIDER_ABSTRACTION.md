@@ -49,15 +49,17 @@ Phase 38 establishes a **provider-neutral payment architecture** for Yuding V2. 
 | - payment_reference: PAY-XXXXXXXX                                        |
 | - pricing_quote_id: FK to booking.server_pricing_quotes                  |
 | - provider_name, provider_order_id, provider_transaction_id              |
-| - status: INITIATED -> REQUIRES_ACTION -> SUCCEEDED / FAILED             |
+| - status: INITIATED -> REQUIRES_ACTION -> AWAITING_WEBHOOK -> SUCCEEDED / FAILED
 +--------------------------------------------------------------------------+
                                     |
                                     v
 +--------------------------------------------------------------------------+
-| Booking Lifecycle State Transitions                                      |
-| - initiatePaymentOrder() -> BookingStatus.PENDING_PAYMENT                |
-| - capturePayment(SUCCESS)-> BookingStatus.PAID                           |
-| - capturePayment(FAIL)   -> BookingStatus.PAYMENT_FAILED                 |
+| Booking Lifecycle State Transitions (Phase 40 Webhook Authority)         |
+| - initiatePaymentOrder()      -> BookingStatus.PENDING_PAYMENT           |
+| - capturePayment(HTTP 200)    -> PaymentStatus.AWAITING_WEBHOOK          |
+|                                  (Booking remains PENDING_PAYMENT)       |
+| - webhook(CAPTURE.COMPLETED)  -> PaymentStatus.SUCCEEDED, Booking.PAID   |
+| - webhook(CAPTURE.DENIED)     -> PaymentStatus.FAILED, PAYMENT_FAILED    |
 +--------------------------------------------------------------------------+
 ```
 
