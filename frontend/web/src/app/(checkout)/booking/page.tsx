@@ -17,7 +17,12 @@ function BookingContent() {
   const serviceId = searchParams.get('serviceId') || '101';
   const selectionRef = searchParams.get('selectionRef') || searchParams.get('offerId') || searchParams.get('serviceId') || '';
   const serviceTitle = searchParams.get('serviceTitle') || 'Séjour Découverte Yuding';
-  const basePrice = parseFloat(searchParams.get('price') || '120');
+  const rawPrice = searchParams.get('price');
+  const parsedPrice = rawPrice ? parseFloat(rawPrice) : NaN;
+  const isPriced = !isNaN(parsedPrice) && parsedPrice > 0;
+  const basePrice = isPriced ? parsedPrice : null;
+  const rawCurrency = searchParams.get('currency');
+  const currency = rawCurrency ? rawCurrency.trim().toUpperCase() : 'EUR';
 
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(
@@ -35,6 +40,7 @@ function BookingContent() {
     statusMessage,
     error: flowError,
     revalidationData,
+    pricingData,
     isPriceChangeModalOpen,
     startBookingFlow,
     handleAcceptPriceChange,
@@ -43,7 +49,17 @@ function BookingContent() {
 
   const [localError, setLocalError] = useState<string | null>(null);
   const displayError = flowError || localError;
-  const totalPrice = basePrice * quantity;
+
+  const hasAuthoritativePrice = pricingData?.totalAmount != null && pricingData.totalAmount > 0;
+  const displayTotal = hasAuthoritativePrice
+    ? `${pricingData.totalAmount} ${pricingData.currency || currency}`
+    : isPriced && basePrice != null
+    ? `${(basePrice * quantity).toFixed(2).replace(/\.00$/, '')} ${currency}`
+    : 'Tarif indisponible';
+
+  const displayUnitPrice = isPriced && basePrice != null
+    ? `${basePrice.toFixed(2).replace(/\.00$/, '')} ${currency}`
+    : 'Tarif indisponible';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,7 +265,11 @@ function BookingContent() {
                 ) : (
                   <>
                     <i className="fas fa-lock"></i>
-                    <span>Procéder au Paiement Sécurisé ({totalPrice} € estimé)</span>
+                    <span>
+                      {isPriced && basePrice != null
+                        ? `Procéder au Paiement Sécurisé (${displayTotal} estimé)`
+                        : 'Valider et tarifier le dossier'}
+                    </span>
                   </>
                 )}
               </button>
@@ -273,7 +293,7 @@ function BookingContent() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
               <span style={{ color: '#666' }}>Prix indicatif unitaire</span>
-              <span style={{ fontWeight: 600 }}>{basePrice} €</span>
+              <span style={{ fontWeight: 600 }}>{displayUnitPrice}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
@@ -295,8 +315,10 @@ function BookingContent() {
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>Total estimé</span>
-              <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>{totalPrice} €</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                {hasAuthoritativePrice ? 'Total certifié' : 'Total estimé'}
+              </span>
+              <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#01796F' }}>{displayTotal}</span>
             </div>
 
             <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem', lineHeight: '1.4' }}>

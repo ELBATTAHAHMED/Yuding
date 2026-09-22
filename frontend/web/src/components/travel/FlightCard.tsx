@@ -12,9 +12,10 @@ export interface FlightCardProps {
 export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }) => {
   const displayName = flight.airlineName || flight.airlineCode || '—';
   const selRef = flight.selectionRef || flight.offerId;
+  const isPriced = flight.price != null && flight.price > 0;
   const bookingUrl = `/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(
     `${displayName} (${flight.origin} → ${flight.destination})`
-  )}&price=${flight.price}`;
+  )}${isPriced ? `&price=${flight.price}` : ''}&currency=${encodeURIComponent(flight.currency || 'EUR')}`;
 
   const durationLabel = flight.totalDurationMinutes
     ? `${Math.floor(flight.totalDurationMinutes / 60)}h${flight.totalDurationMinutes % 60 > 0 ? ` ${flight.totalDurationMinutes % 60}m` : ''}`
@@ -99,13 +100,23 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
           >
             <span>Détails</span>
           </Link>
-          <Link
-            href={bookingUrl}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-[#01796F] hover:bg-[#005951] text-white text-sm font-semibold transition-colors shadow-sm hover:shadow shrink-0"
-          >
-            <i className="fas fa-ticket-alt text-xs" />
-            <span>Réserver</span>
-          </Link>
+          {isPriced ? (
+            <Link
+              href={bookingUrl}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-[#01796F] hover:bg-[#005951] text-white text-sm font-semibold transition-colors shadow-sm hover:shadow shrink-0"
+            >
+              <i className="fas fa-ticket-alt text-xs" />
+              <span>Réserver</span>
+            </Link>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm font-semibold cursor-not-allowed shrink-0"
+              title="Tarif indisponible pour réservation en ligne"
+            >
+              <i className="fas fa-ban text-xs" />
+              <span>Indisponible</span>
+            </span>
+          )}
         </div>
       </div>
     </Card>

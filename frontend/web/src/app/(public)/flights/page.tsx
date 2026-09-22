@@ -494,14 +494,23 @@ export default function FlightsPage() {
                         Voir détails
                       </Link>
 
-                      <Link
-                        href={`/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(flight.selectionRef || flight.offerId)}&serviceTitle=${encodeURIComponent(
-                          `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
-                        )}&price=${flight.price}`}
-                        className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
-                      >
-                        Réserver
-                      </Link>
+                      {flight.price != null && flight.price > 0 ? (
+                        <Link
+                          href={`/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(flight.selectionRef || flight.offerId)}&serviceTitle=${encodeURIComponent(
+                            `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
+                          )}&price=${flight.price}&currency=${encodeURIComponent(flight.currency || 'EUR')}`}
+                          className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
+                        >
+                          Réserver
+                        </Link>
+                      ) : (
+                        <span
+                          className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold text-xs whitespace-nowrap cursor-not-allowed"
+                          title="Tarif indisponible pour ce vol"
+                        >
+                          Indisponible
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
