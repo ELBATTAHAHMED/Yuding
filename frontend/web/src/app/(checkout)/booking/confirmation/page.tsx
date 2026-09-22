@@ -59,10 +59,93 @@ function BookingConfirmationContent() {
     );
   }
 
-  // Guard: If booking exists but status is NOT PAID, alert the user and guide to payment
-  const isUnpaid = booking && booking.status !== 'PAID' && !paymentRef;
+  // Guard: If booking exists but status is NOT PAID, enforce backend truth regardless of query parameters
+  const isNotPaid = booking && booking.status !== 'PAID';
 
-  if (isUnpaid) {
+  if (isNotPaid) {
+    if (booking.status === 'PENDING_PAYMENT') {
+      return (
+        <div style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem' }}>
+          <div
+            className="container"
+            style={{
+              maxWidth: '650px',
+              background: 'var(--card, #fff)',
+              borderRadius: '16px',
+              padding: '3rem 2rem',
+              textAlign: 'center',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+            }}
+          >
+            <div style={{ color: '#01796F', fontSize: '3.5rem', marginBottom: '1.5rem' }}>
+              <i className="fas fa-spinner fa-spin" />
+            </div>
+
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text, #001b1a)' }}>
+              Confirmation du paiement en cours…
+            </h1>
+
+            <div
+              style={{
+                display: 'inline-block',
+                padding: '0.5rem 1.5rem',
+                backgroundColor: '#e6f4f2',
+                color: '#01796F',
+                borderRadius: '20px',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                marginBottom: '1.5rem',
+              }}
+            >
+              Statut du dossier : PENDING_PAYMENT
+            </div>
+
+            <p style={{ fontSize: '1rem', color: '#555', lineHeight: '1.7', marginBottom: '2rem' }}>
+              Le dossier <strong>{reference}</strong> est en attente de confirmation sécurisée par le webhook officiel du prestataire.
+              Cette opération se finalise automatiquement dès validation par le réseau bancaire.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="btn-booking"
+                style={{
+                  padding: '0.85rem 2rem',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#01796F',
+                }}
+              >
+                <i className="fas fa-sync-alt" />
+                Actualiser le statut
+              </button>
+
+              <Link
+                href="/account/bookings"
+                style={{
+                  padding: '0.85rem 2rem',
+                  borderRadius: '8px',
+                  border: '1px solid #01796F',
+                  color: '#01796F',
+                  textDecoration: 'none',
+                  fontWeight: 700,
+                }}
+              >
+                Mes réservations
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem' }}>
         <div

@@ -29,9 +29,14 @@ public class PaymentProperties {
         private String baseUrl = "https://api-m.sandbox.paypal.com";
         private String clientId = "";
         private String clientSecret = "";
+        private String webhookId = "";
 
         public boolean isConfigured() {
             return clientId != null && !clientId.isBlank() && clientSecret != null && !clientSecret.isBlank();
+        }
+
+        public boolean isWebhookConfigured() {
+            return webhookId != null && !webhookId.isBlank();
         }
     }
 }

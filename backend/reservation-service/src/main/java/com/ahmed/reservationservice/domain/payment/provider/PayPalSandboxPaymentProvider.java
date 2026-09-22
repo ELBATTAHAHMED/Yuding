@@ -185,7 +185,7 @@ public class PayPalSandboxPaymentProvider implements PaymentProvider {
      * Authenticates with PayPal Sandbox via OAuth 2.0 Client Credentials.
      * Caches access token with TTL safety margin.
      */
-    private synchronized String getAccessToken() {
+    public synchronized String getAccessToken() {
         Instant now = Instant.now();
         if (cachedAccessToken != null && now.isBefore(tokenExpiresAt)) {
             return cachedAccessToken;

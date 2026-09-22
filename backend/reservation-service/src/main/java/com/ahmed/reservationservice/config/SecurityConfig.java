@@ -71,6 +71,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/apir/hebergements/**", "/apir/transports/**", "/apir/activities/**").hasAnyRole("ADMIN", "CONTENT_MANAGER")
                         .requestMatchers(HttpMethod.DELETE, "/apir/hebergements/**", "/apir/transports/**", "/apir/activities/**").hasAnyRole("ADMIN", "CONTENT_MANAGER")
 
+                        // Inbound payment provider webhook (secured via PayPal signature verification, not user JWT)
+                        .requestMatchers(HttpMethod.POST, "/webhooks/paypal").permitAll()
+
                         // Reservations, Bookings & Payments require authentication
                         .requestMatchers("/apir/reservations/**", "/apir/paiements/**", "/bookings/**").authenticated()
 

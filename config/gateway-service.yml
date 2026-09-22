@@ -25,7 +25,7 @@ spring:
         - id: reservation-route
           uri: lb://RESERVATION-SERVICE
           predicates:
-            - Path=/apir/**,/bookings/**
+            - Path=/apir/**,/bookings/**,/webhooks/paypal
         - id: identity-route
           uri: lb://IDENTITY-SERVICE
           predicates:

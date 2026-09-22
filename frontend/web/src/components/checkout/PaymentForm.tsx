@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { paymentService } from '@/services/payment.service';
+import { bookingService } from '@/services/booking.service';
 import { BookingPricingResponseDto } from '@/types/booking.types';
 import { PaymentOrderResponseDto } from '@/types/payment.types';
 import { CardPreview } from './CardPreview';
@@ -28,6 +30,8 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingOrder, setPendingOrder] = useState<PaymentOrderResponseDto | null>(null);
+  const [waitingForWebhook, setWaitingForWebhook] = useState(false);
+  const [webhookTimeout, setWebhookTimeout] = useState(false);
 
   // Format authoritative total amount
   const formattedAmount = pricing.totalAmount != null
@@ -84,6 +88,34 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           router.push(
             `/booking/confirmation?reference=${bookingReference}&payment=${captureResult.paymentReference}&amount=${captureResult.amount}&currency=${captureResult.currency}`
           );
+        }
+      } else if (captureResult.paymentStatus === 'AWAITING_WEBHOOK') {
+        setWaitingForWebhook(true);
+        // Bounded polling for webhook-confirmed PAID status (15 attempts x 2s = 30s)
+        let confirmed = false;
+        for (let attempt = 0; attempt < 15; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          try {
+            const currentBooking = await bookingService.getBookingByReference(bookingReference);
+            if (currentBooking.status === 'PAID') {
+              confirmed = true;
+              break;
+            }
+          } catch (pollErr) {
+            console.warn('Polling check error:', pollErr);
+          }
+        }
+
+        if (confirmed) {
+          if (onPaymentSuccess) {
+            onPaymentSuccess(captureResult.paymentReference);
+          } else {
+            router.push(
+              `/booking/confirmation?reference=${bookingReference}&payment=${captureResult.paymentReference}&amount=${captureResult.amount}&currency=${captureResult.currency}`
+            );
+          }
+        } else {
+          setWebhookTimeout(true);
         }
       } else {
         setError(captureResult.message || 'Le paiement a échoué. Veuillez vérifier vos coordonnées et réessayer.');
@@ -562,65 +594,140 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 </div>
               )}
 
-              {/* Primary Pay Action CTA */}
-              <button
-                type={isCardMode ? 'button' : 'submit'}
-                onClick={isCardMode ? () => setSelectedMethod('paypal') : undefined}
-                disabled={isLoading}
-                style={{
-                  marginTop: '1.75rem',
-                  width: '100%',
-                  padding: '1rem 1.5rem',
-                  borderRadius: '12px',
-                  background:
-                    selectedMethod === 'paypal'
-                      ? 'linear-gradient(135deg, #0070BA 0%, #003087 100%)'
-                      : 'linear-gradient(135deg, #01796F 0%, #005951 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  fontSize: '1.05rem',
-                  fontWeight: 700,
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.75rem',
-                  boxShadow:
-                    selectedMethod === 'paypal'
-                      ? '0 8px 20px -4px rgba(0, 112, 186, 0.35)'
-                      : '0 8px 20px -4px rgba(1, 121, 111, 0.35)',
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading) {
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin" />
-                    <span>Traitement sécurisé en cours...</span>
-                  </>
-                ) : isCardMode ? (
-                  <>
-                    <i className="fab fa-paypal" />
-                    <span>Basculer sur PayPal Sandbox pour régler {formattedAmount}</span>
-                    <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-lock" />
-                    <span>Payer avec PayPal ({formattedAmount})</span>
-                    <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
-                  </>
-                )}
-              </button>
+              {/* Primary Pay Action CTA or Webhook Confirmation Pending View */}
+              {waitingForWebhook ? (
+                <div
+                  style={{
+                    marginTop: '1.75rem',
+                    padding: '1.5rem',
+                    borderRadius: '16px',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    textAlign: 'center',
+                  }}
+                >
+                  {!webhookTimeout ? (
+                    <>
+                      <div style={{ color: '#01796F', fontSize: '2rem', marginBottom: '0.75rem' }}>
+                        <i className="fas fa-spinner fa-spin" />
+                      </div>
+                      <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
+                        Confirmation du paiement en cours…
+                      </h4>
+                      <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+                        Votre règlement a été soumis avec succès. Nous attendons la confirmation finale sécurisée du webhook pour valider votre réservation.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ color: '#f59e0b', fontSize: '2rem', marginBottom: '0.75rem' }}>
+                        <i className="fas fa-clock" />
+                      </div>
+                      <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
+                        Le paiement est en cours de vérification
+                      </h4>
+                      <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+                        La confirmation finale du prestataire est en attente. Vous pouvez actualiser la vérification ou retrouver votre dossier dans vos réservations.
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => window.location.reload()}
+                          className="btn-booking"
+                          style={{
+                            padding: '0.6rem 1.25rem',
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            background: '#01796F',
+                            color: '#ffffff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                        >
+                          <i className="fas fa-sync-alt" /> Actualiser
+                        </button>
+                        <Link
+                          href="/account/bookings"
+                          style={{
+                            padding: '0.6rem 1.25rem',
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            border: '1px solid #cbd5e1',
+                            color: '#475569',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          Mes réservations
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type={isCardMode ? 'button' : 'submit'}
+                  onClick={isCardMode ? () => setSelectedMethod('paypal') : undefined}
+                  disabled={isLoading}
+                  style={{
+                    marginTop: '1.75rem',
+                    width: '100%',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '12px',
+                    background:
+                      selectedMethod === 'paypal'
+                        ? 'linear-gradient(135deg, #0070BA 0%, #003087 100%)'
+                        : 'linear-gradient(135deg, #01796F 0%, #005951 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontSize: '1.05rem',
+                    fontWeight: 700,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.75rem',
+                    boxShadow:
+                      selectedMethod === 'paypal'
+                        ? '0 8px 20px -4px rgba(0, 112, 186, 0.35)'
+                        : '0 8px 20px -4px rgba(1, 121, 111, 0.35)',
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isLoading) {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin" />
+                      <span>Traitement sécurisé en cours...</span>
+                    </>
+                  ) : isCardMode ? (
+                    <>
+                      <i className="fab fa-paypal" />
+                      <span>Basculer sur PayPal Sandbox pour régler {formattedAmount}</span>
+                      <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-lock" />
+                      <span>Payer avec PayPal ({formattedAmount})</span>
+                      <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
+                    </>
+                  )}
+                </button>
+              )}
             </form>
           </div>
 

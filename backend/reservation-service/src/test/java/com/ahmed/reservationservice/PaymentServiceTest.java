@@ -183,7 +183,6 @@ class PaymentServiceTest {
         when(bookingRepository.findByBookingReference(bookingRef)).thenReturn(Optional.of(booking));
         when(paymentRepository.findByPaymentReference("PAY-ABC12345")).thenReturn(Optional.of(payment));
         when(providerRegistry.getProvider("mock")).thenReturn(new MockPaymentProvider());
-        when(bookingService.markPaid(any())).thenReturn(booking);
 
         PaymentCaptureRequestDto request = PaymentCaptureRequestDto.builder()
                 .paymentReference("PAY-ABC12345")
@@ -193,10 +192,10 @@ class PaymentServiceTest {
                 bookingRef, request, userId.toString(), List.of("ROLE_USER"));
 
         assertThat(response).isNotNull();
-        assertThat(response.getPaymentStatus()).isEqualTo("SUCCEEDED");
+        assertThat(response.getPaymentStatus()).isEqualTo("AWAITING_WEBHOOK");
         assertThat(response.getProviderTransactionId()).startsWith("MOCK-CAPTURE-");
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCEEDED);
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.AWAITING_WEBHOOK);
 
-        verify(bookingService).markPaid(booking.getId());
+        verify(bookingService, org.mockito.Mockito.never()).markPaid(any());
     }
 }

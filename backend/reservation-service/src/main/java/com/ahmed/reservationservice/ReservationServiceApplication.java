@@ -49,6 +49,8 @@ public class ReservationServiceApplication {
                                     System.setProperty("yuding.payment.paypal.client-id", val);
                                 } else if ("PAYPAL_CLIENT_SECRET".equals(key)) {
                                     System.setProperty("yuding.payment.paypal.client-secret", val);
+                                } else if ("PAYPAL_WEBHOOK_ID".equals(key)) {
+                                    System.setProperty("yuding.payment.paypal.webhook-id", val);
                                 }
                             }
                         }
