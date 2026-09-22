@@ -12,8 +12,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Safe public projection of a Booking.
- * Hides JPA entity version and internal details while exposing authoritative lifecycle state.
+ * Safe public projection of a Booking for public API responses.
+ * Uses the public Booking Reference (YUD-XXXXXXXX) as the external identifier,
+ * completely hiding internal database primary key UUIDs.
  */
 @Data
 @Builder
@@ -21,7 +22,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class BookingResponseDto {
 
-    private UUID id;
+    private String bookingReference;
     private UUID userId;
     private ProductType productType;
     private BookingStatus status;
@@ -35,7 +36,7 @@ public class BookingResponseDto {
             return null;
         }
         return BookingResponseDto.builder()
-                .id(booking.getId())
+                .bookingReference(booking.getBookingReference())
                 .userId(booking.getUserId())
                 .productType(booking.getProductType())
                 .status(booking.getStatus())

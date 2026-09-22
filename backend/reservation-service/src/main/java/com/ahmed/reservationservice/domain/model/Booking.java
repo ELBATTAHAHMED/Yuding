@@ -1,5 +1,6 @@
 package com.ahmed.reservationservice.domain.model;
 
+import com.ahmed.reservationservice.domain.service.BookingReferenceGenerator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,7 +21,8 @@ import java.util.UUID;
 
 /**
  * Booking Aggregate Root for Yuding V2.
- * Strictly encapsulates lifecycle status mutations, UTC timestamps, and optimistic locking.
+ * Strictly encapsulates internal UUID, public booking reference (YUD-XXXXXXXX),
+ * lifecycle status mutations, UTC timestamps, and optimistic locking.
  */
 @Entity
 @Table(name = "bookings", schema = "booking")
@@ -33,6 +35,9 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "booking_reference", nullable = false, unique = true, length = 16, updatable = false)
+    private String bookingReference;
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
@@ -62,19 +67,23 @@ public class Booking {
     private Integer version;
 
     /**
-     * Domain factory method to initialize a new DRAFT booking shell.
+     * Domain factory method to initialize a new DRAFT booking shell with an immutable public reference.
      */
-    public static Booking createDraft(UUID userId, ProductType productType, Instant now, Instant expiresAt) {
+    public static Booking createDraft(UUID userId, ProductType productType, String bookingReference, Instant now, Instant expiresAt) {
         if (userId == null) {
             throw new IllegalArgumentException("User ID cannot be null");
         }
         if (productType == null) {
             throw new IllegalArgumentException("Product type cannot be null");
         }
+        if (bookingReference == null || !BookingReferenceGenerator.isValid(bookingReference)) {
+            throw new IllegalArgumentException("Valid booking reference (YUD-XXXXXXXX) is required");
+        }
         Instant timestamp = now != null ? now : Instant.now();
         return Booking.builder()
                 .userId(userId)
                 .productType(productType)
+                .bookingReference(bookingReference)
                 .status(BookingStatus.DRAFT)
                 .createdAt(timestamp)
                 .updatedAt(timestamp)
@@ -87,6 +96,7 @@ public class Booking {
     /**
      * Executes a server-authoritative lifecycle state transition.
      * Validates transition rules via BookingLifecycle authority.
+     * Note: bookingReference remains strictly immutable.
      */
     public void transitionTo(BookingStatus targetStatus, Instant now) {
         BookingLifecycle.validateTransition(this.status, targetStatus);

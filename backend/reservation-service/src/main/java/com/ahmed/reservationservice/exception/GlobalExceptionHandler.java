@@ -99,6 +99,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatusCode()).body(response);
     }
 
+    @ExceptionHandler(com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidBookingReference(com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceException ex, HttpServletRequest request) {
+        String requestId = getOrGenerateRequestId(request);
+        log.warn("[{}] Invalid booking reference on {}: {}", requestId, request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(
+                requestId,
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(com.ahmed.reservationservice.domain.exception.BookingNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleBookingNotFound(com.ahmed.reservationservice.domain.exception.BookingNotFoundException ex, HttpServletRequest request) {
         String requestId = getOrGenerateRequestId(request);

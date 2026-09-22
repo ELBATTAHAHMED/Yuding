@@ -20,12 +20,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * REST controller for Booking domain.
- * Strictly adheres to server-authoritative ownership and minimal safe public contract.
+ * Public endpoints exclusively operate with public booking references (YUD-XXXXXXXX).
  */
 @RestController
 @RequestMapping("/bookings")
@@ -37,6 +38,7 @@ public class BookingController {
 
     /**
      * Creates a new DRAFT booking for the currently authenticated user.
+     * Generates a unique public booking reference (YUD-XXXXXXXX) server-side.
      */
     @PostMapping
     public ResponseEntity<BookingResponseDto> createDraft(
@@ -47,22 +49,23 @@ public class BookingController {
         log.info("Received request to create DRAFT booking for user {} (product: {})", userId, request.getProductType());
 
         Booking booking = bookingService.createDraft(userId, request.getProductType());
-        return ResponseEntity.status(HttpStatus.CREATED).body(BookingResponseDto.fromDomain(booking));
+        URI location = URI.create("/bookings/" + booking.getBookingReference());
+        return ResponseEntity.created(location).body(BookingResponseDto.fromDomain(booking));
     }
 
     /**
-     * Retrieves a booking by its technical UUID.
+     * Retrieves a booking by its public reference (YUD-XXXXXXXX).
      * Enforces ownership validation against authenticated user identity.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<BookingResponseDto> getBookingById(
-            @PathVariable UUID id,
+    @GetMapping("/{reference}")
+    public ResponseEntity<BookingResponseDto> getBookingByReference(
+            @PathVariable String reference,
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID userId = resolveUserUuid(jwt);
         boolean privileged = SecurityUtils.hasRole("ADMIN") || SecurityUtils.hasRole("SUPPORT");
 
-        Booking booking = bookingService.getBooking(id, userId, privileged);
+        Booking booking = bookingService.getBookingByReference(reference, userId, privileged);
         return ResponseEntity.ok(BookingResponseDto.fromDomain(booking));
     }
 
@@ -87,17 +90,17 @@ public class BookingController {
     }
 
     /**
-     * Cancels an existing booking if the lifecycle state allows cancellation.
+     * Cancels an existing booking using its public reference (YUD-XXXXXXXX).
      */
-    @PostMapping("/{id}/cancel")
+    @PostMapping("/{reference}/cancel")
     public ResponseEntity<BookingResponseDto> cancelBooking(
-            @PathVariable UUID id,
+            @PathVariable String reference,
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID userId = resolveUserUuid(jwt);
         boolean privileged = SecurityUtils.hasRole("ADMIN") || SecurityUtils.hasRole("SUPPORT");
 
-        Booking booking = bookingService.cancel(id, userId, privileged);
+        Booking booking = bookingService.cancelByReference(reference, userId, privileged);
         return ResponseEntity.ok(BookingResponseDto.fromDomain(booking));
     }
 
