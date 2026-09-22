@@ -100,12 +100,31 @@ export default function BookingReferencePage() {
 
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <Link
-                href="/account/bookings"
+                href={`/booking/${reference}/payment`}
                 className="btn-booking"
                 style={{
                   padding: '0.75rem 1.75rem',
                   borderRadius: '6px',
+                  background: '#01796F',
                   color: '#fff',
+                  textDecoration: 'none',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <i className="fas fa-lock" />
+                Procéder au Paiement
+              </Link>
+
+              <Link
+                href="/account/bookings"
+                style={{
+                  padding: '0.75rem 1.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid #ccc',
+                  color: '#444',
                   textDecoration: 'none',
                   fontWeight: 600,
                   display: 'inline-flex',
