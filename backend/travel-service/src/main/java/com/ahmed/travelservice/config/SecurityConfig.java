@@ -61,6 +61,9 @@ public class SecurityConfig {
                         // Public infrastructure endpoints
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
 
+                        // Internal service-to-service endpoints
+                        .requestMatchers("/internal/**").permitAll()
+
                         // Public travel search endpoints
                         .requestMatchers(HttpMethod.GET, "/travel/airports", "/travel/trains/stations", "/travel/geo/**", "/travel/weather", "/travel/currency/**", "/travel/images/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/flights/search").permitAll()

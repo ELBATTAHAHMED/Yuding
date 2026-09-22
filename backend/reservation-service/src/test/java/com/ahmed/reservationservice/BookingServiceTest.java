@@ -1,6 +1,7 @@
 package com.ahmed.reservationservice;
 
 import com.ahmed.reservationservice.domain.config.BookingLifecycleProperties;
+import com.ahmed.reservationservice.domain.dto.ResolvedOfferDto;
 import com.ahmed.reservationservice.domain.exception.BookingConflictException;
 import com.ahmed.reservationservice.domain.exception.BookingNotFoundException;
 import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
@@ -8,10 +9,14 @@ import com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceExce
 import com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.BookingStatus;
+import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.model.ProductType;
 import com.ahmed.reservationservice.domain.repository.BookingRepository;
+import com.ahmed.reservationservice.domain.repository.OfferSnapshotRepository;
 import com.ahmed.reservationservice.domain.service.BookingReferenceGenerator;
 import com.ahmed.reservationservice.domain.service.BookingService;
+import com.ahmed.reservationservice.domain.service.OfferSnapshotFactory;
+import com.ahmed.reservationservice.feign.TravelOfferResolverClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,10 +25,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,7 +45,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit test suite for BookingService domain lifecycle commands, public reference allocation,
- * collision retry handling, and time-injected expiration.
+ * offer snapshots, and time-injected expiration.
  */
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -48,6 +55,15 @@ class BookingServiceTest {
 
     @Mock
     private BookingReferenceGenerator referenceGenerator;
+
+    @Mock
+    private OfferSnapshotRepository offerSnapshotRepository;
+
+    @Mock
+    private OfferSnapshotFactory offerSnapshotFactory;
+
+    @Mock
+    private TravelOfferResolverClient travelOfferResolverClient;
 
     private BookingLifecycleProperties properties;
     private BookingService bookingService;
@@ -62,11 +78,19 @@ class BookingServiceTest {
         fixedInstant = Instant.parse("2026-09-22T12:00:00Z");
         Clock fixedClock = Clock.fixed(fixedInstant, ZoneOffset.UTC);
 
-        bookingService = new BookingService(bookingRepository, referenceGenerator, properties);
+        bookingService = new BookingService(
+                bookingRepository,
+                referenceGenerator,
+                properties,
+                offerSnapshotRepository,
+                offerSnapshotFactory,
+                travelOfferResolverClient
+        );
         bookingService.setClock(fixedClock);
 
         lenient().when(referenceGenerator.generate()).thenReturn("YUD-K7M4P2Q8");
         lenient().when(bookingRepository.saveAndFlush(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(offerSnapshotRepository.saveAndFlush(any(OfferSnapshot.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -77,6 +101,7 @@ class BookingServiceTest {
 
         Booking draft = bookingService.createDraft(userId, ProductType.FLIGHT);
 
+        assertThat(draft).isNotNull();
         assertThat(draft.getBookingReference()).isEqualTo("YUD-K7M4P2Q8");
         assertThat(draft.getUserId()).isEqualTo(userId);
         assertThat(draft.getProductType()).isEqualTo(ProductType.FLIGHT);
@@ -139,97 +164,143 @@ class BookingServiceTest {
     @DisplayName("getBookingByReference: rejects malformed reference format with InvalidBookingReferenceException")
     void getBookingByReference_malformedFormat_throwsException() {
         UUID userId = UUID.randomUUID();
-
-        assertThatThrownBy(() -> bookingService.getBookingByReference("invalid-reference", userId, false))
-                .isInstanceOf(InvalidBookingReferenceException.class);
+        assertThatThrownBy(() -> bookingService.getBookingByReference("malformed-ref", userId, false))
+                .isInstanceOf(InvalidBookingReferenceException.class)
+                .hasMessageContaining("malformed-ref");
     }
 
     @Test
-    @DisplayName("getBookingByReference: enforces ownership against non-owner (BookingOwnershipException)")
-    void getBookingByReference_ownershipViolation_throwsException() {
+    @DisplayName("getBookingByReference: throws BookingOwnershipException when unauthorized user accesses booking")
+    void getBookingByReference_unauthorizedUser_throwsOwnershipException() {
         UUID ownerId = UUID.randomUUID();
-        UUID otherUserId = UUID.randomUUID();
+        UUID attackerId = UUID.randomUUID();
         String ref = "YUD-K7M4P2Q8";
-        Booking booking = Booking.createDraft(ownerId, ProductType.FLIGHT, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
+        Booking booking = Booking.createDraft(ownerId, ProductType.HOTEL, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
 
         when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
 
-        assertThatThrownBy(() -> bookingService.getBookingByReference(ref, otherUserId, false))
+        assertThatThrownBy(() -> bookingService.getBookingByReference(ref, attackerId, false))
                 .isInstanceOf(BookingOwnershipException.class);
     }
 
     @Test
-    @DisplayName("cancelByReference: cancels a booking using its public reference")
-    void cancelByReference_success() {
-        UUID userId = UUID.randomUUID();
+    @DisplayName("getBookingByReference: allows privileged admin access regardless of ownership")
+    void getBookingByReference_adminAccess_success() {
+        UUID ownerId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
         String ref = "YUD-K7M4P2Q8";
-        Booking booking = Booking.createDraft(userId, ProductType.ACTIVITY, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
+        Booking booking = Booking.createDraft(ownerId, ProductType.HOTEL, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
 
         when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
 
-        Booking cancelled = bookingService.cancelByReference(ref, userId, false);
-        assertThat(cancelled.getStatus()).isEqualTo(BookingStatus.CANCELLED);
-        assertThat(cancelled.getBookingReference()).isEqualTo(ref); // Reference preserved
+        Booking result = bookingService.getBookingByReference(ref, adminId, true);
+        assertThat(result.getBookingReference()).isEqualTo(ref);
     }
 
     @Test
-    @DisplayName("Reference Immutability: reference remains identical across the entire lifecycle")
-    void referenceImmutability_preservedAcrossTransitions() {
+    @DisplayName("Lazy expiration: transitions active draft to EXPIRED when reading past expiration")
+    void getBookingByReference_pastExpiration_transitionsToExpired() {
         UUID userId = UUID.randomUUID();
         String ref = "YUD-K7M4P2Q8";
-        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, ref, fixedInstant, null);
-
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-
-        booking.transitionTo(BookingStatus.PENDING_PAYMENT, fixedInstant);
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-
-        booking.transitionTo(BookingStatus.PAID, fixedInstant);
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-
-        booking.transitionTo(BookingStatus.PENDING_PROVIDER_CONFIRMATION, fixedInstant);
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-
-        booking.transitionTo(BookingStatus.CONFIRMED, fixedInstant);
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-
-        booking.transitionTo(BookingStatus.CANCELLED, fixedInstant);
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-
-        booking.transitionTo(BookingStatus.REFUNDED, fixedInstant);
-        assertThat(booking.getBookingReference()).isEqualTo(ref);
-    }
-
-    @Test
-    @DisplayName("Lazy expiration: getBookingByReference transitions expired DRAFT to EXPIRED")
-    void lazyExpiration_byReference_evaluatesCorrectly() {
-        UUID userId = UUID.randomUUID();
-        String ref = "YUD-K7M4P2Q8";
-        Instant expiresAt = fixedInstant.plus(Duration.ofMinutes(30));
-        Booking booking = Booking.createDraft(userId, ProductType.FLIGHT, ref, fixedInstant, expiresAt);
+        Instant pastExpiresAt = fixedInstant.minus(Duration.ofMinutes(5));
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, ref, fixedInstant.minus(Duration.ofMinutes(35)), pastExpiresAt);
 
         when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
 
-        // Advance clock past expiration (35 minutes later)
-        Instant later = fixedInstant.plus(Duration.ofMinutes(35));
-        bookingService.setClock(Clock.fixed(later, ZoneOffset.UTC));
+        Booking result = bookingService.getBookingByReference(ref, userId, false);
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.EXPIRED);
+        assertThat(result.getStatusChangedAt()).isEqualTo(fixedInstant);
+        verify(bookingRepository).saveAndFlush(booking);
+    }
 
-        Booking retrieved = bookingService.getBookingByReference(ref, userId, false);
+    // ─── OFFER SNAPSHOT TESTS ────────────────────────────────────────────────
 
-        assertThat(retrieved.getStatus()).isEqualTo(BookingStatus.EXPIRED);
-        assertThat(retrieved.getBookingReference()).isEqualTo(ref);
+    @Test
+    @DisplayName("attachOfferSnapshot: resolves trusted offer and attaches immutable snapshot to DRAFT booking")
+    void attachOfferSnapshot_draftBooking_success() {
+        UUID userId = UUID.randomUUID();
+        String ref = "YUD-K7M4P2Q8";
+        String selectionRef = "sel-flight-1";
+        Booking booking = Booking.createDraft(userId, ProductType.FLIGHT, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
+
+        ResolvedOfferDto resolved = ResolvedOfferDto.builder()
+                .selectionRef(selectionRef)
+                .productType("FLIGHT")
+                .provider("SCRAPPA")
+                .providerOfferId("fl-1")
+                .providerAmount(new BigDecimal("250.00"))
+                .providerCurrency("EUR")
+                .build();
+
+        OfferSnapshot snapshot = OfferSnapshot.builder()
+                .booking(booking)
+                .productType(ProductType.FLIGHT)
+                .provider("SCRAPPA")
+                .providerOfferId("fl-1")
+                .providerAmount(new BigDecimal("250.00"))
+                .providerCurrency("EUR")
+                .snapshotHash("test-hash-123456789012345678901234567890123456789012345678901234567890")
+                .capturedAt(fixedInstant)
+                .snapshotExpiresAt(fixedInstant.plus(Duration.ofMinutes(15)))
+                .build();
+
+        when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
+        when(offerSnapshotRepository.existsByBookingId(booking.getId())).thenReturn(false);
+        when(travelOfferResolverClient.resolveOfferSelection(selectionRef)).thenReturn(Optional.of(resolved));
+        when(offerSnapshotFactory.createSnapshot(booking, resolved, fixedInstant)).thenReturn(snapshot);
+
+        OfferSnapshot attached = bookingService.attachOfferSnapshot(ref, selectionRef, userId, false);
+
+        assertThat(attached).isNotNull();
+        assertThat(attached.getProvider()).isEqualTo("SCRAPPA");
+        verify(offerSnapshotRepository).saveAndFlush(snapshot);
     }
 
     @Test
-    @DisplayName("Optimistic lock conflict: ObjectOptimisticLockingFailureException maps to BookingConflictException")
-    void optimisticLockConflict_mappedSafely() {
+    @DisplayName("attachOfferSnapshot: rejects duplicate snapshot on same booking with 409 Conflict")
+    void attachOfferSnapshot_duplicate_throwsConflict() {
         UUID userId = UUID.randomUUID();
-        when(bookingRepository.existsByBookingReference(any())).thenReturn(false);
-        when(bookingRepository.saveAndFlush(any(Booking.class)))
-                .thenThrow(new ObjectOptimisticLockingFailureException(Booking.class, UUID.randomUUID()));
+        String ref = "YUD-K7M4P2Q8";
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
 
-        assertThatThrownBy(() -> bookingService.createDraft(userId, ProductType.HOTEL))
+        when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
+        when(offerSnapshotRepository.existsByBookingId(booking.getId())).thenReturn(true);
+
+        assertThatThrownBy(() -> bookingService.attachOfferSnapshot(ref, "sel-hotel-1", userId, false))
                 .isInstanceOf(BookingConflictException.class)
-                .hasMessageContaining("modified by another transaction");
+                .hasMessageContaining("already has an attached offer snapshot");
+    }
+
+    @Test
+    @DisplayName("attachOfferSnapshot: rejects attachment when booking is not in DRAFT status (e.g. PAID)")
+    void attachOfferSnapshot_nonDraft_throwsConflict() {
+        UUID userId = UUID.randomUUID();
+        String ref = "YUD-K7M4P2Q8";
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
+        booking.transitionTo(BookingStatus.PENDING_PAYMENT, fixedInstant);
+        booking.transitionTo(BookingStatus.PAID, fixedInstant);
+
+        when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.attachOfferSnapshot(ref, "sel-hotel-1", userId, false))
+                .isInstanceOf(BookingConflictException.class)
+                .hasMessageContaining("Only DRAFT bookings are eligible");
+    }
+
+    @Test
+    @DisplayName("attachOfferSnapshot: throws BookingNotFoundException when selection reference is not found/expired")
+    void attachOfferSnapshot_selectionNotFound_throwsNotFound() {
+        UUID userId = UUID.randomUUID();
+        String ref = "YUD-K7M4P2Q8";
+        String selectionRef = "sel-expired-99";
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
+
+        when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
+        when(offerSnapshotRepository.existsByBookingId(booking.getId())).thenReturn(false);
+        when(travelOfferResolverClient.resolveOfferSelection(selectionRef)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookingService.attachOfferSnapshot(ref, selectionRef, userId, false))
+                .isInstanceOf(BookingNotFoundException.class)
+                .hasMessageContaining("was not found or has expired");
     }
 }

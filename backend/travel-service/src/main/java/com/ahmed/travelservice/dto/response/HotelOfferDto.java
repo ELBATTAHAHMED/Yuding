@@ -24,6 +24,9 @@ public class HotelOfferDto {
     /** Search result reference / primary offer ID. */
     private String offerId;
 
+    /** Server-issued opaque selection reference for trusted Offer Snapshot creation. */
+    private String selectionRef;
+
     /** Provider code, e.g. "NUITEE". */
     private String provider;
 

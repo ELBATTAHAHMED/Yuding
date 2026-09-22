@@ -15,6 +15,7 @@ import com.ahmed.travelservice.dto.image.ImageAssetDto;
 @AllArgsConstructor
 public class ActivityOfferDto {
     private String offerId;
+    private String selectionRef;
     private String provider;
     private String title;
     private String destination;

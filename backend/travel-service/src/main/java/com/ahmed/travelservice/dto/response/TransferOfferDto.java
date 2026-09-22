@@ -15,6 +15,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class TransferOfferDto {
     private String offerId;
+    private String selectionRef;
     private String provider;
     private String transferType;
     private String vehicleModel;

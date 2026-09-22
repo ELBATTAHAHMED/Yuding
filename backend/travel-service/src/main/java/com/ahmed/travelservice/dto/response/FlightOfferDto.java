@@ -21,6 +21,9 @@ public class FlightOfferDto {
     /** Yuding search-result reference ID (opaque, not a bookable provider token). */
     private String offerId;
 
+    /** Server-issued opaque selection reference for trusted Offer Snapshot creation. */
+    private String selectionRef;
+
     /** Provider code, e.g. "SCRAPPA". */
     private String provider;
 

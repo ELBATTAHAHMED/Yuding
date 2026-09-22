@@ -21,6 +21,7 @@ import java.util.List;
 public class TrainOfferDto {
 
     private String offerId;
+    private String selectionRef;
 
     /** Provider code, e.g. "TRANSITLAND". */
     private String provider;

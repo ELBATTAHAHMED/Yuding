@@ -30,8 +30,13 @@ public class BookingResponseDto {
     private Instant updatedAt;
     private Instant statusChangedAt;
     private Instant expiresAt;
+    private OfferSnapshotResponseDto offerSnapshot;
 
     public static BookingResponseDto fromDomain(Booking booking) {
+        return fromDomain(booking, null);
+    }
+
+    public static BookingResponseDto fromDomain(Booking booking, com.ahmed.reservationservice.domain.model.OfferSnapshot snapshot) {
         if (booking == null) {
             return null;
         }
@@ -44,6 +49,7 @@ public class BookingResponseDto {
                 .updatedAt(booking.getUpdatedAt())
                 .statusChangedAt(booking.getStatusChangedAt())
                 .expiresAt(booking.getExpiresAt())
+                .offerSnapshot(OfferSnapshotResponseDto.fromDomain(snapshot))
                 .build();
     }
 }
