@@ -189,8 +189,8 @@ export default function FlightsPage() {
         subtitle="Comparez les itinéraires et les prix fournisseurs, en toute transparence."
         destination={selectedDestination?.city}
         country={selectedDestination?.country}
-        defaultImageQuery="commercial passenger airplane runway"
-        defaultImageIndex={2}
+        defaultImageQuery="airport terminal commercial airplane travel"
+        defaultImageIndex={0}
         icon="fas fa-plane-departure"
         compact={hasSearched}
       />
