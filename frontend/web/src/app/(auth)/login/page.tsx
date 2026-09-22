@@ -13,7 +13,7 @@ function LoginFormContent() {
 
   const { login, register, isAuthenticated, isAdmin, isSupport } = useAuth();
 
-  const [isFlipped, setIsFlipped] = useState<boolean>(initialMode);
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode ? 'signup' : 'login');
   const [isDark, setIsDark] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -132,10 +132,12 @@ function LoginFormContent() {
     }
   };
 
+  const isFlipped = mode === 'signup';
+
   return (
     <>
-      {/* ==================== HEADER ==================== */}
-      <header className="header">
+      {/* ==================== EXACT LEGACY HEADER ==================== */}
+      <header className="header auth-header">
         <div className="header-top">
           <div className="container1">
             <Link href="/" className="logo">
@@ -186,13 +188,17 @@ function LoginFormContent() {
       </section>
 
       {/* ==================== 3D FLIP CONTAINER ==================== */}
-      <div className="container auth-container">
-        {/* Checkbox pour l'effet flip */}
+      <div className={`container auth-container ${isFlipped ? 'signup-mode' : 'login-mode'}`}>
+        {/* Checkbox pour compatibilité CSS flip */}
         <input
           type="checkbox"
           id="flip"
           checked={isFlipped}
-          onChange={(e) => setIsFlipped(e.target.checked)}
+          onChange={(e) => {
+            setMode(e.target.checked ? 'signup' : 'login');
+            setErrorMessage(null);
+            setSuccessMessage(null);
+          }}
         />
 
         {/* Couverture (images + textes) */}
@@ -280,16 +286,17 @@ function LoginFormContent() {
                   </div>
                   <div className="text sign-up-text">
                     Don&apos;t have an account?{' '}
-                    <label
-                      htmlFor="flip"
+                    <button
+                      type="button"
+                      className="auth-switch-link"
                       onClick={() => {
-                        setIsFlipped(true);
+                        setMode('signup');
                         setErrorMessage(null);
                         setSuccessMessage(null);
                       }}
                     >
                       Signup now
-                    </label>
+                    </button>
                   </div>
                 </div>
               </form>
@@ -401,16 +408,17 @@ function LoginFormContent() {
                   </div>
                   <div className="text sign-up-text">
                     Already have an account?{' '}
-                    <label
-                      htmlFor="flip"
+                    <button
+                      type="button"
+                      className="auth-switch-link"
                       onClick={() => {
-                        setIsFlipped(false);
+                        setMode('login');
                         setErrorMessage(null);
                         setSuccessMessage(null);
                       }}
                     >
                       Login now
-                    </label>
+                    </button>
                   </div>
                 </div>
               </form>

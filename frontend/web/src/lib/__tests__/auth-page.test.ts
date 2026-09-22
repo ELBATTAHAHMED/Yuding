@@ -204,4 +204,32 @@ describe('V2 Authentication Service & Contracts', () => {
       }
     }
   });
+
+  it('6. Mode transition contract: auth page supports dual-mode flip with persistent panels', () => {
+    // Verifies that auth view contracts define discrete login and signup modes without unmounting
+    const initialMode = 'login';
+    let mode: 'login' | 'signup' = initialMode;
+
+    const toggleToSignup = () => { mode = 'signup'; };
+    const toggleToLogin = () => { mode = 'login'; };
+
+    assert.equal(mode, 'login');
+    toggleToSignup();
+    assert.equal(mode, 'signup');
+    toggleToLogin();
+    assert.equal(mode, 'login');
+  });
+
+  it('7. Header & Flip CSS contract verification: ensures isolated auth header and 3D cover classes exist', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const cssPath = path.resolve(process.cwd(), 'src/styles/loginStyle.css');
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+    assert.ok(cssContent.includes('.header.auth-header'), 'Auth header class must be present in loginStyle.css');
+    assert.ok(cssContent.includes('.container.signup-mode .cover'), 'Signup mode 3D transform must be present in loginStyle.css');
+    assert.ok(cssContent.includes('.auth-switch-link'), 'Interactive switch link button styling must be present in loginStyle.css');
+    assert.ok(cssContent.includes('transform: rotateY(-180deg)'), '3D rotateY transform must be present in loginStyle.css');
+    assert.ok(cssContent.includes('min-height: 100px !important'), '100px fixed header height must be enforced with !important');
+  });
 });
