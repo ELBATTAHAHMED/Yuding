@@ -6,9 +6,11 @@ import { useSearchParams } from 'next/navigation';
 
 function BookingConfirmationContent() {
   const searchParams = useSearchParams();
-  const code = searchParams.get('code') || 'YUD-CONFIRMED';
+  const code = searchParams.get('reference') || searchParams.get('code') || 'YUD-CONFIRMED';
+  const paymentRef = searchParams.get('payment');
   const id = searchParams.get('id');
-  const total = searchParams.get('total');
+  const total = searchParams.get('amount') || searchParams.get('total');
+  const currency = searchParams.get('currency') || 'EUR';
 
   return (
     <div style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem' }}>
@@ -40,16 +42,23 @@ function BookingConfirmationContent() {
             borderRadius: '20px',
             fontWeight: 700,
             fontSize: '1rem',
-            marginBottom: '1.5rem',
+            marginBottom: '1rem',
             letterSpacing: '1px',
           }}
         >
           Numéro de confirmation : {code}
         </div>
 
+        {paymentRef && (
+          <div style={{ marginBottom: '1rem', color: '#004d40', fontWeight: 600, fontSize: '0.95rem' }}>
+            <i className="fas fa-receipt" style={{ marginRight: '0.4rem' }} />
+            Règlement validé : <strong>{paymentRef}</strong> {total ? `(${total} ${currency})` : ''}
+          </div>
+        )}
+
         {id && (
           <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Dossier n° <strong>#{id}</strong> {total ? `— Total réglé : ${total} €` : ''}
+            Dossier n° <strong>#{id}</strong> {total && !paymentRef ? `— Total réglé : ${total} ${currency}` : ''}
           </p>
         )}
 
