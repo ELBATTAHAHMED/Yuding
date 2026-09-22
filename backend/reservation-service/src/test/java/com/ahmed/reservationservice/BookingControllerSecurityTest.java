@@ -7,6 +7,7 @@ import com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceExce
 import com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.BookingStatus;
+import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.model.ProductType;
 import com.ahmed.reservationservice.domain.service.BookingService;
 import com.ahmed.reservationservice.feigh.UtilisateurFeign;
@@ -27,8 +28,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.nullValue;
@@ -115,7 +118,7 @@ class BookingControllerSecurityTest {
         CreateDraftBookingRequest req = new CreateDraftBookingRequest(ProductType.HOTEL);
 
         Booking booking = createSampleBooking(bookingId, userId, reference, ProductType.HOTEL, BookingStatus.DRAFT);
-        when(bookingService.createDraft(eq(userId), eq(ProductType.HOTEL))).thenReturn(booking);
+        when(bookingService.createDraft(eq(userId), eq(ProductType.HOTEL), eq(null))).thenReturn(booking);
 
         mockMvc.perform(post("/bookings")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
@@ -248,5 +251,85 @@ class BookingControllerSecurityTest {
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Conflict"));
+    }
+
+    @Test
+    @DisplayName("POST /bookings/{reference}/offer-snapshot attaches offer snapshot (200 OK)")
+    void attachOfferSnapshot_success_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
+        String selectionRef = "sel-flight-123";
+
+        OfferSnapshot snapshot = OfferSnapshot.builder()
+                .productType(ProductType.FLIGHT)
+                .provider("SCRAPPA")
+                .providerOfferId("fl-123")
+                .providerAmount(new BigDecimal("300.00"))
+                .providerCurrency("EUR")
+                .snapshotHash("1234567890123456789012345678901234567890123456789012345678901234")
+                .capturedAt(Instant.now())
+                .snapshotExpiresAt(Instant.now().plusSeconds(900))
+                .build();
+
+        when(bookingService.attachOfferSnapshot(eq(reference), eq(selectionRef), eq(userId), eq(false)))
+                .thenReturn(snapshot);
+
+        mockMvc.perform(post("/bookings/" + reference + "/offer-snapshot")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"selectionRef\": \"" + selectionRef + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.provider").value("SCRAPPA"))
+                .andExpect(jsonPath("$.providerOfferId").value("fl-123"))
+                .andExpect(jsonPath("$.providerAmount").value(300.00))
+                .andExpect(jsonPath("$.providerCurrency").value("EUR"))
+                .andExpect(jsonPath("$.snapshotHash").value("1234567890123456789012345678901234567890123456789012345678901234"));
+    }
+
+    @Test
+    @DisplayName("POST /bookings/{reference}/offer-snapshot rejects unauthorized user with 403 Forbidden")
+    void attachOfferSnapshot_unauthorizedUser_returns403() throws Exception {
+        UUID attackerId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
+        String selectionRef = "sel-flight-123";
+
+        when(bookingService.attachOfferSnapshot(eq(reference), eq(selectionRef), eq(attackerId), eq(false)))
+                .thenThrow(new BookingOwnershipException(UUID.randomUUID(), attackerId));
+
+        mockMvc.perform(post("/bookings/" + reference + "/offer-snapshot")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(attackerId.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"selectionRef\": \"" + selectionRef + "\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /bookings/{reference}/offer-snapshot returns snapshot for owner (200 OK)")
+    void getOfferSnapshot_success_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
+
+        OfferSnapshot snapshot = OfferSnapshot.builder()
+                .productType(ProductType.HOTEL)
+                .provider("NUITEE")
+                .providerOfferId("lp1897")
+                .providerAmount(new BigDecimal("120.00"))
+                .providerCurrency("EUR")
+                .snapshotHash("1234567890123456789012345678901234567890123456789012345678901234")
+                .capturedAt(Instant.now())
+                .snapshotExpiresAt(Instant.now().plusSeconds(900))
+                .build();
+
+        when(bookingService.getSnapshotByBookingReference(eq(reference), eq(userId), eq(false)))
+                .thenReturn(Optional.of(snapshot));
+
+        mockMvc.perform(get("/bookings/" + reference + "/offer-snapshot")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.provider").value("NUITEE"))
+                .andExpect(jsonPath("$.providerOfferId").value("lp1897"));
     }
 }

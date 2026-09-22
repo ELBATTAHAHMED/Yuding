@@ -1,14 +1,18 @@
 package com.ahmed.reservationservice.domain.service;
 
 import com.ahmed.reservationservice.domain.config.BookingLifecycleProperties;
+import com.ahmed.reservationservice.domain.dto.ResolvedOfferDto;
 import com.ahmed.reservationservice.domain.exception.BookingConflictException;
 import com.ahmed.reservationservice.domain.exception.BookingNotFoundException;
 import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
 import com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceException;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.BookingStatus;
+import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.model.ProductType;
 import com.ahmed.reservationservice.domain.repository.BookingRepository;
+import com.ahmed.reservationservice.domain.repository.OfferSnapshotRepository;
+import com.ahmed.reservationservice.feign.TravelOfferResolverClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -19,12 +23,13 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Server-authoritative Booking domain service.
- * Orchestrates public reference allocation, lifecycle transitions, ownership enforcement,
- * expiration evaluation, and optimistic concurrency protection.
+ * Orchestrates public reference allocation, lifecycle transitions, immutable offer snapshots,
+ * ownership enforcement, expiration evaluation, and optimistic concurrency protection.
  */
 @Service
 @Slf4j
@@ -36,17 +41,33 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookingReferenceGenerator referenceGenerator;
     private final BookingLifecycleProperties properties;
+    private final OfferSnapshotRepository offerSnapshotRepository;
+    private final OfferSnapshotFactory offerSnapshotFactory;
+    private final TravelOfferResolverClient travelOfferResolverClient;
     private Clock clock;
 
     @Autowired
     public BookingService(
             BookingRepository bookingRepository,
             BookingReferenceGenerator referenceGenerator,
-            BookingLifecycleProperties properties) {
+            BookingLifecycleProperties properties,
+            OfferSnapshotRepository offerSnapshotRepository,
+            OfferSnapshotFactory offerSnapshotFactory,
+            @Autowired(required = false) TravelOfferResolverClient travelOfferResolverClient) {
         this.bookingRepository = bookingRepository;
         this.referenceGenerator = referenceGenerator;
         this.properties = properties;
+        this.offerSnapshotRepository = offerSnapshotRepository;
+        this.offerSnapshotFactory = offerSnapshotFactory;
+        this.travelOfferResolverClient = travelOfferResolverClient;
         this.clock = Clock.systemUTC();
+    }
+
+    public BookingService(
+            BookingRepository bookingRepository,
+            BookingReferenceGenerator referenceGenerator,
+            BookingLifecycleProperties properties) {
+        this(bookingRepository, referenceGenerator, properties, null, null, null);
     }
 
     /**
@@ -64,6 +85,13 @@ public class BookingService {
      * Creates a new DRAFT booking with a unique cryptographic public reference (YUD-XXXXXXXX).
      */
     public Booking createDraft(UUID userId, ProductType productType) {
+        return createDraft(userId, productType, null);
+    }
+
+    /**
+     * Creates a new DRAFT booking and atomically attaches a trusted offer snapshot if selectionRef is provided.
+     */
+    public Booking createDraft(UUID userId, ProductType productType, String selectionRef) {
         Instant current = now();
         Instant expiresAt = current.plus(Duration.ofMinutes(properties.getDraftTtlMinutes()));
 
@@ -72,7 +100,68 @@ public class BookingService {
 
         log.info("Creating DRAFT booking [{}] for user {} (product: {}, expiresAt: {})",
                 reference, userId, productType, expiresAt);
-        return saveWithOptimisticLockHandling(booking);
+        Booking saved = saveWithOptimisticLockHandling(booking);
+
+        if (selectionRef != null && !selectionRef.isBlank()) {
+            attachOfferSnapshot(saved.getBookingReference(), selectionRef, userId, false);
+        }
+
+        return saved;
+    }
+
+    /**
+     * Attaches an immutable offer snapshot to an existing DRAFT booking.
+     * Resolves the offer from the server-side trusted selection store.
+     */
+    public OfferSnapshot attachOfferSnapshot(String bookingReference, String selectionRef, UUID requestingUserId, boolean privileged) {
+        if (selectionRef == null || selectionRef.isBlank()) {
+            throw new IllegalArgumentException("Selection reference is required to attach an offer snapshot");
+        }
+
+        Booking booking = getBookingByReference(bookingReference, requestingUserId, privileged);
+
+        // Snapshot attachment is strictly restricted to DRAFT status
+        if (booking.getStatus() != BookingStatus.DRAFT) {
+            throw new BookingConflictException(String.format(
+                    "Offer snapshot cannot be attached to booking [%s] in status %s. Only DRAFT bookings are eligible.",
+                    booking.getBookingReference(), booking.getStatus()));
+        }
+
+        // Check if snapshot already exists (enforce 1 immutable snapshot per booking)
+        if (offerSnapshotRepository != null && offerSnapshotRepository.existsByBookingId(booking.getId())) {
+            throw new BookingConflictException(String.format(
+                    "Booking [%s] already has an attached offer snapshot. Snapshots are immutable and cannot be replaced.",
+                    booking.getBookingReference()));
+        }
+
+        // Resolve trusted offer from Travel Service
+        ResolvedOfferDto resolvedOffer = null;
+        if (travelOfferResolverClient != null) {
+            resolvedOffer = travelOfferResolverClient.resolveOfferSelection(selectionRef)
+                    .orElseThrow(() -> new BookingNotFoundException(
+                            "Selected offer [" + selectionRef + "] was not found or has expired. Please select a fresh offer."));
+        } else {
+            throw new IllegalStateException("TravelOfferResolverClient is not configured to resolve offer selections");
+        }
+
+        OfferSnapshot snapshot = offerSnapshotFactory.createSnapshot(booking, resolvedOffer, now());
+
+        log.info("Persisting immutable offer snapshot [hash={}] for booking [{}] (product: {}, provider: {}, providerOfferId: {})",
+                snapshot.getSnapshotHash(), booking.getBookingReference(), snapshot.getProductType(), snapshot.getProvider(), snapshot.getProviderOfferId());
+
+        return offerSnapshotRepository.saveAndFlush(snapshot);
+    }
+
+    /**
+     * Retrieves the offer snapshot associated with a booking by reference.
+     */
+    @Transactional(readOnly = true)
+    public Optional<OfferSnapshot> getSnapshotByBookingReference(String bookingReference, UUID requestingUserId, boolean privileged) {
+        Booking booking = getBookingByReference(bookingReference, requestingUserId, privileged);
+        if (offerSnapshotRepository == null) {
+            return Optional.empty();
+        }
+        return offerSnapshotRepository.findByBookingId(booking.getId());
     }
 
     private String allocateUniqueReference() {

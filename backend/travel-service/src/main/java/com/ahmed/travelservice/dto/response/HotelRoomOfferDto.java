@@ -21,6 +21,9 @@ public class HotelRoomOfferDto {
     /** Real provider offer ID (e.g. Nuitee offerId). Never fabricated. */
     private String offerId;
 
+    /** Server-issued opaque selection reference for trusted Offer Snapshot creation. */
+    private String selectionRef;
+
     /** Provider internal rate ID. */
     private String rateId;
 

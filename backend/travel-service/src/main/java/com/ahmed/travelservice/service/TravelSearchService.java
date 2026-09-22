@@ -1,5 +1,6 @@
 package com.ahmed.travelservice.service;
 
+import com.ahmed.travelservice.cache.OfferSelectionCache;
 import com.ahmed.travelservice.domain.query.*;
 import com.ahmed.travelservice.dto.request.ActivitySearchRequest;
 import com.ahmed.travelservice.dto.request.FlightSearchRequest;
@@ -12,13 +13,12 @@ import com.ahmed.travelservice.provider.TravelProvider;
 import com.ahmed.travelservice.provider.TravelProviderRegistry;
 import com.ahmed.travelservice.provider.error.ProviderErrorCode;
 import com.ahmed.travelservice.provider.error.TravelProviderException;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 
 @Service
 public class TravelSearchService {
@@ -30,30 +30,41 @@ public class TravelSearchService {
     private final CurrencyService currencyService;
     private final com.ahmed.travelservice.cache.ExternalApiCache cache;
     private final com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties;
+    private final OfferSelectionCache selectionCache;
 
     @org.springframework.beans.factory.annotation.Autowired
     public TravelSearchService(TravelProviderRegistry providerRegistry,
                                TrainRoutingService trainRoutingService,
                                CurrencyService currencyService,
                                com.ahmed.travelservice.cache.ExternalApiCache cache,
-                               com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties) {
+                               com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties,
+                               @org.springframework.beans.factory.annotation.Autowired(required = false) OfferSelectionCache selectionCache) {
         this.providerRegistry = providerRegistry;
         this.trainRoutingService = trainRoutingService;
         this.currencyService = currencyService;
         this.cache = cache;
         this.cacheProperties = cacheProperties;
+        this.selectionCache = selectionCache;
+    }
+
+    public TravelSearchService(TravelProviderRegistry providerRegistry,
+                               TrainRoutingService trainRoutingService,
+                               CurrencyService currencyService,
+                               com.ahmed.travelservice.cache.ExternalApiCache cache,
+                               com.ahmed.travelservice.cache.ExternalApiCacheProperties cacheProperties) {
+        this(providerRegistry, trainRoutingService, currencyService, cache, cacheProperties, null);
     }
 
     public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService, CurrencyService currencyService) {
-        this(providerRegistry, trainRoutingService, currencyService, null, null);
+        this(providerRegistry, trainRoutingService, currencyService, null, null, null);
     }
 
     public TravelSearchService(TravelProviderRegistry providerRegistry, TrainRoutingService trainRoutingService) {
-        this(providerRegistry, trainRoutingService, null, null, null);
+        this(providerRegistry, trainRoutingService, null, null, null, null);
     }
 
     public TravelSearchService(TravelProviderRegistry providerRegistry) {
-        this(providerRegistry, null, null, null, null);
+        this(providerRegistry, null, null, null, null, null);
     }
 
     public SearchResponse<FlightOfferDto> searchFlights(FlightSearchRequest request) {
@@ -75,6 +86,7 @@ public class TravelSearchService {
                 offers = provider.searchFlights(query);
             }
             applyFlightConversions(offers);
+            registerFlightOffers(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -104,6 +116,7 @@ public class TravelSearchService {
                 offers = provider.searchHotels(query);
             }
             applyHotelConversions(offers);
+            registerHotelOffers(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -133,6 +146,7 @@ public class TravelSearchService {
                 offers = provider.searchActivities(query);
             }
             applyActivityConversions(offers);
+            registerActivityOffers(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -162,6 +176,7 @@ public class TravelSearchService {
                 offers = provider.searchTransfers(query);
             }
             applyTransferConversions(offers);
+            registerTransferOffers(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -203,6 +218,7 @@ public class TravelSearchService {
                         ? trainRoutingService.searchTrains(query)
                         : providerRegistry.getProviderForProduct(TravelProduct.TRAINS).searchTrains(query);
             }
+            registerTrainOffers(offers);
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -227,6 +243,226 @@ public class TravelSearchService {
 
     public List<TrainStationDto> getTrainStations() {
         return getTrainStations(null);
+    }
+
+    /**
+     * Resolves a trusted discovery offer by its opaque selection reference.
+     */
+    public Optional<ResolvedOfferDto> resolveOfferSelection(String selectionRef) {
+        if (selectionCache == null || selectionRef == null) {
+            return Optional.empty();
+        }
+        return selectionCache.get(selectionRef);
+    }
+
+    // ─── OFFER SELECTION REGISTRATION ─────────────────────────────────────────
+
+    public void registerFlightOffers(List<FlightOfferDto> offers) {
+        if (offers == null || offers.isEmpty()) return;
+        for (FlightOfferDto offer : offers) {
+            String ref = offer.getSelectionRef();
+            if (ref == null || ref.isBlank()) {
+                ref = "sel-" + UUID.randomUUID();
+                offer.setSelectionRef(ref);
+            }
+            if (selectionCache != null) {
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("origin", offer.getOrigin());
+                details.put("destination", offer.getDestination());
+                details.put("departureTime", offer.getDepartureTime());
+                details.put("arrivalTime", offer.getArrivalTime());
+                details.put("airlineCode", offer.getAirlineCode());
+                details.put("airlineName", offer.getAirlineName());
+                details.put("flightNumber", offer.getFlightNumber());
+                details.put("cabinClass", offer.getCabinClass());
+                details.put("stops", offer.getStops());
+                details.put("totalDurationMinutes", offer.getTotalDurationMinutes());
+                details.put("itineraryComplete", offer.getItineraryComplete());
+                details.put("priceType", offer.getPriceType());
+                details.put("availableSeats", offer.getAvailableSeats());
+                details.put("legs", offer.getLegs());
+
+                ResolvedOfferDto resolved = buildResolvedDto(
+                        ref, "FLIGHT", offer.getProvider(), offer.getOfferId(),
+                        details, offer.getPrice(), offer.getCurrency(), offer.getPriceConversion(), null);
+                selectionCache.put(ref, resolved);
+            }
+        }
+    }
+
+    public void registerHotelOffers(List<HotelOfferDto> offers) {
+        if (offers == null || offers.isEmpty()) return;
+        for (HotelOfferDto hotel : offers) {
+            String ref = hotel.getSelectionRef();
+            if (ref == null || ref.isBlank()) {
+                ref = "sel-" + UUID.randomUUID();
+                hotel.setSelectionRef(ref);
+            }
+            if (selectionCache != null) {
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("hotelId", hotel.getHotelId());
+                details.put("hotelName", hotel.getHotelName());
+                details.put("destination", hotel.getDestination());
+                details.put("address", hotel.getAddress());
+                details.put("city", hotel.getCity());
+                details.put("country", hotel.getCountry());
+                details.put("propertyType", hotel.getPropertyType());
+                details.put("accommodationType", hotel.getAccommodationType());
+                details.put("roomSummary", hotel.getRoomSummary());
+                details.put("checkIn", hotel.getCheckIn() != null ? hotel.getCheckIn().toString() : null);
+                details.put("checkOut", hotel.getCheckOut() != null ? hotel.getCheckOut().toString() : null);
+                details.put("starRating", hotel.getStarRating());
+                details.put("reviewScore", hotel.getReviewScore());
+                details.put("reviewCount", hotel.getReviewCount());
+                details.put("availabilityState", hotel.getAvailabilityState());
+                details.put("roomOffers", hotel.getRoomOffers());
+
+                var conv = hotel.getTotalPriceConversion() != null ? hotel.getTotalPriceConversion() : hotel.getPriceConversion();
+                var amount = hotel.getTotalPrice() != null ? hotel.getTotalPrice() : hotel.getPricePerNight();
+
+                ResolvedOfferDto resolved = buildResolvedDto(
+                        ref, "HOTEL", hotel.getProvider(), hotel.getOfferId() != null ? hotel.getOfferId() : hotel.getHotelId(),
+                        details, amount, hotel.getCurrency(), conv, null);
+                selectionCache.put(ref, resolved);
+
+                // Register room offers if present
+                if (hotel.getRoomOffers() != null) {
+                    for (HotelRoomOfferDto room : hotel.getRoomOffers()) {
+                        String roomRef = room.getSelectionRef();
+                        if (roomRef == null || roomRef.isBlank()) {
+                            roomRef = "sel-room-" + UUID.randomUUID();
+                            room.setSelectionRef(roomRef);
+                        }
+                        Map<String, Object> roomDetails = new LinkedHashMap<>(details);
+                        roomDetails.put("selectedRoom", Map.of(
+                                "roomName", room.getRoomName() != null ? room.getRoomName() : "",
+                                "rateId", room.getRateId() != null ? room.getRateId() : "",
+                                "boardType", room.getBoardType() != null ? room.getBoardType() : "",
+                                "cancellationSummary", room.getCancellationSummary() != null ? room.getCancellationSummary() : "",
+                                "maxOccupancy", room.getMaxOccupancy() != null ? room.getMaxOccupancy() : 0
+                        ));
+                        var roomConv = room.getPriceConversion();
+                        ResolvedOfferDto roomResolved = buildResolvedDto(
+                                roomRef, "HOTEL", hotel.getProvider(), room.getOfferId(),
+                                roomDetails, room.getPrice(), room.getCurrency(), roomConv, null);
+                        selectionCache.put(roomRef, roomResolved);
+                    }
+                }
+            }
+        }
+    }
+
+    public void registerActivityOffers(List<ActivityOfferDto> offers) {
+        if (offers == null || offers.isEmpty()) return;
+        for (ActivityOfferDto activity : offers) {
+            String ref = activity.getSelectionRef();
+            if (ref == null || ref.isBlank()) {
+                ref = "sel-" + UUID.randomUUID();
+                activity.setSelectionRef(ref);
+            }
+            if (selectionCache != null) {
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("title", activity.getTitle());
+                details.put("destination", activity.getDestination());
+                details.put("date", activity.getDate() != null ? activity.getDate().toString() : null);
+                details.put("durationHours", activity.getDurationHours());
+                details.put("category", activity.getCategory());
+                details.put("description", activity.getDescription());
+                details.put("country", activity.getCountry());
+                details.put("source", activity.getSource());
+
+                ResolvedOfferDto resolved = buildResolvedDto(
+                        ref, "ACTIVITY", activity.getProvider(), activity.getOfferId(),
+                        details, activity.getPrice(), activity.getCurrency(), activity.getPriceConversion(), null);
+                selectionCache.put(ref, resolved);
+            }
+        }
+    }
+
+    public void registerTransferOffers(List<TransferOfferDto> offers) {
+        if (offers == null || offers.isEmpty()) return;
+        for (TransferOfferDto transfer : offers) {
+            String ref = transfer.getSelectionRef();
+            if (ref == null || ref.isBlank()) {
+                ref = "sel-" + UUID.randomUUID();
+                transfer.setSelectionRef(ref);
+            }
+            if (selectionCache != null) {
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("pickup", transfer.getPickup());
+                details.put("dropoff", transfer.getDropoff());
+                details.put("date", transfer.getDate() != null ? transfer.getDate().toString() : null);
+                details.put("time", transfer.getTime() != null ? transfer.getTime().toString() : null);
+                details.put("transferType", transfer.getTransferType());
+                details.put("vehicleModel", transfer.getVehicleModel());
+                details.put("capacity", transfer.getCapacity());
+
+                ResolvedOfferDto resolved = buildResolvedDto(
+                        ref, "TRANSFER", transfer.getProvider(), transfer.getOfferId(),
+                        details, transfer.getPrice(), transfer.getCurrency(), transfer.getPriceConversion(), null);
+                selectionCache.put(ref, resolved);
+            }
+        }
+    }
+
+    public void registerTrainOffers(List<TrainOfferDto> offers) {
+        if (offers == null || offers.isEmpty()) return;
+        for (TrainOfferDto train : offers) {
+            String ref = train.getSelectionRef();
+            if (ref == null || ref.isBlank()) {
+                ref = "sel-" + UUID.randomUUID();
+                train.setSelectionRef(ref);
+            }
+            if (selectionCache != null) {
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("originStation", train.getOriginStation());
+                details.put("destinationStation", train.getDestinationStation());
+                details.put("originStationId", train.getOriginStationId());
+                details.put("destinationStationId", train.getDestinationStationId());
+                details.put("departureDate", train.getDepartureDate());
+                details.put("departureTime", train.getDepartureTime());
+                details.put("arrivalTime", train.getArrivalTime());
+                details.put("durationMinutes", train.getDurationMinutes());
+                details.put("trainNumber", train.getTrainNumber());
+                details.put("routeName", train.getRouteName());
+                details.put("operator", train.getOperator());
+                details.put("productType", train.getProductType());
+                details.put("stopsCount", train.getStopsCount());
+                details.put("intermediateStops", train.getIntermediateStops());
+                details.put("legs", train.getLegs());
+
+                ResolvedOfferDto resolved = buildResolvedDto(
+                        ref, "TRAIN", train.getProvider(), train.getOfferId(),
+                        details, train.getPrice(), train.getCurrency(), null, null);
+                selectionCache.put(ref, resolved);
+            }
+        }
+    }
+
+    private ResolvedOfferDto buildResolvedDto(String selectionRef,
+                                              String productType,
+                                              String provider,
+                                              String providerOfferId,
+                                              Map<String, Object> details,
+                                              java.math.BigDecimal amount,
+                                              String currency,
+                                              PriceConversionSnapshot conv,
+                                              Instant providerExpiresAt) {
+        return ResolvedOfferDto.builder()
+                .selectionRef(selectionRef)
+                .productType(productType)
+                .provider(provider != null ? provider : "UNKNOWN")
+                .providerOfferId(providerOfferId != null ? providerOfferId : selectionRef)
+                .selectedDetails(details)
+                .providerAmount(amount)
+                .providerCurrency(currency)
+                .displayAmount(conv != null ? conv.getDisplayAmount() : null)
+                .displayCurrency(conv != null ? conv.getDisplayCurrency() : null)
+                .exchangeRate(conv != null ? conv.getExchangeRate() : null)
+                .exchangeRateDate(conv != null ? conv.getExchangeRateDate() : null)
+                .exchangeRateProvider(conv != null ? conv.getExchangeRateProvider() : null)
+                .providerExpiresAt(providerExpiresAt)
+                .build();
     }
 
     /**
