@@ -14,6 +14,12 @@ public class BookingOwnershipException extends RuntimeException {
     private final UUID bookingId;
     private final UUID userId;
 
+    public BookingOwnershipException(String message) {
+        super(message);
+        this.bookingId = null;
+        this.userId = null;
+    }
+
     public BookingOwnershipException(UUID bookingId, UUID userId) {
         super(String.format("User %s is not authorized to access or modify booking %s", userId, bookingId));
         this.bookingId = bookingId;

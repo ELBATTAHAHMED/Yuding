@@ -1,7 +1,13 @@
 package com.ahmed.travelservice.controller;
 
 import com.ahmed.travelservice.cache.OfferSelectionCache;
+import com.ahmed.travelservice.domain.enums.OfferAvailabilityStatus;
+import com.ahmed.travelservice.domain.enums.OfferPriceStatus;
+import com.ahmed.travelservice.dto.request.InternalRevalidateOfferRequest;
+import com.ahmed.travelservice.dto.response.InternalRevalidationResultDto;
 import com.ahmed.travelservice.dto.response.ResolvedOfferDto;
+import com.ahmed.travelservice.service.revalidation.OfferRevalidationService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +23,10 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,8 +42,14 @@ class InternalTravelOfferControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private OfferSelectionCache offerSelectionCache;
+
+    @MockBean
+    private OfferRevalidationService offerRevalidationService;
 
     @Test
     @DisplayName("GET /internal/travel/offers/resolve/{selectionRef} returns 200 when found")
@@ -80,5 +94,47 @@ class InternalTravelOfferControllerTest {
         mockMvc.perform(get("/internal/travel/offers/resolve/{selectionRef}", ref)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /internal/travel/offers/revalidate returns 200 with normalized revalidation result")
+    void revalidateOfferSuccess() throws Exception {
+        InternalRevalidateOfferRequest request = InternalRevalidateOfferRequest.builder()
+                .productType("FLIGHT")
+                .provider("SCRAPPA")
+                .providerOfferId("flight-123")
+                .snapshotProviderAmount(new BigDecimal("150.00"))
+                .snapshotProviderCurrency("EUR")
+                .selectedDetails(Map.of("origin", "CDG", "destination", "CMN"))
+                .build();
+
+        InternalRevalidationResultDto resultDto = InternalRevalidationResultDto.builder()
+                .productType("FLIGHT")
+                .provider("SCRAPPA")
+                .providerOfferId("flight-123")
+                .matchedProviderOfferId("flight-123")
+                .availabilityStatus(OfferAvailabilityStatus.AVAILABLE)
+                .priceStatus(OfferPriceStatus.UNCHANGED)
+                .snapshotProviderAmount(new BigDecimal("150.00"))
+                .snapshotProviderCurrency("EUR")
+                .currentProviderAmount(new BigDecimal("150.00"))
+                .currentProviderCurrency("EUR")
+                .revalidatedAt(Instant.parse("2026-09-22T12:00:00Z"))
+                .validUntil(Instant.parse("2026-09-22T12:05:00Z"))
+                .message("Revalidation successful")
+                .build();
+
+        when(offerRevalidationService.revalidateOffer(any())).thenReturn(resultDto);
+
+        mockMvc.perform(post("/internal/travel/offers/revalidate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productType").value("FLIGHT"))
+                .andExpect(jsonPath("$.provider").value("SCRAPPA"))
+                .andExpect(jsonPath("$.availabilityStatus").value("AVAILABLE"))
+                .andExpect(jsonPath("$.priceStatus").value("UNCHANGED"))
+                .andExpect(jsonPath("$.currentProviderAmount").value(150.00))
+                .andExpect(jsonPath("$.currentProviderCurrency").value("EUR"));
     }
 }
