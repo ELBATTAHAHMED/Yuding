@@ -6,6 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public final class SecurityUtils {
@@ -18,6 +19,18 @@ public final class SecurityUtils {
             try {
                 return Long.parseLong(jwt.getSubject());
             } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public static UUID getCurrentUserUuid() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+            try {
+                return UUID.fromString(jwt.getSubject());
+            } catch (IllegalArgumentException e) {
                 return null;
             }
         }
@@ -52,6 +65,14 @@ public final class SecurityUtils {
             return true;
         }
         Long currentUserId = getCurrentUserId();
+        return currentUserId != null && currentUserId.equals(resourceOwnerId);
+    }
+
+    public static boolean isOwnerOrPrivileged(UUID resourceOwnerId) {
+        if (hasRole("ADMIN") || hasRole("SUPPORT")) {
+            return true;
+        }
+        UUID currentUserId = getCurrentUserUuid();
         return currentUserId != null && currentUserId.equals(resourceOwnerId);
     }
 }
