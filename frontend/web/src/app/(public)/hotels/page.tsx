@@ -19,28 +19,6 @@ import { saveSearchOffers } from '@/lib/offer-store';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
-interface PresetDestination {
-  label: string;
-  city: string;
-  country: string;
-  countryCode: string;
-}
-
-const PRESET_DESTINATIONS: PresetDestination[] = [
-  { label: 'Marrakech (Maroc)', city: 'Marrakech', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Casablanca (Maroc)', city: 'Casablanca', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Agadir (Maroc)', city: 'Agadir', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Tanger (Maroc)', city: 'Tangier', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Rabat (Maroc)', city: 'Rabat', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Fès (Maroc)', city: 'Fes', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Chefchaouen (Maroc)', city: 'Chefchaouen', country: 'Maroc', countryCode: 'MA' },
-  { label: 'Paris (France)', city: 'Paris', country: 'France', countryCode: 'FR' },
-  { label: 'Madrid (Espagne)', city: 'Madrid', country: 'Espagne', countryCode: 'ES' },
-  { label: 'Dubaï (Émirats arabes unis)', city: 'Dubai', country: 'Émirats arabes unis', countryCode: 'AE' },
-  { label: 'Londres (Royaume-Uni)', city: 'London', country: 'Royaume-Uni', countryCode: 'GB' },
-  { label: 'Rome (Italie)', city: 'Rome', country: 'Italie', countryCode: 'IT' },
-];
-
 function addDays(dateStr: string, days: number): string {
   if (!dateStr) return '';
   const parts = dateStr.split('-');
@@ -125,20 +103,6 @@ export default function HotelsPage() {
       setDestinationPois([]);
       setShowDestinationGuide(false);
     }
-  };
-
-  const handleDestinationSelect = (preset: PresetDestination) => {
-    setDestinationInput(preset.city);
-    setSelectedCity(preset.city);
-    setSelectedCountryCode(preset.countryCode);
-    setValidationError(null);
-
-    // Forward geocode preset to obtain coordinates and POIs for map
-    geoService.geocode({ text: `${preset.city}, ${preset.country}` }).then((res) => {
-      if (res && res.length > 0) {
-        handleGeoPlaceSelect(res[0]);
-      }
-    }).catch(() => {});
   };
 
   const handleCheckInChange = (val: string) => {
@@ -401,7 +365,7 @@ export default function HotelsPage() {
                 <button
                   type="button"
                   onClick={() => setShowOccupancyModal(!showOccupancyModal)}
-                  className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all"
+                  className="travel-passenger-trigger w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all"
                 >
                   <span className="truncate">
                     {occupancies.length} ch., {totalAdults} ad.
@@ -412,7 +376,7 @@ export default function HotelsPage() {
 
                 {/* Occupancy Dropdown Popover */}
                 {showOccupancyModal && (
-                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#062523] text-white rounded-xl shadow-2xl border border-[#01796F]/40 p-4 min-w-[280px]">
+                  <div className="travel-passenger-popover absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#062523] text-white rounded-xl shadow-2xl border border-[#01796F]/40 p-4 min-w-[280px]">
                     <div className="max-h-64 overflow-y-auto divide-y divide-[#01796F]/20">
                       {occupancies.map((room, roomIdx) => (
                         <div key={roomIdx} className="py-2.5 first:pt-0 last:pb-0">
@@ -434,21 +398,21 @@ export default function HotelsPage() {
                           {/* Adults counter */}
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-medium text-slate-200">Adultes</span>
-                            <div className="flex items-center gap-2">
+                            <div className="travel-stepper flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleAdultsChange(roomIdx, -1)}
                                 disabled={room.adults <= 1}
-                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 -
                               </button>
-                              <span className="w-5 text-center font-bold text-xs text-white">{room.adults}</span>
+                              <span className="travel-stepper__value w-5 text-center font-bold text-xs text-white">{room.adults}</span>
                               <button
                                 type="button"
                                 onClick={() => handleAdultsChange(roomIdx, 1)}
                                 disabled={room.adults >= 4}
-                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 +
                               </button>
@@ -458,21 +422,21 @@ export default function HotelsPage() {
                           {/* Children counter */}
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-medium text-slate-200">Enfants (0-17 ans)</span>
-                            <div className="flex items-center gap-2">
+                            <div className="travel-stepper flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleChildrenCountChange(roomIdx, -1)}
                                 disabled={(room.childrenAges?.length || 0) <= 0}
-                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 -
                               </button>
-                              <span className="w-5 text-center font-bold text-xs text-white">{room.childrenAges?.length || 0}</span>
+                              <span className="travel-stepper__value w-5 text-center font-bold text-xs text-white">{room.childrenAges?.length || 0}</span>
                               <button
                                 type="button"
                                 onClick={() => handleChildrenCountChange(roomIdx, 1)}
                                 disabled={(room.childrenAges?.length || 0) >= 3}
-                                className="w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
+                                className="travel-stepper__button w-7 h-7 rounded border border-[#01796F]/40 bg-[#021817] text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center"
                               >
                                 +
                               </button>
@@ -576,20 +540,6 @@ export default function HotelsPage() {
             </div>
           )}
 
-          {/* Popular Destinations subtle helper */}
-          <div className="mt-2.5 flex items-center gap-1.5 flex-wrap text-[11px] text-[#80cbc4]/80">
-            <span className="font-medium text-slate-400">Suggestions :</span>
-            {PRESET_DESTINATIONS.slice(0, 5).map((preset) => (
-              <button
-                key={preset.city}
-                type="button"
-                onClick={() => handleDestinationSelect(preset)}
-                className="hover:text-white underline underline-offset-2 transition-colors mr-1 bg-transparent border-none p-0 cursor-pointer text-[#80cbc4]"
-              >
-                {preset.city}
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 

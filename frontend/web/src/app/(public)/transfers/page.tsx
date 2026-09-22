@@ -139,8 +139,8 @@ export default function TransfersPage() {
         title="Transferts"
         subtitle="Reliez aéroport, gare et destination avec des offres fournisseur vérifiables."
         destination={dropoff || pickup || undefined}
-        defaultImageQuery="airport transfer travel shuttle car"
-        defaultImageIndex={1}
+        defaultImageQuery="passenger shuttle airport"
+        defaultImageIndex={3}
         icon="fas fa-route"
         compact={hasSearched}
       />

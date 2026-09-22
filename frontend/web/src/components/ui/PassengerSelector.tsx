@@ -18,29 +18,6 @@ export interface PassengerSelectorProps {
   className?: string;
 }
 
-const stepperBtn: React.CSSProperties = {
-  width: '32px',
-  height: '32px',
-  borderRadius: '6px',
-  border: '1px solid #ccc',
-  background: '#f5f5f5',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '1rem',
-  fontWeight: 700,
-  cursor: 'pointer',
-  userSelect: 'none',
-  transition: 'background 0.15s ease',
-  flexShrink: 0,
-};
-
-const stepperBtnDisabled: React.CSSProperties = {
-  ...stepperBtn,
-  opacity: 0.35,
-  cursor: 'not-allowed',
-};
-
 /**
  * Reusable passenger / guest counter widget.
  * Renders one row per entry in `rows` with decrement and increment buttons.
@@ -51,52 +28,42 @@ export const PassengerSelector: React.FC<PassengerSelectorProps> = ({
   className = '',
 }) => {
   return (
-    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div className={`travel-passenger-selector ${className}`}>
       {rows.map((row) => {
         const atMin = row.value <= row.min;
         const atMax = row.value >= row.max;
         return (
           <div
             key={row.key}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-            }}
+            className="travel-passenger-row"
           >
             {/* Label */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600, display: 'block' }}>
+            <div className="travel-passenger-row__label">
+              <span className="travel-passenger-row__title">
                 {row.label}
               </span>
               {row.subLabel && (
-                <span style={{ fontSize: '0.75rem', color: '#888', display: 'block' }}>
+                <span className="travel-passenger-row__subtitle">
                   {row.subLabel}
                 </span>
               )}
             </div>
 
             {/* Stepper */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <div className="travel-stepper" aria-label={`${row.label}: ${row.value}`}>
               <button
                 type="button"
                 aria-label={`Diminuer ${row.label}`}
                 disabled={atMin}
                 onClick={() => !atMin && onChange(row.key, row.value - 1)}
-                style={atMin ? stepperBtnDisabled : stepperBtn}
+                className="travel-stepper__button"
               >
                 −
               </button>
 
               <span
                 aria-live="polite"
-                style={{
-                  minWidth: '28px',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                }}
+                className="travel-stepper__value"
               >
                 {row.value}
               </span>
@@ -106,7 +73,7 @@ export const PassengerSelector: React.FC<PassengerSelectorProps> = ({
                 aria-label={`Augmenter ${row.label}`}
                 disabled={atMax}
                 onClick={() => !atMax && onChange(row.key, row.value + 1)}
-                style={atMax ? stepperBtnDisabled : stepperBtn}
+                className="travel-stepper__button"
               >
                 +
               </button>
