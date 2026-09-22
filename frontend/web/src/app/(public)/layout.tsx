@@ -10,7 +10,7 @@ export default function PublicLayout({
   return (
     <>
       <Header />
-      <main style={{ minHeight: 'calc(100vh - 200px)' }}>{children}</main>
+      <main>{children}</main>
       <Footer />
     </>
   );

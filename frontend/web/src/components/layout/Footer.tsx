@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
               className="max-h-11 mb-4 object-contain"
             />
             <p className="text-sm leading-relaxed text-[#b0bec5]">
-              Votre plateforme intelligente de réservation de voyages : hébergements, vols, taxis,
+              Votre plateforme intelligente de réservation de voyages : hébergements, vols, transferts,
               trains et activités partout dans le monde.
             </p>
           </div>
@@ -43,7 +43,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link href="/transfers" className="hover:text-white transition-colors">
-                  Taxi &amp; Trains
+                  Transferts
                 </Link>
               </li>
               <li>

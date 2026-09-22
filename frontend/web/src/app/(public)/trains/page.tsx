@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import type { TrainOffer, TrainStation } from '@/types/travel.types';
 import { StationSelector } from '@/components/travel/StationSelector';
+import { TravelHero, TravelPage } from '@/components/travel';
 import { TrainCard } from '@/components/travel/TrainCard';
 import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
@@ -183,11 +184,19 @@ export default function TrainsPage() {
   }, [trains, directOnly, selectedProduct, sortBy]);
 
   return (
-    <div>
+    <TravelPage page="trains">
+      <TravelHero
+        title="Trains"
+        subtitle="Des horaires ferroviaires fiables pour le Maroc et les réseaux internationaux."
+        destination={destinationStation?.city || undefined}
+        country={destinationStation?.country}
+        icon="fas fa-train"
+        compact={hasSearched}
+      />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
+      <section className="travel-search-panel bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-4">
+          <div className="travel-search-panel__heading mb-4">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Trains
             </h1>
@@ -554,6 +563,6 @@ export default function TrainsPage() {
         </div>
         </div>
       </section>
-    </div>
+    </TravelPage>
   );
 }

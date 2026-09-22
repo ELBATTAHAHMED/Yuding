@@ -84,10 +84,7 @@ export default function HomePage() {
                 Vols
               </Link>
               <Link href="/transfers" className="btn-booking" style={{ color: 'white' }}>
-                Taxi
-              </Link>
-              <Link href="/hotels" className="btn-booking" style={{ color: 'white' }}>
-                location de Voiture
+                Transferts
               </Link>
               <Link href="/activities" className="btn-booking" style={{ color: 'white' }}>
                 Activites

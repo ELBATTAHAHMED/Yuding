@@ -24,7 +24,7 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
   badges = [],
 }) => {
   return (
-    <div className="bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
+    <div className="travel-details-header bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-1 min-w-[240px]">
           <div className="w-12 h-12 rounded-xl bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-xl shrink-0">

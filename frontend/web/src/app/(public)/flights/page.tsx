@@ -7,6 +7,7 @@ import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
 import { AirportSelector } from '@/components/travel/AirportSelector';
 import { FlightSkeleton } from '@/components/travel/FlightSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
+import { TravelHero, TravelPage } from '@/components/travel';
 import { EmptyState, ErrorState, PassengerSelector, SortBar } from '@/components/ui';
 import { sortFlights, buildActiveFilterChips } from '@/lib/search-ux';
 import { saveSearchOffers } from '@/lib/offer-store';
@@ -70,6 +71,11 @@ export default function FlightsPage() {
   const [sortKey, setSortKey] = useState<FlightSortKey>('PRICE_ASC');
 
   const today = new Date().toISOString().split('T')[0];
+  const originError = validationError?.includes("origine") ? validationError : null;
+  const destinationError = validationError?.includes('destination') || validationError?.includes('différents')
+    ? validationError
+    : null;
+  const dateError = validationError?.includes('date') ? validationError : null;
 
   // ── Passenger dropdown rows ──────────────────────────────────────────────
   const passengerRows = [
@@ -177,11 +183,19 @@ export default function FlightsPage() {
   }, []);
 
   return (
-    <div>
+    <TravelPage page="flights">
+      <TravelHero
+        title="Vols"
+        subtitle="Comparez les itinéraires et les prix fournisseurs, en toute transparence."
+        destination={selectedDestination?.city}
+        country={selectedDestination?.country}
+        icon="fas fa-plane-departure"
+        compact={hasSearched}
+      />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
+      <section className="travel-search-panel bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-4">
+          <div className="travel-search-panel__heading mb-4">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Vols
             </h1>
@@ -209,6 +223,7 @@ export default function FlightsPage() {
                     setSelectedOrigin(airport);
                     setValidationError(null);
                   }}
+                  error={originError}
                 />
               </div>
 
@@ -225,6 +240,7 @@ export default function FlightsPage() {
                     setSelectedDestination(airport);
                     setValidationError(null);
                   }}
+                  error={destinationError}
                 />
               </div>
 
@@ -242,9 +258,19 @@ export default function FlightsPage() {
                   id="departure-date"
                   min={today}
                   value={departureDate}
-                  onChange={(e) => setDepartureDate(e.target.value)}
+                  onChange={(e) => {
+                    setDepartureDate(e.target.value);
+                    setValidationError(null);
+                  }}
+                  aria-invalid={Boolean(dateError)}
+                  aria-describedby={dateError ? 'departure-date-error' : undefined}
                   className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] focus:border-transparent transition-all"
                 />
+                {dateError && (
+                  <p id="departure-date-error" className="mt-1 text-[11px] font-medium text-red-600 dark:text-red-300" role="alert">
+                    {dateError}
+                  </p>
+                )}
               </div>
 
               {/* Passengers dropdown */}
@@ -313,13 +339,6 @@ export default function FlightsPage() {
             </div>
           </form>
 
-          {/* Validation Alert */}
-          {validationError && (
-            <div className="mt-2.5 p-2.5 bg-red-950/60 border border-red-500/50 rounded-lg text-red-200 text-xs flex items-center gap-2">
-              <i className="fas fa-exclamation-circle text-red-400" />
-              <span>{validationError}</span>
-            </div>
-          )}
         </div>
       </section>
 
@@ -489,6 +508,6 @@ export default function FlightsPage() {
           </div>
         </div>
       </section>
-    </div>
+    </TravelPage>
   );
 }

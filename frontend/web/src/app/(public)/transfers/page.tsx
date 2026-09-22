@@ -15,6 +15,7 @@ import {
 import { sortTransfers } from '@/lib/search-ux';
 import type { TransferSortKey } from '@/lib/search-ux';
 import { TransferLocationSelector, LocationSuggestion } from '@/components/travel/TransferLocationSelector';
+import { TravelHero, TravelPage } from '@/components/travel';
 import { TransferSkeleton } from '@/components/travel/TransferSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar } from '@/components/ui';
@@ -133,11 +134,18 @@ export default function TransfersPage() {
   };
 
   return (
-    <div>
+    <TravelPage page="transfers">
+      <TravelHero
+        title="Transferts"
+        subtitle="Reliez aéroport, gare et destination avec des offres fournisseur vérifiables."
+        destination={dropoff || pickup || undefined}
+        icon="fas fa-route"
+        compact={hasSearched}
+      />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
-      <section className="bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
+      <section className="travel-search-panel bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-4">
+          <div className="travel-search-panel__heading mb-4">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">
               Transferts &amp; VTC
             </h1>
@@ -322,7 +330,7 @@ export default function TransfersPage() {
               }`}
             >
               <i className="fas fa-car" />
-              Location &amp; Minibus {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
+              Minibus &amp; véhicules {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
             </button>
           </div>
 
@@ -492,6 +500,6 @@ export default function TransfersPage() {
           )}
         </div>
       </section>
-    </div>
+    </TravelPage>
   );
 }
