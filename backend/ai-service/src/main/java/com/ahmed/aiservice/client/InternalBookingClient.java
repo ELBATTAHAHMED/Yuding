@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 /**
- * Internal REST client communicating with reservation-service (default port 8084).
+ * Internal REST client communicating with reservation-service (default port 8090).
  * Forwards caller JWT token for defense-in-depth ownership verification.
  */
 @Component
@@ -19,7 +19,7 @@ public class InternalBookingClient {
 
     private final RestClient restClient;
 
-    public InternalBookingClient(@Value("${yuding.services.reservation-url:http://localhost:8084}") String reservationServiceUrl) {
+    public InternalBookingClient(@Value("${yuding.services.reservation-url:http://localhost:8090}") String reservationServiceUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(reservationServiceUrl)
                 .build();

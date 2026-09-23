@@ -99,7 +99,7 @@ public class SearchActivitiesTool implements AiTool {
                     activity.put("destination", item.path("destination").asText(destination));
                     activity.put("durationMinutes", item.path("durationMinutes").asInt(0));
                     activity.put("rating", item.path("rating").asDouble(0.0));
-                    activity.put("price", item.path("price").asDouble(0.0));
+                    activity.put("price", item.hasNonNull("price") ? item.path("price").asDouble() : null);
                     activity.put("currency", item.path("currency").asText("EUR"));
                     items.add(activity);
                     count++;
