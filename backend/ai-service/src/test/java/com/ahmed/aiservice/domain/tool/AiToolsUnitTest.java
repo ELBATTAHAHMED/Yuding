@@ -117,6 +117,45 @@ class AiToolsUnitTest {
         }
 
         @Test
+        @DisplayName("Preserves null price when offer has null or missing price, does not coerce to 0.0")
+        @SuppressWarnings("unchecked")
+        void searchFlightsNullPricePreserved() throws Exception {
+            String json = """
+                    {
+                      "items": [
+                        {
+                          "id": "FL-NULL-PRICE",
+                          "airline": "Air France",
+                          "flightNumber": "AF9999",
+                          "originAirport": "CDG",
+                          "destinationAirport": "NCE",
+                          "departureTime": "2026-10-01T08:00:00",
+                          "arrivalTime": "2026-10-01T09:30:00",
+                          "durationMinutes": 90,
+                          "stops": 0,
+                          "price": null,
+                          "currency": "EUR"
+                        }
+                      ]
+                    }
+                    """;
+            when(travelClient.searchFlights(anyMap())).thenReturn(objectMapper.readTree(json));
+
+            AiToolCall call = new AiToolCall("call-null-price", "searchFlights", Map.of(
+                    "origin", "CDG",
+                    "destination", "NCE",
+                    "departureDate", "2026-10-01"
+            ));
+
+            AiToolResult result = tool.execute(call, AiToolExecutionContext.anonymous());
+
+            assertThat(result.isSuccess()).isTrue();
+            var flights = (java.util.List<Map<String, Object>>) result.getData().get("flights");
+            assertThat(flights).hasSize(1);
+            assertThat(flights.get(0).get("price")).isNull();
+        }
+
+        @Test
         @DisplayName("Rejects invalid departure date format")
         void searchFlightsInvalidDate() {
             AiToolCall call = new AiToolCall("call-3", "searchFlights", Map.of(

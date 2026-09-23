@@ -109,8 +109,8 @@ public class SearchHotelsTool implements AiTool {
                     hotel.put("address", item.path("address").asText(""));
                     hotel.put("starRating", item.path("starRating").asInt(0));
                     hotel.put("roomType", item.path("roomType").asText(""));
-                    hotel.put("pricePerNight", item.path("pricePerNight").asDouble(0.0));
-                    hotel.put("totalPrice", item.path("totalPrice").asDouble(0.0));
+                    hotel.put("pricePerNight", item.hasNonNull("pricePerNight") ? item.path("pricePerNight").asDouble() : null);
+                    hotel.put("totalPrice", item.hasNonNull("totalPrice") ? item.path("totalPrice").asDouble() : null);
                     hotel.put("currency", item.path("currency").asText("EUR"));
                     items.add(hotel);
                     count++;

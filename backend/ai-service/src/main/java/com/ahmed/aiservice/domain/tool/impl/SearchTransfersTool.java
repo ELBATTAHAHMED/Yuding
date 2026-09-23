@@ -115,7 +115,7 @@ public class SearchTransfersTool implements AiTool {
                     transfer.put("pickup", item.path("pickup").asText(pickup));
                     transfer.put("dropoff", item.path("dropoff").asText(dropoff));
                     transfer.put("durationMinutes", item.path("durationMinutes").asInt(0));
-                    transfer.put("price", item.path("price").asDouble(0.0));
+                    transfer.put("price", item.hasNonNull("price") ? item.path("price").asDouble() : null);
                     transfer.put("currency", item.path("currency").asText("EUR"));
                     items.add(transfer);
                     count++;

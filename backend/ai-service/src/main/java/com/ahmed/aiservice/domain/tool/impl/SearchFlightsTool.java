@@ -128,7 +128,7 @@ public class SearchFlightsTool implements AiTool {
                     offer.put("arrivalTime", item.path("arrivalTime").asText(""));
                     offer.put("durationMinutes", item.path("durationMinutes").asInt(0));
                     offer.put("stops", item.path("stops").asInt(0));
-                    offer.put("price", item.path("price").asDouble(0.0));
+                    offer.put("price", item.hasNonNull("price") ? item.path("price").asDouble() : null);
                     offer.put("currency", item.path("currency").asText("EUR"));
                     items.add(offer);
                     count++;
