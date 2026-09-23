@@ -138,4 +138,27 @@ describe('AI Assistant V2 — Service & Routing Contract Tests', () => {
       }
     );
   });
+
+  test('receives grounded: true and toolsUsed when tools are executed by assistant', async () => {
+    globalThis.fetch = async (input, init) => {
+      return jsonResponse({
+        conversationId: 'c56a4180-65aa-42ec-a945-5fd21dec0538',
+        messageId: 'grounded-msg-123',
+        role: 'assistant',
+        content: 'Vol Air France AF1234 disponible à 120.50 EUR de Paris vers Nice.',
+        createdAt: '2026-09-23T20:00:00Z',
+        grounded: true,
+        toolsUsed: ['searchFlights'],
+      });
+    };
+
+    const result = await aiService.sendMessage({
+      conversationId: 'c56a4180-65aa-42ec-a945-5fd21dec0538',
+      message: 'Vols Paris - Nice demain',
+    });
+
+    assert.equal(result.grounded, true);
+    assert.deepEqual(result.toolsUsed, ['searchFlights']);
+    assert.ok(result.content.includes('Air France'));
+  });
 });

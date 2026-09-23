@@ -9,6 +9,8 @@ export interface AiChatResponseDto {
   role: 'assistant' | 'user' | string;
   content: string;
   createdAt: string;
+  grounded?: boolean;
+  toolsUsed?: string[];
 }
 
 export interface ChatMessage {
@@ -18,4 +20,6 @@ export interface ChatMessage {
   timestamp: Date;
   status?: 'sending' | 'delivered' | 'error';
   errorMessage?: string;
+  grounded?: boolean;
+  toolsUsed?: string[];
 }

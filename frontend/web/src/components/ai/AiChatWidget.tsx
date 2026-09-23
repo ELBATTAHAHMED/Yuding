@@ -9,15 +9,15 @@ import Link from 'next/link';
 const INITIAL_GREETING: ChatMessage = {
   id: 'greeting',
   role: 'assistant',
-  content: "Bonjour ! Je suis l'assistant de voyage Yuding. Que vous cherchiez des idées de destinations, des conseils culturels ou un itinéraire sur mesure, je suis là pour vous aider !\n\n*Note : Pour consulter les tarifs en temps réel et réserver, utilisez la recherche en direct sur le site.*",
+  content: "Bonjour ! Je suis l'assistant de voyage officiel Yuding.\n\nJe peux rechercher pour vous des **vols**, **hôtels**, **activités**, **transferts**, consulter la **météo** en direct, convertir des **devises** et vérifier le statut de vos réservations !",
   timestamp: new Date(),
 };
 
 const SUGGESTIONS = [
-  "Conseils pour visiter Rome en 3 jours",
-  "Idées d'escapade nature en France",
-  "Meilleure période pour voyager au Japon",
-  "Que faire à Marrakech en famille ?",
+  "Vols Paris - Nice demain",
+  "Hôtels à Rome pour 2 nuits",
+  "Météo actuelle à Marrakech",
+  "Convertir 150 EUR en MAD",
 ];
 
 export const AiChatWidget: React.FC = () => {
@@ -113,6 +113,8 @@ export const AiChatWidget: React.FC = () => {
         content: response.content,
         timestamp: new Date(response.createdAt || Date.now()),
         status: 'delivered',
+        grounded: response.grounded,
+        toolsUsed: response.toolsUsed,
       };
 
       setMessages((prev) =>
@@ -297,6 +299,14 @@ export const AiChatWidget: React.FC = () => {
                           renderMessageContent(message.content)
                         )}
                       </div>
+
+                      {/* Grounding Badge */}
+                      {!isUser && message.grounded && (
+                        <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 w-fit">
+                          <i className="fa-solid fa-shield-halved text-emerald-600 dark:text-emerald-400 text-[10px]" />
+                          <span>Données Yuding vérifiées en direct</span>
+                        </div>
+                      )}
 
                       {/* Error or delivery status */}
                       {message.status === 'error' && (

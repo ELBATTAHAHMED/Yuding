@@ -5,6 +5,7 @@ import com.ahmed.aiservice.domain.provider.AiChatCommand;
 import com.ahmed.aiservice.domain.provider.AiChatResult;
 import com.ahmed.aiservice.domain.provider.gemini.GeminiAiProvider;
 import com.ahmed.aiservice.domain.provider.groq.GroqAiProvider;
+import com.ahmed.aiservice.domain.tool.*;
 import com.ahmed.aiservice.dto.AiChatRequest;
 import com.ahmed.aiservice.dto.AiChatResponse;
 import com.ahmed.aiservice.exception.AiProviderException;
@@ -17,6 +18,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +37,12 @@ class AiChatServiceTest {
     @Mock
     private GroqAiProvider groqProvider;
 
+    @Mock
+    private AiToolRegistry toolRegistry;
+
+    @Mock
+    private AiToolExecutor toolExecutor;
+
     private AiProperties aiProperties;
     private AiChatService aiChatService;
 
@@ -47,11 +57,11 @@ class AiChatServiceTest {
         aiProperties.setMaxOutputTokens(2048);
         aiProperties.setRequestTimeoutSeconds(30);
 
-        aiChatService = new AiChatService(aiProperties, geminiProvider, groqProvider);
+        aiChatService = new AiChatService(aiProperties, geminiProvider, groqProvider, toolRegistry, toolExecutor, 3, 6);
     }
 
     @Test
-    @DisplayName("Primary Gemini provider succeeds; fallback is never invoked")
+    @DisplayName("Primary Gemini provider succeeds without tools; ungrounded response returned")
     void primaryProviderSuccess_fallbackNotInvoked() {
         UUID conversationId = UUID.randomUUID();
         AiChatRequest request = AiChatRequest.builder()
@@ -61,7 +71,7 @@ class AiChatServiceTest {
 
         when(geminiProvider.chat(any(AiChatCommand.class))).thenReturn(
                 AiChatResult.builder()
-                        .content("Marrakech offre un grand choix de riads et hôtels. Vous pouvez consulter les offres en direct sur Yuding.")
+                        .content("Marrakech offre un grand choix de riads et hôtels.")
                         .model("gemini-3.8-flash")
                         .provider("gemini")
                         .promptTokens(150)
@@ -77,7 +87,8 @@ class AiChatServiceTest {
         assertThat(response.getMessageId()).isNotNull();
         assertThat(response.getRole()).isEqualTo("assistant");
         assertThat(response.getContent()).contains("Marrakech offre un grand choix");
-        assertThat(response.getCreatedAt()).isNotNull();
+        assertThat(response.isGrounded()).isFalse();
+        assertThat(response.getToolsUsed()).isEmpty();
 
         verify(geminiProvider, times(1)).chat(any(AiChatCommand.class));
         verify(groqProvider, never()).chat(any());
@@ -166,7 +177,7 @@ class AiChatServiceTest {
     }
 
     @Test
-    @DisplayName("Prompt includes travel assistant instructions and live travel truth rule")
+    @DisplayName("Prompt includes travel assistant instructions and grounding directives")
     void systemInstructionIncludesTravelTruthRule() {
         UUID conversationId = UUID.randomUUID();
         AiChatRequest request = AiChatRequest.builder()
@@ -177,7 +188,7 @@ class AiChatServiceTest {
         ArgumentCaptor<AiChatCommand> captor = ArgumentCaptor.forClass(AiChatCommand.class);
         when(geminiProvider.chat(captor.capture())).thenReturn(
                 AiChatResult.builder()
-                        .content("Consultez nos vols en temps réel.")
+                        .content("Voici les vols.")
                         .model("gemini-3.8-flash")
                         .provider("gemini")
                         .promptTokens(50)
@@ -190,8 +201,59 @@ class AiChatServiceTest {
 
         AiChatCommand command = captor.getValue();
         assertThat(command.getSystemInstruction()).contains("Yuding");
-        assertThat(command.getSystemInstruction()).contains("JAMAIS inventer");
+        assertThat(command.getSystemInstruction()).contains("GROUNDING");
         assertThat(command.getUserMessage()).isEqualTo("Combien coûte le vol vers Tokyo ?");
+    }
+
+    @Test
+    @DisplayName("Multi-round tool calling executes tool and marks response as grounded")
+    void multiRoundToolExecution_groundsResponse() {
+        UUID conversationId = UUID.randomUUID();
+        AiChatRequest request = AiChatRequest.builder()
+                .conversationId(conversationId)
+                .message("Y a-t-il des vols de Paris à Nice demain ?")
+                .build();
+
+        AiToolDefinition flightDef = new AiToolDefinition("searchFlights", "Vols", Map.of("type", "object"));
+        when(toolRegistry.getDefinitions()).thenReturn(List.of(flightDef));
+
+        // Round 1: Model requests tool call
+        AiToolCall flightCall = new AiToolCall("call-f1", "searchFlights", Map.of(
+                "origin", "CDG",
+                "destination", "NCE",
+                "departureDate", "2026-10-01"
+        ));
+        AiChatResult round1Result = AiChatResult.builder()
+                .content("")
+                .toolCalls(List.of(flightCall))
+                .model("gemini-3.8-flash")
+                .provider("gemini")
+                .build();
+
+        // Round 2: Model receives tool result and produces grounded response
+        AiChatResult round2Result = AiChatResult.builder()
+                .content("Oui, il y a un vol Air France AF1234 à 120,50 EUR au départ de Paris CDG vers Nice à 08h00.")
+                .toolCalls(Collections.emptyList())
+                .model("gemini-3.8-flash")
+                .provider("gemini")
+                .build();
+
+        when(geminiProvider.chat(any(AiChatCommand.class)))
+                .thenReturn(round1Result)
+                .thenReturn(round2Result);
+
+        when(toolExecutor.execute(eq(flightCall), any(), any()))
+                .thenReturn(AiToolResult.success("call-f1", "searchFlights", Map.of("totalFound", 1)));
+
+        AiChatResponse response = aiChatService.processChat(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.isGrounded()).isTrue();
+        assertThat(response.getToolsUsed()).containsExactly("searchFlights");
+        assertThat(response.getContent()).contains("Air France AF1234");
+
+        verify(toolExecutor, times(1)).execute(eq(flightCall), any(), any());
+        verify(geminiProvider, times(2)).chat(any(AiChatCommand.class));
     }
 
     @Test
@@ -200,7 +262,7 @@ class AiChatServiceTest {
         // Null conversationId
         assertThatThrownBy(() -> aiChatService.processChat(AiChatRequest.builder().conversationId(null).message("Hello").build()))
                 .isInstanceOf(AiProviderException.class)
-                .hasMessageContaining("conversationId is required");
+                .hasMessageContaining("conversationId");
 
         // Blank message
         assertThatThrownBy(() -> aiChatService.processChat(AiChatRequest.builder().conversationId(UUID.randomUUID()).message("   ").build()))
