@@ -1,6 +1,7 @@
 @import '../styles/style.css';
 @import '../styles/travel-design.css';
 @import '../styles/loginStyle.css';
+@import '../styles/home-redesign.css';
 
 @tailwind base;
 @tailwind components;

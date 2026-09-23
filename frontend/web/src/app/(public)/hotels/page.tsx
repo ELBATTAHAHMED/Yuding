@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ApiError } from '@/lib/api-client';
@@ -62,6 +62,35 @@ export default function HotelsPage() {
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const destination = params.get('destination')?.trim();
+    if (!destination) return;
+    const country = params.get('country') || '';
+    const countryCode = params.get('countryCode') || '';
+    setDestinationInput(destination);
+    setSelectedCity(destination);
+    if (countryCode) setSelectedCountryCode(countryCode);
+    setSelectedGeoPlace({
+      id: `home-${destination}`,
+      name: destination,
+      city: destination,
+      formatted: [destination, country].filter(Boolean).join(', '),
+      country,
+      countryCode,
+      latitude: 0,
+      longitude: 0,
+    });
+    const arrival = params.get('checkIn');
+    const departure = params.get('checkOut');
+    if (arrival) setCheckIn(arrival);
+    if (departure) setCheckOut(departure);
+    const adults = Number(params.get('adults'));
+    if (Number.isInteger(adults) && adults >= 1 && adults <= 4) {
+      setOccupancies([{ adults, childrenAges: [] }]);
+    }
+  }, []);
 
   const today = new Date().toISOString().split('T')[0];
   const minCheckOut = checkIn ? addDays(checkIn, 1) : addDays(today, 1);
