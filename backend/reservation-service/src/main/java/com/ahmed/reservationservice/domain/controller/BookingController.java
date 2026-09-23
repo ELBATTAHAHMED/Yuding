@@ -3,6 +3,7 @@ package com.ahmed.reservationservice.domain.controller;
 import com.ahmed.reservationservice.config.SecurityUtils;
 import com.ahmed.reservationservice.domain.dto.AttachOfferSnapshotRequest;
 import com.ahmed.reservationservice.domain.dto.BookingResponseDto;
+import com.ahmed.reservationservice.domain.dto.BookingConfirmationDto;
 import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
 import com.ahmed.reservationservice.domain.dto.OfferSnapshotResponseDto;
 import com.ahmed.reservationservice.domain.idempotency.IdempotencyOperation;
@@ -10,6 +11,7 @@ import com.ahmed.reservationservice.domain.idempotency.IdempotencyService;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.service.BookingService;
+import com.ahmed.reservationservice.domain.service.ConfirmationProjectionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ import java.util.UUID;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final ConfirmationProjectionService confirmationProjectionService;
     private final IdempotencyService idempotencyService;
 
     /**
@@ -108,6 +111,20 @@ public class BookingController {
         Optional<OfferSnapshot> snapshot = bookingService.getSnapshotByBookingReference(reference, userId, privileged);
 
         return ResponseEntity.ok(BookingResponseDto.fromDomain(booking, snapshot.orElse(null)));
+    }
+
+    /**
+     * Returns the confirmation/receipt projection for an owned booking reference. This is read-only:
+     * opening a confirmation URL cannot trigger payment capture or booking lifecycle changes.
+     */
+    @GetMapping("/{reference}/confirmation")
+    public ResponseEntity<BookingConfirmationDto> getConfirmation(
+            @PathVariable String reference,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        UUID userId = resolveUserUuid(jwt);
+        boolean privileged = SecurityUtils.hasRole("ADMIN") || SecurityUtils.hasRole("SUPPORT");
+        return ResponseEntity.ok(confirmationProjectionService.getConfirmation(reference, userId, privileged));
     }
 
     /**

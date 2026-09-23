@@ -1,15 +1,18 @@
 package com.ahmed.reservationservice;
 
 import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
+import com.ahmed.reservationservice.domain.dto.BookingConfirmationDto;
 import com.ahmed.reservationservice.domain.exception.BookingNotFoundException;
 import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
 import com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceException;
 import com.ahmed.reservationservice.domain.exception.InvalidBookingTransitionException;
 import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.BookingStatus;
+import com.ahmed.reservationservice.domain.model.ConfirmationState;
 import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.model.ProductType;
 import com.ahmed.reservationservice.domain.service.BookingService;
+import com.ahmed.reservationservice.domain.service.ConfirmationProjectionService;
 import com.ahmed.reservationservice.feigh.UtilisateurFeign;
 import com.ahmed.reservationservice.repositories.ReservationRepository;
 import com.ahmed.reservationservice.services.ActiviteesServices;
@@ -62,6 +65,9 @@ class BookingControllerSecurityTest {
 
     @MockBean
     private BookingService bookingService;
+
+    @MockBean
+    private ConfirmationProjectionService confirmationProjectionService;
 
     // Legacy mock beans to prevent application context startup failures
     @MockBean
@@ -152,6 +158,61 @@ class BookingControllerSecurityTest {
                 .andExpect(jsonPath("$.bookingReference").value(reference))
                 .andExpect(jsonPath("$.id").doesNotExist())
                 .andExpect(jsonPath("$.productType").value("TRAIN"));
+    }
+
+    @Test
+    @DisplayName("Anonymous access to GET /bookings/{reference}/confirmation is rejected with 401 Unauthorized")
+    void anonymous_confirmation_rejectedWith401() throws Exception {
+        mockMvc.perform(get("/bookings/YUD-K7M4P2Q8/confirmation"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Owner receives only the safe backend confirmation projection")
+    void owner_getConfirmation_returnsSafeProjection() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
+        BookingConfirmationDto confirmation = BookingConfirmationDto.builder()
+                .bookingReference(reference)
+                .bookingStatus(BookingStatus.PAID)
+                .productType(ProductType.FLIGHT)
+                .confirmationState(ConfirmationState.PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION)
+                .paymentReference("PAY-2A3B4C5D")
+                .paymentStatus(com.ahmed.reservationservice.domain.model.PaymentStatus.SUCCEEDED)
+                .paymentProvider("PAYPAL_SANDBOX")
+                .authoritativeAmount(new BigDecimal("249.90"))
+                .currency("EUR")
+                .createdAt(Instant.now())
+                .paymentVerifiedAt(Instant.now())
+                .productSummary(java.util.Map.of("trajet", "Casablanca → Paris"))
+                .build();
+        when(confirmationProjectionService.getConfirmation(eq(reference), eq(userId), eq(false))).thenReturn(confirmation);
+
+        mockMvc.perform(get("/bookings/" + reference + "/confirmation")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookingReference").value(reference))
+                .andExpect(jsonPath("$.confirmationState").value("PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION"))
+                .andExpect(jsonPath("$.authoritativeAmount").value(249.90))
+                .andExpect(jsonPath("$.id").doesNotExist())
+                .andExpect(jsonPath("$.bookingId").doesNotExist())
+                .andExpect(jsonPath("$.providerOrderId").doesNotExist())
+                .andExpect(jsonPath("$.providerTransactionId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("IDOR Defense: another user cannot load a confirmation projection")
+    void idor_userCannotGetAnotherUsersConfirmation_returns403() throws Exception {
+        UUID attackerId = UUID.randomUUID();
+        String reference = "YUD-K7M4P2Q8";
+        when(confirmationProjectionService.getConfirmation(eq(reference), eq(attackerId), eq(false)))
+                .thenThrow(new BookingOwnershipException(UUID.randomUUID(), attackerId));
+
+        mockMvc.perform(get("/bookings/" + reference + "/confirmation")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(attackerId.toString()))))
+                .andExpect(status().isForbidden());
     }
 
     @Test

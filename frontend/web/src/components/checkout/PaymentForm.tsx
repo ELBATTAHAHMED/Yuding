@@ -110,9 +110,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         if (onPaymentSuccess) {
           onPaymentSuccess(captureResult.paymentReference);
         } else {
-          router.push(
-            `/booking/confirmation?reference=${bookingReference}&payment=${captureResult.paymentReference}&amount=${captureResult.amount}&currency=${captureResult.currency}`
-          );
+          router.push(`/booking/confirmation?reference=${encodeURIComponent(bookingReference)}`);
         }
       } else if (captureResult.paymentStatus === 'AWAITING_WEBHOOK') {
         setWaitingForWebhook(true);
@@ -121,8 +119,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         for (let attempt = 0; attempt < 15; attempt++) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
           try {
-            const currentBooking = await bookingService.getBookingByReference(bookingReference);
-            if (currentBooking.status === 'PAID') {
+            const currentConfirmation = await bookingService.getConfirmation(bookingReference);
+            if (currentConfirmation.confirmationState === 'PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION'
+              || currentConfirmation.confirmationState === 'PENDING_PROVIDER_CONFIRMATION'
+              || currentConfirmation.confirmationState === 'CONFIRMED') {
               confirmed = true;
               break;
             }
@@ -135,9 +135,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           if (onPaymentSuccess) {
             onPaymentSuccess(captureResult.paymentReference);
           } else {
-            router.push(
-              `/booking/confirmation?reference=${bookingReference}&payment=${captureResult.paymentReference}&amount=${captureResult.amount}&currency=${captureResult.currency}`
-            );
+            router.push(`/booking/confirmation?reference=${encodeURIComponent(bookingReference)}`);
           }
         } else {
           setWebhookTimeout(true);
