@@ -1,0 +1,10 @@
+# ====================================================================
+# Yuding V2 - Notification Service Development Profile (notification-service-dev.yml)
+# ====================================================================
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:yuding}?currentSchema=notification}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:63342,http://127.0.0.1:5500}

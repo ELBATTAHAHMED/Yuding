@@ -1,0 +1,16 @@
+YUDING - Échec du paiement
+
+Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
+
+Le paiement de votre réservation n'a pas pu être validé. Aucun montant n'a été débité.
+
+Détails de la transaction :
+- Référence dossier : [(${bookingReference})]
+- Référence paiement : [(${paymentReference != null ? paymentReference : 'N/A'})]
+- Montant : [(${amount != null ? amount : '—'})] [(${currency != null ? currency : 'EUR'})]
+
+Vous pouvez reprendre le paiement en ouvrant votre dossier :
+[(${dossierLink})]
+
+--
+Yuding V2 - Zéro stockage de carte bancaire (PAN / CVC)

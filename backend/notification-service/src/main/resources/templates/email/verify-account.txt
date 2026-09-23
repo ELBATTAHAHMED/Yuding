@@ -1,0 +1,14 @@
+YUDING - Vérification de votre compte
+
+Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
+
+Merci d'avoir créé votre compte sur Yuding.
+Veuillez confirmer votre adresse e-mail en ouvrant le lien suivant :
+
+[(${verificationLink})]
+
+Ce lien de vérification expire dans 24 heures.
+Si vous n'avez pas créé de compte sur Yuding, vous pouvez ignorer ce message.
+
+--
+Yuding V2 - Plateforme de voyage sécurisée

@@ -1,0 +1,16 @@
+YUDING - Réservation confirmée
+
+Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
+
+Votre réservation est officiellement confirmée par le fournisseur.
+
+Détails de votre voyage :
+- Référence dossier : [(${bookingReference})]
+- Prestation : [(${serviceTitle != null ? serviceTitle : (productType != null ? productType : 'Voyage')})]
+- Montant réglé : [(${amount != null ? amount : '—'})] [(${currency != null ? currency : 'EUR'})]
+
+Vous pouvez consulter votre dossier et vos documents de voyage à tout moment :
+[(${dossierLink})]
+
+--
+Yuding V2 - Bon voyage !

@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
+import { authService } from '@/services/auth.service';
 
 function LoginFormContent() {
   const router = useRouter();
@@ -22,6 +23,12 @@ function LoginFormContent() {
   // Login form fields
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+
+  // Forgot password fields
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
 
   // Signup form fields
   const [signupFirstName, setSignupFirstName] = useState('');
@@ -96,6 +103,21 @@ function LoginFormContent() {
       setErrorMessage(err.message || 'Identifiants invalides. Veuillez vérifier votre email et mot de passe.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    setForgotMessage(null);
+    try {
+      await authService.forgotPassword(forgotEmail.trim());
+    } catch {
+      // Anti-enumeration: preserve same response message regardless of user existence
+    } finally {
+      setForgotLoading(false);
+      setForgotMessage("Si un compte est associé à cette adresse e-mail, un lien sécurisé vient de vous être envoyé.");
     }
   };
 
@@ -237,71 +259,130 @@ function LoginFormContent() {
           <div className="form-content">
             {/* =========== LOGIN FORM =========== */}
             <div className="login-form">
-              <div className="title">Login</div>
-              <form id="login-form" onSubmit={handleLogin}>
-                <div className="input-boxes">
-                  {errorMessage && !isFlipped && (
-                    <div className="auth-alert auth-alert-error" role="alert">
-                      <i className="fas fa-exclamation-circle"></i>
-                      <span>{errorMessage}</span>
+              <div className="title">{showForgotPassword ? 'Réinitialisation' : 'Login'}</div>
+              {showForgotPassword ? (
+                <form id="forgot-form" onSubmit={handleForgotPassword}>
+                  <div className="input-boxes">
+                    {forgotMessage && (
+                      <div className="auth-alert auth-alert-success" role="alert">
+                        <i className="fas fa-check-circle"></i>
+                        <span>{forgotMessage}</span>
+                      </div>
+                    )}
+                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px', lineHeight: '1.4' }}>
+                      Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation sécurisé.
+                    </p>
+                    <div className="input-box">
+                      <i className="fas fa-envelope"></i>
+                      <input
+                        type="email"
+                        id="forgot-email"
+                        name="email"
+                        placeholder="Votre adresse e-mail"
+                        autoComplete="email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        required
+                      />
                     </div>
-                  )}
-                  {successMessage && !isFlipped && (
-                    <div className="auth-alert auth-alert-success" role="alert">
-                      <i className="fas fa-check-circle"></i>
-                      <span>{successMessage}</span>
+                    <div className="button input-box">
+                      <input
+                        type="submit"
+                        value={forgotLoading ? 'Envoi en cours...' : 'Envoyer le lien'}
+                        className="btn"
+                        disabled={forgotLoading}
+                      />
                     </div>
-                  )}
-                  <div className="input-box">
-                    <i className="fas fa-envelope"></i>
-                    <input
-                      type="email"
-                      id="login-email"
-                      name="email"
-                      placeholder="Enter your email"
-                      autoComplete="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                    />
+                    <div className="text sign-up-text">
+                      <button
+                        type="button"
+                        className="auth-switch-link"
+                        onClick={() => setShowForgotPassword(false)}
+                      >
+                        Retour à la connexion
+                      </button>
+                    </div>
                   </div>
-                  <div className="input-box">
-                    <i className="fas fa-lock"></i>
-                    <input
-                      type="password"
-                      id="login-password"
-                      name="password"
-                      placeholder="Enter your password"
-                      autoComplete="current-password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                    />
+                </form>
+              ) : (
+                <form id="login-form" onSubmit={handleLogin}>
+                  <div className="input-boxes">
+                    {errorMessage && !isFlipped && (
+                      <div className="auth-alert auth-alert-error" role="alert">
+                        <i className="fas fa-exclamation-circle"></i>
+                        <span>{errorMessage}</span>
+                      </div>
+                    )}
+                    {successMessage && !isFlipped && (
+                      <div className="auth-alert auth-alert-success" role="alert">
+                        <i className="fas fa-check-circle"></i>
+                        <span>{successMessage}</span>
+                      </div>
+                    )}
+                    <div className="input-box">
+                      <i className="fas fa-envelope"></i>
+                      <input
+                        type="email"
+                        id="login-email"
+                        name="email"
+                        placeholder="Enter your email"
+                        autoComplete="email"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="input-box">
+                      <i className="fas fa-lock"></i>
+                      <input
+                        type="password"
+                        id="login-password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autoComplete="current-password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="text" style={{ textAlign: 'right', marginTop: '4px', marginBottom: '8px' }}>
+                      <button
+                        type="button"
+                        className="auth-switch-link"
+                        style={{ fontSize: '13px', textDecoration: 'none' }}
+                        onClick={() => {
+                          setShowForgotPassword(true);
+                          setForgotMessage(null);
+                        }}
+                      >
+                        Mot de passe oublié ?
+                      </button>
+                    </div>
+                    <div className="button input-box">
+                      <input
+                        type="submit"
+                        value={loading ? 'Connexion en cours...' : 'Submit'}
+                        className="btn"
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="text sign-up-text">
+                      Don&apos;t have an account?{' '}
+                      <button
+                        type="button"
+                        className="auth-switch-link"
+                        onClick={() => {
+                          setMode('signup');
+                          setErrorMessage(null);
+                          setSuccessMessage(null);
+                        }}
+                      >
+                        Signup now
+                      </button>
+                    </div>
                   </div>
-                  <div className="button input-box">
-                    <input
-                      type="submit"
-                      value={loading ? 'Connexion en cours...' : 'Submit'}
-                      className="btn"
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="text sign-up-text">
-                    Don&apos;t have an account?{' '}
-                    <button
-                      type="button"
-                      className="auth-switch-link"
-                      onClick={() => {
-                        setMode('signup');
-                        setErrorMessage(null);
-                        setSuccessMessage(null);
-                      }}
-                    >
-                      Signup now
-                    </button>
-                  </div>
-                </div>
-              </form>
+                </form>
+              )}
             </div>
 
             {/* =========== SIGNUP FORM =========== */}

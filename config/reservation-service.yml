@@ -19,3 +19,9 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 10MB
+
+yuding:
+  notification:
+    service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
+    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
+

@@ -1,0 +1,41 @@
+# ====================================================================
+# Yuding V2 - Notification Service Base Configuration (notification-service.yml)
+# Schema: notification
+# ====================================================================
+
+server:
+  port: 8085
+  max-http-request-header-size: 16KB
+
+spring:
+  application:
+    name: notification-service
+  jpa:
+    properties:
+      hibernate:
+        default_schema: notification
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS:false}
+
+yuding:
+  notification:
+    channel: EMAIL
+    from-address: ${SMTP_FROM_ADDRESS:no-reply@yuding.local}
+    from-name: ${SMTP_FROM_NAME:Yuding}
+    frontend-base-url: ${YUDING_FRONTEND_BASE_URL:http://localhost:3000}
+    max-attempts: ${YUDING_NOTIFICATION_MAX_ATTEMPTS:5}
+    stale-processing-timeout-minutes: 5
+    worker-enabled: true
+    worker-fixed-delay-ms: 2000
