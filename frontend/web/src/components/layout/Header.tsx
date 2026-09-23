@@ -113,7 +113,6 @@ export const Header: React.FC = () => {
               aria-label="Ouvrir la navigation"
               onClick={() => setMenuOpen((open) => !open)}
               style={{
-                display: 'none',
                 background: 'none',
                 border: 'none',
                 fontSize: '20px',

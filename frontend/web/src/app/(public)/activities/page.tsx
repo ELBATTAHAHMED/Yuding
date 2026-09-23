@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
@@ -65,6 +65,22 @@ export default function ActivitiesPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const city = params.get('destination')?.trim();
+    if (!city) return;
+    setDestination(city);
+    setSelectedGeoPlace({
+      id: `home-${city}`,
+      name: city,
+      city,
+      formatted: city,
+      countryCode: params.get('countryCode') || '',
+      latitude: 0,
+      longitude: 0,
+    });
+  }, []);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
