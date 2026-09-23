@@ -24,3 +24,9 @@ jwt:
   access-token-expiration-minutes: 15
   public-key-location: ${JWT_PUBLIC_KEY_LOCATION:classpath:certs/public.pem}
   private-key-location: ${JWT_PRIVATE_KEY_LOCATION:classpath:certs/private.pem}
+
+yuding:
+  notification:
+    service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
+    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
+

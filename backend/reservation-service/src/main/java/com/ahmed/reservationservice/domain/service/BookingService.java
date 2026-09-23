@@ -44,6 +44,7 @@ public class BookingService {
     private final OfferSnapshotRepository offerSnapshotRepository;
     private final OfferSnapshotFactory offerSnapshotFactory;
     private final TravelOfferResolverClient travelOfferResolverClient;
+    private final BookingNotificationDispatcher notificationDispatcher;
     private Clock clock;
 
     @Autowired
@@ -53,21 +54,33 @@ public class BookingService {
             BookingLifecycleProperties properties,
             OfferSnapshotRepository offerSnapshotRepository,
             OfferSnapshotFactory offerSnapshotFactory,
-            @Autowired(required = false) TravelOfferResolverClient travelOfferResolverClient) {
+            @Autowired(required = false) TravelOfferResolverClient travelOfferResolverClient,
+            @Autowired(required = false) BookingNotificationDispatcher notificationDispatcher) {
         this.bookingRepository = bookingRepository;
         this.referenceGenerator = referenceGenerator;
         this.properties = properties;
         this.offerSnapshotRepository = offerSnapshotRepository;
         this.offerSnapshotFactory = offerSnapshotFactory;
         this.travelOfferResolverClient = travelOfferResolverClient;
+        this.notificationDispatcher = notificationDispatcher;
         this.clock = Clock.systemUTC();
     }
 
     public BookingService(
             BookingRepository bookingRepository,
             BookingReferenceGenerator referenceGenerator,
+            BookingLifecycleProperties properties,
+            OfferSnapshotRepository offerSnapshotRepository,
+            OfferSnapshotFactory offerSnapshotFactory,
+            TravelOfferResolverClient travelOfferResolverClient) {
+        this(bookingRepository, referenceGenerator, properties, offerSnapshotRepository, offerSnapshotFactory, travelOfferResolverClient, null);
+    }
+
+    public BookingService(
+            BookingRepository bookingRepository,
+            BookingReferenceGenerator referenceGenerator,
             BookingLifecycleProperties properties) {
-        this(bookingRepository, referenceGenerator, properties, null, null, null);
+        this(bookingRepository, referenceGenerator, properties, null, null, null, null);
     }
 
     /**
@@ -216,7 +229,11 @@ public class BookingService {
         log.info("Cancelling booking [{}] from current status {}", booking.getBookingReference(), booking.getStatus());
         booking.transitionTo(BookingStatus.CANCELLED, current);
         booking.updateExpiresAt(null, current);
-        return saveWithOptimisticLockHandling(booking);
+        Booking saved = saveWithOptimisticLockHandling(booking);
+        if (notificationDispatcher != null) {
+            notificationDispatcher.dispatchBookingCancelled(saved);
+        }
+        return saved;
     }
 
     /**
@@ -277,7 +294,11 @@ public class BookingService {
                 booking.getBookingReference(), booking.getStatus());
         booking.transitionTo(BookingStatus.PAYMENT_FAILED, current);
         booking.updateExpiresAt(expiresAt, current);
-        return saveWithOptimisticLockHandling(booking);
+        Booking saved = saveWithOptimisticLockHandling(booking);
+        if (notificationDispatcher != null) {
+            notificationDispatcher.dispatchPaymentFailed(saved, null, null, "EUR");
+        }
+        return saved;
     }
 
     /**
@@ -291,6 +312,7 @@ public class BookingService {
                 booking.getBookingReference(), booking.getStatus());
         booking.transitionTo(BookingStatus.PAID, current);
         booking.updateExpiresAt(null, current); // Paid bookings do not auto-expire
+        // CRITICAL TRUTH RULE: DO NOT dispatch BOOKING_CONFIRMED here! Zero confirmed emails on PAID.
         return saveWithOptimisticLockHandling(booking);
     }
 
@@ -318,7 +340,12 @@ public class BookingService {
                 booking.getBookingReference(), booking.getStatus());
         booking.transitionTo(BookingStatus.CONFIRMED, current);
         booking.updateExpiresAt(null, current);
-        return saveWithOptimisticLockHandling(booking);
+        Booking saved = saveWithOptimisticLockHandling(booking);
+        // CRITICAL TRUTH RULE: BOOKING_CONFIRMED fires ONLY on BookingStatus.CONFIRMED.
+        if (notificationDispatcher != null) {
+            notificationDispatcher.dispatchBookingConfirmed(saved);
+        }
+        return saved;
     }
 
     /**
@@ -332,7 +359,11 @@ public class BookingService {
                 booking.getBookingReference(), booking.getStatus());
         booking.transitionTo(BookingStatus.CANCELLED, current);
         booking.updateExpiresAt(null, current);
-        return saveWithOptimisticLockHandling(booking);
+        Booking saved = saveWithOptimisticLockHandling(booking);
+        if (notificationDispatcher != null) {
+            notificationDispatcher.dispatchBookingCancelled(saved);
+        }
+        return saved;
     }
 
     /**
@@ -346,7 +377,11 @@ public class BookingService {
                 booking.getBookingReference(), booking.getStatus());
         booking.transitionTo(BookingStatus.REFUNDED, current);
         booking.updateExpiresAt(null, current);
-        return saveWithOptimisticLockHandling(booking);
+        Booking saved = saveWithOptimisticLockHandling(booking);
+        if (notificationDispatcher != null) {
+            notificationDispatcher.dispatchRefundCompleted(saved, null, null, "EUR");
+        }
+        return saved;
     }
 
     /**

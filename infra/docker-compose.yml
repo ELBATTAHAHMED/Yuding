@@ -64,6 +64,20 @@ services:
     volumes:
       - ./migrations:/flyway/sql:ro
 
+  # ====================================================================
+  # Mailpit Local Development SMTP & Web Inbox
+  # ====================================================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: yuding-mailpit
+    restart: unless-stopped
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_DATABASE: ""
+
 volumes:
   postgres-data:
     driver: local

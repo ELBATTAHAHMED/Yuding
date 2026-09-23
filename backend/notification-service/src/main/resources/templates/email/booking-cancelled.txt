@@ -1,0 +1,13 @@
+YUDING - Annulation de votre réservation
+
+Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
+
+Votre réservation [(${bookingReference})] a été annulée.
+
+Si un remboursement est applicable conformément aux conditions du fournisseur, il sera traité de manière indépendante.
+
+Vous pouvez consulter votre dossier ici :
+[(${dossierLink})]
+
+--
+Yuding V2 - Notifications transactionnelles

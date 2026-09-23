@@ -1,0 +1,15 @@
+YUDING - Remboursement effectué
+
+Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
+
+Le remboursement de votre réservation a été validé et traité avec succès.
+
+Détails :
+- Dossier : [(${bookingReference != null ? bookingReference : 'N/A'})]
+- Référence paiement : [(${paymentReference != null ? paymentReference : 'N/A'})]
+- Montant remboursé : [(${amount != null ? amount : '—'})] [(${currency != null ? currency : 'EUR'})]
+
+Les fonds seront crédités selon les délais de votre établissement bancaire.
+
+--
+Yuding V2 - Notifications transactionnelles sécurisées
