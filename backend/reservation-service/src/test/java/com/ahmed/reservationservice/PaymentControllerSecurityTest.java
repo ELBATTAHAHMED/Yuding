@@ -79,7 +79,7 @@ class PaymentControllerSecurityTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(paymentService.initiatePaymentOrder(eq(validRef), any(), any(), eq(userUuid.toString()), any()))
+        when(paymentService.initiatePaymentOrder(eq(validRef), any(), any(), any(), eq(userUuid.toString()), any()))
                 .thenReturn(dto);
 
         mockMvc.perform(post("/bookings/{reference}/payment/create-order", validRef)
@@ -106,7 +106,7 @@ class PaymentControllerSecurityTest {
     @Test
     @DisplayName("POST /bookings/{reference}/payment/create-order returns 403 when non-owner accesses booking")
     void createOrderForbiddenForNonOwner() throws Exception {
-        when(paymentService.initiatePaymentOrder(eq(validRef), any(), any(), eq(userUuid.toString()), any()))
+        when(paymentService.initiatePaymentOrder(eq(validRef), any(), any(), any(), eq(userUuid.toString()), any()))
                 .thenThrow(new BookingOwnershipException("Access denied"));
 
         mockMvc.perform(post("/bookings/{reference}/payment/create-order", validRef)

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getConfirmationPresentation } from '../confirmation-state.ts';
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -37,7 +38,7 @@ describe('Phase 38 Payment Abstraction & Reference Tests', () => {
   });
 });
 
-describe('Phase 39 local card simulator boundary', () => {
+describe('Phase 39 & 41 Demo Card & Mock Payment Flow', () => {
   it('renders a local-only visual preview without a CVC prop', () => {
     const cardPreviewPath = resolve(testDirectory, '../../components/checkout/CardPreview.tsx');
     const content = readFileSync(cardPreviewPath, 'utf-8');
@@ -47,52 +48,45 @@ describe('Phase 39 local card simulator boundary', () => {
     assert.ok(content.includes('•••'), 'CardPreview must keep CVC masked on the back of the artwork');
   });
 
-  it('renders Visa and Mastercard as clearly labelled visual demo forms', () => {
+  it('renders Visa and Mastercard demo inputs with Mode démo and server-priced demo CTA', () => {
     const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
     const content = readFileSync(paymentFormPath, 'utf-8');
 
     assert.ok(content.includes('interface DemoCardState'), 'Demo values must be explicitly distinguished from payment data');
     assert.ok(content.includes('Numéro de carte de démonstration'), 'Visa/Mastercard must render the local demo number field');
     assert.ok(content.includes('Mode démo'), 'Visa/Mastercard must disclose demo mode');
-    assert.ok(content.includes('Simulation visuelle uniquement'), 'Visa/Mastercard must disclose local-only behaviour');
-    assert.ok(content.includes('Tester l’animation'), 'The demo CTA must not be a payment CTA');
-    assert.equal(content.includes("Le paiement direct par carte n'est pas disponible pour ce compte sandbox"), false, 'The obsolete unavailable-card panel must be removed');
-    assert.equal(content.includes('Basculer sur PayPal Sandbox'), false, 'The duplicated card-mode PayPal CTA must be removed');
+    assert.ok(content.includes('Payer {formattedAmount} en mode démo'), 'Demo CTA must show authoritative server amount with demo indication');
+    assert.ok(content.includes('Réinitialiser les champs'), 'Form must provide a clear field reset CTA');
   });
 
-  it('keeps the demo submit path completely separate from paymentService', () => {
-    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
-    const content = readFileSync(paymentFormPath, 'utf-8');
-    const demoStart = content.indexOf('const handleDemoSimulation');
-    const demoEnd = content.indexOf('return (', demoStart);
-    const demoHandler = content.slice(demoStart, demoEnd);
-
-    assert.ok(demoStart >= 0, 'A local demo submit handler must exist');
-    assert.equal(/paymentService|bookingService|fetch\(|apiClient|window\.open/.test(demoHandler), false, 'Demo submit must not trigger a network or payment call');
-    assert.ok(content.includes('onSubmit={isCardMode ? handleDemoSimulation : handlePay}'), 'Only PayPal may use the provider-backed submit handler');
-    assert.ok(content.includes('paymentService.initiatePaymentOrder'), 'The PayPal Sandbox flow must remain unchanged');
-    assert.ok(content.includes('paymentService.capturePayment'), 'The PayPal Sandbox capture flow must remain unchanged');
-  });
-
-  it('clears demo values on every payment-method switch and never writes browser storage', () => {
-    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
-    const content = readFileSync(paymentFormPath, 'utf-8');
-    const switchStart = content.indexOf('const selectPaymentMethod');
-    const switchEnd = content.indexOf('const formatDemoNumber', switchStart);
-    const switchHandler = content.slice(switchStart, switchEnd);
-
-    assert.ok(content.includes('setDemoCard(EMPTY_DEMO_CARD_STATE)'), 'A reset must discard component-memory demo values');
-    assert.ok(switchHandler.includes('clearDemoCard()'), 'Every payment method switch must clear demo values');
-    assert.equal(/localStorage|sessionStorage|document\.cookie|URLSearchParams/.test(content), false, 'Demo values must never be persisted or included in URLs');
-  });
-
-  it('has no save-card UI or card-network lookup logic', () => {
+  it('connects demo card checkout to paymentService.initiatePaymentOrder with paymentMode=DEMO_CARD without transmitting card credentials', () => {
     const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
     const content = readFileSync(paymentFormPath, 'utf-8');
 
-    assert.equal(content.includes('setSaveCard'), false, 'PaymentForm must not have saveCard state');
-    assert.equal(content.includes(".startsWith('4')"), false, 'PaymentForm must not parse Visa BIN');
-    assert.equal(content.includes('5[1-5]'), false, 'PaymentForm must not parse Mastercard BIN');
+    assert.ok(content.includes("paymentMode = isCardMode ? 'DEMO_CARD' : undefined"), 'Must pass DEMO_CARD paymentMode for card checkout');
+    
+    // Verify that raw card inputs are never passed to paymentService
+    const initiateCallStart = content.indexOf('paymentService.initiatePaymentOrder(');
+    assert.ok(initiateCallStart > 0, 'Must invoke paymentService.initiatePaymentOrder');
+    const initiateCallEnd = content.indexOf(');', initiateCallStart);
+    const initiateCallArgs = content.slice(initiateCallStart, initiateCallEnd);
+    
+    assert.equal(/demoCard|displayNumber|holderName|expiry|cvc/.test(initiateCallArgs), false, 'initiatePaymentOrder must never receive raw demo card inputs');
+  });
+
+  it('stores only the preferred card brand name in localStorage without any credentials', () => {
+    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
+    const content = readFileSync(paymentFormPath, 'utf-8');
+
+    assert.ok(content.includes('yuding_preferred_payment_method'), 'Must support remembering preferred payment method brand');
+    assert.ok(content.includes('Mémoriser ce mode de paiement'), 'Must render preference toggle label');
+    assert.equal(/localStorage\.setItem\([^,]+,\s*(demoCard|JSON\.stringify)/.test(content), false, 'Must never persist card details to localStorage');
+  });
+
+  it('has zero raw card storage and displays factual zero-storage assurance', () => {
+    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
+    const content = readFileSync(paymentFormPath, 'utf-8');
+
     assert.ok(content.includes('Zéro Stockage PAN / CVC'), 'PaymentForm must display factual zero-storage assurance');
     assert.equal(content.includes('PCI-DSS Level 1'), false, 'PaymentForm must not make unsupported PCI-DSS claims');
   });
@@ -108,10 +102,31 @@ describe('Phase 39 local card simulator boundary', () => {
     }
   });
 
-  it('verifies PaymentService requests contain zero card credentials', () => {
+  it('verifies PaymentService requests contain zero card credentials and accept paymentMode', () => {
     const servicePath = resolve(testDirectory, '../../services/payment.service.ts');
     const content = readFileSync(servicePath, 'utf-8');
 
     assert.equal(/cardNumber|pan|cvv|cvc/i.test(content), false, 'PaymentService must not reference card credentials');
+    assert.ok(content.includes('paymentMode?: string'), 'PaymentService must accept paymentMode query parameter');
+  });
+
+  it('verifies confirmation state maps mock provider to demo validation presentation', () => {
+    const mockPresentation = getConfirmationPresentation({
+      bookingReference: 'YUD-ABC12345',
+      paymentReference: 'PAY-MOCK1234',
+      paymentProvider: 'mock',
+      confirmationState: 'PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION',
+      bookingStatus: 'PAID',
+      paymentStatus: 'SUCCEEDED',
+      productType: 'HOTEL',
+      authoritativeAmount: 246.00,
+      currency: 'EUR',
+      createdAt: '2026-09-23T02:00:00Z',
+      productSummary: {},
+    });
+
+    assert.equal(mockPresentation.title, 'Paiement démo validé');
+    assert.ok(mockPresentation.description.includes('fournisseur n’est pas encore confirmée'));
+    assert.equal(mockPresentation.tone, 'success');
   });
 });

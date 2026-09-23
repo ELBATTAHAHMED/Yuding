@@ -65,7 +65,18 @@ const PRESENTATIONS: Record<ConfirmationState, ConfirmationPresentation> = {
 };
 
 export function getConfirmationPresentation(confirmation: BookingConfirmationDto): ConfirmationPresentation {
-  return PRESENTATIONS[confirmation.confirmationState];
+  const base = PRESENTATIONS[confirmation.confirmationState] || PRESENTATIONS.INCONSISTENT_STATE;
+  if (confirmation.confirmationState === 'PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION') {
+    const isMock = Boolean(confirmation.paymentProvider && (confirmation.paymentProvider.toUpperCase().includes('MOCK') || confirmation.paymentProvider.toUpperCase().includes('DEMO')));
+    if (isMock) {
+      return {
+        ...base,
+        title: 'Paiement démo validé',
+        description: 'Le paiement de démonstration a été validé. La réservation fournisseur n’est pas encore confirmée.',
+      };
+    }
+  }
+  return base;
 }
 
 /**

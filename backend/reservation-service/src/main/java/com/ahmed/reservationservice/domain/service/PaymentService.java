@@ -14,6 +14,7 @@ import com.ahmed.reservationservice.domain.model.Payment;
 import com.ahmed.reservationservice.domain.model.PaymentStatus;
 import com.ahmed.reservationservice.domain.model.PricingStatus;
 import com.ahmed.reservationservice.domain.model.ServerPricingQuote;
+import com.ahmed.reservationservice.domain.payment.provider.MockPaymentProvider;
 import com.ahmed.reservationservice.domain.payment.provider.PaymentCaptureCommand;
 import com.ahmed.reservationservice.domain.payment.provider.PaymentCaptureResult;
 import com.ahmed.reservationservice.domain.payment.provider.PaymentOrderCommand;
@@ -69,8 +70,24 @@ public class PaymentService {
             String cancelUrl,
             String userId,
             List<String> roles) {
+        return initiatePaymentOrder(bookingReference, returnUrl, cancelUrl, null, userId, roles);
+    }
 
-        log.info("PaymentService: Initiating payment order for booking [{}] by user [{}]", bookingReference, userId);
+    /**
+     * Initiates a payment order for the given booking reference and explicit payment mode.
+     * Enforces server-authoritative pricing and zero client price influence.
+     */
+    @Transactional
+    public PaymentOrderResponseDto initiatePaymentOrder(
+            String bookingReference,
+            String returnUrl,
+            String cancelUrl,
+            String paymentMode,
+            String userId,
+            List<String> roles) {
+
+        log.info("PaymentService: Initiating payment order for booking [{}] (mode=[{}]) by user [{}]",
+                bookingReference, paymentMode, userId);
 
         // 1. Load booking and enforce ownership
         Booking booking = bookingRepository.findByBookingReference(bookingReference)
@@ -112,13 +129,20 @@ public class PaymentService {
             booking = bookingService.markPendingPayment(booking.getId(), UUID.fromString(userId), isPrivileged);
         }
 
-        // 7. Check if an active INITIATED payment already exists for this exact pricing quote
+        // Resolve requested or configured PaymentProvider
+        PaymentProvider activeProvider = (paymentMode != null && !paymentMode.isBlank())
+                ? providerRegistry.getProviderByMode(paymentMode)
+                : providerRegistry.getActiveProvider();
+
+        // 7. Check if an active INITIATED payment already exists for this exact pricing quote and provider
         Optional<Payment> existingPaymentOpt = paymentRepository.findTopByBookingIdOrderByCreatedAtDesc(booking.getId());
         if (existingPaymentOpt.isPresent()) {
             Payment existing = existingPaymentOpt.get();
-            if (existing.getStatus() == PaymentStatus.INITIATED
+            if ((existing.getStatus() == PaymentStatus.INITIATED || existing.getStatus() == PaymentStatus.REQUIRES_ACTION)
                     && quote.getId().equals(existing.getPricingQuoteId())
-                    && existing.getProviderOrderId() != null) {
+                    && existing.getProviderOrderId() != null
+                    && existing.getProviderName() != null
+                    && existing.getProviderName().equalsIgnoreCase(activeProvider.getProviderName())) {
                 log.info("PaymentService: Reusing existing initiated payment [ref={}, orderId={}] for booking [{}]",
                         existing.getPaymentReference(), existing.getProviderOrderId(), bookingReference);
                 return PaymentOrderResponseDto.builder()
@@ -140,7 +164,6 @@ public class PaymentService {
         String providerRequestId = "ORD-" + paymentReference;
 
         // 9. Delegate to active PaymentProvider
-        PaymentProvider activeProvider = providerRegistry.getActiveProvider();
         PaymentOrderCommand orderCommand = PaymentOrderCommand.builder()
                 .bookingReference(bookingReference)
                 .paymentReference(paymentReference)
@@ -293,7 +316,13 @@ public class PaymentService {
         Instant now = Instant.now(clock);
 
         if (captureResult.isSuccess()) {
-            // Synchronous capture submitted: record captureId and transition payment to AWAITING_WEBHOOK.
+            // For Mock/Demo provider: complete payment via trusted internal completion path
+            if (MockPaymentProvider.PROVIDER_NAME.equalsIgnoreCase(payment.getProviderName())) {
+                return completeMockPayment(payment, booking, captureResult, now);
+            }
+
+            // Real/sandbox provider (e.g. PayPal): synchronous capture submitted;
+            // record captureId and transition payment to AWAITING_WEBHOOK.
             // DO NOT mark Booking PAID! Final authority belongs strictly to verified webhook (Phase 40).
             payment.setProviderTransactionId(captureResult.getProviderTransactionId());
             payment.setStatus(PaymentStatus.AWAITING_WEBHOOK);
@@ -333,6 +362,44 @@ public class PaymentService {
                     .message("Payment capture failed: " + captureResult.getErrorMessage())
                     .build();
         }
+    }
+
+    /**
+     * Trusted internal completion path strictly scoped to MockPaymentProvider / DEMO mode.
+     * Transitions payment to SUCCEEDED and booking to PAID (NOT CONFIRMED).
+     * Enforces mandatory security barrier rejecting non-mock providers.
+     */
+    @Transactional
+    public PaymentCaptureResponseDto completeMockPayment(
+            Payment payment,
+            Booking booking,
+            PaymentCaptureResult captureResult,
+            Instant now) {
+
+        if (!MockPaymentProvider.PROVIDER_NAME.equalsIgnoreCase(payment.getProviderName())) {
+            log.error("SECURITY VIOLATION: Mock completion attempted for non-mock provider [{}] on payment [{}]",
+                    payment.getProviderName(), payment.getPaymentReference());
+            throw new BookingConflictException("MOCK_COMPLETION_FORBIDDEN: Cannot use mock completion mechanism for non-mock provider: " + payment.getProviderName());
+        }
+
+        payment.markSucceeded(captureResult.getProviderTransactionId(), now);
+        paymentRepository.save(payment);
+
+        bookingService.markPaid(booking.getId());
+
+        log.info("PaymentService: Mock payment [{}] completed successfully. Booking [{}] transitioned to PAID.",
+                payment.getPaymentReference(), booking.getBookingReference());
+
+        return PaymentCaptureResponseDto.builder()
+                .bookingReference(booking.getBookingReference())
+                .paymentReference(payment.getPaymentReference())
+                .providerTransactionId(captureResult.getProviderTransactionId())
+                .paymentStatus(PaymentStatus.SUCCEEDED.name())
+                .bookingStatus(BookingStatus.PAID.name())
+                .amount(payment.getAmount())
+                .currency(payment.getCurrency())
+                .message("Demo payment completed successfully.")
+                .build();
     }
 
     /**

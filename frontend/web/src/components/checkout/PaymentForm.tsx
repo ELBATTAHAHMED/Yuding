@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { paymentService } from '@/services/payment.service';
@@ -42,11 +42,12 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const router = useRouter();
 
-  // Visa and Mastercard are local-only visual simulators. PayPal is the only provider flow.
+  // Visa and Mastercard are visual demo card modes backed by MockPaymentProvider.
+  // PayPal is the provider-backed Sandbox flow.
   const [selectedMethod, setSelectedMethod] = useState<'visa' | 'mastercard' | 'paypal'>('paypal');
   const [isFlipped, setIsFlipped] = useState(false);
   const [demoCard, setDemoCard] = useState<DemoCardState>(EMPTY_DEMO_CARD_STATE);
-  const [demoSimulationComplete, setDemoSimulationComplete] = useState(false);
+  const [rememberMethod, setRememberMethod] = useState(false);
 
   // Processing state
   const [isLoading, setIsLoading] = useState(false);
@@ -78,13 +79,44 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
     ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: pricing.currency || 'EUR' }).format(pricing.feeAmount)
     : null;
 
-  // Handle Submission (Card or PayPal Sandbox)
+  // Restore preferred payment method brand if saved in localStorage (brand only, never card data)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('yuding_preferred_payment_method');
+      if (saved === 'VISA') {
+        setSelectedMethod('visa');
+        setRememberMethod(true);
+      } else if (saved === 'MASTERCARD') {
+        setSelectedMethod('mastercard');
+        setRememberMethod(true);
+      }
+    } catch {
+      // Ignore localStorage read errors in restricted environments
+    }
+  }, []);
+
+  const isCardMode = selectedMethod === 'visa' || selectedMethod === 'mastercard';
+
+  // Handle Submission (Demo Card via MockPaymentProvider or PayPal Sandbox)
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
+      // Save or clear preferred payment method brand only (ZERO card data)
+      if (typeof window !== 'undefined') {
+        try {
+          if (rememberMethod && isCardMode) {
+            localStorage.setItem('yuding_preferred_payment_method', selectedMethod.toUpperCase());
+          } else if (!rememberMethod) {
+            localStorage.removeItem('yuding_preferred_payment_method');
+          }
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
+
       // 1. Initiate order (server derives authoritative amount and currency)
       const returnUrl = typeof window !== 'undefined'
         ? `${window.location.origin}${getBookingDossierPath(bookingReference)}`
@@ -99,11 +131,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           : `idemp-ord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       }
 
+      const paymentMode = isCardMode ? 'DEMO_CARD' : undefined;
+
       const order = await paymentService.initiatePaymentOrder(
         bookingReference,
         returnUrl,
         cancelUrl,
-        createOrderIdempotencyKeyRef.current
+        createOrderIdempotencyKeyRef.current,
+        paymentMode
       );
       setPendingOrder(order);
 
@@ -173,11 +208,8 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
     }
   };
 
-  const isCardMode = selectedMethod === 'visa' || selectedMethod === 'mastercard';
-
   const clearDemoCard = () => {
     setDemoCard(EMPTY_DEMO_CARD_STATE);
-    setDemoSimulationComplete(false);
     setIsFlipped(false);
   };
 
@@ -194,13 +226,6 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const formatDemoExpiry = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 4);
     return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
-  };
-
-  const handleDemoSimulation = (event: React.FormEvent) => {
-    event.preventDefault();
-    // Intentionally local-only: no API client, provider, persistence, or telemetry call.
-    setDemoSimulationComplete(true);
-    setIsFlipped(false);
   };
 
   return (
@@ -548,9 +573,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             )}
 
             {/* Form */}
-            <form onSubmit={isCardMode ? handleDemoSimulation : handlePay}>
+            <form onSubmit={handlePay}>
               {isCardMode ? (
-                /* Browser-memory-only visual simulator. It never invokes a payment API. */
+                /* Browser-memory-only visual simulator. It never invokes a payment API with card data. */
                 <div
                   style={{
                     padding: '1.35rem',
@@ -574,7 +599,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                         Carte {selectedMethod === 'visa' ? 'Visa' : 'Mastercard'} de démonstration
                       </h3>
                       <p style={{ color: '#64748b', fontSize: '0.82rem', margin: '0.25rem 0 0', lineHeight: 1.45 }}>
-                        Animez l&apos;aperçu de carte localement, sans transaction.
+                        Paiement démo interactif. Aucune coordonnée bancaire réelle requise.
                       </p>
                     </div>
                     <span
@@ -650,9 +675,31 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                     </div>
                   </div>
 
-                  <p style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#52716d', fontSize: '0.78rem', lineHeight: 1.45, margin: '1rem 0 0' }}>
+                  {/* Safe Brand Preference Checkbox (Zero card credentials stored) */}
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.6rem',
+                      marginTop: '0.9rem',
+                      fontSize: '0.82rem',
+                      color: '#475569',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={rememberMethod}
+                      onChange={(e) => setRememberMethod(e.target.checked)}
+                      style={{ accentColor: '#01796F', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    <span>Mémoriser ce mode de paiement</span>
+                  </label>
+
+                  <p style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#52716d', fontSize: '0.78rem', lineHeight: 1.45, margin: '0.85rem 0 0' }}>
                     <i className="fas fa-shield-halved" />
-                    Simulation visuelle uniquement — aucune donnée bancaire n&apos;est transmise.
+                    Les données saisies restent locales et ne sont jamais transmises.
                   </p>
                 </div>
               ) : (
@@ -772,29 +819,30 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 </div>
               ) : (
                 <>
-                  {isCardMode && demoSimulationComplete && (
-                    <div
-                      role="status"
+                  {isCardMode && (
+                    <label
                       style={{
-                        marginTop: '1.25rem',
-                        padding: '0.8rem 1rem',
-                        borderRadius: '10px',
-                        background: '#ecfdf5',
-                        border: '1px solid #a7f3d0',
-                        color: '#047857',
-                        fontSize: '0.84rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.55rem',
+                        gap: '0.6rem',
+                        marginTop: '1rem',
+                        fontSize: '0.85rem',
+                        color: '#475569',
+                        cursor: 'pointer',
                       }}
                     >
-                      <i className="fas fa-circle-check" />
-                      Simulation terminée — aucun paiement n&apos;a été effectué.
-                    </div>
+                      <input
+                        type="checkbox"
+                        checked={rememberMethod}
+                        onChange={(e) => setRememberMethod(e.target.checked)}
+                        style={{ accentColor: '#01796F', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>Mémoriser ce mode de paiement</span>
+                    </label>
                   )}
                   <button
                     type="submit"
-                    disabled={!isCardMode && isLoading}
+                    disabled={isLoading}
                     style={{
                       marginTop: '1.25rem',
                       width: '100%',
@@ -807,7 +855,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                       border: 'none',
                       fontSize: '1.05rem',
                       fontWeight: 700,
-                      cursor: !isCardMode && isLoading ? 'not-allowed' : 'pointer',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -818,21 +866,22 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                     }}
                     onMouseEnter={(event) => {
-                      if (isCardMode || !isLoading) event.currentTarget.style.transform = 'translateY(-1px)';
+                      if (!isLoading) event.currentTarget.style.transform = 'translateY(-1px)';
                     }}
                     onMouseLeave={(event) => {
                       event.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
-                    {isCardMode ? (
-                      <>
-                        <i className="fas fa-wand-magic-sparkles" />
-                        <span>{demoSimulationComplete ? 'Rejouer l’animation' : 'Tester l’animation'}</span>
-                      </>
-                    ) : isLoading ? (
+                    {isLoading ? (
                       <>
                         <i className="fas fa-spinner fa-spin" />
-                        <span>Traitement sécurisé en cours...</span>
+                        <span>{isCardMode ? 'Traitement du paiement démo en cours...' : 'Traitement sécurisé en cours...'}</span>
+                      </>
+                    ) : isCardMode ? (
+                      <>
+                        <i className="fas fa-lock" />
+                        <span>Payer {formattedAmount} en mode démo</span>
+                        <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
                       </>
                     ) : (
                       <>
@@ -842,7 +891,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                       </>
                     )}
                   </button>
-                  {isCardMode && demoSimulationComplete && (
+                  {isCardMode && (
                     <button
                       type="button"
                       onClick={clearDemoCard}
@@ -859,7 +908,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                         cursor: 'pointer',
                       }}
                     >
-                      Réinitialiser la démo
+                      Réinitialiser les champs
                     </button>
                   )}
                 </>
