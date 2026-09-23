@@ -8,7 +8,7 @@
     "build:staging": "cross-env NEXT_PUBLIC_APP_ENV=staging next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "test": "node --test --test-force-exit --experimental-strip-types src/lib/__tests__/api-client.test.ts src/lib/__tests__/auth-page.test.ts src/lib/__tests__/state-management.test.ts src/lib/__tests__/routing-cors.test.ts src/lib/__tests__/travel-search.test.ts src/lib/__tests__/hotel-filters.test.ts src/lib/__tests__/trains-search.test.ts src/lib/__tests__/transfer-filters.test.ts src/lib/__tests__/geo-places.test.ts src/lib/__tests__/weather.test.ts src/lib/__tests__/price-display.test.ts src/lib/__tests__/image-provenance.test.ts src/lib/__tests__/search-ux.test.ts src/lib/__tests__/offer-details.test.ts src/lib/__tests__/payment.test.ts src/lib/__tests__/booking-flow.test.ts"
+    "test": "node --test --test-force-exit --experimental-strip-types src/lib/__tests__/api-client.test.ts src/lib/__tests__/auth-page.test.ts src/lib/__tests__/state-management.test.ts src/lib/__tests__/routing-cors.test.ts src/lib/__tests__/travel-search.test.ts src/lib/__tests__/hotel-filters.test.ts src/lib/__tests__/trains-search.test.ts src/lib/__tests__/transfer-filters.test.ts src/lib/__tests__/geo-places.test.ts src/lib/__tests__/weather.test.ts src/lib/__tests__/price-display.test.ts src/lib/__tests__/image-provenance.test.ts src/lib/__tests__/search-ux.test.ts src/lib/__tests__/offer-details.test.ts src/lib/__tests__/payment.test.ts src/lib/__tests__/booking-flow.test.ts src/lib/__tests__/ai-assistant.test.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.1",
