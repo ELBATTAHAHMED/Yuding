@@ -9,7 +9,9 @@ Under no circumstances does Yuding receive, process, serialize, store, or log:
 - Card Verification Value (CVV / CVC / Security Code)
 - Card expiration date as a payment credential
 
-All payment processing relies strictly on **provider-hosted fields, provider-hosted checkout, and provider tokenization**. Yuding interacts exclusively with non-sensitive provider identifiers (`providerOrderId`, `providerTransactionId`, `paymentReference`).
+All real payment processing relies strictly on **provider-hosted fields, provider-hosted checkout, and provider tokenization**. Yuding interacts exclusively with non-sensitive provider identifiers (`providerOrderId`, `providerTransactionId`, `paymentReference`).
+
+Visa and Mastercard also offer a clearly labelled **local visual simulator**. Its intentionally fictional values exist only in the mounted React component's `DemoCardState` so the preview can animate. They are not payment credentials, are discarded on method switch, refresh, route change, or unmount, and never cross a browser-to-server boundary.
 
 ---
 
@@ -67,32 +69,30 @@ Owning or processing raw card data places an application directly in the high-ri
 
 ## 3. Frontend Architecture (`frontend/web/`)
 
-### 3.1 Removal of Raw Card Inputs & React State
-All historical raw input fields and associated state hooks have been permanently removed from `PaymentForm.tsx`:
-- `cardNumber` state, input element, and input formatting removed.
-- `expiry` state, input element, and formatting removed.
-- `cvv` state and input element removed.
-- `saveCard` state and checkbox removed.
-- Client-side BIN/IIN parsing (`startsWith('4')`, `5[1-5]`) deleted.
+### 3.1 Local Visual Simulator Boundary
+`PaymentForm.tsx` contains a narrowly scoped `DemoCardState` only for the Visa and Mastercard visual simulator:
+- It is React component memory only; it is never sent to `paymentService`, an API route, a provider, analytics, logs, URLs, cookies, `localStorage`, or `sessionStorage`.
+- It is reset whenever the user selects a different payment method and naturally disappears on refresh, route change, and unmount.
+- The demo formatting is presentation-only. There is no BIN/IIN lookup, network lookup, card-network validation, or attempt to determine if a value is real.
+- CVC is used only to flip the local visual card; it is not rendered on the card face and is never transmitted.
+- There is no saved-card control, token vault, or card persistence feature.
 
 ### 3.2 Decorative Card Component (`CardPreview.tsx`)
-The animated 3D credit card component is strictly decorative:
-- Accepts only safe props: `cardHolder?: string`, `last4?: string`, `isFlipped?: boolean`, `brand: 'visa' | 'mastercard'`, `onToggleFlip?: () => void`.
-- **Card Number:** Displays permanently masked groups `•••• •••• •••• ••••` (or optionally `•••• •••• •••• ${last4}` only if safely provided by provider metadata).
-- **Expiry Date:** Displays static `••/••`.
-- **CVC:** Displays static `•••` on the magnetic strip reverse.
-- Card scheme styling (Visa purple gradient vs. Mastercard deep slate) is driven strictly by explicit UI button selection, with zero payment processing authority.
+The animated 3D card component is a local visual surface:
+- It receives visual-only `demoCard` display values from the mounted `PaymentForm` and never accepts provider credentials, a payment DTO, or a CVC value.
+- In Visa/Mastercard demo mode it may render the locally typed fictional number, holder, and expiry solely to animate the card artwork.
+- CVC stays masked on the card back; focus can flip the card but does not transmit or render the typed CVC.
+- Card scheme styling (Visa teal gradient vs. Mastercard deep slate) is driven strictly by the selected UI tab, with zero payment processing authority.
 
 ### 3.3 Provider Eligibility & Honest Fallback
-When direct card entry is selected, Yuding evaluates provider eligibility:
-- If hosted fields are not configured or eligible on the active sandbox account, the UI presents a truthful notice:
-  > *"Le paiement direct par carte n'est pas disponible pour ce compte sandbox. Conformément aux normes de sécurité, Yuding ne reçoit, ne traite et ne stocke aucun numéro complet de carte bancaire (PAN), cryptogramme (CVC) ni date d'expiration."*
-- A prominent action allows the user to switch seamlessly to PayPal Sandbox checkout.
-- No fake card forms or simulated card numbers are ever presented.
+Visa and Mastercard are explicitly marked **Mode démo** and offer only a `Tester l’animation` action. Completing it shows the local message *"Simulation terminée — aucun paiement n’a été effectué."* It does not call any backend or provider.
+
+PayPal Sandbox remains the only provider-backed choice. Its existing action alone can create a payment order, capture it, and await Phase 40 webhook authority.
 
 ### 3.4 Browser Storage Audit
-- Neither `localStorage` nor `sessionStorage` contains payment card credentials.
-- No card numbers, expiration dates, or CVVs are ever written to browser storage or client cookies.
+- Neither `localStorage` nor `sessionStorage` contains demo values or payment card credentials.
+- No demo number, expiration date, or CVC is written to browser storage, client cookies, or URLs.
+- Refreshing the route removes every `DemoCardState` value.
 
 ---
 
@@ -186,7 +186,8 @@ Yuding does not implement raw card storage or simulated card saving:
 - Full `reservation-service` suite: 153 tests passed (0 failures, 0 errors).
 
 ### 7.2 Automated Frontend Tests
-- `payment.test.ts`: Proves zero raw card inputs/states in `PaymentForm`, zero sensitive props in `CardPreview`, zero card credential fields in TypeScript DTOs, and server-authoritative amount display.
+- `payment.test.ts`: Proves Visa and Mastercard render the `DemoCardState` visual simulator, its submit path contains no payment-service call, method switches clear local demo state, no save-card UI exists, and the PayPal Sandbox path remains provider-backed.
+- The same tests prove no demo value is written to browser storage, URL construction, DTOs, or the API client.
 - Full `frontend/web` suite: 120 tests passed across 39 suites (0 failures).
 
 ### 7.3 End-to-End Runtime Audit
