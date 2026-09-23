@@ -13,9 +13,47 @@ export type BookingStatus =
   | 'PENDING_PAYMENT'
   | 'PAID'
   | 'PAYMENT_FAILED'
+  | 'PENDING_PROVIDER_CONFIRMATION'
   | 'CONFIRMED'
   | 'CANCELLED'
+  | 'REFUNDED'
   | 'EXPIRED';
+
+export type PaymentStatus =
+  | 'INITIATED'
+  | 'REQUIRES_ACTION'
+  | 'AWAITING_WEBHOOK'
+  | 'SUCCEEDED'
+  | 'FAILED'
+  | 'REFUNDED';
+
+export type ConfirmationState =
+  | 'AWAITING_PAYMENT'
+  | 'PAYMENT_VERIFICATION_PENDING'
+  | 'PAYMENT_FAILED'
+  | 'PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION'
+  | 'PENDING_PROVIDER_CONFIRMATION'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'REFUNDED'
+  | 'EXPIRED'
+  | 'INCONSISTENT_STATE';
+
+/** Safe, backend-authoritative confirmation projection. */
+export interface BookingConfirmationDto {
+  bookingReference: string;
+  bookingStatus: BookingStatus;
+  productType: BookingProductType;
+  confirmationState: ConfirmationState;
+  paymentReference?: string | null;
+  paymentStatus?: PaymentStatus | null;
+  paymentProvider?: string | null;
+  authoritativeAmount?: number | null;
+  currency?: string | null;
+  createdAt: string;
+  paymentVerifiedAt?: string | null;
+  productSummary: Record<string, unknown>;
+}
 
 export interface CreateDraftBookingRequest {
   productType: BookingProductType;

@@ -2,6 +2,7 @@ import { apiClient } from '../lib/api-client.ts';
 import type {
   AttachOfferSnapshotRequest,
   BookingPricingResponseDto,
+  BookingConfirmationDto,
   BookingRequest,
   BookingResponse,
   BookingResponseDto,
@@ -75,6 +76,14 @@ export const bookingService = {
   },
 
   /**
+   * Retrieves the read-only, backend-authoritative confirmation projection.
+   * The reference identifies the resource only; no query value can influence its state or amount.
+   */
+  async getConfirmation(bookingReference: string): Promise<BookingConfirmationDto> {
+    return apiClient.get<BookingConfirmationDto>(`/bookings/${bookingReference}/confirmation`, true);
+  },
+
+  /**
    * Establishes server-authoritative pricing for a booking based on fresh revalidation (Phase 37).
    */
   async createAuthoritativePricing(bookingReference: string): Promise<BookingPricingResponseDto> {
@@ -103,45 +112,11 @@ export const bookingService = {
     }
   },
 
-  /** Legacy reservation creation retained for backwards compatibility */
-  async createBooking(request: BookingRequest): Promise<BookingResponse> {
-    try {
-      const result = await apiClient.post<any>(
-        '/apir/reservations/create',
-        {
-          dateDepart: request.startDate,
-          dateArrivee: request.endDate,
-          nombrePlaces: request.quantity,
-          prixTotal: request.totalPrice,
-          details: request.serviceTitle,
-          serviceType: request.serviceType,
-        },
-        true
-      );
-
-      const authoritativePrice =
-        result.prixTotal != null
-          ? result.prixTotal
-          : result.totalPrice != null
-          ? result.totalPrice
-          : request.totalPrice;
-      return {
-        bookingId: String(result.idr || result.id || Math.floor(Math.random() * 90000 + 10000)),
-        status: 'CONFIRMED',
-        totalPrice: authoritativePrice,
-        currency: request.currency,
-        createdAt: new Date().toISOString(),
-        confirmationCode: `YUD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      };
-    } catch {
-      return {
-        bookingId: String(Math.floor(Math.random() * 90000 + 10000)),
-        status: 'CONFIRMED',
-        totalPrice: request.totalPrice,
-        currency: request.currency,
-        createdAt: new Date().toISOString(),
-        confirmationCode: `YUD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      };
-    }
+  /**
+   * @deprecated The legacy endpoint could manufacture a client confirmation. Use the Phase 34+
+   * draft, snapshot, pricing, payment, and confirmation APIs instead.
+   */
+  async createBooking(_request: BookingRequest): Promise<BookingResponse> {
+    throw new Error('Legacy booking creation is disabled. Create a DRAFT booking through the authoritative booking flow.');
   },
 };

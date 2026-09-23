@@ -1,7 +1,9 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { bookingService } from '../../services/booking.service.ts';
+import { getConfirmationPresentation, getConfirmationReference } from '../confirmation-state.ts';
 import type {
+  BookingConfirmationDto,
   BookingProductType,
   BookingResponseDto,
   BookingRevalidationResponseDto,
@@ -212,6 +214,63 @@ describe('Booking Flow Integration & Lifecycle Tests (Phases 33–38)', () => {
     assert.match(capturedCalls[0].url, /\/bookings\/YUD-A2B3C4D5$/);
     assert.equal(capturedCalls[0].method, 'GET');
     assert.equal(result.status, 'PAID');
+  });
+
+  it('loads confirmation only from the read-only backend endpoint and ignores success query values', async () => {
+    const mockConfirmation: BookingConfirmationDto = {
+      bookingReference: 'YUD-A2B3C4D5',
+      bookingStatus: 'PAID',
+      productType: 'FLIGHT',
+      confirmationState: 'PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION',
+      paymentReference: 'PAY-2A3B4C5D',
+      paymentStatus: 'SUCCEEDED',
+      paymentProvider: 'PAYPAL_SANDBOX',
+      authoritativeAmount: 249.9,
+      currency: 'EUR',
+      createdAt: '2026-09-22T12:00:00Z',
+      paymentVerifiedAt: '2026-09-22T12:01:00Z',
+      productSummary: { trajet: 'Casablanca → Paris' },
+    };
+
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({ url: input.toString(), method: init?.method || 'GET' });
+      return createMockResponse(mockConfirmation, 200);
+    };
+
+    const callbackValues = new URLSearchParams(
+      'reference=YUD-A2B3C4D5&success=true&status=CONFIRMED&amount=0.01&currency=USD&payment=fake'
+    );
+    const reference = getConfirmationReference(callbackValues);
+    const result = await bookingService.getConfirmation(reference);
+    const presentation = getConfirmationPresentation(result);
+
+    assert.equal(reference, 'YUD-A2B3C4D5');
+    assert.equal(capturedCalls.length, 1);
+    assert.match(capturedCalls[0].url, /\/bookings\/YUD-A2B3C4D5\/confirmation$/);
+    assert.equal(capturedCalls[0].url.includes('?'), false);
+    assert.equal(capturedCalls[0].method, 'GET');
+    assert.equal(result.authoritativeAmount, 249.9);
+    assert.equal(presentation.title, 'Paiement sandbox validé');
+    assert.notEqual(presentation.title, 'Réservation confirmée');
+  });
+
+  it('maps confirmed status only from the backend confirmation state', () => {
+    const presentation = getConfirmationPresentation({
+      bookingReference: 'YUD-A2B3C4D5',
+      bookingStatus: 'CONFIRMED',
+      productType: 'HOTEL',
+      confirmationState: 'CONFIRMED',
+      paymentReference: 'PAY-2A3B4C5D',
+      paymentStatus: 'SUCCEEDED',
+      paymentProvider: 'PAYPAL_SANDBOX',
+      authoritativeAmount: 120,
+      currency: 'EUR',
+      createdAt: '2026-09-22T12:00:00Z',
+      paymentVerifiedAt: '2026-09-22T12:01:00Z',
+      productSummary: {},
+    });
+
+    assert.equal(presentation.title, 'Réservation confirmée');
   });
 
   it('strictly avoids direct microservice ports (8081, 8082, 8084, 8090, 8072, 7777)', async () => {
