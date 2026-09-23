@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { bookingService } from '../../services/booking.service.ts';
-import { getConfirmationPresentation, getConfirmationReference } from '../confirmation-state.ts';
+import { getBookingDossierPath, getConfirmationPresentation, getConfirmationReference } from '../confirmation-state.ts';
 import type {
   BookingConfirmationDto,
   BookingProductType,
@@ -271,6 +271,10 @@ describe('Booking Flow Integration & Lifecycle Tests (Phases 33–38)', () => {
     });
 
     assert.equal(presentation.title, 'Réservation confirmée');
+  });
+
+  it('uses the public booking reference for the canonical dossier route', () => {
+    assert.equal(getBookingDossierPath(' YUD-A2B3C4D5 '), '/bookings/YUD-A2B3C4D5');
   });
 
   it('strictly avoids direct microservice ports (8081, 8082, 8084, 8090, 8072, 7777)', async () => {
