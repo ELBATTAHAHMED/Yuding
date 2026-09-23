@@ -1,5 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const testDirectory = dirname(fileURLToPath(import.meta.url));
 
 describe('Phase 38 Payment Abstraction & Reference Tests', () => {
   it('validates canonical payment reference format PAY-XXXXXXXX', () => {
@@ -32,48 +37,69 @@ describe('Phase 38 Payment Abstraction & Reference Tests', () => {
   });
 });
 
-describe('Phase 39 Card Data Security & Elimination of Raw Credentials', () => {
-  const fs = require('fs');
-  const path = require('path');
+describe('Phase 39 local card simulator boundary', () => {
+  it('renders a local-only visual preview without a CVC prop', () => {
+    const cardPreviewPath = resolve(testDirectory, '../../components/checkout/CardPreview.tsx');
+    const content = readFileSync(cardPreviewPath, 'utf-8');
 
-  it('verifies CardPreview component accepts zero raw card secret props', () => {
-    const cardPreviewPath = path.resolve(__dirname, '../../components/checkout/CardPreview.tsx');
-    const content = fs.readFileSync(cardPreviewPath, 'utf-8');
-
-    // Must not accept raw card credentials in props
-    assert.equal(/cardNumber\s*:\s*string/.test(content), false, 'CardPreview must not accept cardNumber prop');
-    assert.equal(/cvv\s*:\s*string/.test(content), false, 'CardPreview must not accept cvv prop');
-    assert.equal(/expiry\s*:\s*string/.test(content), false, 'CardPreview must not accept expiry prop');
-
-    // Must display permanently masked values
-    assert.ok(content.includes("'••••'"), 'CardPreview must use permanently masked groups');
-    assert.ok(content.includes('••/••'), 'CardPreview must use static masked expiry placeholder');
-    assert.ok(content.includes('•••'), 'CardPreview must use static masked CVC placeholder');
+    assert.ok(content.includes('demoCard?:'), 'CardPreview must accept only the explicitly local visual state');
+    assert.equal(/cvc\s*:\s*string/.test(content), false, 'CardPreview must never receive the demo CVC');
+    assert.ok(content.includes('•••'), 'CardPreview must keep CVC masked on the back of the artwork');
   });
 
-  it('verifies PaymentForm contains zero raw card credential inputs or states', () => {
-    const paymentFormPath = path.resolve(__dirname, '../../components/checkout/PaymentForm.tsx');
-    const content = fs.readFileSync(paymentFormPath, 'utf-8');
+  it('renders Visa and Mastercard as clearly labelled visual demo forms', () => {
+    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
+    const content = readFileSync(paymentFormPath, 'utf-8');
 
-    // No React state for sensitive card data
-    assert.equal(content.includes('useState') && content.includes('cardNumber'), false, 'PaymentForm must not have cardNumber state');
-    assert.equal(content.includes('useState') && content.includes('setExpiry'), false, 'PaymentForm must not have expiry state');
-    assert.equal(content.includes('useState') && content.includes('setCvv'), false, 'PaymentForm must not have cvv state');
+    assert.ok(content.includes('interface DemoCardState'), 'Demo values must be explicitly distinguished from payment data');
+    assert.ok(content.includes('Numéro de carte de démonstration'), 'Visa/Mastercard must render the local demo number field');
+    assert.ok(content.includes('Mode démo'), 'Visa/Mastercard must disclose demo mode');
+    assert.ok(content.includes('Simulation visuelle uniquement'), 'Visa/Mastercard must disclose local-only behaviour');
+    assert.ok(content.includes('Tester l’animation'), 'The demo CTA must not be a payment CTA');
+    assert.equal(content.includes("Le paiement direct par carte n'est pas disponible pour ce compte sandbox"), false, 'The obsolete unavailable-card panel must be removed');
+    assert.equal(content.includes('Basculer sur PayPal Sandbox'), false, 'The duplicated card-mode PayPal CTA must be removed');
+  });
+
+  it('keeps the demo submit path completely separate from paymentService', () => {
+    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
+    const content = readFileSync(paymentFormPath, 'utf-8');
+    const demoStart = content.indexOf('const handleDemoSimulation');
+    const demoEnd = content.indexOf('return (', demoStart);
+    const demoHandler = content.slice(demoStart, demoEnd);
+
+    assert.ok(demoStart >= 0, 'A local demo submit handler must exist');
+    assert.equal(/paymentService|bookingService|fetch\(|apiClient|window\.open/.test(demoHandler), false, 'Demo submit must not trigger a network or payment call');
+    assert.ok(content.includes('onSubmit={isCardMode ? handleDemoSimulation : handlePay}'), 'Only PayPal may use the provider-backed submit handler');
+    assert.ok(content.includes('paymentService.initiatePaymentOrder'), 'The PayPal Sandbox flow must remain unchanged');
+    assert.ok(content.includes('paymentService.capturePayment'), 'The PayPal Sandbox capture flow must remain unchanged');
+  });
+
+  it('clears demo values on every payment-method switch and never writes browser storage', () => {
+    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
+    const content = readFileSync(paymentFormPath, 'utf-8');
+    const switchStart = content.indexOf('const selectPaymentMethod');
+    const switchEnd = content.indexOf('const formatDemoNumber', switchStart);
+    const switchHandler = content.slice(switchStart, switchEnd);
+
+    assert.ok(content.includes('setDemoCard(EMPTY_DEMO_CARD_STATE)'), 'A reset must discard component-memory demo values');
+    assert.ok(switchHandler.includes('clearDemoCard()'), 'Every payment method switch must clear demo values');
+    assert.equal(/localStorage|sessionStorage|document\.cookie|URLSearchParams/.test(content), false, 'Demo values must never be persisted or included in URLs');
+  });
+
+  it('has no save-card UI or card-network lookup logic', () => {
+    const paymentFormPath = resolve(testDirectory, '../../components/checkout/PaymentForm.tsx');
+    const content = readFileSync(paymentFormPath, 'utf-8');
+
     assert.equal(content.includes('setSaveCard'), false, 'PaymentForm must not have saveCard state');
-
-    // No BIN detection logic
     assert.equal(content.includes(".startsWith('4')"), false, 'PaymentForm must not parse Visa BIN');
     assert.equal(content.includes('5[1-5]'), false, 'PaymentForm must not parse Mastercard BIN');
-
-    // Truthful sandbox status and factual assurances
-    assert.ok(content.includes("Le paiement direct par carte n'est pas disponible pour ce compte sandbox"), 'PaymentForm must state honest sandbox limitation');
     assert.ok(content.includes('Zéro Stockage PAN / CVC'), 'PaymentForm must display factual zero-storage assurance');
     assert.equal(content.includes('PCI-DSS Level 1'), false, 'PaymentForm must not make unsupported PCI-DSS claims');
   });
 
   it('verifies Payment DTOs contain zero card credential fields', () => {
-    const typesPath = path.resolve(__dirname, '../../types/payment.types.ts');
-    const content = fs.readFileSync(typesPath, 'utf-8');
+    const typesPath = resolve(testDirectory, '../../types/payment.types.ts');
+    const content = readFileSync(typesPath, 'utf-8');
 
     const forbidden = ['cardNumber', 'pan', 'cvv', 'cvc', 'securityCode', 'expiryMonth', 'expiryYear'];
     for (const field of forbidden) {
@@ -83,10 +109,9 @@ describe('Phase 39 Card Data Security & Elimination of Raw Credentials', () => {
   });
 
   it('verifies PaymentService requests contain zero card credentials', () => {
-    const servicePath = path.resolve(__dirname, '../../services/payment.service.ts');
-    const content = fs.readFileSync(servicePath, 'utf-8');
+    const servicePath = resolve(testDirectory, '../../services/payment.service.ts');
+    const content = readFileSync(servicePath, 'utf-8');
 
     assert.equal(/cardNumber|pan|cvv|cvc/i.test(content), false, 'PaymentService must not reference card credentials');
   });
 });
-

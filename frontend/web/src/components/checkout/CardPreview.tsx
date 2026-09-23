@@ -3,25 +3,29 @@
 import React from 'react';
 
 export interface CardPreviewProps {
-  cardHolder?: string;
-  last4?: string;
+  /** Local-only visual data from PaymentForm's DemoCardState. Never provider or API data. */
+  demoCard?: {
+    holderName: string;
+    displayNumber: string;
+    expiry: string;
+  };
   isFlipped?: boolean;
   brand: 'visa' | 'mastercard';
   onToggleFlip?: () => void;
 }
 
 export const CardPreview: React.FC<CardPreviewProps> = ({
-  cardHolder,
-  last4,
+  demoCard,
   isFlipped = false,
   brand,
   onToggleFlip,
 }) => {
-  // Phase 39: PAN is permanently masked. Only safe provider-returned last4 may be displayed.
-  const g1 = '••••';
-  const g2 = '••••';
-  const g3 = '••••';
-  const g4 = last4 ? last4.slice(-4) : '••••';
+  // These display-only values exist only while the parent demo component is mounted.
+  const demoGroups = (demoCard?.displayNumber || '').split(' ');
+  const g1 = demoGroups[0] || '••••';
+  const g2 = demoGroups[1] || '••••';
+  const g3 = demoGroups[2] || '••••';
+  const g4 = demoGroups[3] || '••••';
 
   const isVisa = brand === 'visa';
 
@@ -158,7 +162,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
             </div>
           </div>
 
-          {/* Middle: Live Embossed PAN (Card Number) */}
+          {/* Middle: local demonstration display only */}
           <div
             style={{
               position: 'relative',
@@ -205,17 +209,17 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                   letterSpacing: '0.5px',
                 }}
               >
-                {cardHolder || 'VOTRE NOM'}
+                {demoCard?.holderName || 'VOTRE NOM'}
               </div>
             </div>
 
-            {/* Expiry: permanently masked decorative placeholder */}
+            {/* Local demonstration display only */}
             <div style={{ marginRight: '1.2rem', textAlign: 'center' }}>
               <div style={{ fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.75, marginBottom: '2px' }}>
                 Expire fin
               </div>
               <div style={{ fontSize: '0.88rem', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '1px' }}>
-                ••/••
+                {demoCard?.expiry || '••/••'}
               </div>
             </div>
 
@@ -301,11 +305,11 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                     fontStyle: 'italic',
                   }}
                 >
-                  {cardHolder || 'Signature autorisée'}
+                  {demoCard?.holderName || 'Signature autorisée'}
                 </span>
               </div>
 
-              {/* CVC Box: permanently masked */}
+              {/* CVC remains masked; focus alone controls the visual flip. */}
               <div
                 style={{
                   width: '64px',

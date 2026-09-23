@@ -16,6 +16,25 @@ interface PaymentFormProps {
   onPaymentSuccess?: (paymentRef: string) => void;
 }
 
+/**
+ * Deliberately browser-memory-only state for the visual card simulator.
+ * It is not a payment credential model and must never cross the component boundary
+ * into API clients, storage, URLs, logging, or analytics.
+ */
+interface DemoCardState {
+  holderName: string;
+  displayNumber: string;
+  expiry: string;
+  cvc: string;
+}
+
+const EMPTY_DEMO_CARD_STATE: DemoCardState = {
+  holderName: '',
+  displayNumber: '',
+  expiry: '',
+  cvc: '',
+};
+
 export const PaymentForm: React.FC<PaymentFormProps> = ({
   bookingReference,
   pricing,
@@ -23,9 +42,11 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const router = useRouter();
 
-  // Payment method: 'visa' | 'mastercard' | 'paypal' (decorative scheme preview or active PayPal Sandbox)
+  // Visa and Mastercard are local-only visual simulators. PayPal is the only provider flow.
   const [selectedMethod, setSelectedMethod] = useState<'visa' | 'mastercard' | 'paypal'>('paypal');
   const [isFlipped, setIsFlipped] = useState(false);
+  const [demoCard, setDemoCard] = useState<DemoCardState>(EMPTY_DEMO_CARD_STATE);
+  const [demoSimulationComplete, setDemoSimulationComplete] = useState(false);
 
   // Processing state
   const [isLoading, setIsLoading] = useState(false);
@@ -154,6 +175,34 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
   const isCardMode = selectedMethod === 'visa' || selectedMethod === 'mastercard';
 
+  const clearDemoCard = () => {
+    setDemoCard(EMPTY_DEMO_CARD_STATE);
+    setDemoSimulationComplete(false);
+    setIsFlipped(false);
+  };
+
+  const selectPaymentMethod = (method: 'visa' | 'mastercard' | 'paypal') => {
+    // A method switch is a hard boundary for all locally simulated card-like values.
+    clearDemoCard();
+    setError(null);
+    setSelectedMethod(method);
+  };
+
+  const formatDemoNumber = (value: string) =>
+    value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+
+  const formatDemoExpiry = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  };
+
+  const handleDemoSimulation = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Intentionally local-only: no API client, provider, persistence, or telemetry call.
+    setDemoSimulationComplete(true);
+    setIsFlipped(false);
+  };
+
   return (
     <div
       style={{
@@ -231,6 +280,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               <CardPreview
                 isFlipped={isFlipped}
                 brand={selectedMethod === 'mastercard' ? 'mastercard' : 'visa'}
+                demoCard={isCardMode ? demoCard : undefined}
                 onToggleFlip={() => setIsFlipped(!isFlipped)}
               />
               <div
@@ -388,7 +438,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               {/* Visa Option */}
               <button
                 type="button"
-                onClick={() => setSelectedMethod('visa')}
+                onClick={() => selectPaymentMethod('visa')}
                 style={{
                   padding: '0.85rem 0.5rem',
                   borderRadius: '12px',
@@ -419,7 +469,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               {/* Mastercard Option */}
               <button
                 type="button"
-                onClick={() => setSelectedMethod('mastercard')}
+                onClick={() => selectPaymentMethod('mastercard')}
                 style={{
                   padding: '0.85rem 0.5rem',
                   borderRadius: '12px',
@@ -452,7 +502,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               {/* PayPal Sandbox Option */}
               <button
                 type="button"
-                onClick={() => setSelectedMethod('paypal')}
+                onClick={() => selectPaymentMethod('paypal')}
                 style={{
                   padding: '0.85rem 0.5rem',
                   borderRadius: '12px',
@@ -498,84 +548,112 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             )}
 
             {/* Form */}
-            <form onSubmit={handlePay}>
+            <form onSubmit={isCardMode ? handleDemoSimulation : handlePay}>
               {isCardMode ? (
-                /* Card Mode: Truthful Provider-Hosted Notice (Phase 39) */
+                /* Browser-memory-only visual simulator. It never invokes a payment API. */
                 <div
                   style={{
-                    padding: '2rem 1.5rem',
+                    padding: '1.35rem',
                     borderRadius: '14px',
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    textAlign: 'center',
+                    background: 'linear-gradient(145deg, #f8fafc 0%, #f0fdfa 100%)',
+                    border: '1px solid #cce5e1',
                     marginBottom: '1rem',
                   }}
                 >
                   <div
                     style={{
-                      fontSize: '2.5rem',
-                      color: selectedMethod === 'mastercard' ? '#005951' : '#01796F',
-                      marginBottom: '0.75rem',
-                    }}
-                  >
-                    <i className="fas fa-credit-card" />
-                  </div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>
-                    Paiement direct par carte ({selectedMethod === 'visa' ? 'Visa' : 'Mastercard'})
-                  </h3>
-                  <p
-                    style={{
-                      color: '#64748b',
-                      fontSize: '0.88rem',
-                      maxWidth: '420px',
-                      margin: '0 auto 1.25rem',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    Le paiement direct par carte n&apos;est pas disponible pour ce compte sandbox.
-                    Conformément aux normes de sécurité, Yuding ne reçoit, ne traite et ne stocke aucun
-                    numéro complet de carte bancaire (PAN), cryptogramme (CVC) ni date d&apos;expiration.
-                  </p>
-                  <div
-                    style={{
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.4rem 0.9rem',
-                      borderRadius: '20px',
-                      background: '#f1f5f9',
-                      color: '#475569',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      marginBottom: '1rem',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      marginBottom: '1.15rem',
                     }}
                   >
-                    <i className="fas fa-shield-halved text-xs text-[#01796F]" />
-                    Champs carte hébergés par le prestataire uniquement
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMethod('paypal')}
+                    <div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 750, color: '#0f172a', margin: 0 }}>
+                        Carte {selectedMethod === 'visa' ? 'Visa' : 'Mastercard'} de démonstration
+                      </h3>
+                      <p style={{ color: '#64748b', fontSize: '0.82rem', margin: '0.25rem 0 0', lineHeight: 1.45 }}>
+                        Animez l&apos;aperçu de carte localement, sans transaction.
+                      </p>
+                    </div>
+                    <span
                       style={{
-                        padding: '0.65rem 1.25rem',
-                        borderRadius: '10px',
-                        background: '#01796F',
-                        color: '#ffffff',
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        border: 'none',
-                        cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '0.5rem',
-                        boxShadow: '0 4px 12px rgba(1, 121, 111, 0.25)',
+                        gap: '0.35rem',
+                        padding: '0.35rem 0.7rem',
+                        borderRadius: '999px',
+                        background: '#dff7f2',
+                        color: '#00685f',
+                        fontSize: '0.72rem',
+                        fontWeight: 750,
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      <i className="fab fa-paypal" />
-                      <span>Régler via PayPal Sandbox ({formattedAmount})</span>
-                    </button>
+                      <i className="fas fa-flask" /> Mode démo
+                    </span>
                   </div>
+                  <div style={{ display: 'grid', gap: '0.9rem' }}>
+                    <label style={{ display: 'grid', gap: '0.4rem', color: '#334155', fontSize: '0.82rem', fontWeight: 700 }}>
+                      Nom du titulaire
+                      <input
+                        value={demoCard.holderName}
+                        onChange={(event) => setDemoCard((current) => ({ ...current, holderName: event.target.value }))}
+                        placeholder="VOTRE NOM"
+                        autoComplete="off"
+                        data-demo-card-field="holder"
+                        style={{ border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0.75rem 0.85rem', color: 'var(--text, #0f172a)', background: 'var(--card, #ffffff)', fontSize: '0.95rem' }}
+                      />
+                    </label>
+
+                    <label style={{ display: 'grid', gap: '0.4rem', color: '#334155', fontSize: '0.82rem', fontWeight: 700 }}>
+                      Numéro de carte de démonstration
+                      <input
+                        value={demoCard.displayNumber}
+                        onChange={(event) => setDemoCard((current) => ({ ...current, displayNumber: formatDemoNumber(event.target.value) }))}
+                        placeholder="1234 5678 9012 3456"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        data-demo-card-field="number"
+                        style={{ border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0.75rem 0.85rem', color: 'var(--text, #0f172a)', background: 'var(--card, #ffffff)', fontSize: '0.95rem', letterSpacing: '0.08em' }}
+                      />
+                    </label>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.8rem' }}>
+                      <label style={{ display: 'grid', gap: '0.4rem', color: '#334155', fontSize: '0.82rem', fontWeight: 700 }}>
+                        Date d&apos;expiration
+                        <input
+                          value={demoCard.expiry}
+                          onChange={(event) => setDemoCard((current) => ({ ...current, expiry: formatDemoExpiry(event.target.value) }))}
+                          placeholder="MM/AA"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          data-demo-card-field="expiry"
+                          style={{ border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0.75rem 0.85rem', color: 'var(--text, #0f172a)', background: 'var(--card, #ffffff)', fontSize: '0.95rem' }}
+                        />
+                      </label>
+                      <label style={{ display: 'grid', gap: '0.4rem', color: '#334155', fontSize: '0.82rem', fontWeight: 700 }}>
+                        CVC / CVV
+                        <input
+                          value={demoCard.cvc}
+                          onChange={(event) => setDemoCard((current) => ({ ...current, cvc: event.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                          onFocus={() => setIsFlipped(true)}
+                          onBlur={() => setIsFlipped(false)}
+                          placeholder="•••"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          data-demo-card-field="cvc"
+                          style={{ border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0.75rem 0.85rem', color: 'var(--text, #0f172a)', background: 'var(--card, #ffffff)', fontSize: '0.95rem', letterSpacing: '0.12em' }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <p style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#52716d', fontSize: '0.78rem', lineHeight: 1.45, margin: '1rem 0 0' }}>
+                    <i className="fas fa-shield-halved" />
+                    Simulation visuelle uniquement — aucune donnée bancaire n&apos;est transmise.
+                  </p>
                 </div>
               ) : (
                 /* PayPal Sandbox View */
@@ -693,64 +771,98 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   )}
                 </div>
               ) : (
-                <button
-                  type={isCardMode ? 'button' : 'submit'}
-                  onClick={isCardMode ? () => setSelectedMethod('paypal') : undefined}
-                  disabled={isLoading}
-                  style={{
-                    marginTop: '1.75rem',
-                    width: '100%',
-                    padding: '1rem 1.5rem',
-                    borderRadius: '12px',
-                    background:
-                      selectedMethod === 'paypal'
-                        ? 'linear-gradient(135deg, #0070BA 0%, #003087 100%)'
-                        : 'linear-gradient(135deg, #01796F 0%, #005951 100%)',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '1.05rem',
-                    fontWeight: 700,
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.75rem',
-                    boxShadow:
-                      selectedMethod === 'paypal'
-                        ? '0 8px 20px -4px rgba(0, 112, 186, 0.35)'
-                        : '0 8px 20px -4px rgba(1, 121, 111, 0.35)',
-                    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoading) {
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  {isLoading ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin" />
-                      <span>Traitement sécurisé en cours...</span>
-                    </>
-                  ) : isCardMode ? (
-                    <>
-                      <i className="fab fa-paypal" />
-                      <span>Basculer sur PayPal Sandbox pour régler {formattedAmount}</span>
-                      <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-lock" />
-                      <span>Payer avec PayPal ({formattedAmount})</span>
-                      <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
-                    </>
+                <>
+                  {isCardMode && demoSimulationComplete && (
+                    <div
+                      role="status"
+                      style={{
+                        marginTop: '1.25rem',
+                        padding: '0.8rem 1rem',
+                        borderRadius: '10px',
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        color: '#047857',
+                        fontSize: '0.84rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.55rem',
+                      }}
+                    >
+                      <i className="fas fa-circle-check" />
+                      Simulation terminée — aucun paiement n&apos;a été effectué.
+                    </div>
                   )}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={!isCardMode && isLoading}
+                    style={{
+                      marginTop: '1.25rem',
+                      width: '100%',
+                      padding: '1rem 1.5rem',
+                      borderRadius: '12px',
+                      background: isCardMode
+                        ? 'linear-gradient(135deg, #01796F 0%, #005951 100%)'
+                        : 'linear-gradient(135deg, #0070BA 0%, #003087 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '1.05rem',
+                      fontWeight: 700,
+                      cursor: !isCardMode && isLoading ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.75rem',
+                      boxShadow: isCardMode
+                        ? '0 8px 20px -4px rgba(1, 121, 111, 0.35)'
+                        : '0 8px 20px -4px rgba(0, 112, 186, 0.35)',
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                    }}
+                    onMouseEnter={(event) => {
+                      if (isCardMode || !isLoading) event.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(event) => {
+                      event.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    {isCardMode ? (
+                      <>
+                        <i className="fas fa-wand-magic-sparkles" />
+                        <span>{demoSimulationComplete ? 'Rejouer l’animation' : 'Tester l’animation'}</span>
+                      </>
+                    ) : isLoading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin" />
+                        <span>Traitement sécurisé en cours...</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-lock" />
+                        <span>Payer avec PayPal ({formattedAmount})</span>
+                        <i className="fas fa-arrow-right" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }} />
+                      </>
+                    )}
+                  </button>
+                  {isCardMode && demoSimulationComplete && (
+                    <button
+                      type="button"
+                      onClick={clearDemoCard}
+                      style={{
+                        width: '100%',
+                        marginTop: '0.7rem',
+                        padding: '0.65rem 1rem',
+                        borderRadius: '10px',
+                        border: '1px solid #cbd5e1',
+                        background: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Réinitialiser la démo
+                    </button>
+                  )}
+                </>
               )}
             </form>
           </div>
