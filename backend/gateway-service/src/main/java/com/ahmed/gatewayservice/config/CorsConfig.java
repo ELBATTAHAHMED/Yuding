@@ -55,11 +55,14 @@ public class CorsConfig {
                 "X-Request-Id",
                 "X-Correlation-Id",
                 "X-Requested-With",
-                "Origin"
+                "Origin",
+                "Idempotency-Key",
+                "idempotency-key"
         ));
         config.setExposedHeaders(List.of(
                 "X-Request-Id",
-                "X-Correlation-Id"
+                "X-Correlation-Id",
+                "Idempotent-Replayed"
         ));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);

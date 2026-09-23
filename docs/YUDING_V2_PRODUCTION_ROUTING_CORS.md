@@ -72,9 +72,9 @@ public CorsConfigurationSource corsConfigurationSource(
     config.setAllowedOrigins(origins);
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(List.of(
-            "Authorization", "Content-Type", "Accept", "X-Request-Id", "X-Correlation-Id", "X-Requested-With", "Origin"
+            "Authorization", "Content-Type", "Accept", "X-Request-Id", "X-Correlation-Id", "X-Requested-With", "Origin", "Idempotency-Key"
     ));
-    config.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id"));
+    config.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id", "Idempotent-Replayed"));
     config.setAllowCredentials(true);
     config.setMaxAge(3600L);
     ...
