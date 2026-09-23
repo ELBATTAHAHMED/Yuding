@@ -12,11 +12,17 @@ public class AiToolCall {
     private final String id;
     private final String name;
     private final Map<String, Object> arguments;
+    private final String thoughtSignature;
 
     public AiToolCall(String id, String name, Map<String, Object> arguments) {
+        this(id, name, arguments, null);
+    }
+
+    public AiToolCall(String id, String name, Map<String, Object> arguments, String thoughtSignature) {
         this.id = id != null ? id : name;
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.arguments = arguments != null ? Collections.unmodifiableMap(arguments) : Collections.emptyMap();
+        this.thoughtSignature = thoughtSignature;
     }
 
     public String getId() {
@@ -29,6 +35,10 @@ public class AiToolCall {
 
     public Map<String, Object> getArguments() {
         return arguments;
+    }
+
+    public String getThoughtSignature() {
+        return thoughtSignature;
     }
 
     @Override
