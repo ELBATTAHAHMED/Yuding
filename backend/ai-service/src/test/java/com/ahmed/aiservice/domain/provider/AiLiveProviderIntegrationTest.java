@@ -132,7 +132,7 @@ class AiLiveProviderIntegrationTest {
                 .systemInstruction("Vous êtes l'assistant de voyage Yuding.")
                 .userMessage("Bonjour, présente en une phrase ce que tu peux faire dans Yuding.")
                 .model(properties.getFallbackModel())
-                .maxTokens(100)
+                .maxTokens(512)
                 .timeoutSeconds(30)
                 .build();
 

@@ -152,10 +152,15 @@ public class GeminiAiProvider implements AiProvider {
                     }
                     if (msg.getToolCalls() != null) {
                         for (AiToolCall tc : msg.getToolCalls()) {
-                            parts.add(Map.of("functionCall", Map.of(
+                            Map<String, Object> partMap = new LinkedHashMap<>();
+                            partMap.put("functionCall", Map.of(
                                     "name", tc.getName(),
                                     "args", tc.getArguments() != null ? tc.getArguments() : Map.of()
-                            )));
+                            ));
+                            if (tc.getThoughtSignature() != null && !tc.getThoughtSignature().isBlank()) {
+                                partMap.put("thoughtSignature", tc.getThoughtSignature());
+                            }
+                            parts.add(partMap);
                         }
                     }
                     if (!parts.isEmpty()) {
@@ -268,8 +273,9 @@ public class GeminiAiProvider implements AiProvider {
                     if (fcNode.has("args") && !fcNode.get("args").isNull()) {
                         args = objectMapper.convertValue(fcNode.get("args"), new TypeReference<Map<String, Object>>() {});
                     }
-                    String callId = "call_" + UUID.randomUUID().toString().substring(0, 8);
-                    toolCalls.add(new AiToolCall(callId, funcName, args));
+                    String callId = fcNode.has("id") ? fcNode.get("id").asText() : "call_" + UUID.randomUUID().toString().substring(0, 8);
+                    String thoughtSig = part.has("thoughtSignature") ? part.get("thoughtSignature").asText() : null;
+                    toolCalls.add(new AiToolCall(callId, funcName, args, thoughtSig));
                 }
             }
 

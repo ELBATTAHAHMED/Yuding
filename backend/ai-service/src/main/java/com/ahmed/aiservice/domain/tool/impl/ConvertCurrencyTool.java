@@ -74,12 +74,15 @@ public class ConvertCurrencyTool implements AiTool {
                 return AiToolResult.error(callId, "convertCurrency", "Taux de change indisponible pour " + fromNorm + " -> " + toNorm);
             }
 
+            double rate = snapshot.path("exchangeRate").asDouble(1.0);
+            BigDecimal converted = amount.multiply(BigDecimal.valueOf(rate)).setScale(2, RoundingMode.HALF_UP);
+
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("from", fromNorm);
             result.put("to", toNorm);
             result.put("originalAmount", amount);
-            result.put("convertedAmount", snapshot.path("displayAmount").asDouble());
-            result.put("exchangeRate", snapshot.path("exchangeRate").asDouble(1.0));
+            result.put("convertedAmount", converted.doubleValue());
+            result.put("exchangeRate", rate);
             result.put("rateDate", snapshot.path("exchangeRateDate").asText(""));
             result.put("provider", snapshot.path("exchangeRateProvider").asText("official"));
 

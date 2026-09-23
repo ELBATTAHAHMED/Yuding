@@ -82,10 +82,10 @@ class AiToolsUnitTest {
         }
 
         @Test
-        @DisplayName("Rejects invalid IATA codes")
+        @DisplayName("Rejects unresolvable origin locations")
         void searchFlightsInvalidIata() {
             AiToolCall call = new AiToolCall("call-2", "searchFlights", Map.of(
-                    "origin", "PARIS",
+                    "origin", "ZZ_UNKNOWN_LOC_99",
                     "destination", "NCE",
                     "departureDate", "2026-10-01"
             ));
@@ -93,7 +93,27 @@ class AiToolsUnitTest {
             AiToolResult result = tool.execute(call, AiToolExecutionContext.anonymous());
 
             assertThat(result.isSuccess()).isFalse();
-            assertThat(result.getErrorMessage()).contains("IATA");
+            assertThat(result.getErrorMessage()).contains("invalide");
+        }
+
+        @Test
+        @DisplayName("Resolves city names like Paris and Casablanca to IATA codes")
+        void searchFlightsResolvesCityNames() throws Exception {
+            com.fasterxml.jackson.databind.node.ObjectNode node = objectMapper.createObjectNode();
+            node.putArray("items");
+            when(travelClient.searchFlights(anyMap())).thenReturn(node);
+
+            AiToolCall call = new AiToolCall("call-2b", "searchFlights", Map.of(
+                    "origin", "Casablanca",
+                    "destination", "Paris",
+                    "departureDate", "2026-10-15"
+            ));
+
+            AiToolResult result = tool.execute(call, AiToolExecutionContext.anonymous());
+
+            assertThat(result.isSuccess()).isTrue();
+            assertThat(result.getData().get("origin")).isEqualTo("CMN");
+            assertThat(result.getData().get("destination")).isEqualTo("CDG");
         }
 
         @Test

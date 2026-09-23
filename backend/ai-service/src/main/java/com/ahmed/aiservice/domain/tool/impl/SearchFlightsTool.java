@@ -18,16 +18,23 @@ import java.util.regex.Pattern;
 public class SearchFlightsTool implements AiTool {
 
     private static final Logger log = LoggerFactory.getLogger(SearchFlightsTool.class);
-    private static final Pattern IATA_PATTERN = Pattern.compile("^[A-Za-z]{3}$");
     private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 
     private final InternalTravelClient travelClient;
+    private final AirportResolver airportResolver;
     private final int maxResults;
     private final AiToolDefinition definition;
 
+    public SearchFlightsTool(InternalTravelClient travelClient, int maxResults) {
+        this(travelClient, new AirportResolver(travelClient), maxResults);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
     public SearchFlightsTool(InternalTravelClient travelClient,
+                             AirportResolver airportResolver,
                              @Value("${yuding.ai.max-tool-results:5}") int maxResults) {
         this.travelClient = travelClient;
+        this.airportResolver = airportResolver;
         this.maxResults = maxResults;
         this.definition = new AiToolDefinition(
                 "searchFlights",
@@ -35,8 +42,8 @@ public class SearchFlightsTool implements AiTool {
                 Map.of(
                         "type", "object",
                         "properties", Map.of(
-                                "origin", Map.of("type", "string", "description", "Code IATA de départ (ex: CDG, PAR, JFK)"),
-                                "destination", Map.of("type", "string", "description", "Code IATA d'arrivée (ex: NCE, LHR, DXB)"),
+                                "origin", Map.of("type", "string", "description", "Code IATA ou nom de la ville de départ (ex: CMN, Casablanca, CDG, Paris, JFK)"),
+                                "destination", Map.of("type", "string", "description", "Code IATA ou nom de la ville d'arrivée (ex: CDG, Paris, CMN, Casablanca, NCE, Nice)"),
                                 "departureDate", Map.of("type", "string", "description", "Date de départ au format YYYY-MM-DD"),
                                 "returnDate", Map.of("type", "string", "description", "Date de retour optionnelle au format YYYY-MM-DD"),
                                 "adults", Map.of("type", "integer", "description", "Nombre de passagers adultes (défaut: 1)"),
@@ -57,16 +64,24 @@ public class SearchFlightsTool implements AiTool {
         String callId = call.getId();
         Map<String, Object> args = call.getArguments();
 
-        String origin = getString(args, "origin");
-        String destination = getString(args, "destination");
+        String originRaw = getString(args, "origin");
+        String destinationRaw = getString(args, "destination");
         String departureDate = getString(args, "departureDate");
 
-        if (origin == null || !IATA_PATTERN.matcher(origin.trim()).matches()) {
-            return AiToolResult.error(callId, "searchFlights", "Code IATA d'origine invalide: '" + origin + "'. Doit comporter 3 lettres.");
+        Optional<String> originOpt = airportResolver.resolveToIata(originRaw);
+        if (originOpt.isEmpty()) {
+            return AiToolResult.error(callId, "searchFlights",
+                    "Code d'origine invalide ou ville non reconnue: '" + originRaw + "'. Veuillez spécifier un code IATA valide (ex: CMN) ou une ville (ex: Casablanca).");
         }
-        if (destination == null || !IATA_PATTERN.matcher(destination.trim()).matches()) {
-            return AiToolResult.error(callId, "searchFlights", "Code IATA de destination invalide: '" + destination + "'. Doit comporter 3 lettres.");
+        String origin = originOpt.get();
+
+        Optional<String> destinationOpt = airportResolver.resolveToIata(destinationRaw);
+        if (destinationOpt.isEmpty()) {
+            return AiToolResult.error(callId, "searchFlights",
+                    "Code de destination invalide ou ville non reconnue: '" + destinationRaw + "'. Veuillez spécifier un code IATA valide (ex: CDG) ou une ville (ex: Paris).");
         }
+        String destination = destinationOpt.get();
+
         if (departureDate == null || !DATE_PATTERN.matcher(departureDate.trim()).matches()) {
             return AiToolResult.error(callId, "searchFlights", "Format de date de départ invalide: '" + departureDate + "'. Format attendu: YYYY-MM-DD.");
         }

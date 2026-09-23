@@ -28,17 +28,17 @@ public class AiChatService {
     public static final String SYSTEM_INSTRUCTION = """
             Vous êtes l'assistant de voyage officiel de Yuding (Yuding Assistant).
             Votre mission est d'accompagner, conseiller et guider les voyageurs avec précision et bienveillance.
-            
+
             OUTILS DISPONIBLES ET RÈGLE D'ANCRAGE (GROUNDING) :
             1. Vous avez accès à des outils officiels en temps réel :
-               - searchFlights : recherche de vols avec tarifs réels et horaires.
+               - searchFlights : recherche de vols avec tarifs réels et horaires (accepte codes IATA ou noms de villes comme Casablanca, Paris).
                - searchHotels : recherche d'hôtels avec disponibilités et prix par nuit.
                - searchActivities : recherche d'activités touristiques et visites guidées.
                - searchTransfers : recherche de transferts privés et taxis.
-               - getWeather : météo actuelle et prévisions météorologiques.
-               - convertCurrency : conversion officielle de devises.
+               - getWeather : météo actuelle et prévisions météorologiques en direct.
+               - convertCurrency : conversion officielle de devises en temps réel.
                - getBookingStatus : consultation du statut d'une réservation (nécessite d'être connecté).
-            2. Dès que l'utilisateur pose une question relative à un voyage précis (vols, hôtels, activités, météo, devises, réservations), UTILISEZ SYSTÉMATIQUEMENT L'OUTIL ADAPTÉ avant de formuler votre réponse.
+            2. Dès que l'utilisateur pose une question relative à la météo, aux taux de change ou devises, aux vols, aux hôtels, aux activités, aux transferts ou au statut d'une réservation, VOUS DEVEZ OBLIGATOIREMENT ET SYSTÉMATIQUEMENT APPELER L'OUTIL CORRESPONDANT. Ne dites JAMAIS que vous n'avez pas accès aux données en temps réel ou que vous ne disposez pas d'informations en direct, car ces outils vous fournissent les données exactes du système Yuding.
             3. RÈGLE DE VÉRITÉ ABSOLUE : Fondez vos réponses STRICTEMENT sur les données retournées par les outils. Ne JAMAIS inventer de prix, de disponibilités, de compagnies aériennes ou de numéros de dossier. Si aucun résultat n'est trouvé, informez-en honnêtement le voyageur.
             4. STRICTEMENT EN LECTURE SEULE : Vous NE POUVEZ PAS créer de réservations, encaisser de paiements, modifier ou annuler des dossiers. Si le voyageur souhaite réserver ou payer, invitez-le chaleureusement à finaliser son achat en toute sécurité sur l'interface Yuding.
             5. TRAINS : Aucun outil train n'est actuellement disponible dans l'assistant ; orientez le voyageur vers l'onglet officiel Trains de Yuding.
@@ -101,6 +101,7 @@ public class AiChatService {
         int totalToolCalls = 0;
         boolean fallbackUsed = false;
         String finalContent = "";
+        AiProvider activeProvider = null;
 
         while (round < maxToolRounds) {
             // If we've reached our call limit, don't offer tools on subsequent turn
@@ -118,9 +119,17 @@ public class AiChatService {
                     .timeoutSeconds(properties.getRequestTimeoutSeconds())
                     .build();
 
-            AiChatResult result = executeWithProviderFallback(command, conversationId);
-            if (result.getProvider().equalsIgnoreCase("groq")) {
-                fallbackUsed = true;
+            AiChatResult result;
+            if (activeProvider != null) {
+                result = activeProvider.chat(command);
+            } else {
+                result = executeWithProviderFallback(command, conversationId);
+                if ("groq".equalsIgnoreCase(result.getProvider())) {
+                    activeProvider = groqProvider;
+                    fallbackUsed = true;
+                } else {
+                    activeProvider = geminiProvider;
+                }
             }
 
             if (!result.hasToolCalls()) {
@@ -168,7 +177,9 @@ public class AiChatService {
                     .timeoutSeconds(properties.getRequestTimeoutSeconds())
                     .build();
 
-            AiChatResult finalResult = executeWithProviderFallback(finalCommand, conversationId);
+            AiChatResult finalResult = (activeProvider != null)
+                    ? activeProvider.chat(finalCommand)
+                    : executeWithProviderFallback(finalCommand, conversationId);
             finalContent = finalResult.getContent();
         }
 

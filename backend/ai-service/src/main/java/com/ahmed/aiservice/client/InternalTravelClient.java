@@ -101,14 +101,26 @@ public class InternalTravelClient {
     }
 
     public JsonNode convertCurrency(BigDecimal amount, String from, String to) {
-        log.debug("Calling travel-service /travel/currency/convert with amount={}, from={}, to={}", amount, from, to);
+        log.debug("Calling travel-service /travel/currency/rate with from={}, to={}", from, to);
         return restClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/travel/currency/convert")
-                        .queryParam("amount", amount)
+                .uri(uriBuilder -> uriBuilder.path("/travel/currency/rate")
                         .queryParam("from", from)
                         .queryParam("to", to)
                         .build())
                 .retrieve()
                 .body(JsonNode.class);
+    }
+
+    public JsonNode getAirports() {
+        log.debug("Calling travel-service /travel/airports");
+        try {
+            return restClient.get()
+                    .uri("/travel/airports")
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (Exception e) {
+            log.warn("Failed to retrieve airports from travel-service: {}", e.getMessage());
+            return null;
+        }
     }
 }
