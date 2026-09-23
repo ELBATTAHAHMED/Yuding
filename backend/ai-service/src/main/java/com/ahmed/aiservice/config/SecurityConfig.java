@@ -61,7 +61,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
 
                         // AI chat endpoint requires authenticated user
-                        .requestMatchers("/ai/**").authenticated()
+                        .requestMatchers("/ai/**", "/api/ai/**").authenticated()
 
                         .anyRequest().authenticated()
                 )

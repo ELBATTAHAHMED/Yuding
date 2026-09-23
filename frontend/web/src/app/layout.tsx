@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { AiChatWidget } from '@/components/ai/AiChatWidget';
 
 export const metadata: Metadata = {
   title: 'Yuding — Réservation de Voyages, Hébergements, Vols & Activités',
@@ -34,6 +35,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             {children}
+            <AiChatWidget />
           </AuthProvider>
         </QueryProvider>
       </body>

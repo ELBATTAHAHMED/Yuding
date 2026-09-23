@@ -33,7 +33,7 @@ spring:
         - id: ai-route
           uri: lb://AI-SERVICE
           predicates:
-            - Path=/ai/**
+            - Path=/api/ai/**,/ai/**
         - id: commentaire-route
           uri: lb://COMMENTAIRE-SERVICE
           predicates:
