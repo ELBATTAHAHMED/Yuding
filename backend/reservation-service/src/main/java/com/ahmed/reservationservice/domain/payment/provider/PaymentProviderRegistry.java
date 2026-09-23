@@ -63,6 +63,25 @@ public class PaymentProviderRegistry {
      */
     public PaymentProvider getProvider(String name) {
         if (name == null) return getActiveProvider();
-        return providers.getOrDefault(name.toLowerCase(), getActiveProvider());
+        PaymentProvider provider = providers.get(name.toLowerCase());
+        return provider != null ? provider : getActiveProvider();
+    }
+
+    /**
+     * Resolves the PaymentProvider based on explicit client intent / payment mode.
+     * Maps DEMO_CARD to MockPaymentProvider while keeping default/PayPal mapped to active provider.
+     */
+    public PaymentProvider getProviderByMode(String paymentMode) {
+        if (paymentMode == null || paymentMode.isBlank() || "PAYPAL".equalsIgnoreCase(paymentMode) || "PAYPAL_SANDBOX".equalsIgnoreCase(paymentMode)) {
+            return getActiveProvider();
+        }
+        if ("DEMO_CARD".equalsIgnoreCase(paymentMode) || "MOCK".equalsIgnoreCase(paymentMode)) {
+            PaymentProvider mockProvider = providers.get(MockPaymentProvider.PROVIDER_NAME);
+            if (mockProvider != null) {
+                return mockProvider;
+            }
+            throw new IllegalStateException("MockPaymentProvider bean not found in application context.");
+        }
+        throw new IllegalArgumentException("Unsupported payment mode: " + paymentMode);
     }
 }

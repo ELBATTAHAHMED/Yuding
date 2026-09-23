@@ -16,11 +16,13 @@ export const paymentService = {
     bookingReference: string,
     returnUrl?: string,
     cancelUrl?: string,
-    idempotencyKey?: string
+    idempotencyKey?: string,
+    paymentMode?: string
   ): Promise<PaymentOrderResponseDto> {
     const params = new URLSearchParams();
     if (returnUrl) params.append('returnUrl', returnUrl);
     if (cancelUrl) params.append('cancelUrl', cancelUrl);
+    if (paymentMode) params.append('paymentMode', paymentMode);
     const queryString = params.toString() ? `?${params.toString()}` : '';
 
     const key =

@@ -53,6 +53,7 @@ public class PaymentController {
             @PathVariable String reference,
             @RequestParam(required = false) String returnUrl,
             @RequestParam(required = false) String cancelUrl,
+            @RequestParam(required = false) String paymentMode,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
 
@@ -63,8 +64,9 @@ public class PaymentController {
         Map<String, String> payload = new TreeMap<>();
         if (returnUrl != null) payload.put("returnUrl", returnUrl);
         if (cancelUrl != null) payload.put("cancelUrl", cancelUrl);
+        if (paymentMode != null) payload.put("paymentMode", paymentMode);
 
-        log.info("Received payment order initiation request for booking [{}] by user [{}]", reference, userId);
+        log.info("Received payment order initiation request for booking [{}] (mode=[{}]) by user [{}]", reference, paymentMode, userId);
         PaymentOrderResponseDto response = idempotencyService.execute(
                 IdempotencyOperation.PAYMENT_CREATE,
                 userUuid,
@@ -72,7 +74,7 @@ public class PaymentController {
                 idempotencyKey,
                 payload,
                 PaymentOrderResponseDto.class,
-                () -> paymentService.initiatePaymentOrder(reference, returnUrl, cancelUrl, userId, roles),
+                () -> paymentService.initiatePaymentOrder(reference, returnUrl, cancelUrl, paymentMode, userId, roles),
                 PaymentOrderResponseDto::getPaymentReference,
                 HttpStatus.OK.value()
         );

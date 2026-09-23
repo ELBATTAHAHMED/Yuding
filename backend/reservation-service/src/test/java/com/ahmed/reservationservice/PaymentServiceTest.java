@@ -166,8 +166,8 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("Should successfully capture payment and transition booking to PAID")
-    void shouldCapturePayment() {
+    @DisplayName("Should successfully capture mock payment and transition booking to PAID")
+    void shouldCaptureMockPayment() {
         Booking booking = Booking.createDraft(userId, ProductType.HOTEL, bookingRef, Instant.now(), Instant.now().plusSeconds(1800));
         Payment payment = Payment.builder()
                 .id(UUID.randomUUID())
@@ -192,8 +192,49 @@ class PaymentServiceTest {
                 bookingRef, request, userId.toString(), List.of("ROLE_USER"));
 
         assertThat(response).isNotNull();
-        assertThat(response.getPaymentStatus()).isEqualTo("AWAITING_WEBHOOK");
+        assertThat(response.getPaymentStatus()).isEqualTo("SUCCEEDED");
+        assertThat(response.getBookingStatus()).isEqualTo("PAID");
         assertThat(response.getProviderTransactionId()).startsWith("MOCK-CAPTURE-");
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCEEDED);
+
+        verify(bookingService).markPaid(eq(booking.getId()));
+    }
+
+    @Test
+    @DisplayName("Should submit PayPal payment capture and remain AWAITING_WEBHOOK without marking PAID")
+    void shouldCapturePayPalPaymentAndAwaitWebhook() {
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, bookingRef, Instant.now(), Instant.now().plusSeconds(1800));
+        Payment payment = Payment.builder()
+                .id(UUID.randomUUID())
+                .bookingId(booking.getId())
+                .paymentReference("PAY-PP123456")
+                .providerName("paypal-sandbox")
+                .providerOrderId("PP-ORDER-1234")
+                .amount(new BigDecimal("99.99"))
+                .currency("EUR")
+                .status(PaymentStatus.INITIATED)
+                .build();
+
+        com.ahmed.reservationservice.domain.payment.provider.PaymentProvider mockPayPal =
+                org.mockito.Mockito.mock(com.ahmed.reservationservice.domain.payment.provider.PaymentProvider.class);
+        when(mockPayPal.capturePaymentOrder(any())).thenReturn(
+                com.ahmed.reservationservice.domain.payment.provider.PaymentCaptureResult.success("PP-CAPTURE-123", "COMPLETED")
+        );
+
+        when(bookingRepository.findByBookingReference(bookingRef)).thenReturn(Optional.of(booking));
+        when(paymentRepository.findByPaymentReference("PAY-PP123456")).thenReturn(Optional.of(payment));
+        when(providerRegistry.getProvider("paypal-sandbox")).thenReturn(mockPayPal);
+
+        PaymentCaptureRequestDto request = PaymentCaptureRequestDto.builder()
+                .paymentReference("PAY-PP123456")
+                .build();
+
+        PaymentCaptureResponseDto response = paymentService.capturePayment(
+                bookingRef, request, userId.toString(), List.of("ROLE_USER"));
+
+        assertThat(response).isNotNull();
+        assertThat(response.getPaymentStatus()).isEqualTo("AWAITING_WEBHOOK");
+        assertThat(response.getProviderTransactionId()).isEqualTo("PP-CAPTURE-123");
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.AWAITING_WEBHOOK);
 
         verify(bookingService, org.mockito.Mockito.never()).markPaid(any());

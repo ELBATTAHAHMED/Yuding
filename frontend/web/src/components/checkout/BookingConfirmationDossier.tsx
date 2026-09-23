@@ -18,7 +18,7 @@ function formatServerTimestamp(value?: string | null): string | null {
 function paymentProviderLabel(provider?: string | null): string | null {
   if (!provider) return null;
   if (provider.toUpperCase().includes('PAYPAL')) return 'PayPal Sandbox';
-  if (provider.toUpperCase().includes('MOCK')) return 'Paiement test — Mock';
+  if (provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) return 'Démo / Mock';
   return provider;
 }
 
@@ -96,7 +96,7 @@ export function BookingConfirmationDossier({ reference }: { reference: string })
       {amount ? <ReceiptRow label="Montant réglé" value={amount} strong /> : <ReceiptRow label="Montant" value="Indisponible" />}
       {verifiedAt && <ReceiptRow label="Vérifié le" value={verifiedAt} />}
     </div>
-    {provider && <span className="mt-4 inline-flex rounded-full border border-teal-300 bg-teal-50 px-3 py-1 text-xs font-bold tracking-wide text-teal-800 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-200">SANDBOX / TEST — {provider}</span>}
+    {provider && <span className="mt-4 inline-flex rounded-full border border-teal-300 bg-teal-50 px-3 py-1 text-xs font-bold tracking-wide text-teal-800 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-200">{(provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) ? 'MODE DÉMO' : 'SANDBOX / TEST'} — {provider}</span>}
     {summaryEntries.length > 0 && <div className="mt-6 text-left"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Prestation sélectionnée</h2><dl className="mt-2 grid gap-2 rounded-xl border border-slate-200 p-4 text-sm dark:border-slate-700">{summaryEntries.map(([key, value]) => <ReceiptRow key={key} label={key} value={value} />)}</dl></div>}
     <div className="mt-7 flex flex-wrap justify-center gap-3">
       {presentation.shouldPoll && <button type="button" onClick={recheck} className="btn-booking" disabled={refreshing}><i className={refreshing ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'} />Actualiser le statut</button>}
