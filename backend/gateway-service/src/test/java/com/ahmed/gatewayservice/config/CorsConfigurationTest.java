@@ -29,8 +29,8 @@ class CorsConfigurationTest {
         assertThat(config).isNotNull();
         assertThat(config.getAllowedOrigins()).containsExactly("http://localhost:3000", "http://localhost:63342");
         assertThat(config.getAllowCredentials()).isTrue();
-        assertThat(config.getExposedHeaders()).contains("X-Request-Id", "X-Correlation-Id");
-        assertThat(config.getAllowedHeaders()).contains("Authorization", "Content-Type", "Accept", "X-Request-Id", "X-Correlation-Id");
+        assertThat(config.getExposedHeaders()).contains("X-Request-Id", "X-Correlation-Id", "Idempotent-Replayed");
+        assertThat(config.getAllowedHeaders()).contains("Authorization", "Content-Type", "Accept", "X-Request-Id", "X-Correlation-Id", "Idempotency-Key");
         assertThat(config.getAllowedMethods()).contains("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
     }
 
