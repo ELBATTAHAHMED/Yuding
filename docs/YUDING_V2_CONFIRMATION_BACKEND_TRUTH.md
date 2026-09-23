@@ -55,11 +55,12 @@ provider data, opaque offer identifiers, approval URLs, and any raw payload are 
 
 ## Frontend contract
 
-The payment return route is `/booking/confirmation?reference=YUD-XXXXXXXX`. The reference merely
-locates the backend resource. The confirmation page then performs `GET /bookings/{reference}/confirmation`
-through the central API client and shows the returned state, amount, currency, provider label, and
-safe snapshot summary. While payment verification is pending it performs bounded, read-only
-rechecks; it never captures payment or creates a booking.
+The canonical dossier route is `/bookings/YUD-XXXXXXXX`. The reference merely locates the backend
+resource. The route performs `GET /bookings/{reference}/confirmation` through the central API
+client and shows the returned state, amount, currency, provider label, and safe snapshot summary.
+While payment verification is pending it performs bounded, read-only rechecks; it never captures
+payment or creates a booking. Legacy `/booking/{reference}` and `/booking/confirmation?reference=`
+routes redirect to this canonical route without forwarding any callback claims.
 
 The page is guarded for login as a UX measure. Gateway and reservation-service JWT authorization
 remain authoritative.

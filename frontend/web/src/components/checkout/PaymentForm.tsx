@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { paymentService } from '@/services/payment.service';
 import { bookingService } from '@/services/booking.service';
+import { getBookingDossierPath } from '@/lib/confirmation-state';
 import { BookingPricingResponseDto } from '@/types/booking.types';
 import { PaymentOrderResponseDto } from '@/types/payment.types';
 import { CardPreview } from './CardPreview';
@@ -65,7 +66,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
     try {
       // 1. Initiate order (server derives authoritative amount and currency)
       const returnUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/booking/confirmation?reference=${bookingReference}`
+        ? `${window.location.origin}${getBookingDossierPath(bookingReference)}`
         : undefined;
       const cancelUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/booking/${bookingReference}`
@@ -110,7 +111,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         if (onPaymentSuccess) {
           onPaymentSuccess(captureResult.paymentReference);
         } else {
-          router.push(`/booking/confirmation?reference=${encodeURIComponent(bookingReference)}`);
+          router.push(getBookingDossierPath(bookingReference));
         }
       } else if (captureResult.paymentStatus === 'AWAITING_WEBHOOK') {
         setWaitingForWebhook(true);
@@ -135,7 +136,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           if (onPaymentSuccess) {
             onPaymentSuccess(captureResult.paymentReference);
           } else {
-            router.push(`/booking/confirmation?reference=${encodeURIComponent(bookingReference)}`);
+            router.push(getBookingDossierPath(bookingReference));
           }
         } else {
           setWebhookTimeout(true);

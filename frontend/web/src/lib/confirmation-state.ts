@@ -76,6 +76,10 @@ export function getConfirmationReference(searchParams: Pick<URLSearchParams, 'ge
   return searchParams.get('reference')?.trim() || '';
 }
 
+export function getBookingDossierPath(reference: string): string {
+  return `/bookings/${encodeURIComponent(reference.trim())}`;
+}
+
 export function formatConfirmationAmount(amount?: number | null, currency?: string | null): string | null {
   if (amount == null || !currency) return null;
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
