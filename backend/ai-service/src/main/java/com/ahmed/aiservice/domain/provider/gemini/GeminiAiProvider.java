@@ -5,7 +5,12 @@ import com.ahmed.aiservice.domain.model.AiProviderType;
 import com.ahmed.aiservice.domain.provider.AiChatCommand;
 import com.ahmed.aiservice.domain.provider.AiChatResult;
 import com.ahmed.aiservice.domain.provider.AiProvider;
+import com.ahmed.aiservice.domain.provider.AiProviderMessage;
+import com.ahmed.aiservice.domain.tool.AiToolCall;
+import com.ahmed.aiservice.domain.tool.AiToolDefinition;
+import com.ahmed.aiservice.domain.tool.AiToolResult;
 import com.ahmed.aiservice.exception.AiProviderException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +24,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -99,7 +102,8 @@ public class GeminiAiProvider implements AiProvider {
             } else if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED || ex.getStatusCode() == HttpStatus.FORBIDDEN) {
                 throw new AiProviderException("Gemini authentication failure", "AI_CONFIGURATION_ERROR", false, HttpStatus.UNAUTHORIZED, ex);
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST) {
-                throw new AiProviderException("Gemini rejected input payload as invalid", "AI_INVALID_REQUEST", false, HttpStatus.BAD_REQUEST, ex);
+                log.warn("Gemini 400 Bad Request body: {}", ex.getResponseBodyAsString());
+                throw new AiProviderException("Gemini rejected input payload as invalid: " + ex.getResponseBodyAsString(), "AI_INVALID_REQUEST", false, HttpStatus.BAD_REQUEST, ex);
             } else {
                 throw new AiProviderException("Gemini client error: " + ex.getStatusCode(), "AI_PROVIDER_UNAVAILABLE", false, (HttpStatus) ex.getStatusCode(), ex);
             }
@@ -127,12 +131,77 @@ public class GeminiAiProvider implements AiProvider {
             ));
         }
 
-        payload.put("contents", List.of(
-                Map.of(
-                        "role", "user",
-                        "parts", List.of(Map.of("text", command.getUserMessage()))
-                )
-        ));
+        List<Map<String, Object>> contents = new ArrayList<>();
+        List<AiProviderMessage> messages = command.getMessages();
+
+        if (messages != null && !messages.isEmpty()) {
+            for (AiProviderMessage msg : messages) {
+                String role = msg.getRole();
+                if ("system".equalsIgnoreCase(role)) {
+                    // System instructions already placed in system_instruction
+                    continue;
+                } else if ("user".equalsIgnoreCase(role)) {
+                    contents.add(Map.of(
+                            "role", "user",
+                            "parts", List.of(Map.of("text", msg.getContent() != null ? msg.getContent() : ""))
+                    ));
+                } else if ("assistant".equalsIgnoreCase(role)) {
+                    List<Map<String, Object>> parts = new ArrayList<>();
+                    if (msg.getContent() != null && !msg.getContent().isBlank()) {
+                        parts.add(Map.of("text", msg.getContent()));
+                    }
+                    if (msg.getToolCalls() != null) {
+                        for (AiToolCall tc : msg.getToolCalls()) {
+                            parts.add(Map.of("functionCall", Map.of(
+                                    "name", tc.getName(),
+                                    "args", tc.getArguments() != null ? tc.getArguments() : Map.of()
+                            )));
+                        }
+                    }
+                    if (!parts.isEmpty()) {
+                        contents.add(Map.of("role", "model", "parts", parts));
+                    }
+                } else if ("tool".equalsIgnoreCase(role)) {
+                    // Gemini expects functionResponse parts in a user turn
+                    List<Map<String, Object>> parts = new ArrayList<>();
+                    if (msg.getToolResults() != null) {
+                        for (AiToolResult tr : msg.getToolResults()) {
+                            Map<String, Object> responseData = tr.isSuccess()
+                                    ? tr.getData()
+                                    : Map.of("error", tr.getErrorMessage() != null ? tr.getErrorMessage() : "Tool failed");
+                            parts.add(Map.of("functionResponse", Map.of(
+                                    "name", tr.getToolName(),
+                                    "response", Map.of("name", tr.getToolName(), "content", responseData)
+                            )));
+                        }
+                    }
+                    if (!parts.isEmpty()) {
+                        contents.add(Map.of("role", "user", "parts", parts));
+                    }
+                }
+            }
+        } else if (command.getUserMessage() != null) {
+            contents.add(Map.of(
+                    "role", "user",
+                    "parts", List.of(Map.of("text", command.getUserMessage()))
+            ));
+        }
+
+        payload.put("contents", contents);
+
+        // Map Tool Definitions if provided
+        List<AiToolDefinition> tools = command.getTools();
+        if (tools != null && !tools.isEmpty()) {
+            List<Map<String, Object>> funcDecls = new ArrayList<>();
+            for (AiToolDefinition def : tools) {
+                Map<String, Object> decl = new LinkedHashMap<>();
+                decl.put("name", def.getName());
+                decl.put("description", def.getDescription());
+                decl.put("parameters", convertSchemaForGemini(def.getParameterSchema()));
+                funcDecls.add(decl);
+            }
+            payload.put("tools", List.of(Map.of("functionDeclarations", funcDecls)));
+        }
 
         int maxTokens = command.getMaxTokens() > 0 ? command.getMaxTokens() : properties.getMaxOutputTokens();
         payload.put("generationConfig", Map.of(
@@ -141,6 +210,34 @@ public class GeminiAiProvider implements AiProvider {
         ));
 
         return payload;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> convertSchemaForGemini(Map<String, Object> schema) {
+        if (schema == null) return Map.of("type", "OBJECT");
+        Map<String, Object> converted = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : schema.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if ("type".equals(key) && value instanceof String s) {
+                converted.put(key, s.toUpperCase(Locale.ROOT));
+            } else if ("properties".equals(key) && value instanceof Map<?, ?> props) {
+                Map<String, Object> convertedProps = new LinkedHashMap<>();
+                for (Map.Entry<?, ?> prop : props.entrySet()) {
+                    if (prop.getValue() instanceof Map<?, ?> propMap) {
+                        convertedProps.put(prop.getKey().toString(), convertSchemaForGemini((Map<String, Object>) propMap));
+                    } else {
+                        convertedProps.put(prop.getKey().toString(), prop.getValue());
+                    }
+                }
+                converted.put(key, convertedProps);
+            } else if ("items".equals(key) && value instanceof Map<?, ?> itemsMap) {
+                converted.put(key, convertSchemaForGemini((Map<String, Object>) itemsMap));
+            } else {
+                converted.put(key, value);
+            }
+        }
+        return converted;
     }
 
     private AiChatResult parseGeminiResponse(String responseBody, String model, long latencyMs) {
@@ -154,13 +251,25 @@ public class GeminiAiProvider implements AiProvider {
             JsonNode firstCandidate = candidates.get(0);
             JsonNode parts = firstCandidate.path("content").path("parts");
             if (!parts.isArray() || parts.isEmpty()) {
-                throw new AiProviderException("Gemini candidate has no text parts", "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.SERVICE_UNAVAILABLE);
+                throw new AiProviderException("Gemini candidate has no parts", "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.SERVICE_UNAVAILABLE);
             }
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder textBuilder = new StringBuilder();
+            List<AiToolCall> toolCalls = new ArrayList<>();
+
             for (JsonNode part : parts) {
                 if (part.has("text")) {
-                    sb.append(part.get("text").asText());
+                    textBuilder.append(part.get("text").asText());
+                }
+                if (part.has("functionCall")) {
+                    JsonNode fcNode = part.get("functionCall");
+                    String funcName = fcNode.path("name").asText();
+                    Map<String, Object> args = new HashMap<>();
+                    if (fcNode.has("args") && !fcNode.get("args").isNull()) {
+                        args = objectMapper.convertValue(fcNode.get("args"), new TypeReference<Map<String, Object>>() {});
+                    }
+                    String callId = "call_" + UUID.randomUUID().toString().substring(0, 8);
+                    toolCalls.add(new AiToolCall(callId, funcName, args));
                 }
             }
 
@@ -173,7 +282,8 @@ public class GeminiAiProvider implements AiProvider {
             }
 
             return AiChatResult.builder()
-                    .content(sb.toString().trim())
+                    .content(textBuilder.toString().trim())
+                    .toolCalls(toolCalls)
                     .provider("gemini")
                     .model(model)
                     .promptTokens(promptTokens)

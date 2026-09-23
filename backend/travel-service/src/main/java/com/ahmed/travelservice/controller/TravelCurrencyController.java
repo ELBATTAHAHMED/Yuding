@@ -21,4 +21,12 @@ public class TravelCurrencyController {
     public ResponseEntity<PriceConversionSnapshot> getRate(@RequestParam String from, @RequestParam String to) {
         return ResponseEntity.ok(currencyService.convert(BigDecimal.ONE, from, to));
     }
+
+    @GetMapping("/convert")
+    public ResponseEntity<PriceConversionSnapshot> convert(
+            @RequestParam BigDecimal amount,
+            @RequestParam String from,
+            @RequestParam String to) {
+        return ResponseEntity.ok(currencyService.convert(amount, from, to));
+    }
 }

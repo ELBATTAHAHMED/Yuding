@@ -5,7 +5,12 @@ import com.ahmed.aiservice.domain.model.AiProviderType;
 import com.ahmed.aiservice.domain.provider.AiChatCommand;
 import com.ahmed.aiservice.domain.provider.AiChatResult;
 import com.ahmed.aiservice.domain.provider.AiProvider;
+import com.ahmed.aiservice.domain.provider.AiProviderMessage;
+import com.ahmed.aiservice.domain.tool.AiToolCall;
+import com.ahmed.aiservice.domain.tool.AiToolDefinition;
+import com.ahmed.aiservice.domain.tool.AiToolResult;
 import com.ahmed.aiservice.exception.AiProviderException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +24,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -129,7 +131,8 @@ public class GroqAiProvider implements AiProvider {
             } else if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED || ex.getStatusCode() == HttpStatus.FORBIDDEN) {
                 throw new AiProviderException("Groq authentication failure", "AI_CONFIGURATION_ERROR", false, HttpStatus.UNAUTHORIZED, ex);
             } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST) {
-                throw new AiProviderException("Groq rejected input payload as invalid", "AI_INVALID_REQUEST", false, HttpStatus.BAD_REQUEST, ex);
+                log.warn("Groq 400 Bad Request body: {}", ex.getResponseBodyAsString());
+                throw new AiProviderException("Groq rejected input payload as invalid: " + ex.getResponseBodyAsString(), "AI_INVALID_REQUEST", false, HttpStatus.BAD_REQUEST, ex);
             } else {
                 throw new AiProviderException("Groq client error: " + ex.getStatusCode(), "AI_PROVIDER_UNAVAILABLE", false, (HttpStatus) ex.getStatusCode(), ex);
             }
@@ -152,12 +155,90 @@ public class GroqAiProvider implements AiProvider {
         Map<String, Object> payload = new HashMap<>();
         payload.put("model", model);
 
-        List<Map<String, String>> messages = new ArrayList<>();
+        List<Map<String, Object>> messages = new ArrayList<>();
         if (command.getSystemInstruction() != null && !command.getSystemInstruction().isBlank()) {
             messages.add(Map.of("role", "system", "content", command.getSystemInstruction()));
         }
-        messages.add(Map.of("role", "user", "content", command.getUserMessage()));
+
+        List<AiProviderMessage> inputMessages = command.getMessages();
+        if (inputMessages != null && !inputMessages.isEmpty()) {
+            for (AiProviderMessage msg : inputMessages) {
+                String role = msg.getRole();
+                if ("system".equalsIgnoreCase(role)) {
+                    // System already handled
+                    continue;
+                } else if ("user".equalsIgnoreCase(role)) {
+                    messages.add(Map.of("role", "user", "content", msg.getContent() != null ? msg.getContent() : ""));
+                } else if ("assistant".equalsIgnoreCase(role)) {
+                    Map<String, Object> asstMsg = new LinkedHashMap<>();
+                    asstMsg.put("role", "assistant");
+                    if (msg.getContent() != null && !msg.getContent().isBlank()) {
+                        asstMsg.put("content", msg.getContent());
+                    } else {
+                        asstMsg.put("content", "");
+                    }
+                    if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
+                        List<Map<String, Object>> toolCalls = new ArrayList<>();
+                        for (AiToolCall tc : msg.getToolCalls()) {
+                            try {
+                                String argsJson = objectMapper.writeValueAsString(tc.getArguments());
+                                toolCalls.add(Map.of(
+                                        "id", tc.getId(),
+                                        "type", "function",
+                                        "function", Map.of(
+                                                "name", tc.getName(),
+                                                "arguments", argsJson
+                                        )
+                                ));
+                            } catch (Exception e) {
+                                log.warn("Failed to serialize tool call arguments for Groq: {}", e.getMessage());
+                            }
+                        }
+                        asstMsg.put("tool_calls", toolCalls);
+                    }
+                    messages.add(asstMsg);
+                } else if ("tool".equalsIgnoreCase(role)) {
+                    if (msg.getToolResults() != null) {
+                        for (AiToolResult tr : msg.getToolResults()) {
+                            try {
+                                String contentJson = objectMapper.writeValueAsString(
+                                        tr.isSuccess() ? tr.getData() : Map.of("error", tr.getErrorMessage() != null ? tr.getErrorMessage() : "Tool failed")
+                                );
+                                Map<String, Object> toolMsg = new LinkedHashMap<>();
+                                toolMsg.put("role", "tool");
+                                toolMsg.put("tool_call_id", tr.getCallId());
+                                toolMsg.put("name", tr.getToolName());
+                                toolMsg.put("content", contentJson);
+                                messages.add(toolMsg);
+                            } catch (Exception e) {
+                                log.warn("Failed to serialize tool result for Groq: {}", e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (command.getUserMessage() != null) {
+            messages.add(Map.of("role", "user", "content", command.getUserMessage()));
+        }
+
         payload.put("messages", messages);
+
+        // Map Tool Definitions if provided
+        List<AiToolDefinition> tools = command.getTools();
+        if (tools != null && !tools.isEmpty()) {
+            List<Map<String, Object>> groqTools = new ArrayList<>();
+            for (AiToolDefinition def : tools) {
+                groqTools.add(Map.of(
+                        "type", "function",
+                        "function", Map.of(
+                                "name", def.getName(),
+                                "description", def.getDescription(),
+                                "parameters", def.getParameterSchema()
+                        )
+                ));
+            }
+            payload.put("tools", groqTools);
+        }
 
         int maxTokens = command.getMaxTokens() > 0 ? command.getMaxTokens() : properties.getMaxOutputTokens();
         payload.put("max_tokens", maxTokens);
@@ -175,7 +256,24 @@ public class GroqAiProvider implements AiProvider {
             }
 
             JsonNode firstChoice = choices.get(0);
-            String content = firstChoice.path("message").path("content").asText("");
+            JsonNode messageNode = firstChoice.path("message");
+            String content = messageNode.path("content").asText("");
+
+            List<AiToolCall> toolCalls = new ArrayList<>();
+            if (messageNode.has("tool_calls") && messageNode.get("tool_calls").isArray()) {
+                for (JsonNode tcNode : messageNode.get("tool_calls")) {
+                    String id = tcNode.path("id").asText("call_" + UUID.randomUUID().toString().substring(0, 8));
+                    String funcName = tcNode.path("function").path("name").asText();
+                    String argsStr = tcNode.path("function").path("arguments").asText("{}");
+                    Map<String, Object> args = new HashMap<>();
+                    try {
+                        args = objectMapper.readValue(argsStr, new TypeReference<Map<String, Object>>() {});
+                    } catch (Exception e) {
+                        log.warn("Failed to parse tool call arguments string from Groq: {}", argsStr);
+                    }
+                    toolCalls.add(new AiToolCall(id, funcName, args));
+                }
+            }
 
             Integer promptTokens = null;
             Integer completionTokens = null;
@@ -187,6 +285,7 @@ public class GroqAiProvider implements AiProvider {
 
             return AiChatResult.builder()
                     .content(content.trim())
+                    .toolCalls(toolCalls)
                     .provider("groq")
                     .model(model)
                     .promptTokens(promptTokens)

@@ -29,6 +29,9 @@ class AiLiveProviderIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        assumeTrue("true".equalsIgnoreCase(System.getProperty("AI_LIVE_TESTS", System.getenv("AI_LIVE_TESTS"))),
+                "Skipping live provider tests: AI_LIVE_TESTS=true required");
+
         properties = new AiProperties();
         properties.setRequestTimeoutSeconds(30);
         properties.setMaxOutputTokens(512);

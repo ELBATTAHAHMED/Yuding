@@ -180,3 +180,17 @@ DIRECTIVES IMPORTANTES :
    - `src/lib/__tests__/ai-assistant.test.ts`: Verifies routing to Gateway (`/api/ai/chat`), authorization header forwarding, payload structure, port isolation, and 429/503 error handling.
    - TypeScript compilation (`npx tsc --noEmit`) passes with zero errors.
    - Production build (`npm run build`) passes with all 23 static/dynamic routes optimized.
+
+---
+
+## 9. Phase 45 Evolution — Tool Calling & Grounded Travel Answers
+
+In Phase 45, the AI Assistant was upgraded from text-only guidance to **live-grounded tool calling**:
+- **7 Read-Only Tools:** `searchFlights`, `searchHotels`, `searchActivities`, `searchTransfers`, `getWeather`, `convertCurrency`, `getBookingStatus`.
+- **Bounded Tool Loop:** Max 3 rounds, max 6 tool executions, 12s timeout per tool.
+- **Request-Scoped Deduplication:** Prevents redundant external calls within the same conversational turn.
+- **IDOR Protection:** `getBookingStatus` forwards caller RS256 JWT tokens for server-side ownership enforcement and applies data minimization.
+- **Grounding Telemetry:** `AiChatResponse` carries `grounded: boolean` and `toolsUsed: string[]`, rendering a `[🛡️ Données Yuding vérifiées en direct]` badge in `AiChatWidget.tsx`.
+
+For complete details, see [YUDING_V2_AI_TOOL_CALLING.md](file:///docs/YUDING_V2_AI_TOOL_CALLING.md).
+
