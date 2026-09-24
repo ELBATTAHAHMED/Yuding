@@ -88,6 +88,14 @@ try {
   await page.click('button[aria-label="Ouvrir l’assistant Yuding"]');
   await page.waitForSelector('[role="dialog"]');
   assert.equal(await page.$eval('[role="dialog"] h2', (element) => element.textContent), 'Assistant Yuding');
+  const panelEdges = await page.$eval('[role="dialog"]', (panel) => {
+    const bounds = panel.getBoundingClientRect();
+    return {
+      topGap: panel.firstElementChild.getBoundingClientRect().top - bounds.top,
+      bottomGap: bounds.bottom - panel.lastElementChild.getBoundingClientRect().bottom,
+    };
+  });
+  assert.ok(panelEdges.topGap <= 2 && panelEdges.bottomGap <= 2, `panel has unwanted outer spacing: ${JSON.stringify(panelEdges)}`);
   assert.equal(await page.$$eval('[aria-label="Idées de questions"] button', (elements) => elements.length), 4);
 
   await page.click('#yuding-assistant-input');
