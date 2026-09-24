@@ -2,10 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  const isHome = pathname === '/';
   return (
-    <footer className="yuding-footer">
+    <footer className={`yuding-footer ${isHome ? 'yuding-footer--home' : ''}`}>
       <div className="yuding-footer__inner">
         <div className="yuding-footer__grid">
           <div>
