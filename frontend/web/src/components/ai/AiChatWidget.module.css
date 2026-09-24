@@ -1,4 +1,8 @@
 .root {
+  --ai-root-bottom: calc(64px + env(safe-area-inset-bottom));
+  --ai-panel-bottom: 66px;
+  --ai-panel-height: 520px;
+  --ai-header-bottom: 120px;
   --ai-surface: #fcfdfd;
   --ai-body: #f7f9f9;
   --ai-text: #172522;
@@ -10,9 +14,10 @@
   position: fixed;
   z-index: 10000;
   right: 24px;
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  bottom: var(--ai-root-bottom);
   font-family: 'Poppins', 'Montserrat', sans-serif;
   color: var(--ai-text);
+  transition: none;
 }
 
 :global(.dark) .root {
@@ -54,11 +59,11 @@
 .panel {
   position: absolute;
   right: 0;
-  bottom: 66px;
+  bottom: var(--ai-panel-bottom);
   display: flex;
   flex-direction: column;
   width: min(380px, calc(100vw - 28px));
-  height: min(548px, calc(100dvh - 112px - env(safe-area-inset-bottom)));
+  height: min(var(--ai-panel-height), max(0px, calc(100dvh - var(--ai-header-bottom) - 16px - var(--ai-root-bottom) - var(--ai-panel-bottom))));
   min-height: 0;
   padding: 0;
   overflow: hidden;
@@ -78,8 +83,8 @@
   align-items: center;
   gap: 10px;
   flex: none;
-  min-height: 69px;
-  padding: 11px 13px 11px 17px;
+  min-height: 65px;
+  padding: 9px 13px 9px 17px;
   border-bottom: 1px solid var(--ai-line);
   background: var(--ai-surface);
 }
@@ -116,7 +121,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 17px 18px 20px;
+  padding: 15px 18px 17px;
   background: var(--ai-body);
   scrollbar-width: thin;
   scrollbar-color: #bdcbc6 transparent;
@@ -127,11 +132,12 @@
 .body::-webkit-scrollbar-thumb { background: #bdcbc6; border-radius: 8px; }
 :global(.dark) .body::-webkit-scrollbar-thumb { background: #426058; }
 
-.welcome { padding-top: 13px; text-align: left; }
-.welcomeMark { width: 48px; height: 48px; border-radius: 15px; margin-bottom: 24px; }
+.welcome { padding-top: 8px; text-align: left; }
+.welcomeCentered { display: flex; flex-direction: column; justify-content: center; min-height: 100%; }
+.welcomeMark { width: 48px; height: 48px; border-radius: 15px; margin-bottom: 18px; }
 .welcomeEyebrow { margin: 0 0 9px; color: var(--ai-accent); font-size: 9px; font-weight: 700; letter-spacing: .15em; }
 .welcome h3 { margin: 0; color: var(--ai-text); font-size: 22px; font-weight: 700; line-height: 1.35; letter-spacing: -.035em; text-align: left; }
-.welcomeDescription { margin: 10px 0 22px; color: var(--ai-muted); font-size: 11.5px; line-height: 1.6; }
+.welcomeDescription { margin: 10px 0 17px; color: var(--ai-muted); font-size: 11.5px; line-height: 1.6; }
 .suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .suggestions button {
   display: flex;
@@ -227,7 +233,7 @@
 .notice span { flex: 1; }
 .notice button { padding: 0; border: 0; color: var(--ai-accent); background: transparent; font-size: 10.5px; font-weight: 700; }
 
-.footer { flex: none; padding: 11px 12px 12px; border-top: 1px solid var(--ai-line); background: var(--ai-surface); }
+.footer { flex: none; padding: 9px 12px 10px; border-top: 1px solid var(--ai-line); background: var(--ai-surface); }
 .composer { display: flex; align-items: flex-end; gap: 6px; padding: 5px 5px 5px 11px; border: 1px solid var(--ai-line); border-radius: 13px; background: var(--ai-body); transition: border-color .15s ease, box-shadow .15s ease; }
 .composer:focus-within { border-color: var(--ai-accent); box-shadow: 0 0 0 3px rgba(8, 121, 110, .11); }
 .composer textarea {
@@ -258,14 +264,13 @@
 @keyframes bodyEnter { from { opacity: .7; } to { opacity: 1; } }
 
 @media (max-width: 600px) {
-  .root { left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); }
-  .panel { bottom: 64px; width: 100%; height: min(610px, calc(100dvh - 102px - env(safe-area-inset-bottom))); border-radius: 17px; }
+  .root { --ai-root-bottom: calc(14px + env(safe-area-inset-bottom)); --ai-panel-bottom: 64px; --ai-panel-height: 610px; left: 14px; right: 14px; }
+  .panel { width: 100%; border-radius: 17px; }
   .body { padding: 16px; }
   .welcome { padding-top: 6px; }
 }
 @media (max-height: 560px) {
-  .root { bottom: calc(10px + env(safe-area-inset-bottom)); }
-  .panel { bottom: 57px; height: calc(100dvh - 78px - env(safe-area-inset-bottom)); }
+  .root { --ai-root-bottom: calc(10px + env(safe-area-inset-bottom)); --ai-panel-bottom: 57px; }
   .header { min-height: 60px; padding-top: 8px; padding-bottom: 8px; }
   .body { padding-top: 12px; padding-bottom: 12px; }
   .welcomeMark { margin-bottom: 12px; }

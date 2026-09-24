@@ -18,11 +18,11 @@ const SUGGESTIONS = [
 function AssistantMark({ size = 22 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="M7 7.5 16 17l9-9.5M16 17v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="7" cy="7.5" r="2.5" fill="currentColor" />
-      <circle cx="25" cy="7.5" r="2.5" fill="currentColor" />
-      <circle cx="16" cy="17" r="2.75" fill="currentColor" />
-      <circle cx="16" cy="25" r="2.5" fill="currentColor" />
+      <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M9 21.4c3.1-6.1 8.2-9.6 15-9.7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="9" cy="21.4" r="2" fill="currentColor" />
+      <circle cx="16.2" cy="14.3" r="1.65" fill="currentColor" />
+      <path d="m21.4 8.9 3.5 2.8-3.5 2.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -102,9 +102,36 @@ export const AiChatWidget: React.FC = () => {
   const nearBottomRef = useRef(true);
   const forceScrollRef = useRef(false);
   const loadSequenceRef = useRef(0);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const firstName = user?.firstName?.trim().split(/\s+/)[0];
   const safeName = firstName && firstName.length <= 30 && !firstName.includes('@') ? firstName : null;
+
+  useEffect(() => {
+    let header: HTMLElement | null = null;
+    let observer: ResizeObserver | null = null;
+    const syncHeaderBottom = () => {
+      const currentHeader = document.querySelector<HTMLElement>('.yuding-header, .auth-header');
+      if (currentHeader !== header) {
+        observer?.disconnect();
+        header = currentHeader;
+        if (header && typeof ResizeObserver !== 'undefined') {
+          observer = new ResizeObserver(syncHeaderBottom);
+          observer.observe(header);
+        }
+      }
+      const bottom = Math.max(0, Math.ceil(header?.getBoundingClientRect().bottom ?? 0));
+      rootRef.current?.style.setProperty('--ai-header-bottom', `${bottom}px`);
+    };
+    syncHeaderBottom();
+    window.addEventListener('resize', syncHeaderBottom);
+    window.addEventListener('scroll', syncHeaderBottom, { passive: true });
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', syncHeaderBottom);
+      window.removeEventListener('scroll', syncHeaderBottom);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -327,7 +354,7 @@ export const AiChatWidget: React.FC = () => {
   };
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={rootRef}>
       {isRendered && (
         <section className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`} role="dialog" aria-label="Assistant Yuding" aria-hidden={!isOpen}>
           <header className={styles.header}>
@@ -360,7 +387,7 @@ export const AiChatWidget: React.FC = () => {
             ) : (
               <>
                 {messages.length === 0 && (
-                  <div className={styles.welcome}>
+                  <div className={`${styles.welcome} ${isAuthenticated ? styles.welcomeCentered : ''}`}>
                     <div className={styles.welcomeMark}><AssistantMark size={28} /></div>
                     <p className={styles.welcomeEyebrow}>VOTRE PROCHAIN VOYAGE COMMENCE ICI</p>
                     <h3>Bonjour{safeName ? ` ${safeName}` : ''}.<br />Où souhaitez-vous aller&nbsp;?</h3>

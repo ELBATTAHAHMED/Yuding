@@ -151,16 +151,20 @@ try {
   assert.ok(duration.includes('1e-05s') || duration.includes('0.00001s'), `reduced motion duration: ${duration}`);
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
 
-  for (const [width, height] of [[1440, 900], [1366, 768], [1024, 768], [768, 1024], [390, 844]]) {
+  for (const [width, height] of [[1440, 900], [1366, 768], [1024, 768], [768, 1024], [390, 844], [390, 650]]) {
     await page.setViewport({ width, height });
     const layout = await page.evaluate(() => {
       const panel = document.querySelector('[role="dialog"]').getBoundingClientRect();
       const trigger = document.querySelector('button[aria-expanded="true"]').getBoundingClientRect();
-      return { left: panel.left, right: panel.right, top: panel.top, bottom: panel.bottom, triggerBottom: trigger.bottom, clientWidth: document.documentElement.clientWidth, height: innerHeight, scrolls: [...document.querySelector('[role="dialog"]').children].filter((element) => getComputedStyle(element).overflowY === 'auto').length };
+      const siteHeader = document.querySelector('.yuding-header, .auth-header')?.getBoundingClientRect();
+      return { left: panel.left, right: panel.right, top: panel.top, bottom: panel.bottom, panelHeight: panel.height, headerBottom: siteHeader?.bottom ?? 0, triggerBottom: trigger.bottom, clientWidth: document.documentElement.clientWidth, height: innerHeight, scrolls: [...document.querySelector('[role="dialog"]').children].filter((element) => getComputedStyle(element).overflowY === 'auto').length };
     });
     assert.ok(layout.left >= 0 && layout.right <= layout.clientWidth && layout.top >= 0 && layout.bottom <= layout.height, `panel overflow at ${width}x${height}: ${JSON.stringify(layout)}`);
+    assert.ok(layout.top >= layout.headerBottom + 12, `panel overlaps site header at ${width}x${height}: ${JSON.stringify(layout)}`);
+    if (width === 1366 && height === 768) assert.ok(layout.top - layout.headerBottom <= 20, `panel too far below site header at ${width}x${height}: ${JSON.stringify(layout)}`);
+    if (width > 600) assert.ok(layout.panelHeight <= 540, `desktop panel too tall at ${width}x${height}: ${JSON.stringify(layout)}`);
     assert.equal(layout.scrolls, 1, `one scrolling body at ${width}x${height}`);
-    console.log(`✓ ${width}x${height}: panel fits, one scrolling body`);
+    console.log(`✓ ${width}x${height}: ${Math.round(layout.panelHeight)}px panel, ${Math.round(layout.top - layout.headerBottom)}px below header, one scrolling body`);
   }
 
   account = 'Other';
@@ -168,6 +172,12 @@ try {
   await page.click('button[aria-label="Ouvrir l’assistant Yuding"]');
   await page.waitForFunction(() => document.querySelector('[role="dialog"]')?.textContent?.includes('Bonjour Other'));
   assert.ok(!(await page.$eval('[role="dialog"]', (element) => element.textContent)).includes('23 °C'), 'old account messages are isolated');
+  await page.setViewport({ width: 1366, height: 768 });
+  await page.goto(`${baseUrl}/hotels`, { waitUntil: 'networkidle0' });
+  await page.click('button[aria-label="Ouvrir l’assistant Yuding"]');
+  await page.waitForSelector('[role="dialog"]');
+  const subpageGap = await page.evaluate(() => document.querySelector('[role="dialog"]').getBoundingClientRect().top - document.querySelector('.yuding-header').getBoundingClientRect().bottom);
+  assert.ok(subpageGap >= 12, `panel overlaps the sticky subpage header: ${subpageGap}px`);
   console.log('✓ trigger, open/close, keyboard, welcome, chat, grounded output, XSS escaping, history, new conversation, refresh, errors, themes, reduced motion, and account isolation');
 } finally {
   await browser.close();
