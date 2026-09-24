@@ -123,7 +123,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
 
       {/* Main schedule layout: Origin -> Duration / Transfers -> Destination */}
       <div className="grid grid-cols-1 items-center gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(235px,.38fr)]">
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(105px,.8fr)_minmax(0,1fr)] items-center gap-3 rounded-xl bg-slate-50/70 px-3 py-4 dark:bg-[#0a302d]/60">
+        <div className="grid h-full min-h-[126px] grid-cols-[minmax(0,1fr)_minmax(105px,.8fr)_minmax(0,1fr)] items-center gap-3 rounded-xl bg-slate-50/70 px-3 py-4 dark:bg-[#0a302d]/60">
         {/* Origin */}
         <div className="min-w-0">
           <div className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
@@ -171,7 +171,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
         </div>
 
         {/* Pricing & Selection */}
-        <div className="flex min-w-0 flex-col gap-2 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:py-0 lg:pl-5 dark:border-[#01796F]/25">
+        <div className="flex h-full min-h-[126px] min-w-0 flex-col justify-center gap-2 rounded-xl bg-slate-50/70 p-3 dark:bg-[#0a302d]/60">
           <div className="text-xs leading-relaxed text-slate-500 lg:text-right dark:text-slate-400">
             Tarif non disponible via cette source
           </div>

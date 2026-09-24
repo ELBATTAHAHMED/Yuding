@@ -250,13 +250,13 @@ export default function TrainsPage() {
               </div>
 
               {/* Swap Button */}
-              <div className="hidden lg:flex items-center justify-center pb-0.5">
+              <div className="hidden lg:flex h-14 items-center justify-center self-end">
                 <button
                   type="button"
                   onClick={handleSwap}
                   disabled={!originStation && !destinationStation}
                   title="Inverser les gares"
-                  className="w-10 h-10 rounded-full border border-[#01796F]/40 bg-[#021817] text-[#02E0D5] hover:bg-[#01796F]/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="w-10 h-10 rounded-full border border-[#01796F]/40 bg-[#01796F]/10 text-[#01796F] hover:bg-[#01796F]/20 flex items-center justify-center disabled:cursor-not-allowed transition-colors"
                 >
                   <i className="fas fa-exchange-alt text-xs" />
                 </button>
@@ -336,11 +336,11 @@ export default function TrainsPage() {
               </div>
 
               {/* Submit Button */}
-              <div className="w-full lg:w-auto">
+              <div className="w-full lg:mt-5 lg:w-auto">
                 <button
                   type="submit"
                   disabled={loading || !originStation || !destinationStation || !date}
-                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-wider"
+                  className="w-full lg:w-auto h-10 px-6 bg-[#01796F] hover:bg-[#015f57] text-white font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:cursor-not-allowed uppercase tracking-wider"
                 >
                   {loading ? (
                     <i className="fas fa-spinner fa-spin" />

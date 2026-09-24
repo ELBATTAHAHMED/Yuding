@@ -52,19 +52,19 @@ export function AccountMenu() {
       {open && (
         <div id="yuding-account-menu" className={styles.panel}>
           <div className={styles.identity}>
-            <span className={styles.identityAvatar}>{initial}</span>
+            <span className={styles.identityAvatar} aria-hidden="true">{initial}</span>
             <span className={styles.identityText}>
               <strong>{displayName}</strong>
               <small>{user?.email}</small>
             </span>
           </div>
           <div className={styles.links}>
-            <Link ref={firstLinkRef} href="/account/profile" onClick={() => setOpen(false)}><i className="fas fa-user" aria-hidden="true" />Mon profil</Link>
-            <Link href="/account/bookings" onClick={() => setOpen(false)}><i className="fas fa-suitcase" aria-hidden="true" />Mes réservations</Link>
-            <Link href="/account/profile#account-security" onClick={() => setOpen(false)}><i className="fas fa-cog" aria-hidden="true" />Paramètres</Link>
+            <Link ref={firstLinkRef} href="/account/profile" onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-user" aria-hidden="true" /></span><span>Mon profil</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
+            <Link href="/account/bookings" onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-suitcase" aria-hidden="true" /></span><span>Mes réservations</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
+            <Link href="/account/profile#account-security" onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-cog" aria-hidden="true" /></span><span>Paramètres</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
           </div>
           <button type="button" className={styles.logout} onClick={() => { setOpen(false); void logout(); }}>
-            <i className="fas fa-sign-out-alt" aria-hidden="true" />Se déconnecter
+            <span className={styles.logoutIcon}><i className="fas fa-sign-out-alt" aria-hidden="true" /></span>Se déconnecter
           </button>
         </div>
       )}

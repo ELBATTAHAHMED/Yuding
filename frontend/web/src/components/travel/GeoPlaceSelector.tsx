@@ -254,7 +254,7 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
               type="button"
               onClick={handleClear}
               aria-label="Effacer le lieu"
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 flex items-center justify-center transition-colors"
+              className="bg-transparent text-[#01796F] hover:text-[#005f57] dark:text-[#02E0D5] dark:hover:text-white text-xs p-1 flex items-center justify-center transition-colors"
             >
               <i className="fas fa-times-circle" />
             </button>
