@@ -103,52 +103,142 @@ public class GroqAiProvider implements AiProvider {
             );
         }
 
-        String model = (command.getModel() != null && !command.getModel().isBlank())
-                ? command.getModel()
+        String defaultGroqModel = "groq".equalsIgnoreCase(properties.getPrimaryProvider())
+                ? properties.getPrimaryModel()
                 : properties.getFallbackModel();
+        if (defaultGroqModel == null || defaultGroqModel.isBlank() || defaultGroqModel.startsWith("gemini") || "openai/gpt-oss-120b".equalsIgnoreCase(defaultGroqModel)) {
+            defaultGroqModel = "qwen/qwen3.8-27b";
+        }
+
+        String model = (command.getModel() != null && !command.getModel().isBlank() && !"openai/gpt-oss-120b".equalsIgnoreCase(command.getModel()))
+                ? command.getModel()
+                : defaultGroqModel;
 
         Map<String, Object> requestPayload = buildGroqPayload(command, model);
-        long startTime = System.currentTimeMillis();
+        int maxAttempts = 5;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            long startTime = System.currentTimeMillis();
+            try {
+                String responseBody = restClient.post()
+                        .uri("/chat/completions")
+                        .header("Authorization", "Bearer " + properties.getGroq().getApiKey().trim())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(requestPayload)
+                        .retrieve()
+                        .body(String.class);
 
-        try {
-            String responseBody = restClient.post()
-                    .uri("/chat/completions")
-                    .header("Authorization", "Bearer " + properties.getGroq().getApiKey().trim())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(requestPayload)
-                    .retrieve()
-                    .body(String.class);
+                long latencyMs = System.currentTimeMillis() - startTime;
+                return parseGroqResponse(responseBody, model, latencyMs);
 
-            long latencyMs = System.currentTimeMillis() - startTime;
-            return parseGroqResponse(responseBody, model, latencyMs);
+            } catch (HttpClientErrorException ex) {
+                long latencyMs = System.currentTimeMillis() - startTime;
+                log.warn("GroqAiProvider: HTTP client error [{}]: latency={}ms attempt={}/{}", ex.getStatusCode(), latencyMs, attempt, maxAttempts);
 
-        } catch (HttpClientErrorException ex) {
-            long latencyMs = System.currentTimeMillis() - startTime;
-            log.warn("GroqAiProvider: HTTP client error [{}]: latency={}ms", ex.getStatusCode(), latencyMs);
+                if (ex.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                    if (attempt < maxAttempts) {
+                        long sleepMs = 5000L * attempt;
+                        try {
+                            String errorBody = ex.getResponseBodyAsString();
+                            log.info("Groq 429 response body: {}", errorBody);
 
-            if (ex.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                throw new AiProviderException("Groq rate limit exceeded", "AI_PROVIDER_RATE_LIMITED", true, HttpStatus.TOO_MANY_REQUESTS, ex);
-            } else if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED || ex.getStatusCode() == HttpStatus.FORBIDDEN) {
-                throw new AiProviderException("Groq authentication failure", "AI_CONFIGURATION_ERROR", false, HttpStatus.UNAUTHORIZED, ex);
-            } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST) {
-                log.warn("Groq 400 Bad Request body: {}", ex.getResponseBodyAsString());
-                throw new AiProviderException("Groq rejected input payload as invalid: " + ex.getResponseBodyAsString(), "AI_INVALID_REQUEST", false, HttpStatus.BAD_REQUEST, ex);
-            } else {
-                throw new AiProviderException("Groq client error: " + ex.getStatusCode(), "AI_PROVIDER_UNAVAILABLE", false, (HttpStatus) ex.getStatusCode(), ex);
+                            java.util.regex.Matcher mSec = java.util.regex.Pattern.compile("try again in ([0-9]+(?:\\.[0-9]+)?)s", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(errorBody);
+                            java.util.regex.Matcher mMinSec = java.util.regex.Pattern.compile("try again in ([0-9]+)m([0-9]+(?:\\.[0-9]+)?)s", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(errorBody);
+                            java.util.regex.Matcher mMs = java.util.regex.Pattern.compile("try again in ([0-9]+(?:\\.[0-9]+)?)ms", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(errorBody);
+
+                            if (mSec.find()) {
+                                double sec = Double.parseDouble(mSec.group(1));
+                                sleepMs = Math.max(1000L, (long) (sec * 1000) + 1500L);
+                            } else if (mMinSec.find()) {
+                                double min = Double.parseDouble(mMinSec.group(1));
+                                double sec = Double.parseDouble(mMinSec.group(2));
+                                sleepMs = (long) ((min * 60 + sec) * 1000) + 1500L;
+                            } else if (mMs.find()) {
+                                double ms = Double.parseDouble(mMs.group(1));
+                                sleepMs = (long) ms + 1000L;
+                            } else {
+                                org.springframework.http.HttpHeaders headers = ex.getResponseHeaders();
+                                if (headers != null) {
+                                    String resetTokens = headers.getFirst("x-ratelimit-reset-tokens");
+                                    String retryAfter = headers.getFirst("Retry-After");
+                                    String resetRequests = headers.getFirst("x-ratelimit-reset-requests");
+
+                                    String waitHeader = (resetTokens != null && !resetTokens.isBlank()) ? resetTokens
+                                            : (retryAfter != null && !retryAfter.isBlank()) ? retryAfter
+                                            : resetRequests;
+
+                                    if (waitHeader != null && !waitHeader.isBlank()) {
+                                        String clean = waitHeader.replace("s", "").trim();
+                                        double seconds = Double.parseDouble(clean);
+                                        sleepMs = Math.max(1500L, (long) (seconds * 1000) + 1200L);
+                                    }
+                                }
+                            }
+                        } catch (Exception parseEx) {
+                            log.warn("Failed to parse 429 retry duration: {}", parseEx.getMessage());
+                        }
+
+                        if (sleepMs > 45000L) {
+                            log.warn("Groq rate limit sleep duration ({}ms) exceeds 45s threshold. Failing fast.", sleepMs);
+                            throw new AiProviderException("Groq rate limit exceeded (extended quota limit)", "AI_PROVIDER_RATE_LIMITED", true, HttpStatus.TOO_MANY_REQUESTS, ex);
+                        }
+
+                        log.info("Groq rate limited (429). Sleeping {}ms before retry (attempt {}/{})", sleepMs, attempt, maxAttempts);
+                        try {
+                            Thread.sleep(sleepMs);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                        continue;
+                    }
+                    throw new AiProviderException("Groq rate limit exceeded", "AI_PROVIDER_RATE_LIMITED", true, HttpStatus.TOO_MANY_REQUESTS, ex);
+                } else if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED || ex.getStatusCode() == HttpStatus.FORBIDDEN) {
+                    throw new AiProviderException("Groq authentication failure", "AI_CONFIGURATION_ERROR", false, HttpStatus.UNAUTHORIZED, ex);
+                } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                    String errorBody = ex.getResponseBodyAsString();
+                    log.warn("Groq 400 Bad Request body: {}", errorBody);
+                    if (errorBody.contains("tool_use_failed") || errorBody.contains("Tool choice is none")) {
+                        try {
+                            JsonNode errRoot = objectMapper.readTree(errorBody);
+                            String failedGen = errRoot.path("error").path("failed_generation").asText("");
+                            if (!failedGen.isBlank()) {
+                                log.info("GroqAiProvider: Recovered failed_generation from tool_use_failed: length={}", failedGen.length());
+                                return AiChatResult.builder()
+                                        .content(failedGen.trim())
+                                        .toolCalls(Collections.emptyList())
+                                        .provider("groq")
+                                        .model(model)
+                                        .latencyMs(latencyMs)
+                                        .build();
+                            }
+                        } catch (Exception parseEx) {
+                            log.warn("Failed to parse failed_generation from Groq 400: {}", parseEx.getMessage());
+                        }
+                    }
+                    throw new AiProviderException("Groq rejected input payload as invalid: " + errorBody, "AI_INVALID_REQUEST", false, HttpStatus.BAD_REQUEST, ex);
+                } else {
+                    throw new AiProviderException("Groq client error: " + ex.getStatusCode(), "AI_PROVIDER_UNAVAILABLE", false, (HttpStatus) ex.getStatusCode(), ex);
+                }
+            } catch (HttpServerErrorException ex) {
+                long latencyMs = System.currentTimeMillis() - startTime;
+                log.warn("GroqAiProvider: HTTP server error from Groq [{}]: latency={}ms attempt={}/{}", ex.getStatusCode(), latencyMs, attempt, maxAttempts);
+                if (attempt < maxAttempts) {
+                    try { Thread.sleep(1000L * attempt); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    continue;
+                }
+                throw new AiProviderException("Groq service is temporarily unavailable", "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.SERVICE_UNAVAILABLE, ex);
+            } catch (ResourceAccessException ex) {
+                long latencyMs = System.currentTimeMillis() - startTime;
+                log.warn("GroqAiProvider: Connection timeout / network error: latency={}ms error={}", latencyMs, ex.getMessage());
+                throw new AiProviderException("Groq request timed out or network error", "AI_PROVIDER_TIMEOUT", true, HttpStatus.GATEWAY_TIMEOUT, ex);
+            } catch (AiProviderException ape) {
+                throw ape;
+            } catch (Exception ex) {
+                long latencyMs = System.currentTimeMillis() - startTime;
+                log.error("GroqAiProvider: Unexpected failure: latency={}ms error={}", latencyMs, ex.getMessage());
+                throw new AiProviderException("Groq provider unexpected failure: " + ex.getMessage(), "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.INTERNAL_SERVER_ERROR, ex);
             }
-        } catch (HttpServerErrorException ex) {
-            long latencyMs = System.currentTimeMillis() - startTime;
-            log.warn("GroqAiProvider: HTTP server error from Groq [{}]: latency={}ms", ex.getStatusCode(), latencyMs);
-            throw new AiProviderException("Groq service is temporarily unavailable", "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.SERVICE_UNAVAILABLE, ex);
-        } catch (ResourceAccessException ex) {
-            long latencyMs = System.currentTimeMillis() - startTime;
-            log.warn("GroqAiProvider: Connection timeout / network error: latency={}ms error={}", latencyMs, ex.getMessage());
-            throw new AiProviderException("Groq request timed out or network error", "AI_PROVIDER_TIMEOUT", true, HttpStatus.GATEWAY_TIMEOUT, ex);
-        } catch (Exception ex) {
-            long latencyMs = System.currentTimeMillis() - startTime;
-            log.error("GroqAiProvider: Unexpected failure: latency={}ms error={}", latencyMs, ex.getMessage());
-            throw new AiProviderException("Groq provider unexpected failure: " + ex.getMessage(), "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.INTERNAL_SERVER_ERROR, ex);
         }
+        throw new AiProviderException("Groq request failed after all attempts", "AI_PROVIDER_UNAVAILABLE", true, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     private Map<String, Object> buildGroqPayload(AiChatCommand command, String model) {

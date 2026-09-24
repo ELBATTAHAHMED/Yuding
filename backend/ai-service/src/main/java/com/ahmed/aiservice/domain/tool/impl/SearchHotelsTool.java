@@ -96,19 +96,36 @@ public class SearchHotelsTool implements AiTool {
 
         try {
             JsonNode response = travelClient.searchHotels(request);
+            if (response != null && "PROVIDER_UNAVAILABLE".equalsIgnoreCase(response.path("status").asText())) {
+                String errorMsg = response.path("message").asText("Le service de recherche d'hôtels est temporairement indisponible.");
+                return AiToolResult.error(callId, "searchHotels", errorMsg);
+            }
+
+            JsonNode itemsNode = null;
+            if (response != null) {
+                if (response.has("results") && response.get("results").isArray()) {
+                    itemsNode = response.get("results");
+                } else if (response.has("items") && response.get("items").isArray()) {
+                    itemsNode = response.get("items");
+                }
+            }
+
             List<Map<String, Object>> items = new ArrayList<>();
-            if (response != null && response.has("items") && response.get("items").isArray()) {
-                JsonNode itemsNode = response.get("items");
+            if (itemsNode != null) {
                 int count = 0;
                 for (JsonNode item : itemsNode) {
                     if (count >= maxResults) break;
                     Map<String, Object> hotel = new LinkedHashMap<>();
-                    hotel.put("id", item.path("id").asText(""));
+                    String hotelId = item.hasNonNull("hotelId") ? item.path("hotelId").asText()
+                            : (item.hasNonNull("id") ? item.path("id").asText() : "hotel_" + (count + 1));
+                    hotel.put("id", hotelId);
                     hotel.put("hotelName", item.path("hotelName").asText(""));
-                    hotel.put("city", item.path("city").asText(destination));
-                    hotel.put("address", item.path("address").asText(""));
+                    hotel.put("city", item.hasNonNull("city") ? item.path("city").asText() : destination);
+                    String address = item.path("address").asText("");
+                    hotel.put("address", address.length() > 80 ? address.substring(0, 80) : address);
                     hotel.put("starRating", item.path("starRating").asInt(0));
-                    hotel.put("roomType", item.path("roomType").asText(""));
+                    String roomSummary = item.hasNonNull("roomSummary") ? item.path("roomSummary").asText() : item.path("roomType").asText("");
+                    hotel.put("roomType", roomSummary.length() > 80 ? roomSummary.substring(0, 80) : roomSummary);
                     hotel.put("pricePerNight", item.hasNonNull("pricePerNight") ? item.path("pricePerNight").asDouble() : null);
                     hotel.put("totalPrice", item.hasNonNull("totalPrice") ? item.path("totalPrice").asDouble() : null);
                     hotel.put("currency", item.path("currency").asText("EUR"));
@@ -118,11 +135,16 @@ public class SearchHotelsTool implements AiTool {
             }
 
             Map<String, Object> result = new LinkedHashMap<>();
+            result.put("status", "SUCCESS");
+            result.put("source", "YUDING_TRAVEL_API");
             result.put("destination", destination.trim());
             result.put("checkIn", checkIn.trim());
             result.put("checkOut", checkOut.trim());
             result.put("totalFound", items.size());
             result.put("hotels", items);
+            if (items.isEmpty()) {
+                result.put("note", "Aucune offre d'hébergement trouvée dans le système Yuding pour ces critères exacts.");
+            }
 
             return AiToolResult.success(callId, "searchHotels", result);
         } catch (Exception e) {

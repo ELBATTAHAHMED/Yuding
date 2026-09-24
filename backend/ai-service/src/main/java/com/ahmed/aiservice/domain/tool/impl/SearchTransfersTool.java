@@ -101,19 +101,34 @@ public class SearchTransfersTool implements AiTool {
 
         try {
             JsonNode response = travelClient.searchTransfers(request);
+            if (response != null && "PROVIDER_UNAVAILABLE".equalsIgnoreCase(response.path("status").asText())) {
+                String errorMsg = response.path("message").asText("Le service de recherche de transferts est temporairement indisponible.");
+                return AiToolResult.error(callId, "searchTransfers", errorMsg);
+            }
+
+            JsonNode itemsNode = null;
+            if (response != null) {
+                if (response.has("results") && response.get("results").isArray()) {
+                    itemsNode = response.get("results");
+                } else if (response.has("items") && response.get("items").isArray()) {
+                    itemsNode = response.get("items");
+                }
+            }
+
             List<Map<String, Object>> items = new ArrayList<>();
-            if (response != null && response.has("items") && response.get("items").isArray()) {
-                JsonNode itemsNode = response.get("items");
+            if (itemsNode != null) {
                 int count = 0;
                 for (JsonNode item : itemsNode) {
                     if (count >= maxResults) break;
                     Map<String, Object> transfer = new LinkedHashMap<>();
-                    transfer.put("id", item.path("id").asText(""));
-                    transfer.put("vehicleType", item.path("vehicleType").asText(""));
-                    transfer.put("vehicleDescription", item.path("vehicleDescription").asText(""));
-                    transfer.put("maxPassengers", item.path("maxPassengers").asInt(passengers));
-                    transfer.put("pickup", item.path("pickup").asText(pickup));
-                    transfer.put("dropoff", item.path("dropoff").asText(dropoff));
+                    String id = item.hasNonNull("offerId") ? item.path("offerId").asText() : item.path("id").asText("");
+                    if (id.length() > 50) id = id.substring(0, 50);
+                    transfer.put("id", id);
+                    transfer.put("vehicleType", item.hasNonNull("transferType") ? item.path("transferType").asText() : item.path("vehicleType").asText("TAXI"));
+                    transfer.put("vehicleDescription", item.hasNonNull("vehicleModel") ? item.path("vehicleModel").asText() : item.path("vehicleDescription").asText(""));
+                    transfer.put("maxPassengers", item.hasNonNull("capacity") ? item.path("capacity").asInt() : item.path("maxPassengers").asInt(passengers));
+                    transfer.put("pickup", item.hasNonNull("pickup") ? item.path("pickup").asText() : pickup);
+                    transfer.put("dropoff", item.hasNonNull("dropoff") ? item.path("dropoff").asText() : dropoff);
                     transfer.put("durationMinutes", item.path("durationMinutes").asInt(0));
                     transfer.put("price", item.hasNonNull("price") ? item.path("price").asDouble() : null);
                     transfer.put("currency", item.path("currency").asText("EUR"));
@@ -123,12 +138,17 @@ public class SearchTransfersTool implements AiTool {
             }
 
             Map<String, Object> result = new LinkedHashMap<>();
+            result.put("status", "SUCCESS");
+            result.put("source", "YUDING_TRAVEL_API");
             result.put("pickup", pickup.trim());
             result.put("dropoff", dropoff.trim());
             result.put("date", date.trim());
             result.put("time", time.trim());
             result.put("totalFound", items.size());
             result.put("transfers", items);
+            if (items.isEmpty()) {
+                result.put("note", "Aucun transfert trouvé dans le système Yuding pour ces critères exacts.");
+            }
 
             return AiToolResult.success(callId, "searchTransfers", result);
         } catch (Exception e) {

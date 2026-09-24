@@ -27,22 +27,40 @@ public class AiChatService {
 
     public static final String SYSTEM_INSTRUCTION = """
             Vous êtes l'assistant de voyage officiel de Yuding (Yuding Assistant).
-            Votre mission est d'accompagner, conseiller et guider les voyageurs avec précision et bienveillance.
+            Votre mission est d'accompagner, conseiller et guider les voyageurs avec une rigueur absolue, précision et bienveillance.
 
             OUTILS DISPONIBLES ET RÈGLE D'ANCRAGE (GROUNDING) :
-            1. Vous avez accès à des outils officiels en temps réel :
-               - searchFlights : recherche de vols avec tarifs réels et horaires (accepte codes IATA ou noms de villes comme Casablanca, Paris).
-               - searchHotels : recherche d'hôtels avec disponibilités et prix par nuit.
-               - searchActivities : recherche d'activités touristiques et visites guidées.
-               - searchTransfers : recherche de transferts privés et taxis.
-               - getWeather : météo actuelle et prévisions météorologiques en direct.
-               - convertCurrency : conversion officielle de devises en temps réel.
-               - getBookingStatus : consultation du statut d'une réservation (nécessite d'être connecté).
-            2. Dès que l'utilisateur pose une question relative à la météo, aux taux de change ou devises, aux vols, aux hôtels, aux activités, aux transferts ou au statut d'une réservation, VOUS DEVEZ OBLIGATOIREMENT ET SYSTÉMATIQUEMENT APPELER L'OUTIL CORRESPONDANT. Ne dites JAMAIS que vous n'avez pas accès aux données en temps réel ou que vous ne disposez pas d'informations en direct, car ces outils vous fournissent les données exactes du système Yuding.
-            3. RÈGLE DE VÉRITÉ ABSOLUE : Fondez vos réponses STRICTEMENT sur les données retournées par les outils. Ne JAMAIS inventer de prix, de disponibilités, de compagnies aériennes ou de numéros de dossier. Si aucun résultat n'est trouvé, informez-en honnêtement le voyageur.
-            4. STRICTEMENT EN LECTURE SEULE : Vous NE POUVEZ PAS créer de réservations, encaisser de paiements, modifier ou annuler des dossiers. Si le voyageur souhaite réserver ou payer, invitez-le chaleureusement à finaliser son achat en toute sécurité sur l'interface Yuding.
-            5. TRAINS : Aucun outil train n'est actuellement disponible dans l'assistant ; orientez le voyageur vers l'onglet officiel Trains de Yuding.
-            6. Répondez dans la langue utilisée par le voyageur (par défaut en français), avec clarté, courtoisie et professionnalisme.
+            1. Vous avez accès à 7 outils officiels Yuding en temps réel :
+               - searchFlights : vols réels (accepte codes IATA ou noms de villes comme Casablanca, Paris).
+               - searchHotels : hôtels réels avec disponibilités et tarifs.
+               - searchActivities : activités touristiques et visites guidées.
+               - searchTransfers : transferts privés et taxis.
+               - getWeather : météo actuelle et prévisions météorologiques.
+               - convertCurrency : conversion officielle de devises au taux officiel.
+               - getBookingStatus : consultation du statut d'une réservation (authentification requise).
+
+            2. APPEL SYSTÉMATIQUE DES OUTILS :
+               Dès que la question porte sur un fait courant (météo, devises, vols, hôtels, activités, transferts, statut de réservation), VOUS DEVEZ OBLIGATOIREMENT APPELER L'OUTIL CORRESPONDANT. Ne dites jamais que vous n'avez pas accès aux données en temps réel.
+
+            3. POLITIQUE STRICTE DE PROVENANCE FACTUELLE (AUCUNE INVENTION DE FAITS COURANTS) :
+               - TOUTE affirmation factuelle courante (prix, tarifs, devises, disponibilités, horaires, météo, véhicules, catégories, prestataires ou statut de dossier) DOIT STRICTEMENT ET EXCLUSIVEMENT PROVENIR des données renvoyées par l'outil.
+               - GARDE DES NOMBRES ET TARIFS : Tout nombre ou montant actuel (prix en EUR/MAD, température en °C, humidité, vent en km/h, taux de change) doit provenir du résultat de l'outil ou d'un calcul arithmétique direct à partir de celui-ci (ex: montant × taux de change). Il est FORMELLEMENT INTERDIT d'inventer des tarifs externes ou approximatifs (ex: INTERDIT de mentionner "taxi officiel ≈ 70 MAD / ≈ 6 €", "forfait 20 €", etc.).
+               - PAS D'INVENTAIRE INVENTÉ : Si l'outil ne liste pas expressément des types de véhicules (ex: vans, limousines, berlines, minibus) ou des catégories spécifiques, NE PRÉTENDEZ PAS qu'ils sont disponibles chez Yuding.
+               - PAS DE CAPACITÉS SERVICE CLIENT IMAGINAIRES : Ne prétendez jamais que le service client Yuding peut vérifier des partenaires cachés ou non affichés. Invitez simplement l'utilisateur à modifier ses critères de recherche (dates, horaires, destination).
+               - RÉSULTATS VIDES (0 OFFRE) : Si un outil renvoie 0 résultat, informez sobrement l'utilisateur qu'aucune offre Yuding n'a été trouvée pour ces critères ("Aucune offre trouvée pour ces critères"). Ne tentez JAMAIS de compenser l'absence de résultat par des estimations issues de votre mémoire.
+
+            4. RÈGLES DE STATUT RÉSERVATION (PAID vs CONFIRMED) :
+               - Si le statut renvoyé est "PAID" : vous devez impérativement indiquer que le PAIEMENT EST VALIDÉ, mais que la réservation est EN ATTENTE DE CONFIRMATION PAR LE FOURNISSEUR. Le statut PAID n'est PAS identique à CONFIRMED.
+               - Si le dossier est introuvable ou non autorisé (403/404) : indiquez avec courtoisie que le dossier est introuvable ou non accessible, sans divulguer aucune information personnelle (anti-IDOR).
+
+            5. BUDGETS ET DATES DE VOL :
+               - Si un utilisateur demande un vol avec un budget (ex: "à 50 EUR") sans préciser de date, demandez-lui sa date de départ au lieu de chercher ou d'inventer une date arbitraire.
+               - Si une recherche de vol ne retourne aucun vol ou aucun prix, ne proposez pas de conversion de devises inutile.
+
+            6. STRICTEMENT EN LECTURE SEULE :
+               Vous ne pouvez ni créer, ni modifier, ni payer, ni annuler de réservation. Invitez le voyageur à effectuer ses démarches sur l'interface sécurisée Yuding.
+
+            7. Répondez dans la langue utilisée par le voyageur (par défaut en français), avec clarté, concision et professionnalisme.
             """;
 
     private final AiProperties properties;
@@ -59,7 +77,7 @@ public class AiChatService {
                          GroqAiProvider groqProvider) {
         this(properties, geminiProvider, groqProvider,
                 new AiToolRegistry(Collections.emptyList()),
-                new AiToolExecutor(new AiToolRegistry(Collections.emptyList()), new com.fasterxml.jackson.databind.ObjectMapper(), 12),
+                new AiToolExecutor(new AiToolRegistry(Collections.emptyList()), new com.fasterxml.jackson.databind.ObjectMapper(), 25),
                 3, 6);
     }
 
@@ -126,9 +144,10 @@ public class AiChatService {
                 result = executeWithProviderFallback(command, conversationId);
                 if ("groq".equalsIgnoreCase(result.getProvider())) {
                     activeProvider = groqProvider;
-                    fallbackUsed = true;
+                    fallbackUsed = !"groq".equalsIgnoreCase(properties.getPrimaryProvider());
                 } else {
                     activeProvider = geminiProvider;
+                    fallbackUsed = !"gemini".equalsIgnoreCase(properties.getPrimaryProvider());
                 }
             }
 
@@ -168,9 +187,10 @@ public class AiChatService {
 
         // If loop finished due to round limit but no text returned yet, request final text without tools
         if (finalContent.isBlank() && !messages.isEmpty()) {
+            String finalInstruction = SYSTEM_INSTRUCTION + "\n\nSYNTHÈSE FINALE OBLIGATOIRE : Rédigez maintenant directement votre réponse finale en texte clair et bienveillant pour l'utilisateur, à partir des données exactes reçues ci-dessus. N'appelez plus aucun outil.";
             AiChatCommand finalCommand = AiChatCommand.builder()
                     .conversationId(conversationId)
-                    .systemInstruction(SYSTEM_INSTRUCTION)
+                    .systemInstruction(finalInstruction)
                     .messages(new ArrayList<>(messages))
                     .tools(Collections.emptyList())
                     .maxTokens(properties.getMaxOutputTokens())
@@ -191,33 +211,38 @@ public class AiChatService {
     }
 
     private AiChatResult executeWithProviderFallback(AiChatCommand command, UUID conversationId) {
+        AiProvider primary = "groq".equalsIgnoreCase(properties.getPrimaryProvider()) ? groqProvider : geminiProvider;
+        AiProvider fallback = (primary == groqProvider) ? geminiProvider : groqProvider;
+        String primaryName = (primary != null && primary.getProviderType() != null) ? primary.getProviderType().name().toLowerCase() : "primary";
+        String fallbackName = (fallback != null && fallback.getProviderType() != null) ? fallback.getProviderType().name().toLowerCase() : "fallback";
+
         try {
-            return geminiProvider.chat(command);
+            return primary.chat(command);
         } catch (AiProviderException ex) {
-            if (shouldTriggerFallback(ex)) {
-                log.warn("AiChatService: Primary provider [gemini] failed transiently ({}). Triggering fallback to [groq] for conversation [{}]",
-                        ex.getErrorCode(), conversationId);
+            if (shouldTriggerFallback(ex, fallback)) {
+                log.warn("AiChatService: Primary provider [{}] failed transiently ({}). Triggering fallback to [{}] for conversation [{}]",
+                        primaryName, ex.getErrorCode(), fallbackName, conversationId);
                 try {
-                    return groqProvider.chat(command);
+                    return fallback.chat(command);
                 } catch (Exception fallbackEx) {
-                    log.error("AiChatService: Fallback provider [groq] also failed for conversation [{}]", conversationId);
+                    log.error("AiChatService: Fallback provider [{}] also failed for conversation [{}]", fallbackName, conversationId);
                     throw fallbackEx;
                 }
             } else {
-                log.warn("AiChatService: Primary provider error is non-retryable ({}). Fallback skipped.", ex.getErrorCode());
+                log.warn("AiChatService: Primary provider [{}] error is non-retryable ({}). Fallback skipped.", primaryName, ex.getErrorCode());
                 throw ex;
             }
         }
     }
 
-    private boolean shouldTriggerFallback(AiProviderException ex) {
+    private boolean shouldTriggerFallback(AiProviderException ex, AiProvider fallback) {
         if (!properties.isFallbackEnabled()) {
             return false;
         }
         if (!ex.isRetryable()) {
             return false;
         }
-        return groqProvider.isAvailable();
+        return fallback != null && fallback.isAvailable();
     }
 
     private void validateRequest(AiChatRequest request) {

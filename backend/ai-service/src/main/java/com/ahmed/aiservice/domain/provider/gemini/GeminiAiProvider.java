@@ -71,9 +71,16 @@ public class GeminiAiProvider implements AiProvider {
             );
         }
 
+        String defaultGeminiModel = "gemini".equalsIgnoreCase(properties.getPrimaryProvider())
+                ? properties.getPrimaryModel()
+                : properties.getFallbackModel();
+        if (defaultGeminiModel == null || defaultGeminiModel.isBlank() || !defaultGeminiModel.startsWith("gemini")) {
+            defaultGeminiModel = "gemini-3.6-flash";
+        }
+
         String model = (command.getModel() != null && !command.getModel().isBlank())
                 ? command.getModel()
-                : properties.getPrimaryModel();
+                : defaultGeminiModel;
 
         Map<String, Object> requestPayload = buildGeminiPayload(command);
         long startTime = System.currentTimeMillis();

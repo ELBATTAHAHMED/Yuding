@@ -21,7 +21,8 @@ yuding:
     groq:
       api-key: ${GROQ_API_KEY:}
       base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
-    request-timeout-seconds: ${AI_REQUEST_TIMEOUT_SECONDS:30}
+    request-timeout-seconds: ${AI_REQUEST_TIMEOUT_SECONDS:60}
+    tool-timeout-seconds: ${AI_TOOL_TIMEOUT_SECONDS:35}
     max-output-tokens: ${AI_MAX_OUTPUT_TOKENS:2048}
 
 spring:
