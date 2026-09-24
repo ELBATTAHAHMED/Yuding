@@ -33,9 +33,10 @@ public final class TravelSearchMapper {
         if (req == null) return null;
 
         String rawDest = req.getDestination() != null ? req.getDestination().trim() : "";
-        String city = req.getCity() != null && !req.getCity().isBlank() ? req.getCity().trim() : extractCity(rawDest);
+        String rawCity = req.getCity() != null && !req.getCity().isBlank() ? req.getCity().trim() : extractCity(rawDest);
+        String city = com.ahmed.travelservice.service.AirportDirectory.normalizeCityName(rawCity);
         String countryCode = req.getCountryCode() != null && !req.getCountryCode().isBlank()
-                ? req.getCountryCode().trim().toUpperCase() : extractCountryCode(rawDest);
+                ? req.getCountryCode().trim().toUpperCase() : extractCountryCode(rawDest.isBlank() ? city : rawDest);
 
         java.util.List<HotelSearchQuery.RoomOccupancy> occupancies = null;
         if (req.getOccupancies() != null && !req.getOccupancies().isEmpty()) {
@@ -95,12 +96,12 @@ public final class TravelSearchMapper {
 
         String lowerDest = destination.toLowerCase().trim();
         return switch (lowerDest) {
-            case "marrakech", "casablanca", "agadir", "tanger", "tangier", "rabat", "fès", "fes", "essaouira", "chefchaouen", "dakhla", "ouarzazate" -> "MA";
+            case "marrakech", "marrakesh", "casablanca", "agadir", "tanger", "tangier", "rabat", "fès", "fes", "essaouira", "chefchaouen", "dakhla", "ouarzazate" -> "MA";
             case "paris", "nice", "lyon", "marseille" -> "FR";
-            case "madrid", "barcelona", "malaga" -> "ES";
+            case "madrid", "barcelona", "barcelone", "malaga" -> "ES";
             case "dubai", "abu dhabi" -> "AE";
-            case "london" -> "GB";
-            case "rome", "milan" -> "IT";
+            case "london", "londres" -> "GB";
+            case "rome", "roma", "milan" -> "IT";
             case "istanbul" -> "TR";
             default -> "MA";
         };

@@ -76,6 +76,33 @@ public final class AirportDirectory {
         return Optional.empty();
     }
 
+    /**
+     * Normalizes a raw city name or location string into its canonical provider-accepted city name.
+     * E.g. "Marrakesh" -> "Marrakech", "Fez" -> "Fes", "Barcelone" -> "Barcelona", etc.
+     */
+    public static String normalizeCityName(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        String s = stripDiacritics(raw.contains(",") ? raw.split(",")[0].trim() : raw.trim());
+        if (s.contains("MARRAKESH") || s.contains("MARRAKECH")) return "Marrakech";
+        if (s.contains("FES") || s.contains("FEZ")) return "Fes";
+        if (s.contains("TANGER") || s.contains("TANGIER")) return "Tangier";
+        if (s.contains("CASA") || s.contains("CASABLANCA")) return "Casablanca";
+        if (s.contains("BARCELONE") || s.contains("BARCELONA")) return "Barcelona";
+        if (s.contains("LONDRES") || s.contains("LONDON")) return "London";
+        if (s.contains("ROMA") || s.contains("ROME")) return "Rome";
+        if (s.contains("PARIS")) return "Paris";
+        if (s.contains("MADRID")) return "Madrid";
+        if (s.contains("AGADIR")) return "Agadir";
+        if (s.contains("RABAT")) return "Rabat";
+        if (s.contains("CHEFCHAOUEN")) return "Chefchaouen";
+        if (s.contains("ESSAOUIRA")) return "Essaouira";
+        if (s.contains("DAKHLA")) return "Dakhla";
+        if (s.contains("OUARZAZATE")) return "Ouarzazate";
+        if (s.contains("DUBAI")) return "Dubai";
+        if (s.contains("ISTANBUL")) return "Istanbul";
+        return raw.trim();
+    }
+
     private static String normalizeCityAlias(String clean) {
         if (clean == null) return "";
         if (clean.contains("MARRAKESH") || clean.contains("MARRAKECH")) return "MARRAKECH";
@@ -88,7 +115,7 @@ public final class AirportDirectory {
         return clean;
     }
 
-    private static String stripDiacritics(String str) {
+    public static String stripDiacritics(String str) {
         if (str == null) return "";
         String n = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
         return n.replaceAll("\\p{M}", "").replaceAll("[-_]", " ").replaceAll("\\s+", " ").trim().toUpperCase(Locale.ROOT);

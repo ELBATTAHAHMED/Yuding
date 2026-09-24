@@ -65,8 +65,15 @@ class ScrappaClientTest {
     }
 
     @Test
+    void extractIata_fromCityName() {
+        assertThat(ScrappaClient.extractIata("Casablanca", "origin")).isEqualTo("CMN");
+        assertThat(ScrappaClient.extractIata("Paris", "dest")).isEqualTo("CDG");
+        assertThat(ScrappaClient.extractIata("Marrakech", "dest")).isEqualTo("RAK");
+    }
+
+    @Test
     void extractIata_invalid_throwsProviderRequestInvalid() {
-        assertThatThrownBy(() -> ScrappaClient.extractIata("Casablanca", "origin"))
+        assertThatThrownBy(() -> ScrappaClient.extractIata("NonExistentCityXYZ999", "origin"))
                 .isInstanceOf(TravelProviderException.class)
                 .satisfies(e -> assertThat(((TravelProviderException) e).getErrorCode())
                         .isEqualTo(ProviderErrorCode.PROVIDER_REQUEST_INVALID));
