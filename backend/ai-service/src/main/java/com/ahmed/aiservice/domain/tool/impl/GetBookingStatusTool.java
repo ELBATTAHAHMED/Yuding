@@ -80,12 +80,23 @@ public class GetBookingStatusTool implements AiTool {
             String status = bookingNode.path("status").asText("UNKNOWN");
             String productType = bookingNode.path("productType").asText("UNKNOWN");
             boolean isPaid = PAID_STATUSES.contains(status);
+            boolean isConfirmed = "CONFIRMED".equalsIgnoreCase(status);
 
             Map<String, Object> result = new LinkedHashMap<>();
+            result.put("source", "YUDING_RESERVATION_API");
             result.put("bookingReference", bookingRef);
             result.put("status", status);
+            result.put("bookingStatus", status);
             result.put("productType", productType);
             result.put("paid", isPaid);
+            result.put("confirmed", isConfirmed);
+            if ("PAID".equalsIgnoreCase(status)) {
+                result.put("statusExplanation", "Le paiement est validé par Yuding, mais la réservation est en attente de confirmation par le fournisseur (PAID != CONFIRMED).");
+            } else if ("CONFIRMED".equalsIgnoreCase(status)) {
+                result.put("statusExplanation", "La réservation est entièrement confirmée par le fournisseur.");
+            } else {
+                result.put("statusExplanation", "Statut actuel de la réservation : " + status);
+            }
 
             log.info("Booking status retrieved securely: ref={}, status={}, productType={}",
                     bookingRef, status, productType);

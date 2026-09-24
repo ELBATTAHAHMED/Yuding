@@ -86,18 +86,34 @@ public class SearchActivitiesTool implements AiTool {
 
         try {
             JsonNode response = travelClient.searchActivities(request);
+            if (response != null && "PROVIDER_UNAVAILABLE".equalsIgnoreCase(response.path("status").asText())) {
+                String errorMsg = response.path("message").asText("Le service de recherche d'activités est temporairement indisponible.");
+                return AiToolResult.error(callId, "searchActivities", errorMsg);
+            }
+
+            JsonNode itemsNode = null;
+            if (response != null) {
+                if (response.has("results") && response.get("results").isArray()) {
+                    itemsNode = response.get("results");
+                } else if (response.has("items") && response.get("items").isArray()) {
+                    itemsNode = response.get("items");
+                }
+            }
+
             List<Map<String, Object>> items = new ArrayList<>();
-            if (response != null && response.has("items") && response.get("items").isArray()) {
-                JsonNode itemsNode = response.get("items");
+            if (itemsNode != null) {
                 int count = 0;
                 for (JsonNode item : itemsNode) {
                     if (count >= maxResults) break;
                     Map<String, Object> activity = new LinkedHashMap<>();
-                    activity.put("id", item.path("id").asText(""));
+                    activity.put("id", item.hasNonNull("offerId") ? item.path("offerId").asText() : item.path("id").asText(""));
                     activity.put("title", item.path("title").asText(""));
                     activity.put("category", item.path("category").asText(""));
-                    activity.put("destination", item.path("destination").asText(destination));
-                    activity.put("durationMinutes", item.path("durationMinutes").asInt(0));
+                    activity.put("destination", item.hasNonNull("destination") ? item.path("destination").asText() : destination);
+                    int durationMins = item.hasNonNull("durationMinutes")
+                            ? item.path("durationMinutes").asInt()
+                            : (int)(item.path("durationHours").asDouble(0.0) * 60);
+                    activity.put("durationMinutes", durationMins);
                     activity.put("rating", item.path("rating").asDouble(0.0));
                     activity.put("price", item.hasNonNull("price") ? item.path("price").asDouble() : null);
                     activity.put("currency", item.path("currency").asText("EUR"));
@@ -107,9 +123,14 @@ public class SearchActivitiesTool implements AiTool {
             }
 
             Map<String, Object> result = new LinkedHashMap<>();
+            result.put("status", "SUCCESS");
+            result.put("source", "YUDING_TRAVEL_API");
             result.put("destination", destination.trim());
             result.put("totalFound", items.size());
             result.put("activities", items);
+            if (items.isEmpty()) {
+                result.put("note", "Aucune activité trouvée dans le système Yuding pour ces critères exacts.");
+            }
 
             return AiToolResult.success(callId, "searchActivities", result);
         } catch (Exception e) {

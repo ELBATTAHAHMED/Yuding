@@ -11,7 +11,7 @@ export const aiService = {
       '/api/ai/chat',
       request,
       true, // requiresAuth
-      { timeoutMs: 35000 }
+      { timeoutMs: 75000 }
     );
   },
 };

@@ -27,7 +27,7 @@ public class AiToolExecutor {
 
     public AiToolExecutor(AiToolRegistry registry,
                           ObjectMapper objectMapper,
-                          @Value("${yuding.ai.tool-timeout-seconds:12}") int toolTimeoutSeconds) {
+                          @Value("${yuding.ai.tool-timeout-seconds:35}") int toolTimeoutSeconds) {
         this.registry = registry;
         this.objectMapper = objectMapper;
         this.toolTimeoutSeconds = toolTimeoutSeconds;

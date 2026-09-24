@@ -112,21 +112,39 @@ public class SearchFlightsTool implements AiTool {
 
         try {
             JsonNode response = travelClient.searchFlights(request);
+            if (response != null && "PROVIDER_UNAVAILABLE".equalsIgnoreCase(response.path("status").asText())) {
+                String errorMsg = response.path("message").asText("Le service de recherche de vols est temporairement indisponible.");
+                return AiToolResult.error(callId, "searchFlights", errorMsg);
+            }
+
+            JsonNode itemsNode = null;
+            if (response != null) {
+                if (response.has("results") && response.get("results").isArray()) {
+                    itemsNode = response.get("results");
+                } else if (response.has("items") && response.get("items").isArray()) {
+                    itemsNode = response.get("items");
+                }
+            }
+
             List<Map<String, Object>> items = new ArrayList<>();
-            if (response != null && response.has("items") && response.get("items").isArray()) {
-                JsonNode itemsNode = response.get("items");
+            if (itemsNode != null) {
                 int count = 0;
                 for (JsonNode item : itemsNode) {
                     if (count >= maxResults) break;
                     Map<String, Object> offer = new LinkedHashMap<>();
-                    offer.put("id", item.path("id").asText(""));
-                    offer.put("airline", item.path("airline").asText(""));
+                    String id = item.hasNonNull("offerId") ? item.path("offerId").asText() : item.path("id").asText("");
+                    if (id.length() > 50) id = id.substring(0, 50);
+                    String airline = item.hasNonNull("airlineName") && !item.path("airlineName").asText().isBlank()
+                            ? item.path("airlineName").asText()
+                            : (item.hasNonNull("airlineCode") ? item.path("airlineCode").asText() : item.path("airline").asText(""));
+                    offer.put("id", id);
+                    offer.put("airline", airline);
                     offer.put("flightNumber", item.path("flightNumber").asText(""));
-                    offer.put("origin", item.path("originAirport").asText(origin));
-                    offer.put("destination", item.path("destinationAirport").asText(destination));
+                    offer.put("origin", item.hasNonNull("origin") ? item.path("origin").asText() : item.path("originAirport").asText(origin));
+                    offer.put("destination", item.hasNonNull("destination") ? item.path("destination").asText() : item.path("destinationAirport").asText(destination));
                     offer.put("departureTime", item.path("departureTime").asText(""));
                     offer.put("arrivalTime", item.path("arrivalTime").asText(""));
-                    offer.put("durationMinutes", item.path("durationMinutes").asInt(0));
+                    offer.put("durationMinutes", item.hasNonNull("totalDurationMinutes") ? item.path("totalDurationMinutes").asInt() : item.path("durationMinutes").asInt(0));
                     offer.put("stops", item.path("stops").asInt(0));
                     offer.put("price", item.hasNonNull("price") ? item.path("price").asDouble() : null);
                     offer.put("currency", item.path("currency").asText("EUR"));
@@ -136,11 +154,16 @@ public class SearchFlightsTool implements AiTool {
             }
 
             Map<String, Object> result = new LinkedHashMap<>();
+            result.put("status", "SUCCESS");
+            result.put("source", "YUDING_TRAVEL_API");
             result.put("totalFound", items.size());
             result.put("origin", origin.toUpperCase());
             result.put("destination", destination.toUpperCase());
             result.put("departureDate", departureDate);
             result.put("flights", items);
+            if (items.isEmpty()) {
+                result.put("note", "Aucune offre de vol trouvée dans le système Yuding pour ces critères exacts.");
+            }
 
             return AiToolResult.success(callId, "searchFlights", result);
         } catch (Exception e) {
