@@ -13,6 +13,33 @@ export interface AiChatResponseDto {
   toolsUsed?: string[];
 }
 
+export interface ConversationSummaryDto {
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt?: string | null;
+}
+
+export interface ConversationMessageDto {
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant' | string;
+  content: string;
+  grounded?: boolean;
+  toolsUsed?: string[];
+  createdAt: string;
+}
+
+export interface CreateConversationResponse {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt?: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';

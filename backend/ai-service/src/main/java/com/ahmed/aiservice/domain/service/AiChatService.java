@@ -1,22 +1,33 @@
 package com.ahmed.aiservice.domain.service;
 
 import com.ahmed.aiservice.config.AiProperties;
+import com.ahmed.aiservice.config.SecurityUtils;
+import com.ahmed.aiservice.domain.entity.AiToolCallEntity;
+import com.ahmed.aiservice.domain.entity.ConversationEntity;
+import com.ahmed.aiservice.domain.entity.ConversationMessageEntity;
 import com.ahmed.aiservice.domain.provider.*;
 import com.ahmed.aiservice.domain.provider.gemini.GeminiAiProvider;
 import com.ahmed.aiservice.domain.provider.groq.GroqAiProvider;
+import com.ahmed.aiservice.domain.repository.AiToolCallRepository;
+import com.ahmed.aiservice.domain.repository.ConversationMessageRepository;
+import com.ahmed.aiservice.domain.repository.ConversationRepository;
 import com.ahmed.aiservice.domain.tool.*;
 import com.ahmed.aiservice.dto.AiChatRequest;
 import com.ahmed.aiservice.dto.AiChatResponse;
 import com.ahmed.aiservice.exception.AiProviderException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -57,10 +68,15 @@ public class AiChatService {
                - Si un utilisateur demande un vol avec un budget (ex: "à 50 EUR") sans préciser de date, demandez-lui sa date de départ au lieu de chercher ou d'inventer une date arbitraire.
                - Si une recherche de vol ne retourne aucun vol ou aucun prix, ne proposez pas de conversion de devises inutile.
 
-            6. STRICTEMENT EN LECTURE SEULE :
+            6. RÈGLE DE CONTEXTE MULTI-TOUR ET ANCRAGE TEMPS RÉEL (GROUNDING EN SUIVI DE CONVERSATION) :
+               L'historique des échanges précédents sert UNIQUEMENT de contexte conversationnel (pour retenir les destinations abordées, les préférences du voyageur ou les questions précédentes).
+               L'HISTORIQUE NE CONSTITUE EN AUCUN CAS UNE SOURCE D'AUTORITÉ POUR LES FAITS EN TEMPS RÉEL.
+               Pour toute question de suivi portant sur des faits réels (par exemple : "et pour demain ?", "quel temps fera-t-il ?", "donne-moi un hôtel pour cette ville", "convertis ce prix en MAD", "quel est le statut de ma commande ?"), VOUS DEVEZ SYSTÉMATIQUEMENT RÉEXÉCUTER L'OUTIL CORRESPONDANT. Ne réutilisez jamais de vieux prix ou de vieilles données sans interrogation de l'outil.
+
+            7. STRICTEMENT EN LECTURE SEULE :
                Vous ne pouvez ni créer, ni modifier, ni payer, ni annuler de réservation. Invitez le voyageur à effectuer ses démarches sur l'interface sécurisée Yuding.
 
-            7. Répondez dans la langue utilisée par le voyageur (par défaut en français), avec clarté, concision et professionnalisme.
+            8. Répondez dans la langue utilisée par le voyageur (par défaut en français), avec clarté, concision et professionnalisme.
             """;
 
     private final AiProperties properties;
@@ -68,6 +84,10 @@ public class AiChatService {
     private final GroqAiProvider groqProvider;
     private final AiToolRegistry toolRegistry;
     private final AiToolExecutor toolExecutor;
+    private final AiConversationService conversationService;
+    private final ConversationRepository conversationRepository;
+    private final ConversationMessageRepository conversationMessageRepository;
+    private final AiToolCallRepository toolCallRepository;
 
     private final int maxToolRounds;
     private final int maxToolCallsPerRequest;
@@ -78,15 +98,32 @@ public class AiChatService {
         this(properties, geminiProvider, groqProvider,
                 new AiToolRegistry(Collections.emptyList()),
                 new AiToolExecutor(new AiToolRegistry(Collections.emptyList()), new com.fasterxml.jackson.databind.ObjectMapper(), 25),
+                null, null, null, null,
                 3, 6);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
     public AiChatService(AiProperties properties,
                          GeminiAiProvider geminiProvider,
                          GroqAiProvider groqProvider,
                          AiToolRegistry toolRegistry,
                          AiToolExecutor toolExecutor,
+                         int maxToolRounds,
+                         int maxToolCallsPerRequest) {
+        this(properties, geminiProvider, groqProvider, toolRegistry, toolExecutor,
+                null, null, null, null,
+                maxToolRounds, maxToolCallsPerRequest);
+    }
+
+    @Autowired
+    public AiChatService(AiProperties properties,
+                         GeminiAiProvider geminiProvider,
+                         GroqAiProvider groqProvider,
+                         AiToolRegistry toolRegistry,
+                         AiToolExecutor toolExecutor,
+                         @Autowired(required = false) AiConversationService conversationService,
+                         @Autowired(required = false) ConversationRepository conversationRepository,
+                         @Autowired(required = false) ConversationMessageRepository conversationMessageRepository,
+                         @Autowired(required = false) AiToolCallRepository toolCallRepository,
                          @Value("${yuding.ai.max-tool-rounds:3}") int maxToolRounds,
                          @Value("${yuding.ai.max-tool-calls-per-request:6}") int maxToolCallsPerRequest) {
         this.properties = properties;
@@ -94,6 +131,10 @@ public class AiChatService {
         this.groqProvider = groqProvider;
         this.toolRegistry = toolRegistry;
         this.toolExecutor = toolExecutor;
+        this.conversationService = conversationService;
+        this.conversationRepository = conversationRepository;
+        this.conversationMessageRepository = conversationMessageRepository;
+        this.toolCallRepository = toolCallRepository;
         this.maxToolRounds = maxToolRounds;
         this.maxToolCallsPerRequest = maxToolCallsPerRequest;
     }
@@ -108,21 +149,80 @@ public class AiChatService {
         UUID conversationId = request.getConversationId();
         String userMessage = request.getMessage().trim();
 
+        // 1. Resolve User and Conversation Persistence
+        UUID userUuid = resolveUserUuid(executionContext);
+        ConversationEntity conversation = null;
+        ConversationMessageEntity persistedUserMsg = null;
+        int nextSequenceNumber = 1;
+
+        if (userUuid != null && conversationService != null && conversationRepository != null) {
+            conversation = conversationService.getOrCreateConversation(conversationId, userUuid);
+            conversationId = conversation.getId();
+
+            if (conversationMessageRepository != null) {
+                int maxSeq = conversationMessageRepository.findMaxSequenceNumber(conversationId);
+                nextSequenceNumber = maxSeq + 1;
+
+                // Persist User Message
+                persistedUserMsg = ConversationMessageEntity.builder()
+                        .id(UUID.randomUUID())
+                        .conversationId(conversationId)
+                        .role("USER")
+                        .content(userMessage)
+                        .sequenceNumber(nextSequenceNumber)
+                        .createdAt(Instant.now())
+                        .build();
+                conversationMessageRepository.save(persistedUserMsg);
+
+                // Auto-generate title if default
+                if (conversation.getTitle() == null || "Nouvelle conversation".equalsIgnoreCase(conversation.getTitle())) {
+                    String clean = userMessage.replaceAll("\\s+", " ").trim();
+                    if (clean.length() > 60) {
+                        clean = clean.substring(0, 57) + "...";
+                    }
+                    conversation.setTitle(clean);
+                }
+            }
+        }
+
+        // 2. Build Bounded Prior Conversation History
+        List<AiProviderMessage> messages = new ArrayList<>();
+        if (conversation != null && conversationMessageRepository != null) {
+            List<ConversationMessageEntity> recentDesc = conversationMessageRepository
+                    .findRecentMessagesDesc(conversationId, PageRequest.of(0, 20));
+            List<ConversationMessageEntity> history = new ArrayList<>(recentDesc);
+            Collections.reverse(history);
+
+            for (ConversationMessageEntity m : history) {
+                if (persistedUserMsg != null && m.getId().equals(persistedUserMsg.getId())) {
+                    continue; // Skip current user message, will be appended below
+                }
+                if ("USER".equalsIgnoreCase(m.getRole())) {
+                    messages.add(AiProviderMessage.user(m.getContent()));
+                } else if ("ASSISTANT".equalsIgnoreCase(m.getRole())) {
+                    messages.add(AiProviderMessage.assistant(m.getContent()));
+                }
+            }
+        }
+
+        // Append current user message turn
+        messages.add(AiProviderMessage.user(userMessage));
+
+        // 3. Prepare Model & Tools Execution
         List<AiToolDefinition> toolDefinitions = toolRegistry.getDefinitions();
         Map<String, AiToolResult> requestCache = new ConcurrentHashMap<>();
         Set<String> uniqueToolsUsed = new LinkedHashSet<>();
-
-        List<AiProviderMessage> messages = new ArrayList<>();
-        messages.add(AiProviderMessage.user(userMessage));
+        List<ExecutedToolRecord> executedTools = new ArrayList<>();
 
         int round = 0;
         int totalToolCalls = 0;
         boolean fallbackUsed = false;
         String finalContent = "";
         AiProvider activeProvider = null;
+        String providerName = "gemini";
+        String modelName = properties.getPrimaryModel();
 
         while (round < maxToolRounds) {
-            // If we've reached our call limit, don't offer tools on subsequent turn
             List<AiToolDefinition> availableTools = (totalToolCalls >= maxToolCallsPerRequest)
                     ? Collections.emptyList()
                     : toolDefinitions;
@@ -144,11 +244,17 @@ public class AiChatService {
                 result = executeWithProviderFallback(command, conversationId);
                 if ("groq".equalsIgnoreCase(result.getProvider())) {
                     activeProvider = groqProvider;
+                    providerName = "groq";
                     fallbackUsed = !"groq".equalsIgnoreCase(properties.getPrimaryProvider());
                 } else {
                     activeProvider = geminiProvider;
+                    providerName = "gemini";
                     fallbackUsed = !"gemini".equalsIgnoreCase(properties.getPrimaryProvider());
                 }
+            }
+
+            if (result.getModel() != null) {
+                modelName = result.getModel();
             }
 
             if (!result.hasToolCalls()) {
@@ -173,11 +279,17 @@ public class AiChatService {
             // Execute each tool call
             List<AiToolResult> toolResults = new ArrayList<>();
             for (AiToolCall call : allowedCalls) {
+                long toolStart = System.currentTimeMillis();
+                Instant startedAt = Instant.now();
                 AiToolResult toolResult = toolExecutor.execute(call, executionContext, requestCache);
+                Instant completedAt = Instant.now();
+                long toolDuration = System.currentTimeMillis() - toolStart;
+
                 toolResults.add(toolResult);
                 if (toolResult.isSuccess()) {
                     uniqueToolsUsed.add(call.getName());
                 }
+                executedTools.add(new ExecutedToolRecord(call, toolResult, startedAt, completedAt, toolDuration));
             }
 
             // Record tool responses in conversation
@@ -201,14 +313,88 @@ public class AiChatService {
                     ? activeProvider.chat(finalCommand)
                     : executeWithProviderFallback(finalCommand, conversationId);
             finalContent = finalResult.getContent();
+            if (finalResult.getModel() != null) {
+                modelName = finalResult.getModel();
+            }
         }
 
         log.info("AiChatService: Completed chat: conv=[{}] rounds=[{}] toolsCalled=[{}] toolsUsed={} fallback=[{}]",
                 conversationId, round, totalToolCalls, uniqueToolsUsed, fallbackUsed);
 
         boolean grounded = !uniqueToolsUsed.isEmpty();
-        return AiChatResponse.grounded(conversationId, finalContent, new ArrayList<>(uniqueToolsUsed));
+        UUID assistantMessageId = UUID.randomUUID();
+        Instant responseCreatedAt = Instant.now();
+
+        // 4. Persist Assistant Message and Tool Calls
+        if (conversation != null && conversationMessageRepository != null) {
+            ConversationMessageEntity assistantMsgEntity = ConversationMessageEntity.builder()
+                    .id(assistantMessageId)
+                    .conversationId(conversationId)
+                    .role("ASSISTANT")
+                    .content(finalContent)
+                    .grounded(grounded)
+                    .provider(providerName)
+                    .model(modelName)
+                    .toolCount(executedTools.size())
+                    .sequenceNumber(nextSequenceNumber + 1)
+                    .createdAt(responseCreatedAt)
+                    .build();
+            conversationMessageRepository.save(assistantMsgEntity);
+
+            // Persist Tool Calls
+            if (toolCallRepository != null && !executedTools.isEmpty() && conversationService != null) {
+                for (ExecutedToolRecord rec : executedTools) {
+                    AiToolCallEntity tcEntity = AiToolCallEntity.builder()
+                            .id(UUID.randomUUID())
+                            .conversationId(conversationId)
+                            .assistantMessageId(assistantMessageId)
+                            .toolName(rec.call().getName())
+                            .toolCallId(rec.call().getId())
+                            .argumentsJson(conversationService.sanitizeJsonForStorage(rec.call().getArguments()))
+                            .status(rec.result().isSuccess() ? "SUCCESS" : "ERROR")
+                            .resultSummaryJson(conversationService.sanitizeJsonForStorage(rec.result().getData()))
+                            .startedAt(rec.startedAt())
+                            .completedAt(rec.completedAt())
+                            .durationMs(rec.durationMs())
+                            .createdAt(Instant.now())
+                            .build();
+                    toolCallRepository.save(tcEntity);
+                }
+            }
+
+            // Update conversation timestamps & title
+            conversation.setLastMessageAt(responseCreatedAt);
+            conversation.setUpdatedAt(responseCreatedAt);
+            conversationRepository.save(conversation);
+        }
+
+        return AiChatResponse.builder()
+                .conversationId(conversationId)
+                .messageId(assistantMessageId)
+                .role("assistant")
+                .content(finalContent)
+                .createdAt(responseCreatedAt)
+                .grounded(grounded)
+                .toolsUsed(new ArrayList<>(uniqueToolsUsed))
+                .build();
     }
+
+    private UUID resolveUserUuid(AiToolExecutionContext executionContext) {
+        if (executionContext != null && executionContext.getUserId() != null) {
+            try {
+                return UUID.fromString(executionContext.getUserId());
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return SecurityUtils.getCurrentUserUuid();
+    }
+
+    private record ExecutedToolRecord(
+            AiToolCall call,
+            AiToolResult result,
+            Instant startedAt,
+            Instant completedAt,
+            long durationMs
+    ) {}
 
     private AiChatResult executeWithProviderFallback(AiChatCommand command, UUID conversationId) {
         AiProvider primary = "groq".equalsIgnoreCase(properties.getPrimaryProvider()) ? groqProvider : geminiProvider;
