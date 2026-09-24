@@ -1,665 +1,404 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/features/auth/AuthContext';
 import { aiService } from '@/services/ai.service';
-import { ChatMessage, ConversationSummaryDto } from '@/types/ai.types';
-import Link from 'next/link';
-
-const INITIAL_GREETING: ChatMessage = {
-  id: 'greeting',
-  role: 'assistant',
-  content: "Bonjour ! Je suis l'assistant de voyage officiel Yuding.\n\nJe peux rechercher pour vous des **vols**, **hôtels**, **activités**, **transferts**, consulter la **météo** en direct, convertir des **devises** et vérifier le statut de vos réservations !",
-  timestamp: new Date(),
-};
-
-const SUGGESTIONS = [
-  "Vols Paris - Nice demain",
-  "Hôtels à Rome pour 2 nuits",
-  "Météo actuelle à Marrakech",
-  "Convertir 150 EUR en MAD",
-];
+import type { ChatMessage, ConversationSummaryDto } from '@/types/ai.types';
+import styles from './AiChatWidget.module.css';
 
 const ACTIVE_CONV_STORAGE_KEY = 'yuding_ai_active_conv';
+const SUGGESTIONS = [
+  { label: 'Paris demain', prompt: 'Quels vols pour Paris demain ?' },
+  { label: 'Météo Marrakech', prompt: 'Quel temps fait-il à Marrakech aujourd’hui ?' },
+  { label: 'Hôtels à Rome', prompt: 'Trouve-moi des hôtels à Rome.' },
+  { label: '150 EUR → MAD', prompt: 'Convertis 150 EUR en MAD.' },
+];
+
+function AssistantMark({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="12.3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M21.7 10.3 18.1 18.1 10.3 21.7 13.9 13.9 21.7 10.3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="16" cy="16" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}
+
+function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' | 'check' | 'warning' }) {
+  const paths = {
+    history: <><path d="M3 12a9 9 0 1 0 2.5-6.2" /><path d="M3 4v4h4M12 7v5l3 2" /></>,
+    plus: <path d="M12 5v14M5 12h14" />,
+    close: <path d="M5 5l14 14M19 5 5 19" />,
+    send: <><path d="m4 12 16-7-4 14-4-6-8-1Z" /><path d="m12 13 8-8" /></>,
+    back: <><path d="m14 5-7 7 7 7" /><path d="M7 12h13" /></>,
+    check: <path d="m5 12 4 4L19 6" />,
+    warning: <><path d="M12 3 2.5 20h19L12 3Z" /><path d="M12 9v5M12 17h.01" /></>,
+  };
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+}
+
+function InlineText({ text }: { text: string }) {
+  return <>{text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>;
+    if (part.startsWith('*') && part.endsWith('*')) return <em key={index}>{part.slice(1, -1)}</em>;
+    return part;
+  })}</>;
+}
+
+function AssistantContent({ content }: { content: string }) {
+  return (
+    <div className={styles.answer}>
+      {content.split('\n').map((line, index) => {
+        const value = line.trim();
+        if (!value) return <div key={index} className={styles.answerGap} />;
+        if (/^#{1,4}\s/.test(value)) return <h3 key={index}><InlineText text={value.replace(/^#{1,4}\s+/, '')} /></h3>;
+        if (/^[-*•]\s/.test(value)) return <div key={index} className={styles.answerList}><span aria-hidden="true">•</span><p><InlineText text={value.replace(/^[-*•]\s+/, '')} /></p></div>;
+        const numbered = value.match(/^(\d+)\.\s+(.*)$/);
+        if (numbered) return <div key={index} className={styles.answerList}><span>{numbered[1]}.</span><p><InlineText text={numbered[2]} /></p></div>;
+        if (/^[-—_]{3,}$/.test(value)) return <hr key={index} />;
+        if (value.startsWith('>')) return <blockquote key={index} className={styles.answerQuote}><InlineText text={value.replace(/^>\s*/, '')} /></blockquote>;
+        if (value.startsWith('|')) {
+          const cells = value.split('|').slice(1, -1).map((cell) => cell.trim());
+          if (cells.every((cell) => /^:?-{2,}:?$/.test(cell))) return null;
+          return <div key={index} className={styles.answerTableRow}>{cells.map((cell, cellIndex) => <span key={cellIndex}><InlineText text={cell} /></span>)}</div>;
+        }
+        return <p key={index}><InlineText text={line} /></p>;
+      })}
+    </div>
+  );
+}
+
+function formatTime(date: Date) {
+  return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHistoryDate(value: string | null | undefined) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return formatTime(date);
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
 
 export const AiChatWidget: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [conversationId, setConversationId] = useState<string>('');
-  const [conversationTitle, setConversationTitle] = useState<string>('Assistant Yuding');
+  const [isRendered, setIsRendered] = useState(false);
+  const [view, setView] = useState<'chat' | 'history'>('chat');
+  const [conversationId, setConversationId] = useState('');
   const [conversations, setConversations] = useState<ConversationSummaryDto[]>([]);
-  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_GREETING]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [retryText, setRetryText] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const nearBottomRef = useRef(true);
+  const forceScrollRef = useRef(false);
+  const loadSequenceRef = useRef(0);
 
-  // Auto-scroll to bottom of messages
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const firstName = user?.firstName?.trim().split(/\s+/)[0];
+  const safeName = firstName && firstName.length <= 30 && !firstName.includes('@') ? firstName : null;
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+      return;
+    }
+    const timeout = window.setTimeout(() => setIsRendered(false), 190);
+    return () => window.clearTimeout(timeout);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && view === 'chat' && isAuthenticated) {
+      const timeout = window.setTimeout(() => textareaRef.current?.focus(), 190);
+      return () => window.clearTimeout(timeout);
+    }
+  }, [isOpen, view, isAuthenticated]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 104)}px`;
+  }, [inputValue, isOpen, view]);
+
+  useEffect(() => {
+    if (!isOpen || view !== 'chat') return;
+    const frame = requestAnimationFrame(() => {
+      const scroll = scrollRef.current;
+      if (scroll && (nearBottomRef.current || forceScrollRef.current)) {
+        scroll.scrollTop = scroll.scrollHeight;
+        forceScrollRef.current = false;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [messages, isLoading, isOpen, view]);
+
+  const readConversation = useCallback(async (id: string) => {
+    const sequence = ++loadSequenceRef.current;
+    setIsLoadingHistory(true);
+    setNotice(null);
+    setRetryText(null);
+    try {
+      const serverMessages = await aiService.getConversationMessages(id);
+      if (sequence !== loadSequenceRef.current) return;
+      setMessages(serverMessages.map((message) => ({
+        id: message.id,
+        role: message.role === 'user' ? 'user' : 'assistant',
+        content: message.content,
+        timestamp: new Date(message.createdAt || Date.now()),
+        status: 'delivered',
+        grounded: message.grounded,
+        toolsUsed: message.toolsUsed,
+      })));
+      setConversationId(id);
+      setView('chat');
+      nearBottomRef.current = true;
+      forceScrollRef.current = true;
+      try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, id); } catch {}
+    } catch {
+      if (sequence !== loadSequenceRef.current) return;
+      setNotice('Cette conversation ne peut pas être chargée.');
+      try { sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
+    } finally {
+      if (sequence === loadSequenceRef.current) setIsLoadingHistory(false);
+    }
   }, []);
 
   useEffect(() => {
-    if (isOpen && !isHistoryDrawerOpen) {
-      scrollToBottom();
+    let cancelled = false;
+    if (isAuthLoading) return;
+    const sequence = ++loadSequenceRef.current;
+    if (!isAuthenticated) {
+      try { sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
+      setConversationId('');
+      setConversations([]);
+      setMessages([]);
+      setView('chat');
+      setNotice(null);
+      setRetryText(null);
+      return;
     }
-  }, [messages, isOpen, isHistoryDrawerOpen, scrollToBottom]);
+    const initialize = async () => {
+      try {
+        const list = await aiService.getConversations(25);
+        if (cancelled || sequence !== loadSequenceRef.current) return;
+        setConversations(list);
+        let savedId: string | null = null;
+        try { savedId = sessionStorage.getItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
+        const target = list.find((item) => item.id === savedId) || list[0];
+        if (target) {
+          await readConversation(target.id);
+        } else {
+          const created = await aiService.createConversation('Nouvelle conversation');
+          if (cancelled) return;
+          setConversationId(created.id);
+          setMessages([]);
+          setConversations([{ ...created, status: 'ACTIVE' }]);
+          try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, created.id); } catch {}
+        }
+      } catch {
+        if (!cancelled) setNotice('Connexion à vos conversations indisponible.');
+      }
+    };
+    void initialize();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, isAuthLoading, readConversation]);
 
-  // Focus textarea when opened
-  useEffect(() => {
-    if (isOpen && isAuthenticated && !isHistoryDrawerOpen) {
-      setTimeout(() => textareaRef.current?.focus(), 150);
-    }
-  }, [isOpen, isAuthenticated, isHistoryDrawerOpen]);
-
-  // Load conversation messages from server
-  const loadConversationMessages = useCallback(async (convId: string, title?: string) => {
+  const startNewConversation = async () => {
+    if (!isAuthenticated || isLoading || isLoadingHistory) return;
+    setNotice(null);
+    setRetryText(null);
     setIsLoadingHistory(true);
-    setErrorMessage(null);
     try {
-      const serverMessages = await aiService.getConversationMessages(convId);
-      setConversationId(convId);
-      if (title) {
-        setConversationTitle(title);
-      }
-      try {
-        sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, convId);
-      } catch {}
-
-      if (serverMessages.length === 0) {
-        setMessages([INITIAL_GREETING]);
-      } else {
-        const formatted: ChatMessage[] = serverMessages.map((m) => ({
-          id: m.id,
-          role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
-          content: m.content,
-          timestamp: new Date(m.createdAt || Date.now()),
-          status: 'delivered',
-          grounded: m.grounded,
-          toolsUsed: m.toolsUsed,
-        }));
-        setMessages(formatted);
-      }
-    } catch (err: any) {
-      // If conversation is missing or access denied, create fresh conversation
-      setMessages([INITIAL_GREETING]);
-      try {
-        sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY);
-      } catch {}
+      const created = await aiService.createConversation('Nouvelle conversation');
+      ++loadSequenceRef.current;
+      setConversationId(created.id);
+      setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current.filter((item) => item.id !== created.id)]);
+      setMessages([]);
+      setInputValue('');
+      setView('chat');
+      nearBottomRef.current = true;
+      try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, created.id); } catch {}
+    } catch {
+      setNotice('Nouvelle conversation indisponible. Réessayez.');
     } finally {
       setIsLoadingHistory(false);
-      setIsHistoryDrawerOpen(false);
     }
-  }, []);
+  };
 
-  // Fetch conversations list and resume active conversation on mount or auth change
-  const refreshConversations = useCallback(async () => {
-    if (!isAuthenticated) return;
+  const sendMessage = async (suggested?: string) => {
+    const text = (suggested ?? inputValue).trim();
+    if (!text || isLoading || isLoadingHistory) return;
+    if (!isAuthenticated) {
+      setNotice('Connectez-vous pour échanger avec l’assistant.');
+      return;
+    }
+    if (text.length > 8000) {
+      setNotice('Votre message dépasse 8 000 caractères.');
+      return;
+    }
+    setIsLoading(true);
+    setNotice(null);
+    setRetryText(null);
+    setView('chat');
+    let id = conversationId;
+    try {
+      if (!id) {
+        const created = await aiService.createConversation('Nouvelle conversation');
+        id = created.id;
+        setConversationId(id);
+        setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current]);
+        try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, id); } catch {}
+      }
+      const messageId = crypto.randomUUID();
+      const userMessage: ChatMessage = { id: messageId, role: 'user', content: text, timestamp: new Date(), status: 'sending' };
+      setMessages((current) => [...current, userMessage]);
+      setInputValue('');
+      nearBottomRef.current = true;
+      forceScrollRef.current = true;
+      try {
+        const response = await aiService.sendMessage({ conversationId: id, message: text });
+        const assistantMessage: ChatMessage = {
+          id: response.messageId || crypto.randomUUID(),
+          role: 'assistant',
+          content: response.content,
+          timestamp: new Date(response.createdAt || Date.now()),
+          status: 'delivered',
+          grounded: response.grounded,
+          toolsUsed: response.toolsUsed,
+        };
+        setMessages((current) => current.map((message) => message.id === messageId ? { ...message, status: 'delivered' as const } : message).concat(assistantMessage));
+        aiService.getConversations(25).then(setConversations).catch(() => {});
+      } catch (error: unknown) {
+        const status = (error as { status?: number })?.status;
+        setNotice(status === 429 ? 'Trop de demandes. Réessayez dans un instant.' : 'L’assistant est momentanément indisponible.');
+        setRetryText(text);
+        setMessages((current) => current.map((message) => message.id === messageId ? { ...message, status: 'error' as const } : message));
+      }
+    } catch {
+      setNotice('Impossible de démarrer la conversation. Réessayez.');
+      setRetryText(text);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const retryMessage = () => {
+    if (!retryText) return;
+    const text = retryText;
+    setMessages((current) => current.filter((message) => !(message.role === 'user' && message.status === 'error' && message.content === text)));
+    void sendMessage(text);
+  };
+
+  const openHistory = async () => {
+    if (view === 'history') { setView('chat'); return; }
+    setView('history');
+    setNotice(null);
+    setRetryText(null);
     try {
       const list = await aiService.getConversations(25);
       setConversations(list);
-
-      let targetId: string | null = null;
-      try {
-        targetId = sessionStorage.getItem(ACTIVE_CONV_STORAGE_KEY);
-      } catch {}
-
-      if (targetId && list.some((c) => c.id === targetId)) {
-        const targetConv = list.find((c) => c.id === targetId);
-        await loadConversationMessages(targetId, targetConv?.title);
-      } else if (list.length > 0) {
-        await loadConversationMessages(list[0].id, list[0].title);
-      } else {
-        // No conversations yet; generate or create a fresh thread
-        const newThread = await aiService.createConversation("Nouvelle conversation");
-        setConversationId(newThread.id);
-        setConversationTitle(newThread.title);
-        setMessages([INITIAL_GREETING]);
-        setConversations([
-          {
-            id: newThread.id,
-            title: newThread.title,
-            status: 'ACTIVE',
-            createdAt: newThread.createdAt,
-            updatedAt: newThread.updatedAt,
-            lastMessageAt: newThread.lastMessageAt,
-          },
-        ]);
-        try {
-          sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, newThread.id);
-        } catch {}
-      }
-    } catch (err) {
-      // Offline fallback: generate client UUID
-      const fallbackId = typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : 'conv-' + Math.random().toString(36).substring(2, 15);
-      setConversationId(fallbackId);
-      setMessages([INITIAL_GREETING]);
-    }
-  }, [isAuthenticated, loadConversationMessages]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshConversations();
-    } else {
-      // Logout cleanup: clear all state and sessionStorage
-      try {
-        sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY);
-      } catch {}
-      setConversationId('');
-      setConversationTitle('Assistant Yuding');
-      setConversations([]);
-      setMessages([INITIAL_GREETING]);
-      setIsHistoryDrawerOpen(false);
-    }
-  }, [isAuthenticated, refreshConversations]);
-
-  const handleStartNewConversation = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      if (isAuthenticated) {
-        const newConv = await aiService.createConversation("Nouvelle conversation");
-        setConversationId(newConv.id);
-        setConversationTitle(newConv.title);
-        setMessages([INITIAL_GREETING]);
-        setConversations((prev) => [
-          {
-            id: newConv.id,
-            title: newConv.title,
-            status: 'ACTIVE',
-            createdAt: newConv.createdAt,
-            updatedAt: newConv.updatedAt,
-            lastMessageAt: newConv.lastMessageAt,
-          },
-          ...prev.filter((c) => c.id !== newConv.id),
-        ]);
-        try {
-          sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, newConv.id);
-        } catch {}
-      } else {
-        const fallbackId = typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : 'conv-' + Math.random().toString(36).substring(2, 15);
-        setConversationId(fallbackId);
-        setConversationTitle('Assistant Yuding');
-        setMessages([INITIAL_GREETING]);
-      }
-      setInputValue('');
-      setIsHistoryDrawerOpen(false);
-    } catch (err: any) {
-      setErrorMessage("Impossible de démarrer une nouvelle conversation.");
-    } finally {
-      setIsLoading(false);
+    } catch {
+      setNotice('Historique momentanément indisponible.');
     }
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = (textToSend || inputValue).trim();
-    if (!text || isLoading) return;
-
-    if (!isAuthenticated) {
-      setErrorMessage("Veuillez vous connecter pour utiliser l'assistant de voyage.");
-      return;
-    }
-
-    if (text.length > 8000) {
-      setErrorMessage("Votre message dépasse la limite maximale de 8000 caractères.");
-      return;
-    }
-
-    // Ensure we have a valid conversationId
-    let currentConvId = conversationId;
-    if (!currentConvId) {
-      try {
-        const newConv = await aiService.createConversation(text.slice(0, 60));
-        currentConvId = newConv.id;
-        setConversationId(newConv.id);
-        setConversationTitle(newConv.title);
-        try {
-          sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, newConv.id);
-        } catch {}
-      } catch {
-        currentConvId = typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : 'conv-' + Date.now();
-        setConversationId(currentConvId);
-      }
-    }
-
-    const userMessageId = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : 'msg-' + Date.now();
-
-    const userMsg: ChatMessage = {
-      id: userMessageId,
-      role: 'user',
-      content: text,
-      timestamp: new Date(),
-      status: 'sending',
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setInputValue('');
-    setErrorMessage(null);
-    setIsLoading(true);
-
-    try {
-      const response = await aiService.sendMessage({
-        conversationId: currentConvId,
-        message: text,
-      });
-
-      const assistantMsg: ChatMessage = {
-        id: response.messageId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'resp-' + Date.now()),
-        role: 'assistant',
-        content: response.content,
-        timestamp: new Date(response.createdAt || Date.now()),
-        status: 'delivered',
-        grounded: response.grounded,
-        toolsUsed: response.toolsUsed,
-      };
-
-      setMessages((prev) =>
-        prev.map((m) => (m.id === userMessageId ? { ...m, status: 'delivered' as const } : m)).concat(assistantMsg)
-      );
-
-      // Refresh conversations list to update title and order
-      aiService.getConversations(25).then(setConversations).catch(() => {});
-    } catch (err: any) {
-      const errorText =
-        err?.status === 429
-          ? "L'assistant reçoit actuellement trop de demandes. Veuillez patienter quelques instants avant de réessayer."
-          : err?.status === 503 || err?.status === 502
-          ? "Le service d'assistance IA est temporairement indisponible. Veuillez réessayer dans un instant."
-          : err?.message || "Une erreur est survenue lors de l'envoi du message.";
-
-      setErrorMessage(errorText);
-      setMessages((prev) =>
-        prev.map((m) => (m.id === userMessageId ? { ...m, status: 'error' as const, errorMessage: errorText } : m))
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Safe formatting for assistant markdown text
-  const renderMessageContent = (content: string) => {
-    const paragraphs = content.split('\n\n');
-    return (
-      <div className="space-y-2 text-sm leading-relaxed">
-        {paragraphs.map((para, pIdx) => {
-          const lines = para.split('\n');
-          return (
-            <div key={pIdx} className="space-y-1">
-              {lines.map((line, lIdx) => {
-                const trimmed = line.trim();
-                if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-                  const bulletText = trimmed.replace(/^(\*|-|•)\s+/, '');
-                  return (
-                    <div key={lIdx} className="flex items-start gap-2 ml-1">
-                      <span className="text-[#087d70] dark:text-[#21bcae] mt-1 text-xs">•</span>
-                      <span>{renderInlineFormatting(bulletText)}</span>
-                    </div>
-                  );
-                }
-                const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
-                if (numMatch) {
-                  return (
-                    <div key={lIdx} className="flex items-start gap-2 ml-1">
-                      <span className="font-semibold text-[#087d70] dark:text-[#21bcae] text-xs mt-0.5">{numMatch[1]}.</span>
-                      <span>{renderInlineFormatting(numMatch[2])}</span>
-                    </div>
-                  );
-                }
-                return (
-                  <p key={lIdx} className="break-words">
-                    {renderInlineFormatting(line)}
-                  </p>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderInlineFormatting = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="font-semibold">{part.slice(2, -2)}</strong>;
-      }
-      if (part.startsWith('*') && part.endsWith('*')) {
-        return <em key={index} className="italic">{part.slice(1, -1)}</em>;
-      }
-      return part;
-    });
+  const onScroll = () => {
+    const area = scrollRef.current;
+    if (!area) return;
+    nearBottomRef.current = area.scrollHeight - area.scrollTop - area.clientHeight < 88;
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
-      {/* Floating Toggle Button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-[#087d70] to-[#0ba392] text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#087d70]/30"
-          aria-label="Ouvrir l'assistant IA Yuding"
-        >
-          <i className="fa-solid fa-robot text-2xl transition-transform duration-300 group-hover:rotate-12" />
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c7b8] opacity-75" />
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#22c7b8] border-2 border-white dark:border-[#151c1b]" />
-          </span>
-          <span className="absolute right-16 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[#021b19] text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-md">
-            Assistant Voyage Yuding
-          </span>
-        </button>
-      )}
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div
-          className="flex flex-col w-[380px] sm:w-[430px] h-[590px] max-h-[85vh] bg-white dark:bg-[#151c1b] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#2d3937] overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5"
-          role="dialog"
-          aria-labelledby="ai-chat-header-title"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#087d70] to-[#0ba392] text-white shadow-sm">
-            <div className="flex items-center gap-2.5 overflow-hidden pr-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex-shrink-0">
-                <i className="fa-solid fa-robot text-base text-white" />
-              </div>
-              <div className="overflow-hidden">
-                <h2 id="ai-chat-header-title" className="font-semibold text-xs sm:text-sm leading-tight truncate">
-                  {conversationTitle || 'Assistant Yuding'}
-                </h2>
-                <div className="flex items-center gap-1.5 text-[11px] text-white/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#22c7b8] inline-block animate-pulse" />
-                  <span>Historique persistant • IA V2</span>
-                </div>
-              </div>
+    <div className={styles.root}>
+      {isRendered && (
+        <section className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`} role="dialog" aria-label="Assistant Yuding" aria-hidden={!isOpen}>
+          <header className={styles.header}>
+            <span className={styles.headerMark}><AssistantMark size={22} /></span>
+            <div className={styles.headerText}>
+              <h2>Assistant Yuding</h2>
+              <p>Votre compagnon de voyage</p>
             </div>
-
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {/* History Drawer Toggle Button */}
-              {isAuthenticated && (
-                <button
-                  onClick={() => setIsHistoryDrawerOpen((prev) => !prev)}
-                  className={`p-1.5 rounded-lg transition-colors text-xs flex items-center gap-1 ${
-                    isHistoryDrawerOpen ? 'bg-white/30 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'
-                  }`}
-                  title="Historique des conversations"
-                  aria-label="Historique des conversations"
-                >
-                  <i className="fa-solid fa-clock-rotate-left text-sm" />
-                  {conversations.length > 0 && (
-                    <span className="text-[10px] bg-white/20 px-1 rounded-full font-medium">
-                      {conversations.length}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {/* Start New Conversation Button */}
-              <button
-                onClick={handleStartNewConversation}
-                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-xs"
-                title="Nouvelle conversation"
-                aria-label="Nouvelle conversation"
-              >
-                <i className="fa-solid fa-plus text-sm" />
-              </button>
-
-              {/* Close Button */}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                title="Fermer"
-                aria-label="Fermer l'assistant"
-              >
-                <i className="fa-solid fa-xmark text-base" />
-              </button>
+            <div className={styles.actions}>
+              {isAuthenticated && <button type="button" className={`${styles.iconButton} ${view === 'history' ? styles.iconButtonActive : ''}`} title={view === 'history' ? 'Retour à la conversation' : 'Historique des conversations'} aria-label={view === 'history' ? 'Retour à la conversation' : 'Historique des conversations'} onClick={() => void openHistory()}><Icon name={view === 'history' ? 'back' : 'history'} /></button>}
+              <button type="button" className={styles.iconButton} title="Nouvelle conversation" aria-label="Nouvelle conversation" disabled={!isAuthenticated || isLoading || isLoadingHistory} onClick={() => void startNewConversation()}><Icon name="plus" /></button>
+              <button type="button" className={styles.iconButton} title="Fermer" aria-label="Fermer l’assistant" onClick={() => setIsOpen(false)}><Icon name="close" /></button>
             </div>
-          </div>
+          </header>
 
-          {/* History Drawer Overlay / Selector */}
-          {isHistoryDrawerOpen && (
-            <div className="bg-[#f0f5f4] dark:bg-[#0d1514] border-b border-gray-200 dark:border-[#2d3937] p-3 max-h-56 overflow-y-auto animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
-                  <i className="fa-solid fa-comments text-[#087d70] dark:text-[#21bcae]" />
-                  Vos conversations
-                </span>
-                <button
-                  onClick={handleStartNewConversation}
-                  className="text-[11px] text-[#087d70] dark:text-[#21bcae] hover:underline font-medium flex items-center gap-1"
-                >
-                  <i className="fa-solid fa-plus text-[10px]" />
-                  Nouvelle conversation
-                </button>
+          <div key={view} className={styles.body} ref={scrollRef} onScroll={onScroll}>
+            {view === 'history' ? (
+              <div className={styles.history}>
+                <div className={styles.sectionHeading}><p>Conversations récentes</p><span>{conversations.length}</span></div>
+                {conversations.length === 0 && <p className={styles.emptyHistory}>Vos échanges apparaîtront ici.</p>}
+                {conversations.map((conversation) => (
+                  <button key={conversation.id} type="button" className={`${styles.historyRow} ${conversation.id === conversationId ? styles.historyRowActive : ''}`} onClick={() => void readConversation(conversation.id)}>
+                    <span className={styles.historyRowTitle}>{conversation.title || 'Nouvelle conversation'}</span>
+                    <span className={styles.historyRowDate}>{formatHistoryDate(conversation.lastMessageAt || conversation.updatedAt)}</span>
+                  </button>
+                ))}
               </div>
-
-              {conversations.length === 0 ? (
-                <p className="text-xs text-gray-400 italic py-2">Aucune conversation précédente.</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {conversations.map((c) => {
-                    const isActive = c.id === conversationId;
-                    return (
-                      <button
-                        key={c.id}
-                        onClick={() => loadConversationMessages(c.id, c.title)}
-                        className={`w-full text-left px-2.5 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
-                          isActive
-                            ? 'bg-[#087d70] text-white font-medium shadow-sm'
-                            : 'bg-white dark:bg-[#182220] hover:bg-gray-100 dark:hover:bg-[#202d2a] text-gray-800 dark:text-gray-200 border border-gray-200/60 dark:border-[#2d3937]'
-                        }`}
-                      >
-                        <span className="truncate pr-2 flex items-center gap-1.5">
-                          <i className={`fa-regular fa-message text-[11px] ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                          {c.title || 'Conversation sans titre'}
-                        </span>
-                        <span className={`text-[10px] flex-shrink-0 ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
-                          {c.lastMessageAt || c.updatedAt
-                            ? new Date(c.lastMessageAt || c.updatedAt).toLocaleDateString([], {
-                                month: 'short',
-                                day: 'numeric',
-                              })
-                            : ''}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f5f8fa] dark:bg-[#0d1110]">
-            {isLoadingHistory ? (
-              <div className="flex flex-col items-center justify-center h-48 space-y-2">
-                <i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#087d70] dark:text-[#21bcae]" />
-                <span className="text-xs text-gray-500">Chargement de la conversation...</span>
-              </div>
+            ) : isLoadingHistory ? (
+              <div className={styles.loadingHistory}>Chargement de la conversation…</div>
             ) : (
               <>
-                {messages.map((message) => {
-                  const isUser = message.role === 'user';
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}
-                    >
-                      <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                        {!isUser && (
-                          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#087d70]/10 dark:bg-[#21bcae]/20 text-[#087d70] dark:text-[#21bcae] flex items-center justify-center text-xs mt-1">
-                            <i className="fa-solid fa-robot" />
-                          </div>
-                        )}
-
-                        <div>
-                          <div
-                            className={`p-3.5 rounded-2xl ${
-                              isUser
-                                ? 'bg-[#087d70] text-white rounded-br-sm'
-                                : 'bg-white dark:bg-[#1b2422] text-[#102220] dark:text-[#edf5f3] border border-gray-100 dark:border-[#2d3937] rounded-bl-sm shadow-sm'
-                            }`}
-                          >
-                            {isUser ? (
-                              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                            ) : (
-                              renderMessageContent(message.content)
-                            )}
-                          </div>
-
-                          {/* Grounding Badge */}
-                          {!isUser && message.grounded && (
-                            <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 w-fit">
-                              <i className="fa-solid fa-shield-halved text-emerald-600 dark:text-emerald-400 text-[10px]" />
-                              <span>Données Yuding vérifiées en direct</span>
-                            </div>
-                          )}
-
-                          {message.status === 'error' && (
-                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                              <i className="fa-solid fa-circle-exclamation" />
-                              <span>Échec de l&apos;envoi</span>
-                            </p>
-                          )}
-
-                          <p className={`text-[10px] text-gray-400 dark:text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
-                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Suggestions Chips (shown when conversation is fresh) */}
-                {messages.length === 1 && (
-                  <div className="pt-2 space-y-1.5">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Suggestions :</p>
-                    <div className="flex flex-col gap-1.5">
-                      {SUGGESTIONS.map((suggestion, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSendMessage(suggestion)}
-                          disabled={isLoading || !isAuthenticated}
-                          className="text-left text-xs px-3 py-2 bg-white dark:bg-[#1b2422] hover:bg-[#087d70]/5 dark:hover:bg-[#21bcae]/10 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#2d3937] rounded-xl transition-colors disabled:opacity-50"
-                        >
-                          💡 {suggestion}
-                        </button>
-                      ))}
+                {messages.length === 0 && (
+                  <div className={styles.welcome}>
+                    <div className={styles.welcomeMark}><AssistantMark size={28} /></div>
+                    <p className={styles.welcomeEyebrow}>VOTRE PROCHAIN VOYAGE COMMENCE ICI</p>
+                    <h3>Bonjour{safeName ? ` ${safeName}` : ''}.<br />Où souhaitez-vous aller&nbsp;?</h3>
+                    <p className={styles.welcomeDescription}>Une destination, une météo, un budget&nbsp;: demandez-moi.</p>
+                    <div className={styles.suggestions} aria-label="Idées de questions">
+                      {SUGGESTIONS.map((item) => <button type="button" key={item.label} onClick={() => void sendMessage(item.prompt)} disabled={!isAuthenticated || isLoading}>{item.label}<span aria-hidden="true">↗</span></button>)}
                     </div>
                   </div>
                 )}
-
-                {/* Loading / Typing indicator */}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="flex gap-2 max-w-[85%]">
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#087d70]/10 dark:bg-[#21bcae]/20 text-[#087d70] dark:text-[#21bcae] flex items-center justify-center text-xs mt-1">
-                        <i className="fa-solid fa-robot" />
+                <div className={styles.messageList} aria-live="polite" aria-relevant="additions">
+                  {messages.map((message, index) => {
+                    const userMessage = message.role === 'user';
+                    const showTime = index === messages.length - 1 || messages[index + 1]?.role !== message.role;
+                    return <div className={`${styles.message} ${userMessage ? styles.userMessage : styles.assistantMessage}`} key={message.id}>
+                      {!userMessage && <span className={styles.messageMark}><AssistantMark size={16} /></span>}
+                      <div className={styles.messageContent}>
+                        {userMessage ? <div className={styles.userBubble}>{message.content}</div> : <AssistantContent content={message.content} />}
+                        {!userMessage && message.grounded && <span className={styles.grounded}><Icon name="check" />Données Yuding vérifiées</span>}
+                        {showTime && <time className={styles.timestamp} dateTime={new Date(message.timestamp).toISOString()}>{formatTime(message.timestamp)}</time>}
                       </div>
-                      <div className="p-3 bg-white dark:bg-[#1b2422] border border-gray-100 dark:border-[#2d3937] rounded-2xl rounded-bl-sm shadow-sm flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '300ms' }} />
-                        <span className="text-xs text-gray-400 ml-1.5">Recherche en cours...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    </div>;
+                  })}
+                  {isLoading && <div className={styles.typing} role="status"><span className={styles.messageMark}><AssistantMark size={16} /></span><span className={styles.typingDots}><i /><i /><i /></span><span>Je cherche pour vous…</span></div>}
+                </div>
+                {!isAuthenticated && <div className={styles.authPrompt}><p>Connectez-vous pour préparer votre voyage avec Yuding.</p><Link href="/login">Se connecter</Link></div>}
               </>
             )}
-
-            {/* Global Error Banner */}
-            {errorMessage && (
-              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
-                <i className="fa-solid fa-triangle-exclamation mt-0.5 text-red-500" />
-                <div className="flex-1">
-                  <span>{errorMessage}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Unauthenticated User Warning */}
-            {!isAuthenticated && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-xl text-xs text-amber-800 dark:text-amber-200">
-                <p className="font-semibold mb-1">Connexion requise</p>
-                <p className="mb-2">Pour poser des questions à l&apos;assistant de voyage, veuillez vous connecter à votre compte.</p>
-                <Link
-                  href="/login"
-                  className="inline-block px-3 py-1.5 bg-[#087d70] text-white rounded-lg font-medium hover:bg-[#05665c] transition-colors"
-                >
-                  Se connecter
-                </Link>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
+            {notice && <div className={styles.notice} role="alert"><Icon name="warning" /><span>{notice}</span>{retryText && view === 'chat' && <button type="button" onClick={retryMessage}>Réessayer</button>}</div>}
           </div>
 
-          {/* Input Footer */}
-          <div className="p-3 bg-white dark:bg-[#151c1b] border-t border-gray-100 dark:border-[#2d3937]">
-            <div className="relative flex items-center gap-2">
-              <textarea
-                ref={textareaRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={
-                  isAuthenticated
-                    ? "Posez votre question... (Entrée pour envoyer)"
-                    : "Connectez-vous pour échanger avec l'assistant"
-                }
-                disabled={isLoading || !isAuthenticated}
-                rows={1}
-                maxLength={8000}
-                className="flex-1 max-h-24 resize-none px-3.5 py-2.5 bg-gray-50 dark:bg-[#111817] text-gray-900 dark:text-[#edf5f3] placeholder-gray-400 dark:placeholder-[#637572] text-sm rounded-xl border border-gray-200 dark:border-[#2d3937] focus:outline-none focus:ring-2 focus:ring-[#087d70] dark:focus:ring-[#21bcae] focus:border-transparent transition-all disabled:opacity-50"
-              />
-
-              <button
-                onClick={() => handleSendMessage()}
-                disabled={!inputValue.trim() || isLoading || !isAuthenticated}
-                className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#087d70] hover:bg-[#05665c] disabled:bg-gray-200 dark:disabled:bg-[#2d3937] text-white disabled:text-gray-400 transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#087d70]/30"
-                aria-label="Envoyer"
-              >
-                <i className="fa-solid fa-paper-plane text-sm" />
-              </button>
-            </div>
-
-            {/* Character counter & disclaimer */}
-            <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400 dark:text-gray-500">
-              <span className="truncate pr-2">
-                IA V2 • Vérifiez les tarifs et réservations en direct sur Yuding
-              </span>
-              {inputValue.length > 500 && (
-                <span className={inputValue.length > 7500 ? 'text-amber-500 font-semibold' : ''}>
-                  {inputValue.length}/8000
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+          <footer className={styles.footer}>
+              <div className={styles.composer}>
+                <label className={styles.srOnly} htmlFor="yuding-assistant-input">Votre question</label>
+                <textarea id="yuding-assistant-input" ref={textareaRef} rows={1} maxLength={8000} value={inputValue} placeholder={isAuthenticated ? 'Posez votre question…' : 'Connectez-vous pour échanger'} disabled={!isAuthenticated || isLoading || isLoadingHistory} onChange={(event) => setInputValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void sendMessage(); } }} />
+                <button type="button" className={styles.sendButton} disabled={!inputValue.trim() || !isAuthenticated || isLoading || isLoadingHistory} onClick={() => void sendMessage()} aria-label="Envoyer le message" title="Envoyer"><Icon name="send" /></button>
+              </div>
+          </footer>
+        </section>
       )}
+      <button type="button" className={`${styles.trigger} ${isOpen ? styles.triggerOpen : ''}`} onClick={() => setIsOpen((current) => !current)} aria-label={isOpen ? 'Fermer l’assistant Yuding' : 'Ouvrir l’assistant Yuding'} aria-expanded={isOpen} title="Assistant Yuding"><AssistantMark size={24} /></button>
     </div>
   );
 };
