@@ -163,12 +163,16 @@ export const AiChatWidget: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isRequestingMic, setIsRequestingMic] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const cancelRecordingRef = useRef(false);
   const recordingTimerRef = useRef<number | null>(null);
+  const micRequestRef = useRef(0);
+  const micPendingRef = useRef(false);
+  const micTimeoutRef = useRef<number | null>(null);
   const pasteCounterRef = useRef(0);
   const uploadLockRef = useRef(false);
   const recordingElapsedRef = useRef(0);
@@ -203,6 +207,8 @@ export const AiChatWidget: React.FC = () => {
   }, []);
 
   useEffect(() => () => {
+    micRequestRef.current += 1;
+    if (micTimeoutRef.current) window.clearTimeout(micTimeoutRef.current);
     recorderRef.current?.stop();
     streamRef.current?.getTracks().forEach((track) => track.stop());
     if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
@@ -570,12 +576,31 @@ export const AiChatWidget: React.FC = () => {
     setIsRecording(false);
   };
 
+  const cancelMicRequest = () => {
+    micRequestRef.current += 1;
+    micPendingRef.current = false;
+    if (micTimeoutRef.current) window.clearTimeout(micTimeoutRef.current);
+    micTimeoutRef.current = null;
+    setIsRequestingMic(false);
+  };
+
   const startRecording = async () => {
+    if (micPendingRef.current || isRecording) return;
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setNotice('Enregistrement vocal non pris en charge par ce navigateur.'); return;
     }
+    const requestId = ++micRequestRef.current;
+    micPendingRef.current = true;
+    setIsRequestingMic(true);
+    setNotice(null);
+    micTimeoutRef.current = window.setTimeout(() => {
+      if (micRequestRef.current !== requestId) return;
+      cancelMicRequest();
+      setNotice('Autorisation du microphone expirée. Réessayez.');
+    }, 20000);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (micRequestRef.current !== requestId) { stream.getTracks().forEach((track) => track.stop()); return; }
       streamRef.current = stream;
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
         .find((type) => MediaRecorder.isTypeSupported(type));
@@ -603,8 +628,17 @@ export const AiChatWidget: React.FC = () => {
         if (recordingElapsedRef.current >= 300) stopRecording();
       }, 1000);
     } catch (error) {
-      setNotice((error as DOMException)?.name === 'NotAllowedError' ? 'Accès au microphone refusé.' : 'Microphone indisponible.');
-      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (micRequestRef.current === requestId) {
+        setNotice((error as DOMException)?.name === 'NotAllowedError' ? 'Accès au microphone refusé.' : 'Microphone indisponible.');
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+      }
+    } finally {
+      if (micRequestRef.current === requestId) {
+        if (micTimeoutRef.current) window.clearTimeout(micTimeoutRef.current);
+        micTimeoutRef.current = null;
+        micPendingRef.current = false;
+        setIsRequestingMic(false);
+      }
     }
   };
 
@@ -785,7 +819,11 @@ export const AiChatWidget: React.FC = () => {
                   : <div key={url} className={styles.stagedAudio}><span className={styles.mediaLoading}>Préparation du message vocal…</span></div>)}
               </div>
             )}
-            {isRecording ? <div className={styles.recordingBar} role="status">
+            {isRequestingMic ? <div className={styles.recordingBar} role="status">
+              <Icon name="mic" />
+              <span>Autorisez le microphone…</span>
+              <button type="button" onClick={cancelMicRequest} aria-label="Annuler la demande de microphone">Annuler</button>
+            </div> : isRecording ? <div className={styles.recordingBar} role="status">
               <span className={styles.recordingDot} aria-hidden="true" />
               <span>{String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:{String(recordingSeconds % 60).padStart(2, '0')}</span>
               <button type="button" onClick={() => stopRecording(true)} aria-label="Annuler l’enregistrement">Annuler</button>
