@@ -56,6 +56,10 @@ public class AiServiceApplication {
                                     case "GROQ_BASE_URL" -> System.setProperty("yuding.ai.groq.base-url", val);
                                     case "AI_REQUEST_TIMEOUT_SECONDS" -> System.setProperty("yuding.ai.request-timeout-seconds", val);
                                     case "AI_MAX_OUTPUT_TOKENS" -> System.setProperty("yuding.ai.max-output-tokens", val);
+                                    case "AI_EMBEDDING_PROVIDER" -> System.setProperty("yuding.ai.rag.embedding-provider", val);
+                                    case "AI_EMBEDDING_MODEL" -> System.setProperty("yuding.ai.rag.embedding-model", val);
+                                    case "AI_EMBEDDING_DIMENSION" -> System.setProperty("yuding.ai.rag.embedding-dimension", val);
+                                    case "AI_RAG_ENABLED" -> System.setProperty("yuding.ai.rag.enabled", val);
                                     default -> {}
                                 }
                             }

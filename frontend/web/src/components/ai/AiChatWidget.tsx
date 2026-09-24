@@ -76,6 +76,36 @@ function formatHistoryDate(value: string | null | undefined) {
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
+function SourcesList({ sources }: { sources: NonNullable<ChatMessage['sources']> }) {
+  const [isOpen, setIsOpen] = useState(false);
+  if (!sources || sources.length === 0) return null;
+
+  return (
+    <div className={styles.sourcesWrapper}>
+      <button
+        type="button"
+        className={styles.sourcesToggle}
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+      >
+        <span>Sources Yuding ({sources.length})</span>
+        <span className={`${styles.sourcesChevron} ${isOpen ? styles.sourcesChevronOpen : ''}`}>▾</span>
+      </button>
+      {isOpen && (
+        <ul className={styles.sourcesList}>
+          {sources.map((src, idx) => (
+            <li key={`${src.reference || idx}-${idx}`} className={styles.sourceItem}>
+              <span className={styles.sourceTitle}>{src.title}</span>
+              {src.section && <span className={styles.sourceSection}> — {src.section}</span>}
+              {src.reference && <span className={styles.sourceRef}>[{src.reference}]</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export const AiChatWidget: React.FC = () => {
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -184,7 +214,9 @@ export const AiChatWidget: React.FC = () => {
         timestamp: new Date(message.createdAt || Date.now()),
         status: 'delivered',
         grounded: message.grounded,
+        groundingType: message.groundingType,
         toolsUsed: message.toolsUsed,
+        sources: message.sources,
       })));
       setConversationId(id);
       setView('chat');
@@ -301,7 +333,9 @@ export const AiChatWidget: React.FC = () => {
           timestamp: new Date(response.createdAt || Date.now()),
           status: 'delivered',
           grounded: response.grounded,
+          groundingType: response.groundingType,
           toolsUsed: response.toolsUsed,
+          sources: response.sources,
         };
         setMessages((current) => current.map((message) => message.id === messageId ? { ...message, status: 'delivered' as const } : message).concat(assistantMessage));
         aiService.getConversations(25).then(setConversations).catch(() => {});
@@ -397,7 +431,21 @@ export const AiChatWidget: React.FC = () => {
                       {!userMessage && <span className={styles.messageMark}><AssistantMark size={21} /></span>}
                       <div className={styles.messageContent}>
                         {userMessage ? <div className={styles.userBubble}>{message.content}</div> : <AssistantContent content={message.content} />}
-                        {!userMessage && message.grounded && <span className={styles.grounded}><Icon name="check" />Données Yuding vérifiées</span>}
+                        {!userMessage && message.grounded && (
+                          <div className={styles.groundedContainer}>
+                            <span className={styles.grounded}>
+                              <Icon name="check" />
+                              {message.groundingType === 'MIXED'
+                                ? 'Sources Yuding + données vérifiées'
+                                : message.groundingType === 'RAG'
+                                ? 'Source Yuding'
+                                : 'Données Yuding vérifiées'}
+                            </span>
+                            {message.sources && message.sources.length > 0 && (
+                              <SourcesList sources={message.sources} />
+                            )}
+                          </div>
+                        )}
                         {showTime && <time className={styles.timestamp} dateTime={new Date(message.timestamp).toISOString()}>{formatTime(message.timestamp)}</time>}
                       </div>
                     </div>;

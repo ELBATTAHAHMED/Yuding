@@ -199,8 +199,20 @@
 .answerQuote { margin: 9px 0; padding: 6px 0 6px 10px; border-left: 2px solid var(--ai-accent); color: var(--ai-muted); }
 .answerTableRow { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 5px 0; border-bottom: 1px solid var(--ai-line); }
 .answerTableRow span:first-child { font-weight: 600; }
-.grounded { display: flex; align-items: center; gap: 4px; width: fit-content; margin-top: 7px; color: var(--ai-accent); font-size: 9.5px; font-weight: 600; line-height: 1.3; }
+.groundedContainer { display: flex; flex-direction: column; gap: 4px; margin-top: 7px; }
+.grounded { display: flex; align-items: center; gap: 4px; width: fit-content; margin-top: 0; color: var(--ai-accent); font-size: 9.5px; font-weight: 600; line-height: 1.3; }
 .grounded svg { width: 13px; height: 13px; }
+.sourcesWrapper { margin-top: 2px; }
+.sourcesToggle { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; background: var(--ai-surface); border: 1px solid var(--ai-line); border-radius: 6px; color: var(--ai-muted); font-size: 9px; font-weight: 500; cursor: pointer; transition: all .15s ease; font-family: inherit; }
+.sourcesToggle:hover { background: var(--ai-soft); color: var(--ai-text); border-color: var(--ai-accent); }
+.sourcesChevron { font-size: 10px; transition: transform .15s ease; }
+.sourcesChevronOpen { transform: rotate(180deg); }
+.sourcesList { list-style: none; margin: 4px 0 0; padding: 6px 9px; background: var(--ai-surface); border: 1px solid var(--ai-line); border-radius: 8px; font-size: 9.5px; line-height: 1.45; color: var(--ai-text); max-width: 380px; }
+.sourceItem { margin-bottom: 3px; }
+.sourceItem:last-child { margin-bottom: 0; }
+.sourceTitle { font-weight: 600; color: var(--ai-text); }
+.sourceSection { color: var(--ai-muted); }
+.sourceRef { display: inline-block; margin-left: 4px; padding: 1px 4px; background: var(--ai-soft); border-radius: 4px; font-size: 8px; color: var(--ai-accent); font-family: monospace; }
 .timestamp { display: block; margin-top: 4px; color: var(--ai-muted); font-size: 9px; line-height: 1.3; opacity: .75; }
 .userMessage .timestamp { text-align: right; }
 .typing { display: flex; align-items: center; gap: 7px; color: var(--ai-muted); font-size: 10.5px; }
