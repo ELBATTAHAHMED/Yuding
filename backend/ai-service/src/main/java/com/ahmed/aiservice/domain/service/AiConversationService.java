@@ -24,6 +24,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.*;
 
+import com.ahmed.aiservice.domain.rag.entity.MessageSourceEntity;
+import com.ahmed.aiservice.domain.rag.repository.MessageSourceRepository;
+import com.ahmed.aiservice.dto.AiSourceDto;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,6 +36,7 @@ public class AiConversationService {
     private final ConversationRepository conversationRepository;
     private final ConversationMessageRepository conversationMessageRepository;
     private final AiToolCallRepository toolCallRepository;
+    private final MessageSourceRepository messageSourceRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -123,6 +128,23 @@ public class AiConversationService {
                 }
             }
 
+            List<AiSourceDto> sources = new ArrayList<>();
+            if (messageSourceRepository != null) {
+                List<MessageSourceEntity> sourceEntities = messageSourceRepository.findByMessageId(msg.getId());
+                for (MessageSourceEntity se : sourceEntities) {
+                    sources.add(new AiSourceDto(se.getDocumentReference(), se.getTitle(), se.getSectionTitle(), se.getCategory()));
+                }
+            }
+
+            String groundingType = "NONE";
+            if (!sources.isEmpty() && toolsUsed.stream().anyMatch(t -> !t.equals("searchKnowledge"))) {
+                groundingType = "MIXED";
+            } else if (!sources.isEmpty()) {
+                groundingType = "RAG";
+            } else if (Boolean.TRUE.equals(msg.getGrounded())) {
+                groundingType = "LIVE";
+            }
+
             dtos.add(ConversationMessageDto.builder()
                     .id(msg.getId())
                     .conversationId(msg.getConversationId())
@@ -130,6 +152,8 @@ public class AiConversationService {
                     .content(msg.getContent())
                     .grounded(Boolean.TRUE.equals(msg.getGrounded()))
                     .toolsUsed(toolsUsed)
+                    .groundingType(groundingType)
+                    .sources(sources)
                     .createdAt(msg.getCreatedAt())
                     .build());
         }

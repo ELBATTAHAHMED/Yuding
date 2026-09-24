@@ -20,6 +20,7 @@ public class AiProperties {
 
     private GeminiProperties gemini = new GeminiProperties();
     private GroqProperties groq = new GroqProperties();
+    private RagProperties rag = new RagProperties();
 
     @Getter
     @Setter
@@ -33,5 +34,18 @@ public class AiProperties {
     public static class GroqProperties {
         private String apiKey = "";
         private String baseUrl = "https://api.groq.com/openai/v1";
+    }
+
+    @Getter
+    @Setter
+    public static class RagProperties {
+        private boolean enabled = true;
+        private String embeddingProvider = "gemini";
+        private String embeddingModel = "gemini-embedding-001";
+        private int embeddingDimension = 768;
+        private double similarityThreshold = 0.35;
+        private int topK = 4;
+        private int maxContextTokens = 600;
+        private boolean autoIngestOnStartup = true;
     }
 }

@@ -35,6 +35,18 @@ public class AiChatResponse {
     @Builder.Default
     private List<String> toolsUsed = Collections.emptyList();
 
+    /**
+     * Grounding typology: "NONE", "LIVE", "RAG", or "MIXED".
+     */
+    @Builder.Default
+    private String groundingType = "NONE";
+
+    /**
+     * Citations / Knowledge sources utilized to form this answer.
+     */
+    @Builder.Default
+    private List<AiSourceDto> sources = Collections.emptyList();
+
     public static AiChatResponse of(UUID conversationId, String content) {
         return AiChatResponse.builder()
                 .conversationId(conversationId)
@@ -43,19 +55,24 @@ public class AiChatResponse {
                 .content(content)
                 .createdAt(Instant.now())
                 .grounded(false)
+                .groundingType("NONE")
                 .toolsUsed(Collections.emptyList())
+                .sources(Collections.emptyList())
                 .build();
     }
 
     public static AiChatResponse grounded(UUID conversationId, String content, List<String> toolsUsed) {
+        boolean hasTools = toolsUsed != null && !toolsUsed.isEmpty();
         return AiChatResponse.builder()
                 .conversationId(conversationId)
                 .messageId(UUID.randomUUID())
                 .role("assistant")
                 .content(content)
                 .createdAt(Instant.now())
-                .grounded(toolsUsed != null && !toolsUsed.isEmpty())
-                .toolsUsed(toolsUsed != null ? toolsUsed : Collections.emptyList())
+                .grounded(hasTools)
+                .groundingType(hasTools ? "LIVE" : "NONE")
+                .toolsUsed(hasTools ? toolsUsed : Collections.emptyList())
+                .sources(Collections.emptyList())
                 .build();
     }
 }

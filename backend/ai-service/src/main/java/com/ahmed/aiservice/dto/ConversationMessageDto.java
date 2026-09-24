@@ -23,5 +23,9 @@ public class ConversationMessageDto {
     private boolean grounded = false;
     @Builder.Default
     private List<String> toolsUsed = Collections.emptyList();
+    @Builder.Default
+    private String groundingType = "NONE";
+    @Builder.Default
+    private List<AiSourceDto> sources = Collections.emptyList();
     private Instant createdAt;
 }

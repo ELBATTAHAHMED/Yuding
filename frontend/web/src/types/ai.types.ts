@@ -1,3 +1,10 @@
+export interface AiSourceDto {
+  reference: string;
+  title: string;
+  section?: string;
+  category?: string;
+}
+
 export interface AiChatRequestDto {
   conversationId: string;
   message: string;
@@ -10,7 +17,9 @@ export interface AiChatResponseDto {
   content: string;
   createdAt: string;
   grounded?: boolean;
+  groundingType?: 'NONE' | 'LIVE' | 'RAG' | 'MIXED' | string;
   toolsUsed?: string[];
+  sources?: AiSourceDto[];
 }
 
 export interface ConversationSummaryDto {
@@ -28,7 +37,9 @@ export interface ConversationMessageDto {
   role: 'user' | 'assistant' | string;
   content: string;
   grounded?: boolean;
+  groundingType?: 'NONE' | 'LIVE' | 'RAG' | 'MIXED' | string;
   toolsUsed?: string[];
+  sources?: AiSourceDto[];
   createdAt: string;
 }
 
@@ -48,5 +59,7 @@ export interface ChatMessage {
   status?: 'sending' | 'delivered' | 'error';
   errorMessage?: string;
   grounded?: boolean;
+  groundingType?: 'NONE' | 'LIVE' | 'RAG' | 'MIXED' | string;
   toolsUsed?: string[];
+  sources?: AiSourceDto[];
 }
