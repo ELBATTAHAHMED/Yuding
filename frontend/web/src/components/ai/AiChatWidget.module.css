@@ -50,7 +50,6 @@
 .trigger:hover { transform: translateY(-2px); background: #0a5b51; box-shadow: 0 12px 24px rgba(8, 36, 32, .24); }
 .trigger:active { transform: translateY(0) scale(.96); }
 .triggerOpen { background: #0b665b; border-radius: 50%; }
-.triggerOpen svg { transform: rotate(-20deg); transition: transform .18s ease; }
 
 .panel {
   position: absolute;
@@ -61,6 +60,7 @@
   width: min(380px, calc(100vw - 28px));
   height: min(548px, calc(100dvh - 112px - env(safe-area-inset-bottom)));
   min-height: 0;
+  padding: 0;
   overflow: hidden;
   border: 1px solid var(--ai-line);
   border-radius: 19px;

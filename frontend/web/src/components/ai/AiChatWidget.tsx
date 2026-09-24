@@ -18,9 +18,11 @@ const SUGGESTIONS = [
 function AssistantMark({ size = 22 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="12.3" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M21.7 10.3 18.1 18.1 10.3 21.7 13.9 13.9 21.7 10.3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx="16" cy="16" r="1.3" fill="currentColor" />
+      <path d="M7 7.5 16 17l9-9.5M16 17v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7" cy="7.5" r="2.5" fill="currentColor" />
+      <circle cx="25" cy="7.5" r="2.5" fill="currentColor" />
+      <circle cx="16" cy="17" r="2.75" fill="currentColor" />
+      <circle cx="16" cy="25" r="2.5" fill="currentColor" />
     </svg>
   );
 }
