@@ -254,6 +254,7 @@ public class GeoapifyClient {
                     .uri(uriBuilder -> {
                         uriBuilder.path("/v1/staticmap")
                                 .queryParam("style", "osm-bright")
+                                .queryParam("lang", "fr")
                                 .queryParam("width", w)
                                 .queryParam("height", h)
                                 .queryParam("center", "lonlat:" + centerLon + "," + centerLat)

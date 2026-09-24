@@ -101,6 +101,7 @@ export const geoService = {
     if (params.width !== undefined) query.set('width', String(params.width));
     if (params.height !== undefined) query.set('height', String(params.height));
     if (params.markers) query.set('markers', params.markers);
+    query.set('v', 'fr-labels-1');
 
     const baseUrl = apiClient.getBaseUrl();
     return `${baseUrl}/travel/geo/map/static?${query.toString()}`;

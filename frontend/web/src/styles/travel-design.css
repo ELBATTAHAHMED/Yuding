@@ -212,6 +212,7 @@ html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background
 .travel-page .text-center.py-16 { max-width: 720px; padding-block: 3.75rem; }
 .travel-page .text-center.py-16 > div:first-child { font-size: 1.75rem; height: 4.5rem; margin-bottom: 1.25rem; width: 4.5rem; }
 .travel-page .text-center.py-16 h3 { font-size: 1.25rem; margin-bottom: .65rem; }
+.geo-map-search::placeholder { color: #6b817a !important; opacity: 1 !important; }
 .dark .travel-page [class*="dark:bg-[#021817]"],
 .dark .travel-details-shell,
 .dark .travel-details-shell [class*="dark:bg-[#021817]"] { background-color: var(--travel-bg) !important; }
@@ -222,25 +223,39 @@ html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background
 .dark .travel-details-shell [class*="dark:border-[#01796F]"] { border-color: var(--travel-border) !important; }
 
 .yuding-footer {
-  background: #081a18;
-  border-top: 1px solid rgba(255,255,255,.1);
-  color: #d9e5e3;
-  margin-top: 72px;
-  padding: 3.5rem var(--travel-gutter) 1.5rem;
+  background: #fff;
+  border-top: 1px solid #e2e8e5;
+  color: #233b38;
+  margin-top: 0;
+  padding: 3.25rem var(--travel-gutter) 1.25rem;
   width: 100%;
 }
 .yuding-footer__inner { margin-inline: auto; max-width: var(--travel-content-width); }
-.yuding-footer__grid { display: grid; gap: 2.75rem; grid-template-columns: 1.35fr repeat(3, 1fr); margin-bottom: 3rem; }
-.yuding-footer h4 { border-bottom: 2px solid var(--travel-primary); color: #fff; display: inline-block; font-size: 1.06rem; font-weight: 800; margin: 0 0 1.1rem; padding-bottom: .45rem; }
-.yuding-footer ul { color: #afc2bf; font-size: .94rem; list-style: none; margin: 0; padding: 0; }
-.yuding-footer li + li { margin-top: .65rem; }
-.yuding-footer a:hover { color: #fff; }
-.yuding-footer img[alt="Yuding Logo"] { max-height: 48px !important; opacity: .96; }
-.yuding-footer__copy, .yuding-footer__project { color: #afc2bf; font-size: .96rem; line-height: 1.68; margin: 0; }
-.yuding-footer__project { display: grid; gap: .7rem; }
-.yuding-footer__project p { align-items: flex-start; display: flex; gap: .55rem; margin: 0; }
-.yuding-footer__project i { color: #54d4c7; margin-top: .28rem; }
-.yuding-footer__rights { border-top: 1px solid rgba(255,255,255,.1); color: #829592; font-size: .75rem; padding-top: 1.35rem; text-align: center; }
+.yuding-footer__grid { display: grid; gap: clamp(1.75rem, 3vw, 3rem); grid-template-columns: 1.35fr .85fr .9fr 1.3fr; margin-bottom: 2.75rem; }
+.yuding-footer__brand img { width: 128px; max-height: 60px; object-fit: contain; object-position: left center; }
+.yuding-footer__brand p { max-width: 255px; margin: .85rem 0 0; color: #677b76; font-size: .86rem; line-height: 1.7; }
+.yuding-footer h4 { color: #183632; font-size: .91rem; font-weight: 800; margin: .45rem 0 1.2rem; text-align: left; }
+.yuding-footer ul { color: #667973; font-size: .82rem; line-height: 1.55; list-style: none; margin: 0; padding: 0; }
+.yuding-footer li + li { margin-top: .6rem; }
+.yuding-footer a { transition: color .18s ease; }
+.yuding-footer a:hover { color: #087d70; }
+.yuding-footer__discover p { max-width: 290px; color: #677b76; font-size: .82rem; line-height: 1.65; margin: 0 0 1rem; }
+.yuding-footer a.yuding-footer__cta { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: .65rem; border-radius: 8px; background: #087d70; color: #fff; font-size: .8rem; font-weight: 700; padding: .55rem 1rem; }
+.yuding-footer a.yuding-footer__cta:hover { background: #05665c; color: #fff; }
+.yuding-footer__bottom { border-top: 1px solid #dfe8e3; padding-top: 1.25rem; }
+.yuding-footer__signature { display: flex; align-items: center; justify-content: center; gap: .8rem; color: #486b64; }
+.yuding-footer__signature > span { flex: 1; height: 1px; background: #cddbd5; }
+.yuding-footer__signature > div { display: flex; flex-direction: column; align-items: center; gap: .25rem; white-space: nowrap; }
+.yuding-footer__signature i { font-size: 1.15rem; }
+.yuding-footer__signature strong { color: #899a95; font-size: .68rem; font-weight: 400; }
+.dark .yuding-footer { background: #111d1b; border-color: #2d403c; color: #e5f1ec; }
+.dark .yuding-footer h4 { color: #f0faf6; }
+.dark .yuding-footer__brand img { filter: invert(1); }
+.dark .yuding-footer__brand p, .dark .yuding-footer ul, .dark .yuding-footer__discover p { color: #a6bbb4; }
+.dark .yuding-footer__bottom { border-color: #32453f; }
+.dark .yuding-footer__signature { color: #a8d9cf; }
+.dark .yuding-footer__signature > span { background: #385c54; }
+.dark .yuding-footer__signature strong { color: #89a49a; }
 
 .header.yuding-header {
   background: rgba(2, 28, 25, .96) !important;
@@ -294,8 +309,9 @@ html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background
   .travel-hero__content { padding: 24px 0 calc(24px + var(--travel-search-overlap)); }
   .travel-search-panel form { border-radius: 14px !important; padding: 26px !important; }
   .travel-hero__attribution { font-size: .62rem; left: 16px; right: 16px; }
-  .yuding-footer { margin-top: 48px; padding-top: 3rem; }
+  .yuding-footer { padding-top: 2.75rem; }
   .yuding-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+  .yuding-footer__bottom { text-align: center; }
 }
 
 @media (max-width: 420px) {
