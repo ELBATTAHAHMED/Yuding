@@ -258,10 +258,19 @@ public class HBXTravelProvider implements TravelProvider {
         if (act.getContent() != null && act.getContent().getMedia() != null && act.getContent().getMedia().getImages() != null) {
             for (HBXActivitySearchResponse.Image img : act.getContent().getMedia().getImages()) {
                 if (img.getUrls() != null && !img.getUrls().isEmpty()) {
+                    HBXActivitySearchResponse.ImageUrl best = null;
+                    int maxDim = -1;
                     for (HBXActivitySearchResponse.ImageUrl u : img.getUrls()) {
                         if (u.getResource() != null && !u.getResource().isBlank()) {
-                            return u.getResource();
+                            int dim = (u.getWidth() != null ? u.getWidth() : 0);
+                            if (best == null || dim > maxDim) {
+                                best = u;
+                                maxDim = dim;
+                            }
                         }
+                    }
+                    if (best != null) {
+                        return best.getResource();
                     }
                 }
             }
@@ -272,13 +281,26 @@ public class HBXTravelProvider implements TravelProvider {
     private String resolveActivityDescription(HBXActivitySearchResponse.HBXActivity act) {
         if (act.getContent() != null) {
             if (act.getContent().getDescription() != null && !act.getContent().getDescription().isBlank()) {
-                return act.getContent().getDescription();
+                return cleanHtml(act.getContent().getDescription());
             }
             if (act.getContent().getSummary() != null && !act.getContent().getSummary().isBlank()) {
-                return act.getContent().getSummary();
+                return cleanHtml(act.getContent().getSummary());
             }
         }
         return "Découvrez une expérience d'exception organisée par notre partenaire HBX.";
+    }
+
+    private static String cleanHtml(String raw) {
+        if (raw == null) return "";
+        return raw.replaceAll("<[^>]*>", " ")
+                .replace("&nbsp;", " ")
+                .replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     private boolean isCuratedMarket(String destCode, String queryDest) {

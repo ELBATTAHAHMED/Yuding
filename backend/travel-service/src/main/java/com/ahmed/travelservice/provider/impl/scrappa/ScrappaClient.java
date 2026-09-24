@@ -20,6 +20,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -339,6 +340,13 @@ public class ScrappaClient {
         Matcher bareMatcher = BARE_IATA.matcher(input);
         if (bareMatcher.matches()) {
             return bareMatcher.group(1).toUpperCase();
+        }
+
+        // Try lookup via AirportDirectory (handles "Casablanca", "Paris", "Marrakech", etc.)
+        Optional<com.ahmed.travelservice.dto.response.AirportDto> airportOpt =
+                com.ahmed.travelservice.service.AirportDirectory.findAirport(input);
+        if (airportOpt.isPresent()) {
+            return airportOpt.get().getCode();
         }
 
         throw new TravelProviderException(PROVIDER_CODE,

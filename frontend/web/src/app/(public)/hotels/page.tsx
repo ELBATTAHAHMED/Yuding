@@ -337,6 +337,11 @@ export default function HotelsPage() {
                   type="city"
                   selectedPlace={selectedGeoPlace}
                   onSelect={handleGeoPlaceSelect}
+                  onQueryChange={(text) => {
+                    setDestinationInput(text);
+                    setSelectedCity(text);
+                    if (validationError) setValidationError(null);
+                  }}
                   error={validationError && !destinationInput.trim() ? validationError : null}
                   required
                 />
@@ -794,7 +799,7 @@ export default function HotelsPage() {
                         </div>
 
                         {/* Review Score */}
-                        {item.reviewScore && (
+                        {typeof item.reviewScore === 'number' && item.reviewScore > 0 ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                             <span
                               style={{
@@ -813,7 +818,7 @@ export default function HotelsPage() {
                               {item.reviewCount ? ` (${item.reviewCount} avis)` : ''}
                             </span>
                           </div>
-                        )}
+                        ) : null}
 
                         {/* Price & Primary Action */}
                         <div

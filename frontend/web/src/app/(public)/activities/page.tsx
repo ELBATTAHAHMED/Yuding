@@ -14,6 +14,11 @@ import type { ActivitySortKey } from '@/lib/search-ux';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
+function stripHtml(text?: string | null): string {
+  if (!text) return '';
+  return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export default function ActivitiesPage() {
   const today = new Date().toISOString().split('T')[0];
 
@@ -437,7 +442,7 @@ export default function ActivitiesPage() {
                           {act.title}
                         </h3>
                         <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 line-clamp-2 flex-grow">
-                          {act.description}
+                          {stripHtml(act.description)}
                         </p>
 
                         <div className="mt-auto flex justify-between items-center pt-3 border-t border-slate-100 dark:border-[#01796F]/20 flex-wrap gap-2">

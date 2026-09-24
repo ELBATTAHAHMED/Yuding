@@ -15,6 +15,11 @@ import {
   type ConditionItem,
 } from '@/components/travel/details';
 
+function stripHtml(text?: string | null): string {
+  if (!text) return '';
+  return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export default function ActivityDetailsPage() {
   const params = useParams();
   const offerId = typeof params?.offerId === 'string' ? params.offerId : '';
@@ -173,7 +178,7 @@ export default function ActivityDetailsPage() {
             Description de l&apos;expérience
           </h3>
           <p style={{ margin: 0, color: '#475569', fontSize: '0.95rem', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
-            {activity.description}
+            {stripHtml(activity.description)}
           </p>
         </div>
       )}
