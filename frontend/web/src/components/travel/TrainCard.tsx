@@ -63,7 +63,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
 
   return (
     <div
-      className={`bg-white dark:bg-[#062523] rounded-xl p-5 shadow-md flex flex-col gap-4 transition-all text-slate-900 dark:text-slate-100 ${
+      className={`bg-white dark:bg-[#062523] rounded-2xl p-5 shadow-sm flex flex-col gap-4 transition-[border-color,box-shadow] text-slate-900 dark:text-slate-100 ${
         selected
           ? 'border-2 border-[#02E0D5] shadow-lg shadow-[#02E0D5]/10'
           : 'border border-slate-200 dark:border-[#01796F]/30 hover:border-[#01796F]/50'
@@ -122,10 +122,11 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
       </div>
 
       {/* Main schedule layout: Origin -> Duration / Transfers -> Destination */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className="grid grid-cols-1 items-center gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(235px,.38fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(105px,.8fr)_minmax(0,1fr)] items-center gap-3 rounded-xl bg-slate-50/70 px-3 py-4 dark:bg-[#0a302d]/60">
         {/* Origin */}
-        <div className="min-w-[130px]">
-          <div className="text-xl font-bold text-slate-900 dark:text-white">
+        <div className="min-w-0">
+          <div className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
             {formatTime(offer.departureTime)}
           </div>
           <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -135,7 +136,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
         </div>
 
         {/* Journey Duration & Route Indicator */}
-        <div className="flex-1 flex flex-col items-center min-w-[150px]">
+        <div className="flex min-w-0 flex-col items-center">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
             {formatDuration(offer.durationMinutes) || 'Direct'}
           </span>
@@ -158,8 +159,8 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
         </div>
 
         {/* Destination */}
-        <div className="min-w-[130px] text-right">
-          <div className="text-xl font-bold text-slate-900 dark:text-white">
+        <div className="min-w-0 text-right">
+          <div className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
             {formatTime(offer.arrivalTime)}
           </div>
           <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -167,17 +168,18 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
           </div>
           <div className="text-[11px] text-slate-400">Arrivée prévue</div>
         </div>
+        </div>
 
         {/* Pricing & Selection */}
-        <div className="flex flex-col items-end min-w-[180px] lg:border-l border-slate-100 dark:border-[#01796F]/20 lg:pl-4">
-          <div className="text-xs text-slate-400 italic text-right mb-2">
+        <div className="flex min-w-0 flex-col gap-3 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:py-1 lg:pl-5 dark:border-[#01796F]/25">
+          <div className="text-xs leading-relaxed text-slate-500 lg:text-right dark:text-slate-400">
             Tarif non disponible via cette source
           </div>
 
-          <div className="flex gap-2 mb-2 flex-wrap justify-end">
+          <div className="grid grid-cols-2 gap-2">
             <Link
               href={`/trains/${encodeURIComponent(offer.offerId)}`}
-              className="px-3 py-1.5 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
             >
               Détails
             </Link>
@@ -185,7 +187,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
             <button
               type="button"
               onClick={() => setSelected((prev) => !prev)}
-              className={`px-3.5 py-1.5 rounded-lg font-bold text-xs text-white flex items-center gap-1.5 transition-colors shadow-sm ${
+              className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-center text-xs font-bold text-white shadow-sm transition-colors ${
                 selected ? 'bg-emerald-600' : 'bg-[#01796F] hover:bg-[#015f57]'
               }`}
               title="Mémoriser ce trajet pour votre itinéraire Yuding"
@@ -209,7 +211,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
               href={offer.officialScheduleUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#0a302d] border border-slate-200 dark:border-[#01796F]/30 text-slate-700 dark:text-slate-300 text-[11px] font-medium hover:text-[#01796F] dark:hover:text-[#02E0D5] transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-2 text-[11px] font-medium text-slate-700 transition-colors hover:text-[#01796F] dark:border-[#01796F]/30 dark:bg-[#0a302d] dark:text-slate-300 dark:hover:text-[#02E0D5]"
             >
               <span>Vérifier sur le site officiel</span>
               <i className="fas fa-external-link-alt text-[9px]" />

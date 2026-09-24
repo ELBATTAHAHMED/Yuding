@@ -277,6 +277,7 @@ html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background
   .header.yuding-header { min-height: 76px !important; }
   .header.yuding-header .header-top > .container { gap: .45rem; min-height: 76px !important; padding-inline: 16px; }
   .header.yuding-header .logo { flex-basis: 108px !important; height: 44px !important; width: 108px !important; }
+  .header.yuding-header .header-top .header-inner .logo { min-width: 0 !important; }
   .header.yuding-header .logo img { max-height: 44px; }
   .header.yuding-header .booking { display: flex !important; }
   .header.yuding-header .booking > a { font-size: .76rem !important; padding: .42rem .7rem !important; }

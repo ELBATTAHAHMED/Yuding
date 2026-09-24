@@ -16,15 +16,7 @@ const SUGGESTIONS = [
 ];
 
 function AssistantMark({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M9 21.4c3.1-6.1 8.2-9.6 15-9.7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="9" cy="21.4" r="2" fill="currentColor" />
-      <circle cx="16.2" cy="14.3" r="1.65" fill="currentColor" />
-      <path d="m21.4 8.9 3.5 2.8-3.5 2.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <span className={styles.assistantMark} style={{ width: size, height: size }} aria-hidden="true" />;
 }
 
 function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' | 'check' | 'warning' }) {
@@ -358,7 +350,7 @@ export const AiChatWidget: React.FC = () => {
       {isRendered && (
         <section className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`} role="dialog" aria-label="Assistant Yuding" aria-hidden={!isOpen}>
           <header className={styles.header}>
-            <span className={styles.headerMark}><AssistantMark size={22} /></span>
+            <span className={styles.headerMark}><AssistantMark size={29} /></span>
             <div className={styles.headerText}>
               <h2>Assistant Yuding</h2>
               <p>Votre compagnon de voyage</p>
@@ -388,7 +380,7 @@ export const AiChatWidget: React.FC = () => {
               <>
                 {messages.length === 0 && (
                   <div className={`${styles.welcome} ${isAuthenticated ? styles.welcomeCentered : ''}`}>
-                    <div className={styles.welcomeMark}><AssistantMark size={28} /></div>
+                    <div className={styles.welcomeMark}><AssistantMark size={38} /></div>
                     <p className={styles.welcomeEyebrow}>VOTRE PROCHAIN VOYAGE COMMENCE ICI</p>
                     <h3>Bonjour{safeName ? ` ${safeName}` : ''}.<br />Où souhaitez-vous aller&nbsp;?</h3>
                     <p className={styles.welcomeDescription}>Une destination, une météo, un budget&nbsp;: demandez-moi.</p>
@@ -402,7 +394,7 @@ export const AiChatWidget: React.FC = () => {
                     const userMessage = message.role === 'user';
                     const showTime = index === messages.length - 1 || messages[index + 1]?.role !== message.role;
                     return <div className={`${styles.message} ${userMessage ? styles.userMessage : styles.assistantMessage}`} key={message.id}>
-                      {!userMessage && <span className={styles.messageMark}><AssistantMark size={16} /></span>}
+                      {!userMessage && <span className={styles.messageMark}><AssistantMark size={21} /></span>}
                       <div className={styles.messageContent}>
                         {userMessage ? <div className={styles.userBubble}>{message.content}</div> : <AssistantContent content={message.content} />}
                         {!userMessage && message.grounded && <span className={styles.grounded}><Icon name="check" />Données Yuding vérifiées</span>}
@@ -410,7 +402,7 @@ export const AiChatWidget: React.FC = () => {
                       </div>
                     </div>;
                   })}
-                  {isLoading && <div className={styles.typing} role="status"><span className={styles.messageMark}><AssistantMark size={16} /></span><span className={styles.typingDots}><i /><i /><i /></span><span>Je cherche pour vous…</span></div>}
+                  {isLoading && <div className={styles.typing} role="status"><span className={styles.messageMark}><AssistantMark size={21} /></span><span className={styles.typingDots}><i /><i /><i /></span><span>Je cherche pour vous…</span></div>}
                 </div>
                 {!isAuthenticated && <div className={styles.authPrompt}><p>Connectez-vous pour préparer votre voyage avec Yuding.</p><Link href="/login">Se connecter</Link></div>}
               </>
@@ -427,7 +419,7 @@ export const AiChatWidget: React.FC = () => {
           </footer>
         </section>
       )}
-      <button type="button" className={`${styles.trigger} ${isOpen ? styles.triggerOpen : ''}`} onClick={() => setIsOpen((current) => !current)} aria-label={isOpen ? 'Fermer l’assistant Yuding' : 'Ouvrir l’assistant Yuding'} aria-expanded={isOpen} title="Assistant Yuding"><AssistantMark size={24} /></button>
+      <button type="button" className={`${styles.trigger} ${isOpen ? styles.triggerOpen : ''}`} onClick={() => setIsOpen((current) => !current)} aria-label={isOpen ? 'Fermer l’assistant Yuding' : 'Ouvrir l’assistant Yuding'} aria-expanded={isOpen} title="Assistant Yuding"><AssistantMark size={38} /></button>
     </div>
   );
 };

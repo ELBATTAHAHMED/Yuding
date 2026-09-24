@@ -279,60 +279,43 @@ export default function ActivitiesPage() {
           )}
 
           {/* Destination Guide & Map (Phase 26) */}
-          {selectedGeoPlace && selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide && (
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '16px',
-                border: '1px solid #e0e0e0',
-                padding: '1.5rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                marginBottom: '2.5rem',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {selectedGeoPlace && Boolean(selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide) && (
+            <div className="mb-9 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-[#01796F]/30 dark:bg-[#062523]">
+              <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#01796F', margin: 0 }}>
-                    <i className="fas fa-map-marked-alt" style={{ marginRight: '0.5rem' }} />
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-[.16em] text-[#01796F] dark:text-[#02E0D5]">Guide de destination</p>
+                  <h2 className="m-0 text-xl font-extrabold leading-snug text-slate-900 dark:text-white">
+                    <i className="fas fa-map-marked-alt mr-2 text-[#01796F] dark:text-[#02E0D5]" />
                     {selectedGeoPlace.city || selectedGeoPlace.name} — Découverte &amp; Points d&apos;Intérêt
                   </h2>
-                  <p style={{ margin: '0.25rem 0 0', color: '#666', fontSize: '0.88rem' }}>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     {selectedGeoPlace.country ? `${selectedGeoPlace.country} • ` : ''}Coordonnées: {selectedGeoPlace.latitude.toFixed(4)}, {selectedGeoPlace.longitude.toFixed(4)}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowDestinationGuide(false)}
-                  style={{
-                    background: 'none',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    padding: '0.4rem 0.8rem',
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    color: '#666',
-                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-[#01796F]/50 hover:text-[#01796F] dark:border-[#01796F]/30 dark:text-slate-300"
                 >
                   Masquer
                 </button>
               </div>
 
-              <div style={{ marginBottom: '1.25rem' }}>
-                <DestinationWeather
-                  latitude={selectedGeoPlace.latitude}
-                  longitude={selectedGeoPlace.longitude}
-                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1.25rem' }}>
+              <div className="mb-4">
                 <DestinationImageGallery
                   city={selectedGeoPlace.city || selectedGeoPlace.name}
                   country={selectedGeoPlace.country}
                   countryCode={selectedGeoPlace.countryCode}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+              <div className="mb-4">
+                <DestinationWeather
+                  latitude={selectedGeoPlace.latitude}
+                  longitude={selectedGeoPlace.longitude}
+                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                />
+              </div>
+              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
                 <GeoMap
                   latitude={selectedGeoPlace.latitude}
                   longitude={selectedGeoPlace.longitude}
@@ -340,7 +323,7 @@ export default function ActivitiesPage() {
                   pois={destinationPois}
                   selectedPoi={selectedPoi}
                   onSelectPoi={(poi) => setSelectedPoi(poi)}
-                  height={340}
+                  height={360}
                 />
                 <NearbyPoiPanel
                   pois={destinationPois}
@@ -393,13 +376,7 @@ export default function ActivitiesPage() {
                 onSortChange={setSortKey}
               />
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: '2rem',
-                }}
-              >
+              <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {sortedActivities.map((act) => {
                   const isCustom = act.source === 'YUDING_CUSTOM';
                   const offerKey = act.offerId || act.id || act.title;
@@ -407,17 +384,17 @@ export default function ActivitiesPage() {
                   return (
                     <div
                       key={offerKey}
-                      className="bg-white dark:bg-[#062523] rounded-xl overflow-hidden shadow-md border border-slate-200 dark:border-[#01796F]/30 flex flex-col transition-all hover:border-[#01796F]/50"
+                      className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523]"
                     >
-                      <div className="h-48 overflow-hidden relative">
+                      <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
                         <SafeEntityImage
                           src={act.imageUrl}
                           alt={act.title}
                           entityType="ACTIVITY"
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                         <span
-                          className={`absolute top-3 right-3 text-white text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md ${
+                          className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm ${
                             isCustom ? 'bg-amber-600' : 'bg-[#01796F]'
                           }`}
                         >
@@ -425,44 +402,44 @@ export default function ActivitiesPage() {
                         </span>
                       </div>
 
-                      <div className="p-4 flex-1 flex flex-col text-slate-900 dark:text-slate-100">
-                        <div className="flex justify-between items-center mb-1.5">
+                      <div className="flex flex-1 flex-col p-5 text-slate-900 dark:text-slate-100">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                           <span className="text-[11px] font-bold text-[#01796F] dark:text-[#02E0D5] uppercase tracking-wider">
                             {act.category || 'Excursion'}
                           </span>
                           {act.durationHours && (
-                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                            <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 dark:bg-[#0a302d] dark:text-slate-300">
                               <i className="fas fa-clock mr-1" />
                               {act.durationHours}h
                             </span>
                           )}
                         </div>
 
-                        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1.5 line-clamp-1">
+                        <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
                           {act.title}
                         </h3>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 line-clamp-2 flex-grow">
+                        <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                           {stripHtml(act.description)}
                         </p>
 
-                        <div className="mt-auto flex justify-between items-center pt-3 border-t border-slate-100 dark:border-[#01796F]/20 flex-wrap gap-2">
+                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-[#01796F]/25">
                           <div>
-                            <span className="text-lg font-bold text-[#01796F] dark:text-[#02E0D5]">
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tarif par personne</span>
+                            <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">
                               <PriceDisplay conversion={act.priceConversion} amount={act.price} currency={act.currency} />
-                            </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400"> / pers.</span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <Link
                               href={`/activities/${encodeURIComponent(offerKey)}`}
-                              className="px-3 py-1.5 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
+                              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                             >
                               Détails
                             </Link>
                             <Link
                               href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(act.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
-                              className="btn-booking px-3.5 py-1.5 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
+                              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                             >
                               Réserver
                             </Link>

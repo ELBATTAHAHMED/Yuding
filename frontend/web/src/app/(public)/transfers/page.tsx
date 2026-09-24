@@ -414,13 +414,13 @@ export default function TransfersPage() {
                 return (
                   <div
                     key={offerKey}
-                    className="bg-white dark:bg-[#062523] p-5 rounded-xl shadow-md border border-slate-200 dark:border-[#01796F]/30 flex justify-between items-center flex-wrap gap-5 text-slate-900 dark:text-slate-100 transition-all hover:border-[#01796F]/50"
+                    className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(245px,.42fr)] items-center gap-5 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523] dark:text-slate-100"
                   >
-                      <div className="flex items-center gap-4">
+                      <div className="flex min-w-0 items-center gap-4">
                         <div className="w-14 h-14 rounded-xl bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-2xl shrink-0">
                           <i className={vehicleIcon} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex gap-2 items-center mb-1">
                             <span
                               style={{ background: badgeBg }}
@@ -435,7 +435,7 @@ export default function TransfersPage() {
                           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
                             {item.vehicleModel || 'Berline Confort'}
                           </h3>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 m-0">
+                          <p className="m-0 mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                             <i className="fas fa-route mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
                             {item.pickup || item.departureCity || 'Aéroport'} → {item.dropoff || item.arrivalCity || 'Destination'}
                           </p>
@@ -448,24 +448,24 @@ export default function TransfersPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 flex-wrap">
-                        <div className="text-right">
-                          <div className="text-xl font-bold text-[#01796F] dark:text-[#02E0D5]">
+                      <div className="flex min-w-0 flex-col gap-3 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:py-1 lg:pl-5 dark:border-[#01796F]/25">
+                        <div className="lg:text-right">
+                          <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">
                             <PriceDisplay conversion={item.priceConversion} amount={item.price} currency={item.currency} />
                           </div>
                           <div className="text-[11px] text-slate-400">Tarif garanti par véhicule</div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <Link
                             href={`/transfers/${encodeURIComponent(offerKey)}`}
-                            className="px-3.5 py-2 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                           >
                             Détails
                           </Link>
                           <Link
                             href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(item.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
-                            className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                           >
                             Réserver
                           </Link>
