@@ -38,6 +38,14 @@
   outline-offset: 2px;
 }
 
+.assistantMark {
+  display: inline-block;
+  flex: none;
+  background: url('/image/assistant-green.png') center / contain no-repeat;
+}
+:global(.dark) .assistantMark { background-image: url('/image/assistant-white.png'); }
+.trigger .assistantMark { background-image: url('/image/assistant-white.png'); }
+
 .trigger {
   position: relative;
   display: grid;

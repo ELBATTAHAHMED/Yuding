@@ -554,7 +554,7 @@ export default function HotelsPage() {
       </section>
 
       {/* ==================== DESTINATION GUIDE & MAP (PHASE 26) ==================== */}
-      {selectedGeoPlace && selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide && (
+      {selectedGeoPlace && Boolean(selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide) && (
         <section className="py-6 px-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
           <div className="max-w-6xl mx-auto">
             <div
@@ -706,33 +706,16 @@ export default function HotelsPage() {
                 }}
               />
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-                  gap: '2rem',
-                }}
-              >
+              <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {sortedHotels.map((item) => {
                   const hotelId = item.hotelId || item.id || item.offerId;
                   const isExpanded = expandedHotelId === hotelId;
                   const roomOffers = item.roomOffers || [];
 
                   return (
-                    <div
-                      key={hotelId}
-                      style={{
-                        background: 'var(--card, #fff)',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        border: '1px solid rgba(0,0,0,0.05)',
-                      }}
-                    >
+                    <div key={hotelId} className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523]">
                       {/* Image & Badges */}
-                      <div style={{ height: '210px', overflow: 'hidden', position: 'relative' }}>
+                      <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={item.imageUrl || '/image/hotels.jpg'}
@@ -743,7 +726,7 @@ export default function HotelsPage() {
                             event.currentTarget.onerror = null;
                             event.currentTarget.src = '/image/hotels.jpg';
                           }}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          className="h-full w-full object-cover"
                         />
                         <div
                           style={{
@@ -787,33 +770,24 @@ export default function HotelsPage() {
                       </div>
 
                       {/* Card Content */}
-                      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ marginBottom: '0.75rem' }}>
-                          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.35rem', lineHeight: '1.3' }}>
+                      <div className="flex flex-1 flex-col p-5 text-slate-900 dark:text-slate-100">
+                        <div className="mb-3">
+                          <h3 className="mb-1.5 line-clamp-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
                             {item.name || item.hotelName}
                           </h3>
-                          <p style={{ color: '#666', fontSize: '0.85rem' }}>
-                            <i className="fas fa-map-marker-alt" style={{ color: '#01796F', marginRight: '0.4rem' }} />
+                          <p className="line-clamp-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                            <i className="fas fa-map-marker-alt mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
                             {item.address ? `${item.address}, ` : ''}{item.city}, {item.country}
                           </p>
                         </div>
 
                         {/* Review Score */}
                         {typeof item.reviewScore === 'number' && item.reviewScore > 0 ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                            <span
-                              style={{
-                                background: '#01796F',
-                                color: '#fff',
-                                padding: '0.2rem 0.5rem',
-                                borderRadius: '4px',
-                                fontWeight: 800,
-                                fontSize: '0.8rem',
-                              }}
-                            >
+                          <div className="mb-4 flex flex-wrap items-center gap-2">
+                            <span className="rounded-md bg-[#01796F] px-2 py-1 text-xs font-extrabold text-white">
                               {item.reviewScore.toFixed(1)}
                             </span>
-                            <span style={{ fontSize: '0.8rem', color: '#555' }}>
+                            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
                               {item.reviewScore >= 8.5 ? 'Excellent' : item.reviewScore >= 7.5 ? 'Très bien' : 'Bien'}
                               {item.reviewCount ? ` (${item.reviewCount} avis)` : ''}
                             </span>
@@ -821,37 +795,22 @@ export default function HotelsPage() {
                         ) : null}
 
                         {/* Price & Primary Action */}
-                        <div
-                          style={{
-                            marginTop: 'auto',
-                            paddingTop: '1rem',
-                            borderTop: '1px solid #f0f0f0',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <div>
-                            <span style={{ fontSize: '0.75rem', color: '#888', display: 'block' }}>À partir de</span>
-                            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#01796F' }}>
+                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-[#01796F]/25">
+                          <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+                            <div>
+                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">À partir de</span>
+                            <span className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">
                               <PriceDisplay conversion={item.priceConversion} amount={item.pricePerNight} currency={item.currency} />
                             </span>
-                            <span style={{ fontSize: '0.8rem', color: '#888' }}> / nuit</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400"> / nuit</span>
+                            </div>
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">via {item.provider || 'NUITEE'}</span>
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div className="grid grid-cols-2 gap-2">
                             <Link
                               href={`/hotels/${encodeURIComponent(item.offerId || hotelId)}`}
-                              style={{
-                                padding: '0.6rem 0.95rem',
-                                borderRadius: '6px',
-                                border: '1.5px solid #01796F',
-                                color: '#01796F',
-                                background: '#fff',
-                                textDecoration: 'none',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                              }}
+                              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                             >
                               Détails
                             </Link>
@@ -860,19 +819,7 @@ export default function HotelsPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleExpandHotel(hotelId)}
-                                style={{
-                                  padding: '0.65rem 1.1rem',
-                                  borderRadius: '6px',
-                                  background: isExpanded ? '#eee' : '#01796F',
-                                  color: isExpanded ? '#333' : '#fff',
-                                  border: 'none',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  fontSize: '0.85rem',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.4rem',
-                                }}
+                                className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-center text-xs font-bold transition-colors ${isExpanded ? 'bg-slate-100 text-slate-700 dark:bg-[#0a302d] dark:text-slate-200' : 'bg-[#01796F] text-white hover:bg-[#005f57]'}`}
                               >
                                 <span>{isExpanded ? 'Masquer offres' : `Offres (${roomOffers.length})`}</span>
                                 <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`} />
@@ -880,15 +827,7 @@ export default function HotelsPage() {
                             ) : (
                               <Link
                                 href={`/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(hotelId)}&selectionRef=${encodeURIComponent(item.selectionRef || item.offerId || hotelId)}&offerId=${encodeURIComponent(item.offerId)}&serviceTitle=${encodeURIComponent(item.name || 'Hôtel')}&price=${item.pricePerNight}&currency=${item.currency}`}
-                                className="btn-booking"
-                                style={{
-                                  padding: '0.65rem 1.25rem',
-                                  borderRadius: '6px',
-                                  color: '#fff',
-                                  textDecoration: 'none',
-                                  fontWeight: 700,
-                                  fontSize: '0.85rem',
-                                }}
+                                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white transition-colors hover:bg-[#005f57]"
                               >
                                 Réserver
                               </Link>
@@ -898,77 +837,48 @@ export default function HotelsPage() {
 
                         {/* Expanded Room Offers List */}
                         {isExpanded && roomOffers.length > 0 && (
-                          <div
-                            style={{
-                              marginTop: '1.25rem',
-                              paddingTop: '1rem',
-                              borderTop: '1px dashed #ddd',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '0.75rem',
-                            }}
-                          >
-                            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#333', margin: 0 }}>
+                          <div className="mt-5 flex flex-col gap-3 border-t border-dashed border-slate-200 pt-4 dark:border-[#01796F]/30">
+                            <h4 className="m-0 text-sm font-bold text-slate-800 dark:text-slate-100">
                               Chambres et tarifs disponibles :
                             </h4>
 
                             {roomOffers.map((offer: HotelRoomOffer) => (
-                              <div
-                                key={offer.offerId}
-                                style={{
-                                  background: '#f9fbfb',
-                                  border: '1px solid #e0f2f1',
-                                  borderRadius: '8px',
-                                  padding: '0.85rem',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  gap: '0.75rem',
-                                }}
-                              >
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#001b1a' }}>
+                              <div key={offer.offerId} className="flex flex-col gap-3 rounded-xl border border-[#01796F]/15 bg-slate-50 p-3.5 dark:bg-[#0a302d]/50">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-bold text-slate-900 dark:text-white">
                                     {offer.roomName}
                                   </div>
-                                  <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '0.2rem' }}>
+                                  <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                                     {offer.boardName || offer.boardType || 'Hébergement seul'}
                                   </div>
-                                  <div style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}>
+                                  <div className="mt-1 text-xs">
                                     {offer.refundable ? (
-                                      <span style={{ color: '#2e7d32', fontWeight: 600 }}>
-                                        <i className="fas fa-check" style={{ marginRight: '0.25rem' }} />
+                                      <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                                        <i className="fas fa-check mr-1" />
                                         Annulation gratuite
                                       </span>
                                     ) : (
-                                      <span style={{ color: '#c62828' }}>
+                                      <span className="text-rose-700 dark:text-rose-300">
                                         Non remboursable
                                       </span>
                                     )}
                                   </div>
                                 </div>
 
-                                <div style={{ textAlign: 'right' }}>
-                                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#01796F' }}>
+                                <div className="flex flex-wrap items-end justify-between gap-2 border-t border-slate-200 pt-3 dark:border-[#01796F]/25">
+                                  <div>
+                                  <div className="text-lg font-extrabold text-[#01796F] dark:text-[#02E0D5]">
                                     <PriceDisplay conversion={offer.priceConversion} amount={offer.price} currency={offer.currency} />
                                   </div>
                                   {offer.pricePerNight && (
-                                    <div style={{ fontSize: '0.7rem', color: '#888' }}>
+                                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
                                       (<PriceDisplay conversion={offer.pricePerNightConversion} amount={offer.pricePerNight} currency={offer.currency} />/nuit)
                                     </div>
                                   )}
+                                  </div>
                                   <Link
                                     href={`/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(hotelId)}&selectionRef=${encodeURIComponent(offer.selectionRef || offer.offerId)}&offerId=${encodeURIComponent(offer.offerId)}&serviceTitle=${encodeURIComponent((item.name || 'Hôtel') + ' - ' + offer.roomName)}&price=${offer.price}&currency=${offer.currency}`}
-                                    style={{
-                                      display: 'inline-block',
-                                      marginTop: '0.4rem',
-                                      padding: '0.4rem 0.85rem',
-                                      background: '#01796F',
-                                      color: '#fff',
-                                      borderRadius: '4px',
-                                      fontSize: '0.75rem',
-                                      fontWeight: 700,
-                                      textDecoration: 'none',
-                                    }}
+                                    className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#01796F] px-3 text-xs font-bold text-white transition-colors hover:bg-[#005f57]"
                                   >
                                     Sélectionner
                                   </Link>

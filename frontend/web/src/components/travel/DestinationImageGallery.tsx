@@ -72,7 +72,7 @@ export const DestinationImageGallery: React.FC<DestinationImageGalleryProps> = (
   return (
     <div className={`w-full rounded-2xl overflow-hidden border border-gray-200/80 dark:border-white/10 bg-white dark:bg-gray-900 shadow-sm ${className}`}>
       {/* Main Hero Landscape Photo */}
-      <div className="relative h-64 sm:h-72 w-full overflow-hidden bg-black/5">
+      <div className="relative h-56 w-full overflow-hidden bg-black/5 sm:h-64">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentImage.url}
@@ -133,7 +133,7 @@ export const DestinationImageGallery: React.FC<DestinationImageGalleryProps> = (
 
       {/* Thumbnail Bar (if multiple photos returned) */}
       {images.length > 1 && (
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-100 dark:border-white/5 flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50 p-2.5 dark:border-white/5 dark:bg-gray-800/60">
           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
             Galerie ({selectedIndex + 1}/{images.length})
           </span>

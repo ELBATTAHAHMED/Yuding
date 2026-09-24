@@ -410,14 +410,14 @@ export default function FlightsPage() {
               sortedFlights.map((flight) => (
                 <div
                   key={flight.offerId}
-                  className="bg-white dark:bg-[#062523] p-5 rounded-xl shadow-md border border-slate-200 dark:border-[#01796F]/30 flex justify-between items-center flex-wrap gap-5 text-slate-900 dark:text-slate-100 transition-all hover:border-[#01796F]/50"
+                  className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(230px,.95fr)] items-center gap-5 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523] dark:text-slate-100"
                 >
                   {/* Airline info */}
-                  <div className="flex items-center gap-3.5 min-w-[200px]">
+                  <div className="flex min-w-0 items-center gap-3.5">
                     <div className="w-12 h-12 rounded-full bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-xl shrink-0">
                       <i className="fas fa-plane" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
                         {flight.airlineName || flight.airlineCode || '—'}
                       </h3>
@@ -434,9 +434,9 @@ export default function FlightsPage() {
                   </div>
 
                   {/* Route + Timing */}
-                  <div className="flex items-center gap-5 flex-wrap">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-slate-900 dark:text-white">
+                  <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl bg-slate-50/70 px-3 py-3 dark:bg-[#0a302d]/60">
+                    <div className="min-w-0 text-left">
+                      <div className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
                         {flight.departureTime ? flight.departureTime.replace('T', ' ').substring(11, 16) : '—'}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{flight.origin}</div>
@@ -447,7 +447,7 @@ export default function FlightsPage() {
                       )}
                     </div>
 
-                    <div className="text-center text-[#01796F] dark:text-[#02E0D5] min-w-[90px]">
+                    <div className="min-w-[78px] text-center text-[#01796F] dark:text-[#02E0D5]">
                       <i className="fas fa-long-arrow-alt-right text-xl" />
                       <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 font-semibold">
                         {flight.totalDurationMinutes ? formatDuration(flight.totalDurationMinutes) : ''}
@@ -457,8 +457,8 @@ export default function FlightsPage() {
                       </div>
                     </div>
 
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-slate-900 dark:text-white">
+                    <div className="min-w-0 text-right">
+                      <div className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
                         {flight.arrivalTime ? flight.arrivalTime.replace('T', ' ').substring(11, 16) : '—'}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{flight.destination}</div>
@@ -471,9 +471,9 @@ export default function FlightsPage() {
                   </div>
 
                   {/* Price + Action hierarchy */}
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-[#01796F] dark:text-[#02E0D5]">
+                  <div className="flex min-w-0 flex-col gap-3 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:py-1 lg:pl-5 dark:border-[#01796F]/25">
+                    <div className="lg:text-right">
+                      <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">
                         <PriceDisplay conversion={flight.priceConversion} amount={flight.price} currency={flight.currency} />
                       </div>
                       {flight.priceType === 'round_trip_starting' && (
@@ -486,10 +486,10 @@ export default function FlightsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Link
                         href={`/flights/${encodeURIComponent(flight.offerId)}`}
-                        className="px-3.5 py-2 rounded-lg border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] dark:border-[#02E0D5]/50 hover:bg-[#01796F]/10 font-bold text-xs whitespace-nowrap transition-colors"
+                        className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                       >
                         Voir détails
                       </Link>
@@ -499,13 +499,13 @@ export default function FlightsPage() {
                           href={`/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(flight.selectionRef || flight.offerId)}&serviceTitle=${encodeURIComponent(
                             `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
                           )}&price=${flight.price}&currency=${encodeURIComponent(flight.currency || 'EUR')}`}
-                          className="btn-booking px-4 py-2 rounded-lg text-white font-bold text-xs whitespace-nowrap transition-colors shadow-sm"
+                          className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                         >
                           Réserver
                         </Link>
                       ) : (
                         <span
-                          className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold text-xs whitespace-nowrap cursor-not-allowed"
+                          className="inline-flex min-h-10 items-center justify-center rounded-lg bg-gray-200 px-2 text-center text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                           title="Tarif indisponible pour ce vol"
                         >
                           Indisponible
