@@ -16,6 +16,7 @@ export interface GeoPlaceSelectorProps {
   error?: string | null;
   disabled?: boolean;
   required?: boolean;
+  onQueryChange?: (text: string) => void;
 }
 
 export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
@@ -30,6 +31,7 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
   error,
   disabled = false,
   required = false,
+  onQueryChange,
 }) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -41,15 +43,23 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const latestQueryRef = useRef('');
+  const prevPlaceRef = useRef<GeoPlace | null>(selectedPlace);
+  const onQueryChangeRef = useRef(onQueryChange);
+  onQueryChangeRef.current = onQueryChange;
 
-  // Sync query display when selectedPlace changes
+  // Sync query display when selectedPlace changes externally
   useEffect(() => {
-    if (selectedPlace) {
-      const displayName = selectedPlace.city || selectedPlace.name;
-      const countryStr = selectedPlace.country ? `, ${selectedPlace.country}` : '';
-      setQuery(`${displayName}${countryStr}`);
-    } else {
-      setQuery('');
+    if (selectedPlace !== prevPlaceRef.current) {
+      prevPlaceRef.current = selectedPlace;
+      if (selectedPlace) {
+        const displayName = selectedPlace.city || selectedPlace.name;
+        const countryStr = selectedPlace.country ? `, ${selectedPlace.country}` : '';
+        setQuery(`${displayName}${countryStr}`);
+        onQueryChangeRef.current?.(displayName);
+      } else if (document.activeElement !== inputRef.current) {
+        setQuery('');
+        onQueryChangeRef.current?.('');
+      }
     }
   }, [selectedPlace]);
 
@@ -95,8 +105,10 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
     const val = e.target.value;
     setQuery(val);
     setIsOpen(true);
+    onQueryChange?.(val);
 
     if (selectedPlace && val !== selectedPlace.name && val !== `${selectedPlace.city}, ${selectedPlace.country}`) {
+      prevPlaceRef.current = null;
       onSelect(null);
     }
 
@@ -115,10 +127,12 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
   };
 
   const handleSelect = (place: GeoPlace) => {
+    prevPlaceRef.current = place;
     onSelect(place);
     const displayName = place.city || place.name;
     const countryStr = place.country ? `, ${place.country}` : '';
     setQuery(`${displayName}${countryStr}`);
+    onQueryChange?.(displayName);
     setIsOpen(false);
     setSuggestions([]);
     inputRef.current?.blur();
@@ -126,10 +140,12 @@ export const GeoPlaceSelector: React.FC<GeoPlaceSelectorProps> = ({
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
+    prevPlaceRef.current = null;
     setQuery('');
     setSuggestions([]);
     setIsOpen(false);
     onSelect(null);
+    onQueryChange?.('');
     inputRef.current?.focus();
   };
 

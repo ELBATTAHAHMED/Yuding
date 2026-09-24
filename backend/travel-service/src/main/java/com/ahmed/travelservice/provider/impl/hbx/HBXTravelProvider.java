@@ -81,9 +81,12 @@ public class HBXTravelProvider implements TravelProvider {
 
         String destCode = HBXActivitiesClient.resolveDestinationCode(query.getDestination());
         if (destCode == null || destCode.isBlank()) {
-            throw new TravelProviderException(METADATA.getProviderCode(),
-                    ProviderErrorCode.PROVIDER_REQUEST_INVALID,
-                    "Destination invalide ou non reconnue: " + query.getDestination());
+            if (isCuratedMarket(null, query.getDestination())) {
+                log.info("HBXTravelProvider: Curated market '{}' has no direct HBX code; applying YUDING_CUSTOM fallback", query.getDestination());
+                return getCuratedMarrakechOffers(query);
+            }
+            log.info("HBXTravelProvider: Destination '{}' is not covered by HBX activity catalog. Returning empty results gracefully.", query.getDestination());
+            return Collections.emptyList();
         }
 
         LocalDate fromDate = query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3);
@@ -110,7 +113,20 @@ public class HBXTravelProvider implements TravelProvider {
                 .build();
 
         log.info("HBXTravelProvider: Searching activities for destCode={}, date={}", destCode, fromDate);
-        HBXActivitySearchResponse response = activitiesClient.searchActivities(request);
+        HBXActivitySearchResponse response;
+        try {
+            response = activitiesClient.searchActivities(request);
+        } catch (TravelProviderException e) {
+            if (e.getErrorCode() == ProviderErrorCode.PROVIDER_REQUEST_INVALID) {
+                log.info("HBXTravelProvider: HBX does not support destination code '{}' ({}): {}. Returning empty list.",
+                        destCode, query.getDestination(), e.getMessage());
+                if (isCuratedMarket(destCode, query.getDestination())) {
+                    return getCuratedMarrakechOffers(query);
+                }
+                return Collections.emptyList();
+            }
+            throw e;
+        }
 
         List<ActivityOfferDto> normalized = normalizeActivities(response, query);
 

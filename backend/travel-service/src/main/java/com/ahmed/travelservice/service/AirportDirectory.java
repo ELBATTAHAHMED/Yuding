@@ -23,6 +23,8 @@ public final class AirportDirectory {
             AirportDto.builder().code("NDR").name("Nador El Aroui Airport").city("Nador").country("Morocco").latitude(34.9889).longitude(-3.0283).cityLatitude(35.1667).cityLongitude(-2.9333).build(),
             AirportDto.builder().code("OUJ").name("Angads Airport").city("Oujda").country("Morocco").latitude(34.7872).longitude(-1.9239).cityLatitude(34.6814).cityLongitude(-1.9086).build(),
             AirportDto.builder().code("OZZ").name("Ouarzazate Airport").city("Ouarzazate").country("Morocco").latitude(30.9392).longitude(-6.9094).cityLatitude(30.9189).cityLongitude(-6.9150).build(),
+            AirportDto.builder().code("ESU").name("Essaouira-Mogador Airport").city("Essaouira").country("Morocco").latitude(31.3975).longitude(-9.6817).cityLatitude(31.5085).cityLongitude(-9.7595).build(),
+            AirportDto.builder().code("VIL").name("Dakhla Airport").city("Dakhla").country("Morocco").latitude(23.7183).longitude(-15.9320).cityLatitude(23.7221).cityLongitude(-15.9347).build(),
 
             // Europe & Americas & Middle East & Asia
             AirportDto.builder().code("CDG").name("Charles de Gaulle Airport").city("Paris").country("France").latitude(49.0097).longitude(2.5479).cityLatitude(48.8566).cityLongitude(2.3522).build(),
@@ -44,12 +46,16 @@ public final class AirportDirectory {
         if (query == null || query.isBlank()) {
             return Optional.empty();
         }
-        String qRaw = query.trim().toUpperCase(Locale.ROOT);
-        String qClean = stripDiacritics(query);
+        String cleanQuery = query.contains(",") ? query.split(",")[0].trim() : query.trim();
+        String qRaw = cleanQuery.toUpperCase(Locale.ROOT);
+        String qClean = stripDiacritics(cleanQuery);
+
+        // Normalize common transliteration / spelling variations
+        String qCanonical = normalizeCityAlias(qClean);
 
         // 1. Direct IATA code match
         for (AirportDto a : ESSENTIAL_AIRPORTS) {
-            if (a.getCode().equalsIgnoreCase(qRaw)) {
+            if (a.getCode().equalsIgnoreCase(qRaw) || a.getCode().equalsIgnoreCase(qCanonical)) {
                 return Optional.of(a);
             }
         }
@@ -59,19 +65,27 @@ public final class AirportDirectory {
             String cityClean = stripDiacritics(a.getCity());
             String nameClean = stripDiacritics(a.getName());
 
-            if (!cityClean.isEmpty() && (qClean.contains(cityClean) || cityClean.contains(qClean))) {
+            if (!cityClean.isEmpty() && (qClean.contains(cityClean) || cityClean.contains(qClean) || qCanonical.contains(cityClean) || cityClean.contains(qCanonical))) {
                 return Optional.of(a);
             }
-            if (!nameClean.isEmpty() && (qClean.contains(nameClean) || nameClean.contains(qClean))) {
-                return Optional.of(a);
-            }
-            // City alias support: Fez <-> Fes
-            if ("FEZ".equalsIgnoreCase(a.getCode()) && (qClean.contains("FES") || qClean.contains("FEZ"))) {
+            if (!nameClean.isEmpty() && (qClean.contains(nameClean) || nameClean.contains(qClean) || qCanonical.contains(nameClean) || nameClean.contains(qCanonical))) {
                 return Optional.of(a);
             }
         }
 
         return Optional.empty();
+    }
+
+    private static String normalizeCityAlias(String clean) {
+        if (clean == null) return "";
+        if (clean.contains("MARRAKESH") || clean.contains("MARRAKECH")) return "MARRAKECH";
+        if (clean.contains("FES") || clean.contains("FEZ")) return "FEZ";
+        if (clean.contains("TANGER") || clean.contains("TANGIER")) return "TANGIER";
+        if (clean.contains("CASA") || clean.contains("CASABLANCA")) return "CASABLANCA";
+        if (clean.contains("BARCELONE") || clean.contains("BARCELONA")) return "BARCELONA";
+        if (clean.contains("LONDRES") || clean.contains("LONDON")) return "LONDON";
+        if (clean.contains("ROMA") || clean.contains("ROME")) return "ROME";
+        return clean;
     }
 
     private static String stripDiacritics(String str) {

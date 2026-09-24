@@ -193,7 +193,12 @@ export const travelService = {
       };
     }
 
-    return apiClient.post<TravelSearchResponse<ActivityOffer>>('/travel/activities/search', payload);
+    return apiClient.post<TravelSearchResponse<ActivityOffer>>(
+      '/travel/activities/search',
+      payload,
+      false,
+      { timeoutMs: 25000 }
+    );
   },
 
   /**

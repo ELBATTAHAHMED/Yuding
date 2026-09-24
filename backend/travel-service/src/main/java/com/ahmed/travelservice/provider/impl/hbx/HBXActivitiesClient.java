@@ -79,23 +79,69 @@ public class HBXActivitiesClient {
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    private static final java.util.Map<String, String> HBX_DESTINATION_CODES = java.util.Map.ofEntries(
+            java.util.Map.entry("PARIS", "PAR"),
+            java.util.Map.entry("CDG", "PAR"),
+            java.util.Map.entry("ORY", "PAR"),
+            java.util.Map.entry("ROME", "ROM"),
+            java.util.Map.entry("ROMA", "ROM"),
+            java.util.Map.entry("FCO", "ROM"),
+            java.util.Map.entry("LONDON", "LON"),
+            java.util.Map.entry("LONDRES", "LON"),
+            java.util.Map.entry("LHR", "LON"),
+            java.util.Map.entry("LGW", "LON"),
+            java.util.Map.entry("NEW YORK", "NYC"),
+            java.util.Map.entry("NYC", "NYC"),
+            java.util.Map.entry("JFK", "NYC"),
+            java.util.Map.entry("MARRAKECH", "RAK"),
+            java.util.Map.entry("MARRAKESH", "RAK"),
+            java.util.Map.entry("CASABLANCA", "CMN"),
+            java.util.Map.entry("CASA", "CMN"),
+            java.util.Map.entry("TANGIER", "TNG"),
+            java.util.Map.entry("TANGER", "TNG"),
+            java.util.Map.entry("AGADIR", "AGA"),
+            java.util.Map.entry("FEZ", "FEZ"),
+            java.util.Map.entry("FES", "FEZ"),
+            java.util.Map.entry("BARCELONA", "BCN"),
+            java.util.Map.entry("BARCELONE", "BCN"),
+            java.util.Map.entry("MADRID", "MAD"),
+            java.util.Map.entry("DUBAI", "DXB"),
+            java.util.Map.entry("DOUBAI", "DXB"),
+            java.util.Map.entry("ISTANBUL", "IST")
+    );
+
     /**
      * Resolves human-friendly destination to HBX destination code globally and dynamically.
      * Supports:
      * - Any valid 3-letter IATA / destination code directly (e.g. BCN, PAR, NYC, RAK, DXB, ROM, MAD, LON).
      * - Dynamic lookup from AirportDirectory for cities/names (e.g. Paris, Barcelona, Madrid, Marrakech).
+     * - Returns null if the destination cannot be resolved to a valid 3-letter HBX destination code.
      */
     public static String resolveDestinationCode(String input) {
         if (input == null || input.isBlank()) {
             return null;
         }
-        String normalized = input.trim().toUpperCase(Locale.ROOT);
-        if (normalized.length() == 3 && normalized.chars().allMatch(Character::isLetter)) {
-            return normalized;
+        String cleanInput = input.contains(",") ? input.split(",")[0].trim() : input.trim();
+        String normalized = cleanInput.toUpperCase(Locale.ROOT);
+
+        // Check direct HBX metropolitan mappings
+        if (HBX_DESTINATION_CODES.containsKey(normalized)) {
+            return HBX_DESTINATION_CODES.get(normalized);
         }
-        return AirportDirectory.findAirport(normalized)
-                .map(a -> a.getCode().toUpperCase(Locale.ROOT))
-                .orElse(normalized);
+
+        // If input is already a 3-letter alphabetic code, verify or pass through
+        if (normalized.length() == 3 && normalized.chars().allMatch(Character::isLetter)) {
+            return HBX_DESTINATION_CODES.getOrDefault(normalized, normalized);
+        }
+
+        // Lookup via AirportDirectory
+        return AirportDirectory.findAirport(cleanInput)
+                .map(a -> {
+                    String code = a.getCode().toUpperCase(Locale.ROOT);
+                    return HBX_DESTINATION_CODES.getOrDefault(code, code);
+                })
+                .filter(code -> code.length() == 3 && code.chars().allMatch(Character::isLetter))
+                .orElse(null);
     }
 
     /**
