@@ -1,10 +1,13 @@
 import { apiClient } from '../lib/api-client.ts';
 import type {
+  AiAttachmentDto,
   AiChatRequestDto,
   AiChatResponseDto,
   ConversationMessageDto,
   ConversationSummaryDto,
   CreateConversationResponse,
+  TripPlanDto,
+  TripPlanRequest,
 } from '../types/ai.types.ts';
 
 export const aiService = {
@@ -52,6 +55,81 @@ export const aiService = {
       request,
       true, // requiresAuth
       { timeoutMs: 75000 }
+    );
+  },
+
+  // ----------------- Smart Trip Planner -----------------
+
+  /**
+   * Generates a new trip plan snapshot with bounded real provider candidates and BigDecimal budget.
+   * Routed via API Gateway (/api/ai/trip-plans).
+   */
+  async createTripPlan(request: TripPlanRequest): Promise<TripPlanDto> {
+    return apiClient.post<TripPlanDto>(
+      '/api/ai/trip-plans',
+      request,
+      true, // requiresAuth
+      { timeoutMs: 60000 }
+    );
+  },
+
+  /**
+   * Lists trip plans created by the authenticated user.
+   */
+  async getUserTripPlans(): Promise<TripPlanDto[]> {
+    return apiClient.get<TripPlanDto[]>(
+      '/api/ai/trip-plans',
+      true // requiresAuth
+    );
+  },
+
+  /**
+   * Retrieves a specific trip plan by public reference (TRP-XXXXXXXX).
+   * Verified server-side against IDOR.
+   */
+  async getTripPlanByReference(reference: string): Promise<TripPlanDto> {
+    return apiClient.get<TripPlanDto>(
+      `/api/ai/trip-plans/${encodeURIComponent(reference)}`,
+      true // requiresAuth
+    );
+  },
+
+  /**
+   * Refreshes real-time pricing and availability snapshot for an existing trip plan.
+   */
+  async refreshTripPlan(reference: string): Promise<TripPlanDto> {
+    return apiClient.post<TripPlanDto>(
+      `/api/ai/trip-plans/${encodeURIComponent(reference)}/refresh`,
+      {},
+      true, // requiresAuth
+      { timeoutMs: 60000 }
+    );
+  },
+
+  // ----------------- Chat Attachments -----------------
+
+  /**
+   * Uploads an attachment (Image or Document) for a specific conversation.
+   * Sniffed server-side with magic bytes and size limits.
+   */
+  async uploadAttachment(conversationId: string, file: File): Promise<AiAttachmentDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postForm<AiAttachmentDto>(
+      `/api/ai/conversations/${encodeURIComponent(conversationId)}/attachments`,
+      formData,
+      true, // requiresAuth
+      { timeoutMs: 60000 }
+    );
+  },
+
+  /**
+   * Deletes an attachment belonging to the authenticated user.
+   */
+  async deleteAttachment(attachmentId: string): Promise<void> {
+    return apiClient.delete<void>(
+      `/api/ai/attachments/${encodeURIComponent(attachmentId)}`,
+      true // requiresAuth
     );
   },
 };

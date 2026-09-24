@@ -22,4 +22,7 @@ public class AiChatRequest {
     @NotBlank(message = "message must not be blank")
     @Size(max = 8000, message = "message exceeds maximum allowed length of 8000 characters")
     private String message;
+
+    @Builder.Default
+    private java.util.List<UUID> attachmentIds = java.util.Collections.emptyList();
 }

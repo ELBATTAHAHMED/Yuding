@@ -22,6 +22,8 @@ public class AiProperties {
     private GroqProperties groq = new GroqProperties();
     private RagProperties rag = new RagProperties();
 
+    private AttachmentProperties attachments = new AttachmentProperties();
+
     @Getter
     @Setter
     public static class GeminiProperties {
@@ -47,5 +49,13 @@ public class AiProperties {
         private int topK = 4;
         private int maxContextTokens = 600;
         private boolean autoIngestOnStartup = true;
+    }
+
+    @Getter
+    @Setter
+    public static class AttachmentProperties {
+        private String storageDir = ".data/attachments";
+        private long maxFileSizeBytes = 10 * 1024 * 1024L;
+        private int maxAttachmentsPerMessage = 4;
     }
 }

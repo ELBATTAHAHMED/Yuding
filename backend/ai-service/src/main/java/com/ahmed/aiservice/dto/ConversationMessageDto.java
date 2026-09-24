@@ -27,5 +27,7 @@ public class ConversationMessageDto {
     private String groundingType = "NONE";
     @Builder.Default
     private List<AiSourceDto> sources = Collections.emptyList();
+    @Builder.Default
+    private List<com.ahmed.aiservice.domain.attachment.dto.AiAttachmentDto> attachments = Collections.emptyList();
     private Instant createdAt;
 }

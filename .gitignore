@@ -62,3 +62,8 @@ config-repo/
 # GTFS runtime downloaded dataset
 backend/travel-service/data/oncf-gtfs/*
 !backend/travel-service/data/oncf-gtfs/.gitkeep
+
+# Runtime Attachment Storage
+.data/
+backend/*/.data/
+backend/*/storage/
