@@ -11,6 +11,7 @@ import { TravelHero, TravelPage } from '@/components/travel';
 import { EmptyState, ErrorState, PassengerSelector, SortBar } from '@/components/ui';
 import { sortFlights, buildActiveFilterChips } from '@/lib/search-ux';
 import { saveSearchOffers } from '@/lib/offer-store';
+import { useSearchSession } from '@/lib/search-session';
 import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
 
@@ -69,6 +70,24 @@ export default function FlightsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [sortKey, setSortKey] = useState<FlightSortKey>('PRICE_ASC');
+
+  useSearchSession('FLIGHT', {
+    selectedOrigin, selectedDestination, departureDate, adults, children, infants,
+    cabinClass, flights, searchMessage, searchStatus, hasSearched, sortKey,
+  }, (saved) => {
+    setSelectedOrigin(saved.selectedOrigin);
+    setSelectedDestination(saved.selectedDestination);
+    setDepartureDate(saved.departureDate);
+    setAdults(saved.adults);
+    setChildren(saved.children);
+    setInfants(saved.infants);
+    setCabinClass(saved.cabinClass);
+    setFlights(saved.flights);
+    setSearchMessage(saved.searchMessage);
+    setSearchStatus(saved.searchStatus);
+    setHasSearched(saved.hasSearched);
+    setSortKey(saved.sortKey);
+  }, isSearching);
 
   const today = new Date().toISOString().split('T')[0];
   const originError = validationError?.includes("origine") ? validationError : null;
@@ -211,7 +230,7 @@ export default function FlightsPage() {
             onSubmit={handleSearch}
             className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1.3fr_auto] gap-2.5 items-end">
+            <div className="grid grid-cols-1 items-start gap-2.5 md:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1.3fr_auto]">
               {/* Origin Airport Selector */}
               <div className="min-w-0">
                 <AirportSelector
@@ -324,7 +343,7 @@ export default function FlightsPage() {
               </div>
 
               {/* Submit Button */}
-              <div className="w-full lg:w-auto">
+              <div className="w-full md:mt-[23px] lg:w-auto">
                 <button
                   type="submit"
                   disabled={isSearching}
@@ -418,12 +437,15 @@ export default function FlightsPage() {
                       <i className="fas fa-plane" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
-                        {flight.airlineName || flight.airlineCode || '—'}
+                      <h3 className="text-base font-bold leading-snug text-slate-900 dark:text-white mb-0.5">
+                        {flight.airlineName && flight.airlineName !== flight.airlineCode
+                          ? flight.airlineName
+                          : `Vol ${[flight.airlineCode, flight.flightNumber].filter(Boolean).join(' ') || 'à découvrir'}`}
                       </h3>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {flight.airlineCode}
-                        {flight.flightNumber ? ` · Vol ${flight.flightNumber}` : ''}
+                        {flight.airlineName && flight.airlineName !== flight.airlineCode
+                          ? [flight.airlineCode, flight.flightNumber && `Vol ${flight.flightNumber}`].filter(Boolean).join(' · ')
+                          : flight.airlineCode && `Compagnie ${flight.airlineCode}`}
                       </span>
                       {flight.provider && (
                         <div className="text-[11px] text-[#01796F] dark:text-[#02E0D5] mt-0.5 font-semibold">

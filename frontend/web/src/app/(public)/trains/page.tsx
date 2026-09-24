@@ -10,6 +10,7 @@ import { TrainCard } from '@/components/travel/TrainCard';
 import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
+import { useSearchSession } from '@/lib/search-session';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -55,6 +56,25 @@ export default function TrainsPage() {
       mounted = false;
     };
   }, []);
+
+  useSearchSession('TRAIN', {
+    originStation, destinationStation, date, departureTime, passengers, trains,
+    hasSearched, errorMessage, outdatedNotice, providerMessage, directOnly, selectedProduct, sortBy,
+  }, (saved) => {
+    setOriginStation(saved.originStation);
+    setDestinationStation(saved.destinationStation);
+    setDate(saved.date);
+    setDepartureTime(saved.departureTime);
+    setPassengers(saved.passengers);
+    setTrains(saved.trains);
+    setHasSearched(saved.hasSearched);
+    setErrorMessage(saved.errorMessage);
+    setOutdatedNotice(saved.outdatedNotice);
+    setProviderMessage(saved.providerMessage);
+    setDirectOnly(saved.directOnly);
+    setSelectedProduct(saved.selectedProduct);
+    setSortBy(saved.sortBy);
+  }, loading);
 
   const handleSwap = () => {
     const temp = originStation;

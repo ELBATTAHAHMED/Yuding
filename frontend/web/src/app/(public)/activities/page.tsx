@@ -10,6 +10,7 @@ import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { sortActivities } from '@/lib/search-ux';
 import { saveSearchOffers } from '@/lib/offer-store';
+import { useSearchSession } from '@/lib/search-session';
 import type { ActivitySortKey } from '@/lib/search-ux';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
@@ -91,6 +92,25 @@ export default function ActivitiesPage() {
       longitude: 0,
     });
   }, []);
+
+  useSearchSession('ACTIVITY', {
+    destination, selectedGeoPlace, destinationPois, selectedPoi, showDestinationGuide,
+    date, travelers, category, sortKey, activities, providerMessage, errorMessage, hasSearched,
+  }, (saved) => {
+    setDestination(saved.destination);
+    setSelectedGeoPlace(saved.selectedGeoPlace);
+    setDestinationPois(saved.destinationPois);
+    setSelectedPoi(saved.selectedPoi);
+    setShowDestinationGuide(saved.showDestinationGuide);
+    setDate(saved.date);
+    setTravelers(saved.travelers);
+    setCategory(saved.category);
+    setSortKey(saved.sortKey);
+    setActivities(saved.activities);
+    setProviderMessage(saved.providerMessage);
+    setErrorMessage(saved.errorMessage);
+    setHasSearched(saved.hasSearched);
+  }, loading || isRetrying);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -386,7 +406,7 @@ export default function ActivitiesPage() {
                       key={offerKey}
                       className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523]"
                     >
-                      <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
+                      <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
                         <SafeEntityImage
                           src={act.imageUrl}
                           alt={act.title}
@@ -402,7 +422,7 @@ export default function ActivitiesPage() {
                         </span>
                       </div>
 
-                      <div className="flex flex-1 flex-col p-5 text-slate-900 dark:text-slate-100">
+                      <div className="flex flex-1 flex-col p-4 text-slate-900 dark:text-slate-100">
                         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                           <span className="text-[11px] font-bold text-[#01796F] dark:text-[#02E0D5] uppercase tracking-wider">
                             {act.category || 'Excursion'}
@@ -415,14 +435,14 @@ export default function ActivitiesPage() {
                           )}
                         </div>
 
-                        <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                        <h3 className="mb-2 line-clamp-2 min-h-[3.75rem] border-b border-slate-300 pb-2 text-lg font-bold leading-snug text-slate-900 dark:border-[#327a73] dark:text-white">
                           {act.title}
                         </h3>
-                        <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                        <p className="mb-3 line-clamp-3 min-h-[3.75rem] text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                           {stripHtml(act.description)}
                         </p>
 
-                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-[#01796F]/25">
+                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-3 dark:border-[#01796F]/25">
                           <div>
                             <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tarif par personne</span>
                             <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">

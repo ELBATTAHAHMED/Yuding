@@ -20,6 +20,7 @@ import { TransferSkeleton } from '@/components/travel/TransferSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
+import { useSearchSession } from '@/lib/search-session';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -66,6 +67,23 @@ export default function TransfersPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [sortKey, setSortKey] = useState<TransferSortKey>('PRICE_ASC');
 
+  useSearchSession('TRANSFER', {
+    pickup, dropoff, date, time, passengers, transportType, transfers,
+    providerMessage, errorMessage, hasSearched, sortKey,
+  }, (saved) => {
+    setPickup(saved.pickup);
+    setDropoff(saved.dropoff);
+    setDate(saved.date);
+    setTime(saved.time);
+    setPassengers(saved.passengers);
+    setTransportType(saved.transportType);
+    setTransfers(saved.transfers);
+    setProviderMessage(saved.providerMessage);
+    setErrorMessage(saved.errorMessage);
+    setHasSearched(saved.hasSearched);
+    setSortKey(saved.sortKey);
+  }, loading);
+
   const categoryCounts = useMemo(() => getTransferCategoryCounts(transfers), [transfers]);
   const filteredTransfers = useMemo(() => filterTransfers(transfers, transportType), [transfers, transportType]);
   const sortedTransfers = useMemo(() => sortTransfers(filteredTransfers, sortKey), [filteredTransfers, sortKey]);
@@ -87,6 +105,7 @@ export default function TransfersPage() {
     const cleanPickup = rawPickup.includes('—')
       ? rawPickup.split('—')[0].trim()
       : (rawPickup.includes(' - ') ? rawPickup.split(' - ')[0].trim() : rawPickup);
+    const providerPickup = POPULAR_DESTINATIONS.find((item) => item.code === cleanPickup)?.title || cleanPickup;
 
     const rawDropoff = dropoff.trim();
     if (!rawDropoff) {
@@ -96,6 +115,8 @@ export default function TransfersPage() {
     const cleanDropoff = rawDropoff.includes('—')
       ? rawDropoff.split('—')[0].trim()
       : (rawDropoff.includes(' - ') ? rawDropoff.split(' - ')[0].trim() : rawDropoff);
+    // Destination suggestions use UI identifiers, not real airport IATA codes.
+    const providerDropoff = POPULAR_DESTINATIONS.find((item) => item.code === cleanDropoff)?.title || cleanDropoff;
 
     setLoading(true);
     setErrorMessage(null);
@@ -104,8 +125,8 @@ export default function TransfersPage() {
 
     try {
       const data = await travelService.searchTransfers({
-        pickup: cleanPickup,
-        dropoff: cleanDropoff,
+        pickup: providerPickup,
+        dropoff: providerDropoff,
         date: date || defaultFutureDate,
         time: time || '12:00',
         passengers: passengers > 0 ? passengers : 2,
@@ -420,8 +441,8 @@ export default function TransfersPage() {
                         <div className="w-14 h-14 rounded-xl bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-2xl shrink-0">
                           <i className={vehicleIcon} />
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex gap-2 items-center mb-1">
+                        <div className="min-w-0 text-left">
+                          <div className="flex flex-wrap justify-start gap-2 items-center mb-1">
                             <span
                               style={{ background: badgeBg }}
                               className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
@@ -432,10 +453,10 @@ export default function TransfersPage() {
                               Partenaire HBX
                             </span>
                           </div>
-                          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
+                          <h3 className="mb-0.5 !text-left text-base font-bold text-slate-900 dark:text-white">
                             {item.vehicleModel || 'Berline Confort'}
                           </h3>
-                          <p className="m-0 mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                          <p className="m-0 mt-1 !text-left text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                             <i className="fas fa-route mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
                             {item.pickup || item.departureCity || 'Aéroport'} → {item.dropoff || item.arrivalCity || 'Destination'}
                           </p>
