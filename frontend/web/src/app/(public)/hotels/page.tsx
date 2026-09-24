@@ -259,8 +259,6 @@ export default function HotelsPage() {
 
     setIsSearching(true);
     setHasSearched(true);
-    setShowDestinationGuide(false);
-    setSelectedPoi(null);
     setExpandedHotelId(null);
     setFilterType('ALL');
 
@@ -801,18 +799,18 @@ export default function HotelsPage() {
 
                       {/* Card Content */}
                       <div className="flex flex-1 flex-col p-4 text-slate-900 dark:text-slate-100">
-                        <div className="border-b border-slate-200 pb-3 dark:border-[#327a73]/50">
-                          <h3 className="line-clamp-2 min-h-[3.125rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                        <div className="border-b border-slate-200 pb-2 dark:border-[#327a73]/50">
+                          <h3 className="line-clamp-2 min-h-[2.75rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
                             {item.name || item.hotelName}
                           </h3>
                         </div>
-                        <div className="flex flex-1 flex-col justify-between gap-3 py-3">
-                          <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                        <div className="flex flex-col gap-2.5 py-2.5">
+                          <p className="line-clamp-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                             <i className="fas fa-map-marker-alt mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
                             {item.address ? `${item.address}, ` : ''}{item.city}, {item.country}
                           </p>
                           {/* Review Score */}
-                          <div className="flex min-h-8 flex-wrap items-center gap-2">
+                          <div className="flex min-h-7 flex-wrap items-center gap-2">
                             {typeof item.reviewScore === 'number' && item.reviewScore > 0 && (<>
                               <span className="rounded-md bg-[#01796F] px-2 py-1 text-xs font-extrabold text-white">
                                 {item.reviewScore.toFixed(1)}
@@ -826,7 +824,7 @@ export default function HotelsPage() {
                         </div>
 
                         {/* Price & Primary Action */}
-                        <div className="flex flex-col gap-3 border-t border-slate-300 pt-3 dark:border-[#327a73]/70">
+                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-300 pt-3 dark:border-[#327a73]/70">
                           <div className="min-w-0">
                             <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">À partir de · par nuit</span>
                             <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">

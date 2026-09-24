@@ -13,7 +13,6 @@ export function AccountMenu() {
   const rootRef = useRef<HTMLDivElement>(null);
   const firstLinkRef = useRef<HTMLAnchorElement>(null);
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email?.split('@')[0] || 'Mon compte';
-  const initial = Array.from((user?.firstName || user?.email || 'C').trim())[0]?.toLocaleUpperCase() || 'C';
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -47,12 +46,16 @@ export function AccountMenu() {
         aria-controls="yuding-account-menu"
         onClick={() => setOpen((value) => !value)}
       >
-        {initial}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/image/compte.png" alt="" aria-hidden="true" />
       </button>
       {open && (
         <div id="yuding-account-menu" className={styles.panel}>
           <div className={styles.identity}>
-            <span className={styles.identityAvatar} aria-hidden="true">{initial}</span>
+            <span className={styles.identityAvatar} aria-hidden="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/image/compte.png" alt="" />
+            </span>
             <span className={styles.identityText}>
               <strong>{displayName}</strong>
               <small>{user?.email}</small>

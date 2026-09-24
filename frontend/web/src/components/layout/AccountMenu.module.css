@@ -1,10 +1,12 @@
 .root { position: relative; display: inline-flex; align-items: center; }
-.avatar { display: grid; place-items: center; width: 40px; height: 40px; border: 2px solid #d6f5ee; border-radius: 50%; background: #078a80; color: #fff; font-size: .95rem; font-weight: 800; line-height: 1; cursor: pointer; box-shadow: 0 0 0 3px rgba(2,224,213,.12); }
-.avatar:hover, .avatar[aria-expanded="true"] { border-color: #97f4e6; box-shadow: 0 0 0 4px rgba(2,224,213,.2); }
+.avatar { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #006d64; border-radius: 50%; background: #087d70; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,83,75,.15); transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.avatar img { width: 23px; height: 23px; object-fit: contain; }
+.avatar:hover, .avatar[aria-expanded="true"] { background: #006f65; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,83,75,.2); }
 .avatar:focus-visible, .links a:focus-visible, .logout:focus-visible { outline: 3px solid #02e0d5; outline-offset: 2px; }
 .panel { position: absolute; top: calc(100% + 13px); right: 0; z-index: 150; width: min(264px,calc(100vw - 24px)); overflow: hidden; border: 1px solid #dce9e7; border-radius: 14px; background: #fff; color: #163331; box-shadow: 0 16px 36px rgba(0,35,32,.18); text-align: left; }
 .identity { display: flex; align-items: center; gap: 10px; padding: 15px 16px 13px; border-bottom: 1px solid #e6efed; }
-.identityAvatar { display: grid; flex: 0 0 34px; place-items: center; height: 34px; border-radius: 50%; background: #e6f6f2; color: #01796f; font-size: 14px; font-weight: 750; }
+.identityAvatar { display: grid; flex: 0 0 34px; place-items: center; height: 34px; border-radius: 50%; background: #087d70; }
+.identityAvatar img { width: 20px; height: 20px; object-fit: contain; }
 .identityText { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .identityText strong, .identityText small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .identityText strong { font-size: 13px; }
@@ -20,7 +22,7 @@
 :global(.dark) .panel { border-color: #394752; background: #202b36; color: #f4fffd; }
 :global(.dark) .identity, :global(.dark) .logout { border-color: #394752; }
 :global(.dark) .identityText small { color: #b3c3c9; }
-:global(.dark) .identityAvatar { background: #24534f; color: #e8fffa; }
+:global(.dark) .identityAvatar { background: #087d70; }
 :global(.dark) .links a:hover { background: #2a414b; color: #c4fff4; }
 :global(.dark) .linkIcon { border-color: #3b6367; color: #7de3d4; }
 :global(.dark) .logoutIcon { border-color: #705052; color: #ef9999; }

@@ -124,8 +124,6 @@ export default function ActivitiesPage() {
     }
 
     setLoading(true);
-    setShowDestinationGuide(false);
-    setSelectedPoi(null);
     setErrorMessage(null);
     setProviderMessage(null);
     setHasSearched(true);
@@ -440,11 +438,11 @@ export default function ActivitiesPage() {
                           )}
                         </div>
 
-                        <h3 className="mb-2 line-clamp-2 min-h-[3.125rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                        <h3 className="line-clamp-2 min-h-[2.75rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
                           {act.title}
                         </h3>
-                        <div aria-hidden="true" className="mb-3 h-px bg-slate-200 dark:bg-[#327a73]/50" />
-                        <p className="mb-3 line-clamp-3 min-h-[3.75rem] text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                        <div aria-hidden="true" className="my-2.5 h-px bg-slate-200 dark:bg-[#327a73]/50" />
+                        <p className="mb-2.5 line-clamp-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                           {stripHtml(act.description)}
                         </p>
 

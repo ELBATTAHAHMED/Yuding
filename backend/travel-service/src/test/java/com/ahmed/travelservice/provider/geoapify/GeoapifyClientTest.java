@@ -201,7 +201,7 @@ class GeoapifyClientTest {
     void getStaticMap_returnsImageBytes() {
         byte[] fakePng = new byte[]{ (byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
 
-        mockMapsServer.expect(requestTo("https://maps.geoapify.com/v1/staticmap?style=osm-bright&width=600&height=400&center=lonlat:2.3522,48.8566&zoom=14&apiKey=mock-secret-test-key&marker=lonlat:2.3522,48.8566"))
+        mockMapsServer.expect(requestTo("https://maps.geoapify.com/v1/staticmap?style=osm-bright&lang=fr&width=600&height=400&center=lonlat:2.3522,48.8566&zoom=14&apiKey=mock-secret-test-key&marker=lonlat:2.3522,48.8566"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(fakePng, MediaType.IMAGE_PNG));
 

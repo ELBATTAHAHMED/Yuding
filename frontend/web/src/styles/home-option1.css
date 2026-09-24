@@ -148,23 +148,3 @@
   .home-option1__intent-image img, .home-option1__story-image img, .home-option1__story-thumb img, .home-option1__itinerary-image img { transition: none; }
 }
 
-
-.yuding-footer--home {
-  background: #f7f5ee;
-  color: #123936;
-  margin-top: 0;
-  padding: 48px 0 22px;
-}
-.yuding-footer--home .yuding-footer__inner { width: min(calc(100% - 80px), 1280px); }
-.yuding-footer--home .yuding-footer__grid { margin-bottom: 2rem; }
-.yuding-footer--home h4 { color: #123936; }
-.yuding-footer--home ul, .yuding-footer--home .yuding-footer__copy, .yuding-footer--home .yuding-footer__project { color: #62736e; }
-.yuding-footer--home a { color: #123936; }
-.yuding-footer--home a:hover { color: #087d70; }
-.yuding-footer--home .yuding-footer__rights { border-color: #d7e2dc; color: #78908a; }
-.yuding-footer--home img[alt="Yuding Logo"] { filter: brightness(.25) saturate(.8); }
-@media (max-width: 720px) {
-  .yuding-footer--home .yuding-footer__inner { width: min(calc(100% - 32px), 600px); }
-}
-
-
