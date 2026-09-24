@@ -8,36 +8,35 @@ import { GeoPlaceSelector } from '@/components/travel';
 import type { GeoPlace } from '@/types/geo.types';
 import { imageService } from '@/services/image.service';
 import type { ImageAsset } from '@/types/image.types';
-import { useDestinationImages } from '@/hooks/queries/useDestinationImages';
 
 type TravelMode = {
-  id: 'all' | 'hotels' | 'flights' | 'activities' | 'transfers' | 'trains';
+  id: 'hotels' | 'flights' | 'activities' | 'transfers' | 'trains';
   label: string;
-  shortLabel: string;
   icon: string;
   href: string;
+  action: string;
 };
 
 const modes: TravelMode[] = [
-  { id: 'all', label: 'Tous les voyages', shortLabel: 'Tout', icon: 'fa-compass', href: '/hotels' },
-  { id: 'hotels', label: 'Hébergements', shortLabel: 'Séjours', icon: 'fa-bed', href: '/hotels' },
-  { id: 'flights', label: 'Vols', shortLabel: 'Vols', icon: 'fa-plane-departure', href: '/flights' },
-  { id: 'activities', label: 'Activités', shortLabel: 'À faire', icon: 'fa-person-hiking', href: '/activities' },
-  { id: 'transfers', label: 'Transferts', shortLabel: 'Transferts', icon: 'fa-car-side', href: '/transfers' },
-  { id: 'trains', label: 'Trains', shortLabel: 'Trains', icon: 'fa-train', href: '/trains' },
+  { id: 'hotels', label: 'Hébergements', icon: 'fa-bed', href: '/hotels', action: 'Voir les séjours' },
+  { id: 'flights', label: 'Vols', icon: 'fa-plane-departure', href: '/flights', action: 'Trouver un vol' },
+  { id: 'activities', label: 'Activités', icon: 'fa-person-hiking', href: '/activities', action: 'Trouver une activité' },
+  { id: 'transfers', label: 'Transferts', icon: 'fa-car-side', href: '/transfers', action: 'Organiser un transfert' },
+  { id: 'trains', label: 'Trains', icon: 'fa-train', href: '/trains', action: 'Chercher un train' },
 ];
 
-const inspiration = [
-  { city: 'Marrakech', country: 'Maroc', image: '/image/marrakech.jpg', note: 'Culture & lumière', href: '/hotels?destination=Marrakech&countryCode=MA' },
-  { city: 'Chefchaouen', country: 'Maroc', image: '/image/chefchaoun.jpeg', note: 'Escapade bleue', href: '/hotels?destination=Chefchaouen&countryCode=MA' },
-  { city: 'Dakhla', country: 'Maroc', image: '/image/Dakhla.jpg', note: 'Mer & désert', href: '/activities?destination=Dakhla&countryCode=MA' },
-  { city: 'New York', country: 'États-Unis', image: '/image/NewYork.jpg', note: 'City break', href: '/hotels?destination=New%20York&countryCode=US' },
+const destinations = [
+  { city: 'Marrakech', country: 'Maroc', kicker: 'Lumière oblique', image: '/image/marrakech.jpg', href: '/hotels?destination=Marrakech&countryCode=MA', size: 'wide' },
+  { city: 'Kyoto', country: 'Japon', kicker: 'Rituels du matin', image: '/image/Seoul.jpg', href: '/activities?destination=Kyoto', size: 'tall' },
+  { city: 'Dakhla', country: 'Maroc', kicker: 'Vent du large', image: '/image/Dakhla.jpg', href: '/activities?destination=Dakhla&countryCode=MA', size: 'small' },
+  { city: 'New York', country: 'États-Unis', kicker: 'Après la dernière rame', image: '/image/NewYork.jpg', href: '/hotels?destination=New%20York&countryCode=US', size: 'small' },
 ];
 
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
 
 export default function HomePage() {
   const router = useRouter();
+  const [mode, setMode] = useState<TravelMode['id']>('hotels');
   const [place, setPlace] = useState<GeoPlace | null>(null);
   const [departure, setDeparture] = useState('');
   const [returnDate, setReturnDate] = useState('');
@@ -45,8 +44,6 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [destinationImage, setDestinationImage] = useState<ImageAsset | null>(null);
   const [destinationImageLoading, setDestinationImageLoading] = useState(false);
-  const { data: newYorkImages } = useDestinationImages({ city: 'New York', country: 'United States', limit: 1 });
-  const newYorkImage = newYorkImages?.images?.[0];
 
   const today = useMemo(() => formatDate(new Date()), []);
   const minReturn = useMemo(() => {
@@ -55,6 +52,7 @@ export default function HomePage() {
     next.setDate(next.getDate() + 1);
     return formatDate(next);
   }, [departure, today]);
+  const activeMode = modes.find((item) => item.id === mode) || modes[0];
 
   useEffect(() => {
     let active = true;
@@ -63,117 +61,88 @@ export default function HomePage() {
       return () => { active = false; };
     }
     setDestinationImageLoading(true);
-    imageService.getDestinationImages({
-      city: place.city || place.name,
-      country: place.country,
-      countryCode: place.countryCode,
-      limit: 1,
-    }).then((response) => {
-      if (active) setDestinationImage(response.images?.[0] || null);
-    }).catch(() => {
-      if (active) setDestinationImage(null);
-    }).finally(() => {
-      if (active) setDestinationImageLoading(false);
-    });
+    imageService.getDestinationImages({ city: place.city || place.name, country: place.country, countryCode: place.countryCode, limit: 1 })
+      .then((response) => { if (active) setDestinationImage(response.images?.[0] || null); })
+      .catch(() => { if (active) setDestinationImage(null); })
+      .finally(() => { if (active) setDestinationImageLoading(false); });
     return () => { active = false; };
   }, [place]);
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!place) {
-      setError('Sélectionnez une destination pour lancer la recherche.');
+      setError('Choisissez une destination pour commencer.');
       return;
     }
     if (departure && returnDate && returnDate <= departure) {
       setError('La date de retour doit suivre la date de départ.');
       return;
     }
-    const params = new URLSearchParams({
-      destination: place.city || place.name,
-      countryCode: place.countryCode || '',
-      adults: travelers,
-    });
+    const params = new URLSearchParams({ destination: place.city || place.name, countryCode: place.countryCode || '', adults: travelers });
     if (place.country) params.set('country', place.country);
     if (departure) params.set('checkIn', departure);
     if (returnDate) params.set('checkOut', returnDate);
-    router.push('/hotels?' + params.toString());
+    router.push(activeMode.href + '?' + params.toString());
   };
 
   return (
-    <div className="home-rebuild">
-      <section className="departure-hero" aria-labelledby="departure-title">
-        <video className="departure-hero__video" autoPlay muted loop playsInline preload="metadata" poster="/image/home1.jpg" aria-hidden="true">
+    <div className="home-v2">
+      <section className="home-v2__hero" aria-labelledby="home-title">
+        <video className="home-v2__video" autoPlay muted loop playsInline preload="metadata" poster="/image/home1.jpg" aria-hidden="true">
           <source src="/image/video.mp4" type="video/mp4" />
         </video>
-        <div className="departure-hero__shade" />
-        <div className="departure-hero__route" aria-hidden="true"><span /><span /><span /></div>
-        <div className="home-frame departure-hero__frame">
-          <div className="departure-hero__copy">
-            <p className="departure-overline"><span className="departure-pulse" /> YUDING / VOTRE DÉPART COMMENCE ICI</p>
-            <h1 id="departure-title">Partez avec une longueur d’avance.</h1>
-            <p className="departure-hero__sub">Séjours, vols, expériences et trajets : trouvez la bonne façon de partir, au même endroit.</p>
-            <div className="departure-hero__signals"><span><i className="fas fa-location-arrow" aria-hidden="true" /> Destination</span><span><i className="fas fa-calendar" aria-hidden="true" /> Vos dates</span><span><i className="fas fa-compass" aria-hidden="true" /> Cinq façons de voyager</span></div>
+        <div className="home-v2__veil" aria-hidden="true" />
+        <div className="home-v2__grain" aria-hidden="true" />
+        <div className="home-v2__hero-inner home-v2__frame">
+          <div className="home-v2__hero-copy">
+            <p className="home-v2__eyebrow"><span className="home-v2__eyebrow-dot" /> Yuding / carnet de départ</p>
+            <h1 id="home-title">Partir<br /><em>change</em> tout.</h1>
+            <p className="home-v2__lede">Une destination, un rythme, une vraie façon d’y arriver.</p>
+            <a className="home-v2__scroll" href="#quick-search"><span>Faire défiler</span><i className="fas fa-arrow-down" aria-hidden="true" /></a>
           </div>
-          <div className="departure-board" aria-label="Inspiration de départs">
-            <div className="departure-board__top"><span>PROCHAINES IDÉES</span><i className="fas fa-ellipsis" aria-hidden="true" /></div>
-            <div className="departure-board__line"><span className="departure-board__code">RAK</span><strong>Marrakech</strong><small>Maroc</small><b>À explorer</b></div>
-            <div className="departure-board__line"><span className="departure-board__code">CDG</span><strong>Paris</strong><small>France</small><b>À composer</b></div>
-            <div className="departure-board__line"><span className="departure-board__code">VIL</span><strong>Dakhla</strong><small>Maroc</small><b>À ressentir</b></div>
-            <div className="departure-board__foot"><span className="departure-board__dot" /> Votre prochaine destination reste ouverte.</div>
+          <div className="home-v2__hero-note" aria-label="Note éditoriale">
+            <span className="home-v2__note-line" />
+            <p>Le monde est vaste.<br />La première piste est simple.</p>
+            <small>YUDING / 2026</small>
           </div>
         </div>
 
-        <div className="home-frame search-dock" id="home-search">
-          <div className="search-dock__intro"><p>PLANIFIER UN DÉPART</p><h2>Où allez-vous ?</h2></div>
-          <nav className="search-dock__modes" aria-label="Autres recherches de voyage">
-            {modes.slice(1).map((item) => item.id === 'hotels'
-              ? <span key={item.id} className="is-active" aria-current="page"><i className={'fas ' + item.icon} aria-hidden="true" /><span className="search-dock__mode-label">{item.label}</span><span className="search-dock__mode-short">{item.shortLabel}</span></span>
-              : <Link key={item.id} href={item.href}><i className={'fas ' + item.icon} aria-hidden="true" /><span className="search-dock__mode-label">{item.label}</span><span className="search-dock__mode-short">{item.shortLabel}</span></Link>)}
-          </nav>
-          <form className="search-dock__form" onSubmit={submitSearch}>
-            <div className="dock-field dock-field--destination"><GeoPlaceSelector id="home-destination" label="Destination" placeholder="Ville ou lieu" type="city" selectedPlace={place} onSelect={(next) => { setPlace(next); setError(null); }} error={error && !place ? error : null} required /></div>
-            <div className="dock-field"><label htmlFor="home-departure"><i className="fas fa-calendar-day" aria-hidden="true" /> Départ</label><input id="home-departure" type="date" min={today} value={departure} onChange={(event) => { setDeparture(event.target.value); setError(null); }} /></div>
-            <div className="dock-field"><label htmlFor="home-return"><i className="fas fa-calendar-check" aria-hidden="true" /> Retour</label><input id="home-return" type="date" min={minReturn} value={returnDate} onChange={(event) => { setReturnDate(event.target.value); setError(null); }} /></div>
-            <div className="dock-field"><label htmlFor="home-passengers"><i className="fas fa-user-group" aria-hidden="true" /> Voyageurs</label><select id="home-passengers" value={travelers} onChange={(event) => setTravelers(event.target.value)}><option value="1">1 voyageur</option><option value="2">2 voyageurs</option><option value="3">3 voyageurs</option><option value="4">4 voyageurs</option><option value="5">5 voyageurs</option><option value="6">6 voyageurs</option></select></div>
-            <button className="dock-submit" type="submit"><span>Voir les séjours</span><i className="fas fa-arrow-right" aria-hidden="true" /></button>
+        <div className="quick-search home-v2__frame" id="quick-search">
+          <div className="quick-search__header">
+            <div><p className="home-v2__label">Commencer ici</p><h2>Votre prochaine escale</h2></div>
+            <span className="quick-search__hint">Recherche rapide · détails ensuite</span>
+          </div>
+          <div className="quick-search__tabs" role="tablist" aria-label="Type de voyage">
+            {modes.map((item) => <button key={item.id} type="button" role="tab" aria-selected={mode === item.id} className={mode === item.id ? 'is-active' : ''} onClick={() => { setMode(item.id); setError(null); }}><i className={'fas ' + item.icon} aria-hidden="true" /><span>{item.label}</span></button>)}
+          </div>
+          <form className="quick-search__form" onSubmit={submitSearch}>
+            <div className="quick-search__field quick-search__field--destination"><GeoPlaceSelector id="home-destination" label="Destination" placeholder="Une ville, une région…" type="city" selectedPlace={place} onSelect={(next) => { setPlace(next); setError(null); }} error={error && !place ? error : null} required /></div>
+            <label className="quick-search__field"><span><i className="fas fa-calendar-day" aria-hidden="true" /> Départ</span><input type="date" min={today} value={departure} onChange={(event) => { setDeparture(event.target.value); setError(null); }} /></label>
+            <label className="quick-search__field"><span><i className="fas fa-calendar-check" aria-hidden="true" /> Retour</span><input type="date" min={minReturn} value={returnDate} onChange={(event) => { setReturnDate(event.target.value); setError(null); }} /></label>
+            <label className="quick-search__field"><span><i className="fas fa-user-group" aria-hidden="true" /> Voyageurs</span><select value={travelers} onChange={(event) => setTravelers(event.target.value)}><option value="1">1 voyageur</option><option value="2">2 voyageurs</option><option value="3">3 voyageurs</option><option value="4">4 voyageurs</option><option value="5">5 voyageurs</option><option value="6">6 voyageurs</option></select></label>
+            <button className="quick-search__submit" type="submit"><span>{activeMode.action}</span><i className="fas fa-arrow-right" aria-hidden="true" /></button>
           </form>
-          {error && place && <p className="dock-error" role="alert">{error}</p>}
+          {error && place && <p className="quick-search__error" role="alert">{error}</p>}
         </div>
       </section>
 
-      {place && (destinationImage || destinationImageLoading) && (
-        <section className="selected-destination" aria-live="polite">
-          <div className="home-frame selected-destination__inner">
-            <div><p className="departure-overline">DESTINATION SÉLECTIONNÉE</p><h2>{place.city || place.name}</h2><p>{place.country || 'Destination'}</p></div>
-            {destinationImageLoading ? <div className="selected-destination__loading">Chargement de l’image de destination…</div> : destinationImage ? <div className="selected-destination__image"><img src={destinationImage.url} alt={destinationImage.altText || 'Image contextuelle de destination'} /><small>Photo contextuelle : {destinationImage.photographerName || 'photographe'} · <a href={destinationImage.photographerUrl || destinationImage.sourcePageUrl || 'https://www.pexels.com'} target="_blank" rel="noopener noreferrer">Pexels</a></small></div> : null}
-          </div>
-        </section>
-      )}
+      {place && (destinationImage || destinationImageLoading) && <section className="route-preview" aria-live="polite"><div className="home-v2__frame route-preview__inner"><div><p className="home-v2__label">Votre piste</p><h2>{place.city || place.name}</h2><p>{place.country || 'Destination sélectionnée'}</p></div>{destinationImageLoading ? <span className="route-preview__loading">Recherche d’une ambiance…</span> : destinationImage ? <div className="route-preview__image"><img src={destinationImage.url} alt={destinationImage.altText || ('Ambiance de ' + (place.city || place.name))} /><small>Photo contextuelle · <a href={destinationImage.photographerUrl || 'https://www.pexels.com'} target="_blank" rel="noopener noreferrer">Pexels</a></small></div> : null}</div></section>}
 
-      <section className="inspiration-section" aria-labelledby="inspiration-title">
-        <div className="home-frame">
-          <div className="section-intro"><div><p className="departure-overline">CHOISIR UNE DIRECTION</p><h2 id="inspiration-title">Les départs commencent par une envie.</h2></div><p>Quelques repères visuels pour ouvrir la recherche.</p></div>
-          <div className="inspiration-rail">
-            {inspiration.map((item, index) => {
-              const contextualImage = item.city === 'New York' ? newYorkImage : null;
-              return <article key={item.city} className={'inspiration-stop inspiration-stop--' + (index + 1)}>
-                <Link href={item.href} className="inspiration-stop__link">
-                  <div className="inspiration-stop__image"><Image src={contextualImage?.url || item.image} alt={item.city + ', ' + item.country} fill sizes="(max-width: 720px) 75vw, 25vw" /></div>
-                  <div className="inspiration-stop__meta"><span>{item.note}</span><strong>{item.city}</strong><small>{item.country} <i className="fas fa-arrow-up-right-from-square" aria-hidden="true" /></small></div>
-                </Link>
-                {contextualImage && <a className="inspiration-stop__credit" href={contextualImage.photographerUrl || contextualImage.sourcePageUrl || 'https://www.pexels.com'} target="_blank" rel="noopener noreferrer">Photo : {contextualImage.photographerName || 'photographe'} / Pexels</a>}
-              </article>;
-            })}
+      <section className="atlas" aria-labelledby="atlas-title">
+        <div className="home-v2__frame">
+          <div className="atlas__intro"><div><p className="home-v2__label">Atlas ouvert</p><h2 id="atlas-title">Une envie,<br /><em>plusieurs horizons.</em></h2></div><p>Des idées pour orienter la recherche. Les disponibilités se vérifient ensuite, quand vous êtes prêt.</p></div>
+          <div className="atlas__grid">
+            {destinations.map((destination, index) => <Link href={destination.href} key={destination.city} className={'atlas-card atlas-card--' + destination.size}><Image src={destination.image} alt={destination.city + ', ' + destination.country} fill sizes="(max-width: 720px) 86vw, (max-width: 1100px) 45vw, 30vw" priority={index === 0} /><span className="atlas-card__wash" /><span className="atlas-card__meta"><small>{destination.kicker}</small><strong>{destination.city}</strong><span>{destination.country} <i className="fas fa-arrow-up-right-from-square" aria-hidden="true" /></span></span></Link>)}
+            <div className="atlas__stamp" aria-hidden="true"><span>Y</span><small>YUDING<br />TRAVEL NOTES</small></div>
           </div>
         </div>
       </section>
 
-      <section className="travel-rhythm" aria-label="Les possibilités Yuding">
-        <div className="travel-rhythm__ticker"><span>HÉBERGEMENTS</span><i className="fas fa-bed" aria-hidden="true" /><span>VOLS</span><i className="fas fa-plane" aria-hidden="true" /><span>ACTIVITÉS</span><i className="fas fa-compass" aria-hidden="true" /><span>TRANSFERTS</span><i className="fas fa-car" aria-hidden="true" /><span>TRAINS</span><i className="fas fa-train" aria-hidden="true" /></div>
-        <div className="home-frame travel-rhythm__inner"><div className="travel-rhythm__headline"><p className="departure-overline">UNE SEULE INTERFACE</p><h2>Tout le trajet<br /><em>en mouvement.</em></h2></div><div className="travel-rhythm__list">{modes.slice(1).map((item, index) => <Link key={item.id} href={item.href}><span>0{index + 1}</span><i className={'fas ' + item.icon} aria-hidden="true" /><strong>{item.label}</strong><b><i className="fas fa-arrow-up-right-from-square" aria-hidden="true" /></b></Link>)}</div></div>
+      <section className="field-notes" aria-labelledby="field-notes-title">
+        <div className="home-v2__frame field-notes__grid"><div className="field-notes__title"><p className="home-v2__label">À votre rythme</p><h2 id="field-notes-title">Composez le<br /><em>bon mouvement.</em></h2><p>Yuding rassemble le départ, le séjour et ce qu’on fait entre les deux. Une recherche claire, puis de la place pour l’imprévu.</p></div><div className="field-notes__list"><div><span>01</span><strong>Le bon point de départ</strong><p>Une destination ou une intuition suffit pour ouvrir une piste.</p></div><div><span>02</span><strong>Le bon tempo</strong><p>Dates, voyageurs et détails restent simples jusqu’à la recherche.</p></div><div><span>03</span><strong>Le bon détour</strong><p>Hébergements, trajets et activités se rejoignent quand vous le décidez.</p></div></div></div>
       </section>
 
-      <section className="last-call" aria-label="Lancer une recherche"><div className="home-frame last-call__inner"><div><p className="departure-overline">YUDING V2</p><h2>La prochaine étape<br /><em>vous appartient.</em></h2></div><Link href="#home-search" className="last-call__button">Commencer <i className="fas fa-arrow-up" aria-hidden="true" /></Link></div></section>
+      <section className="home-v2__closing"><div className="home-v2__frame home-v2__closing-inner"><p className="home-v2__label">Yuding / carnet de départ</p><p className="home-v2__closing-word">À bientôt<br /><em>ailleurs.</em></p><a href="#quick-search" className="home-v2__backtop">Revenir à la recherche <i className="fas fa-arrow-up" aria-hidden="true" /></a></div></section>
     </div>
   );
 }
