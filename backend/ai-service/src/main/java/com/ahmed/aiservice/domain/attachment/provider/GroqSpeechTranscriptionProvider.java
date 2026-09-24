@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.Map;
 
@@ -38,6 +40,23 @@ public class GroqSpeechTranscriptionProvider implements SpeechTranscriptionProvi
     @Override
     public String transcribe(byte[] audio, String filename, String mimeType) {
         if (!isAvailable()) throw new IllegalStateException("Speech transcription is unavailable");
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                return transcribeOnce(audio, filename, mimeType);
+            } catch (ResourceAccessException | HttpServerErrorException e) {
+                if (attempt == 3) throw e;
+                try {
+                    Thread.sleep(300L * attempt);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Speech transcription interrupted", interrupted);
+                }
+            }
+        }
+        throw new IllegalStateException("Speech transcription retries exhausted");
+    }
+
+    private String transcribeOnce(byte[] audio, String filename, String mimeType) {
         ByteArrayResource resource = new ByteArrayResource(audio) {
             @Override public String getFilename() { return filename; }
         };
