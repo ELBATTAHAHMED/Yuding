@@ -36,6 +36,7 @@ public class AiProperties {
     public static class GroqProperties {
         private String apiKey = "";
         private String baseUrl = "https://api.groq.com/openai/v1";
+        private String transcriptionModel = "whisper-large-v3-turbo";
     }
 
     @Getter

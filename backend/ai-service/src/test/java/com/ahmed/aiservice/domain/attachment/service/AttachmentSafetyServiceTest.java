@@ -116,4 +116,37 @@ class AttachmentSafetyServiceTest {
                 .isInstanceOf(AiProviderException.class)
                 .hasMessageContaining("limite maximale");
     }
+
+    @Test
+    void validWebmAudioIsAcceptedFromBytes() {
+        byte[] webm = new byte[]{0x1a, 0x45, (byte) 0xdf, (byte) 0xa3, 0x42, (byte) 0x86, 0x01, 0x00,
+                0x42, (byte) 0x82, (byte) 0x84, 'w', 'e', 'b', 'm'};
+        var result = safetyService.validateAndInspect("voice.webm", "audio/webm;codecs=opus", webm);
+        assertThat(result.kind()).isEqualTo("AUDIO");
+        assertThat(result.mimeType()).isEqualTo("audio/webm");
+    }
+
+    @Test
+    void fakeAudioContainerIsRejected() {
+        byte[] pdf = "%PDF-1.7 fake audio".getBytes(StandardCharsets.UTF_8);
+        assertThatThrownBy(() -> safetyService.validateAndInspect("voice.webm", "audio/webm", pdf))
+                .isInstanceOf(AiProviderException.class);
+    }
+
+    @Test
+    void imageExtensionWithPdfBytesIsRejected() {
+        byte[] pdf = "%PDF-1.7 disguised".getBytes(StandardCharsets.UTF_8);
+        assertThatThrownBy(() -> safetyService.validateAndInspect("photo.png", "image/png", pdf))
+                .isInstanceOf(AiProviderException.class)
+                .hasMessageContaining("incompatibles");
+    }
+
+    @Test
+    void oversizedAudioIsRejected() {
+        byte[] audio = new byte[11 * 1024 * 1024];
+        audio[0] = 'R'; audio[1] = 'I'; audio[2] = 'F'; audio[3] = 'F';
+        audio[8] = 'W'; audio[9] = 'A'; audio[10] = 'V'; audio[11] = 'E';
+        assertThatThrownBy(() -> safetyService.validateAndInspect("voice.wav", "audio/wav", audio))
+                .isInstanceOf(AiProviderException.class);
+    }
 }

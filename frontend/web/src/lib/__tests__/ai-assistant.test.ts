@@ -87,6 +87,30 @@ describe('AI Assistant V2 — Service & Routing Contract Tests', () => {
     assert.ok(result.createdAt);
   });
 
+  test('deletes only through the authenticated Gateway conversation route', async () => {
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({ url: input.toString(), method: init?.method || 'GET', headers: init?.headers as Record<string, string> });
+      return new Response(null, { status: 204 });
+    };
+    await aiService.deleteConversation('owned-conversation');
+    assert.equal(new URL(capturedCalls[0].url).pathname, '/api/ai/conversations/owned-conversation');
+    assert.equal(capturedCalls[0].method, 'DELETE');
+    assert.equal(capturedCalls[0].headers.Authorization, 'Bearer mock-rs256-jwt-token');
+  });
+
+  test('loads private image/audio as a Blob with JWT and revocable object URL support', async () => {
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({ url: input.toString(), method: init?.method || 'GET', headers: init?.headers as Record<string, string> });
+      return new Response(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), { status: 200, headers: { 'Content-Type': 'image/png' } });
+    };
+    const blob = await aiService.getAttachmentContent('private-image');
+    assert.ok(blob instanceof Blob);
+    assert.equal(blob.type, 'image/png');
+    assert.equal(new URL(capturedCalls[0].url).pathname, '/api/ai/attachments/private-image/content');
+    assert.equal(capturedCalls[0].headers.Authorization, 'Bearer mock-rs256-jwt-token');
+    assert.equal(capturedCalls[0].headers.Accept, '*/*');
+  });
+
   test('handles 429 rate limit response gracefully', async () => {
     globalThis.fetch = async () => {
       return jsonResponse(

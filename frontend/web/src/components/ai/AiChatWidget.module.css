@@ -243,6 +243,16 @@
   text-align: left;
   font-size: 11px;
 }
+.historyRowMain { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 1; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; font: inherit; }
+.historyDelete { display: grid; place-items: center; flex: none; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 7px; color: var(--ai-muted); background: transparent; opacity: 0; }
+.historyRow:hover .historyDelete, .historyRow:focus-within .historyDelete { opacity: 1; }
+@media (hover: none) { .historyDelete { opacity: 1; } }
+.historyDelete:hover { color: #a82d35; background: rgba(168,45,53,.09); }
+.historyDelete svg { width: 14px; height: 14px; }
+.deleteConfirm { display: flex; align-items: center; gap: 6px; width: 100%; flex-wrap: wrap; font-size: 10px; }
+.deleteConfirm span { flex: 1 1 100%; }
+.deleteConfirm button { border: 1px solid var(--ai-line); border-radius: 6px; background: var(--ai-body); color: var(--ai-text); padding: 4px 8px; font-size: 10px; }
+.deleteConfirm button:last-child { border-color: #a82d35; color: #a82d35; }
 .historyRow:hover, .historyRowActive { border-color: var(--ai-line); background: var(--ai-surface); }
 .historyRowActive { border-left: 3px solid var(--ai-accent); }
 .historyRowTitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
@@ -282,14 +292,34 @@
 .attachButton:disabled { opacity: .4; cursor: not-allowed; }
 .attachButton svg { width: 16px; height: 16px; }
 
-.attachmentPreviewBar { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 4px 8px; }
+.attachmentPreviewBar { display: flex; flex-wrap: nowrap; gap: 7px; padding: 6px 4px 8px; overflow-x: auto; scrollbar-width: thin; }
 .attachmentChip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid var(--ai-line); border-radius: 8px; background: var(--ai-soft); font-size: 10.5px; color: var(--ai-text); max-width: 100%; }
+.stagedImage { position: relative; flex: none; width: 76px; height: 76px; border: 1px solid var(--ai-line); border-radius: 9px; background: var(--ai-soft); overflow: hidden; }
+.stagedImage > img, .stagedImage .imagePreview, .stagedImage .imagePreview img { width: 100%; height: 100%; object-fit: cover; }
+.stagedImage .attachmentChipRemove { position: absolute; top: 3px; right: 3px; width: 19px; height: 19px; background: rgba(255,255,255,.92); color: #833; font-size: 15px; }
+.stagedAudio { position: relative; flex: none; max-width: 230px; padding: 4px 21px 4px 5px; border: 1px solid var(--ai-line); border-radius: 9px; background: var(--ai-soft); }
+.stagedAudio .attachmentChipRemove { position: absolute; top: 4px; right: 3px; }
 .attachmentChipName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
 .attachmentChipSize { color: var(--ai-muted); font-size: 9.5px; }
 .attachmentChipRemove { display: grid; place-items: center; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; color: var(--ai-muted); background: transparent; cursor: pointer; }
 .attachmentChipRemove:hover { color: #d32f2f; background: rgba(211, 47, 47, .1); }
 
 .messageAttachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.imagePreview { display: block; width: 148px; height: 108px; padding: 0; border: 1px solid var(--ai-line); border-radius: 8px; overflow: hidden; background: var(--ai-soft); }
+.imagePreview img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.audioAttachment { display: flex; flex-direction: column; gap: 3px; max-width: 240px; }
+.audioAttachment audio { display: block; width: 200px; max-width: 100%; height: 34px; }
+.audioAttachment small { color: var(--ai-muted); font-size: 9px; line-height: 1.4; }
+.mediaLoading { color: var(--ai-muted); font-size: 10px; }
+.recordingBar { display: flex; align-items: center; gap: 9px; min-height: 42px; padding: 4px 8px; border: 1px solid var(--ai-line); border-radius: 10px; font-size: 11px; }
+.recordingBar button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 7px; border: 0; border-radius: 7px; color: var(--ai-text); background: var(--ai-soft); font-size: 10px; }
+.recordingBar button:first-of-type { margin-left: auto; }
+.recordingBar svg { width: 13px; height: 13px; }
+.recordingDot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #d43c45; box-shadow: 0 0 0 3px rgba(212,60,69,.14); }
+.dropOverlay { position: absolute; inset: 8px; z-index: 40; display: grid; place-items: center; border: 2px dashed var(--ai-accent); border-radius: 15px; color: var(--ai-accent); background: color-mix(in srgb, var(--ai-surface) 94%, transparent); font-size: 12px; font-weight: 700; pointer-events: none; }
+.lightbox { position: fixed; inset: 0; z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(7,20,18,.83); }
+.lightbox img { max-width: min(90vw, 900px); max-height: 85vh; object-fit: contain; border-radius: 8px; }
+.lightbox button { position: absolute; top: 20px; right: 20px; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; color: #fff; background: rgba(255,255,255,.15); }
 .messageAttachmentItem { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; font-size: 10px; background: rgba(0, 0, 0, .05); border: 1px solid rgba(0, 0, 0, .06); }
 :global(.dark) .messageAttachmentItem { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .1); }
 .messageAttachmentIcon { font-size: 11px; }
@@ -304,6 +334,7 @@
   .panel { width: 100%; border-radius: 17px; }
   .body { padding: 16px; }
   .welcome { padding-top: 6px; }
+  .historyDelete { opacity: 1; }
 }
 @media (max-height: 560px) {
   .root { --ai-root-bottom: calc(10px + env(safe-area-inset-bottom)); --ai-panel-bottom: 57px; }
