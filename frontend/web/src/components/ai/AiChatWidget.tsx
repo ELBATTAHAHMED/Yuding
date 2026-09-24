@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/AuthContext';
 import { aiService } from '@/services/ai.service';
-import type { ChatMessage, ConversationSummaryDto } from '@/types/ai.types';
+import type { AiAttachmentDto, ChatMessage, ConversationSummaryDto } from '@/types/ai.types';
 import styles from './AiChatWidget.module.css';
 
 const ACTIVE_CONV_STORAGE_KEY = 'yuding_ai_active_conv';
@@ -19,7 +19,7 @@ function AssistantMark({ size = 22 }: { size?: number }) {
   return <span className={styles.assistantMark} style={{ width: size, height: size }} aria-hidden="true" />;
 }
 
-function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' | 'check' | 'warning' }) {
+function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' | 'check' | 'warning' | 'paperclip' }) {
   const paths = {
     history: <><path d="M3 12a9 9 0 1 0 2.5-6.2" /><path d="M3 4v4h4M12 7v5l3 2" /></>,
     plus: <path d="M12 5v14M5 12h14" />,
@@ -28,6 +28,7 @@ function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' |
     back: <><path d="m14 5-7 7 7 7" /><path d="M7 12h13" /></>,
     check: <path d="m5 12 4 4L19 6" />,
     warning: <><path d="M12 3 2.5 20h19L12 3Z" /><path d="M12 9v5M12 17h.01" /></>,
+    paperclip: <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l7.88-7.88" />,
   };
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
@@ -119,8 +120,11 @@ export const AiChatWidget: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [retryText, setRetryText] = useState<string | null>(null);
+  const [stagedAttachments, setStagedAttachments] = useState<AiAttachmentDto[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const nearBottomRef = useRef(true);
   const forceScrollRef = useRef(false);
   const loadSequenceRef = useRef(0);
@@ -217,6 +221,7 @@ export const AiChatWidget: React.FC = () => {
         groundingType: message.groundingType,
         toolsUsed: message.toolsUsed,
         sources: message.sources,
+        attachments: message.attachments || [],
       })));
       setConversationId(id);
       setView('chat');
@@ -318,14 +323,28 @@ export const AiChatWidget: React.FC = () => {
         setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current]);
         try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, id); } catch {}
       }
+      const currentStaged = [...stagedAttachments];
+      setStagedAttachments([]);
+
       const messageId = crypto.randomUUID();
-      const userMessage: ChatMessage = { id: messageId, role: 'user', content: text, timestamp: new Date(), status: 'sending' };
+      const userMessage: ChatMessage = {
+        id: messageId,
+        role: 'user',
+        content: text || (currentStaged.length > 0 ? `[Pièce(s) jointe(s) : ${currentStaged.map(a => a.originalFilename).join(', ')}]` : ''),
+        timestamp: new Date(),
+        status: 'sending',
+        attachments: currentStaged,
+      };
       setMessages((current) => [...current, userMessage]);
       setInputValue('');
       nearBottomRef.current = true;
       forceScrollRef.current = true;
       try {
-        const response = await aiService.sendMessage({ conversationId: id, message: text });
+        const response = await aiService.sendMessage({
+          conversationId: id,
+          message: text || `Veuillez analyser ce fichier.`,
+          attachmentIds: currentStaged.map((a) => a.id),
+        });
         const assistantMessage: ChatMessage = {
           id: response.messageId || crypto.randomUUID(),
           role: 'assistant',
@@ -350,6 +369,46 @@ export const AiChatWidget: React.FC = () => {
       setRetryText(text);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (['svg', 'html', 'htm', 'exe', 'bat', 'sh'].includes(ext)) {
+      setNotice('Format de fichier non autorisé (.svg et .html interdits). Formats autorisés : images (.jpg, .png, .webp) et documents (.pdf, .txt, .md, .csv, .docx).');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setNotice('La taille du fichier ne doit pas dépasser 10 Mo.');
+      return;
+    }
+    if (stagedAttachments.length >= 4) {
+      setNotice('Maximum 4 pièces jointes par message.');
+      return;
+    }
+
+    setIsUploading(true);
+    setNotice(null);
+    try {
+      let id = conversationId;
+      if (!id) {
+        const created = await aiService.createConversation('Nouvelle conversation');
+        id = created.id;
+        setConversationId(id);
+        setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current]);
+        try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, id); } catch {}
+      }
+      const uploaded = await aiService.uploadAttachment(id, file);
+      setStagedAttachments((prev) => [...prev, uploaded]);
+    } catch (err: unknown) {
+      const msg = (err as { message?: string })?.message || 'Échec du téléversement du fichier.';
+      setNotice(msg);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -430,7 +489,25 @@ export const AiChatWidget: React.FC = () => {
                     return <div className={`${styles.message} ${userMessage ? styles.userMessage : styles.assistantMessage}`} key={message.id}>
                       {!userMessage && <span className={styles.messageMark}><AssistantMark size={21} /></span>}
                       <div className={styles.messageContent}>
-                        {userMessage ? <div className={styles.userBubble}>{message.content}</div> : <AssistantContent content={message.content} />}
+                        {userMessage ? (
+                          <div className={styles.userBubble}>
+                            {message.content && <div>{message.content}</div>}
+                            {message.attachments && message.attachments.length > 0 && (
+                              <div className={styles.messageAttachments}>
+                                {message.attachments.map((att) => (
+                                  <span key={att.id} className={styles.messageAttachmentItem}>
+                                    <span className={styles.messageAttachmentIcon}>
+                                      {att.kind === 'IMAGE' ? '🖼️' : '📄'}
+                                    </span>
+                                    <span>{att.originalFilename}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <AssistantContent content={message.content} />
+                        )}
                         {!userMessage && message.grounded && (
                           <div className={styles.groundedContainer}>
                             <span className={styles.grounded}>
@@ -459,11 +536,71 @@ export const AiChatWidget: React.FC = () => {
           </div>
 
           <footer className={styles.footer}>
-              <div className={styles.composer}>
-                <label className={styles.srOnly} htmlFor="yuding-assistant-input">Votre question</label>
-                <textarea id="yuding-assistant-input" ref={textareaRef} rows={1} maxLength={8000} value={inputValue} placeholder={isAuthenticated ? 'Posez votre question…' : 'Connectez-vous pour échanger'} disabled={!isAuthenticated || isLoading || isLoadingHistory} onChange={(event) => setInputValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void sendMessage(); } }} />
-                <button type="button" className={styles.sendButton} disabled={!inputValue.trim() || !isAuthenticated || isLoading || isLoadingHistory} onClick={() => void sendMessage()} aria-label="Envoyer le message" title="Envoyer"><Icon name="send" /></button>
+            {stagedAttachments.length > 0 && (
+              <div className={styles.attachmentPreviewBar}>
+                {stagedAttachments.map((att) => (
+                  <span key={att.id} className={styles.attachmentChip}>
+                    <span>{att.kind === 'IMAGE' ? '🖼️' : '📄'}</span>
+                    <span className={styles.attachmentChipName} title={att.originalFilename}>{att.originalFilename}</span>
+                    <span className={styles.attachmentChipSize}>({Math.round(att.sizeBytes / 1024)} ko)</span>
+                    <button
+                      type="button"
+                      className={styles.attachmentChipRemove}
+                      onClick={() => setStagedAttachments((prev) => prev.filter((a) => a.id !== att.id))}
+                      title="Supprimer la pièce jointe"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
               </div>
+            )}
+            <div className={styles.composer}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept=".jpg,.jpeg,.png,.webp,.pdf,.txt,.md,.csv,.docx"
+                onChange={handleFileUpload}
+              />
+              <button
+                type="button"
+                className={styles.attachButton}
+                disabled={!isAuthenticated || isLoading || isLoadingHistory || isUploading || stagedAttachments.length >= 4}
+                onClick={() => fileInputRef.current?.click()}
+                title={isUploading ? 'Téléversement en cours…' : 'Joindre un fichier (JPG, PNG, PDF, DOCX)'}
+                aria-label="Joindre un fichier"
+              >
+                <Icon name="paperclip" />
+              </button>
+              <label className={styles.srOnly} htmlFor="yuding-assistant-input">Votre question</label>
+              <textarea
+                id="yuding-assistant-input"
+                ref={textareaRef}
+                rows={1}
+                maxLength={8000}
+                value={inputValue}
+                placeholder={isAuthenticated ? 'Posez votre question…' : 'Connectez-vous pour échanger'}
+                disabled={!isAuthenticated || isLoading || isLoadingHistory}
+                onChange={(event) => setInputValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    void sendMessage();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className={styles.sendButton}
+                disabled={(!inputValue.trim() && stagedAttachments.length === 0) || !isAuthenticated || isLoading || isLoadingHistory || isUploading}
+                onClick={() => void sendMessage()}
+                aria-label="Envoyer le message"
+                title="Envoyer"
+              >
+                <Icon name="send" />
+              </button>
+            </div>
           </footer>
         </section>
       )}

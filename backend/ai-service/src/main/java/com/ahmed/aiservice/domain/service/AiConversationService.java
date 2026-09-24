@@ -24,6 +24,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.*;
 
+import com.ahmed.aiservice.domain.attachment.dto.AiAttachmentDto;
+import com.ahmed.aiservice.domain.attachment.repository.MessageAttachmentRepository;
 import com.ahmed.aiservice.domain.rag.entity.MessageSourceEntity;
 import com.ahmed.aiservice.domain.rag.repository.MessageSourceRepository;
 import com.ahmed.aiservice.dto.AiSourceDto;
@@ -37,6 +39,7 @@ public class AiConversationService {
     private final ConversationMessageRepository conversationMessageRepository;
     private final AiToolCallRepository toolCallRepository;
     private final MessageSourceRepository messageSourceRepository;
+    private final MessageAttachmentRepository messageAttachmentRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -145,6 +148,22 @@ public class AiConversationService {
                 groundingType = "LIVE";
             }
 
+            List<AiAttachmentDto> attachments = Collections.emptyList();
+            if (messageAttachmentRepository != null) {
+                attachments = messageAttachmentRepository.findByMessageIdWithAttachment(msg.getId()).stream()
+                        .map(ma -> AiAttachmentDto.builder()
+                                .id(ma.getAttachment().getId())
+                                .publicReference(ma.getAttachment().getPublicReference())
+                                .originalFilename(ma.getAttachment().getOriginalFilename())
+                                .mimeType(ma.getAttachment().getMimeType())
+                                .sizeBytes(ma.getAttachment().getSizeBytes())
+                                .kind(ma.getAttachment().getKind())
+                                .status(ma.getAttachment().getStatus())
+                                .createdAt(ma.getAttachment().getCreatedAt())
+                                .build())
+                        .toList();
+            }
+
             dtos.add(ConversationMessageDto.builder()
                     .id(msg.getId())
                     .conversationId(msg.getConversationId())
@@ -154,6 +173,7 @@ public class AiConversationService {
                     .toolsUsed(toolsUsed)
                     .groundingType(groundingType)
                     .sources(sources)
+                    .attachments(attachments)
                     .createdAt(msg.getCreatedAt())
                     .build());
         }

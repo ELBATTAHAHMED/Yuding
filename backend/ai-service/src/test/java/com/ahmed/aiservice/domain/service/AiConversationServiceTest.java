@@ -46,13 +46,16 @@ class AiConversationServiceTest {
     @Mock
     private com.ahmed.aiservice.domain.rag.repository.MessageSourceRepository messageSourceRepository;
 
+    @Mock
+    private com.ahmed.aiservice.domain.attachment.repository.MessageAttachmentRepository messageAttachmentRepository;
+
     private ObjectMapper objectMapper;
     private AiConversationService conversationService;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        conversationService = new AiConversationService(conversationRepository, messageRepository, toolCallRepository, messageSourceRepository, objectMapper);
+        conversationService = new AiConversationService(conversationRepository, messageRepository, toolCallRepository, messageSourceRepository, messageAttachmentRepository, objectMapper);
     }
 
     @Test

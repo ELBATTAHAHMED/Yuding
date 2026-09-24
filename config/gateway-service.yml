@@ -43,4 +43,4 @@ spring:
           predicates:
             - Path=/travel/**
   codec:
-    max-in-memory-size: 5MB
+    max-in-memory-size: 25MB

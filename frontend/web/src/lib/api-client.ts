@@ -204,11 +204,15 @@ export class ApiClient {
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
     const timeoutMs = options.timeoutMs ?? this.defaultTimeoutMs;
 
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
+
+    if (!isFormData && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (this.accessToken && requiresAuth) {
       headers['Authorization'] = `Bearer ${this.accessToken}`;
@@ -365,12 +369,25 @@ export class ApiClient {
   }
 
   public post<T>(endpoint: string, body?: any, requiresAuth = false, options: RequestOptions = {}): Promise<T> {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
     return this.request<T>(
       endpoint,
       {
         ...options,
         method: 'POST',
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isFormData ? body : (body !== undefined ? JSON.stringify(body) : undefined),
+      },
+      requiresAuth
+    );
+  }
+
+  public postForm<T>(endpoint: string, formData: FormData, requiresAuth = false, options: RequestOptions = {}): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        ...options,
+        method: 'POST',
+        body: formData,
       },
       requiresAuth
     );

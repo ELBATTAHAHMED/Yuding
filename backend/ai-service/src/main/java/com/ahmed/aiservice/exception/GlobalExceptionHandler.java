@@ -117,12 +117,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAiProviderException(AiProviderException ex, HttpServletRequest request) {
         String requestId = getOrGenerateRequestId(request);
         log.error("[{}] AI Provider error on {}: [transient={}] {}", requestId, request.getRequestURI(), ex.isTransientError(), ex.getMessage());
-        HttpStatus status = ex.isTransientError() ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.BAD_GATEWAY;
+        HttpStatus status = ex.getHttpStatus() != null
+                ? ex.getHttpStatus()
+                : (ex.isTransientError() ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.BAD_GATEWAY);
+        String message = (status == HttpStatus.NOT_FOUND || status == HttpStatus.FORBIDDEN || status == HttpStatus.BAD_REQUEST)
+                ? ex.getMessage()
+                : "Le service d'assistance IA est temporairement indisponible. Veuillez réessayer dans un instant.";
         ErrorResponse response = ErrorResponse.of(
                 requestId,
                 status.value(),
-                status.getReasonPhrase(),
-                "Le service d'assistance IA est temporairement indisponible. Veuillez réessayer dans un instant.",
+                ex.getErrorCode() != null ? ex.getErrorCode() : status.getReasonPhrase(),
+                message,
                 request.getRequestURI()
         );
         return ResponseEntity.status(status).body(response);
