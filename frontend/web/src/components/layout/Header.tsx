@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
 import { DarkModeToggle } from '@/components/common/DarkModeToggle';
+import { AccountMenu } from './AccountMenu';
 
 export const Header: React.FC = () => {
-  const { user, isAuthenticated, isAdmin, isSupport, logout } = useAuth();
+  const { isAuthenticated, isAdmin, isSupport } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,30 +68,11 @@ export const Header: React.FC = () => {
             <div className="booking">
               {isAuthenticated ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <Link href="/account">
-                    <button className="btn-connexion" type="button" style={{ padding: '8px 16px', fontSize: '13px' }}>
-                      <i className="fas fa-user-circle" />
-                      <span>{user?.firstName || user?.email?.split('@')[0] || 'Mon Compte'}</span>
-                    </button>
-                  </Link>
+                  <AccountMenu />
 
                   {(isAdmin || isSupport) && (
-                    <Link href="/admin">
-                      <button className="btn-connexion" type="button" style={{ background: '#e11d48', padding: '8px 14px', fontSize: '13px' }}>
-                        Admin
-                      </button>
-                    </Link>
+                    <Link href="/admin" className="btn-connexion" style={{ background: '#e11d48', padding: '8px 14px', fontSize: '13px' }}>Admin</Link>
                   )}
-
-                  <button
-                    onClick={() => logout()}
-                    className="h-btn"
-                    style={{ background: 'transparent', border: 'none', color: isDark ? '#00d4aa' : '#0f766e', cursor: 'pointer', fontSize: '15px', padding: '6px' }}
-                    title="Déconnexion"
-                    type="button"
-                  >
-                    <i className="fas fa-sign-out-alt" />
-                  </button>
                 </div>
               ) : (
                 <Link

@@ -243,7 +243,7 @@ export default function AccountPage() {
             </div>
 
             {/* Change Password Form */}
-            <div style={{ background: 'var(--card, #fff)', borderRadius: '12px', padding: '1.75rem', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
+            <div id="account-security" style={{ background: 'var(--card, #fff)', borderRadius: '12px', padding: '1.75rem', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', scrollMarginTop: '110px' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>
                 <i className="fas fa-key" style={{ marginRight: '0.5rem', color: '#01796F' }}></i>
                 Modifier mon mot de passe

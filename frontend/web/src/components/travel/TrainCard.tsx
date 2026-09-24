@@ -171,7 +171,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
         </div>
 
         {/* Pricing & Selection */}
-        <div className="flex min-w-0 flex-col gap-3 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:py-1 lg:pl-5 dark:border-[#01796F]/25">
+        <div className="flex min-w-0 flex-col gap-2 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:py-0 lg:pl-5 dark:border-[#01796F]/25">
           <div className="text-xs leading-relaxed text-slate-500 lg:text-right dark:text-slate-400">
             Tarif non disponible via cette source
           </div>
@@ -211,7 +211,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
               href={offer.officialScheduleUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-2 text-[11px] font-medium text-slate-700 transition-colors hover:text-[#01796F] dark:border-[#01796F]/30 dark:bg-[#0a302d] dark:text-slate-300 dark:hover:text-[#02E0D5]"
+              className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition-colors hover:text-[#01796F] dark:border-[#01796F]/30 dark:bg-[#0a302d] dark:text-slate-300 dark:hover:text-[#02E0D5]"
             >
               <span>Vérifier sur le site officiel</span>
               <i className="fas fa-external-link-alt text-[9px]" />

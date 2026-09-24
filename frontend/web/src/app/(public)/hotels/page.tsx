@@ -16,6 +16,7 @@ import { TravelHero, TravelPage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
+import { useSearchSession } from '@/lib/search-session';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -91,6 +92,31 @@ export default function HotelsPage() {
       setOccupancies([{ adults, childrenAges: [] }]);
     }
   }, []);
+
+  useSearchSession('HOTEL', {
+    destinationInput, selectedCity, selectedCountryCode, selectedGeoPlace, destinationPois,
+    selectedPoi, showDestinationGuide, checkIn, checkOut, guestNationality, occupancies,
+    allHotels, expandedHotelId, filterType, sortKey, hasSearched, searchStatus, searchMessage,
+  }, (saved) => {
+    setDestinationInput(saved.destinationInput);
+    setSelectedCity(saved.selectedCity);
+    setSelectedCountryCode(saved.selectedCountryCode);
+    setSelectedGeoPlace(saved.selectedGeoPlace);
+    setDestinationPois(saved.destinationPois);
+    setSelectedPoi(saved.selectedPoi);
+    setShowDestinationGuide(saved.showDestinationGuide);
+    setCheckIn(saved.checkIn);
+    setCheckOut(saved.checkOut);
+    setGuestNationality(saved.guestNationality);
+    setOccupancies(saved.occupancies);
+    setAllHotels(saved.allHotels);
+    setExpandedHotelId(saved.expandedHotelId);
+    setFilterType(saved.filterType);
+    setSortKey(saved.sortKey);
+    setHasSearched(saved.hasSearched);
+    setSearchStatus(saved.searchStatus);
+    setSearchMessage(saved.searchMessage);
+  }, isSearching);
 
   const today = new Date().toISOString().split('T')[0];
   const minCheckOut = checkIn ? addDays(checkIn, 1) : addDays(today, 1);
@@ -715,7 +741,7 @@ export default function HotelsPage() {
                   return (
                     <div key={hotelId} className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523]">
                       {/* Image & Badges */}
-                      <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
+                      <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={item.imageUrl || '/image/hotels.jpg'}
@@ -770,20 +796,20 @@ export default function HotelsPage() {
                       </div>
 
                       {/* Card Content */}
-                      <div className="flex flex-1 flex-col p-5 text-slate-900 dark:text-slate-100">
-                        <div className="mb-3">
-                          <h3 className="mb-1.5 line-clamp-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                      <div className="flex flex-1 flex-col p-4 text-slate-900 dark:text-slate-100">
+                        <div className="mb-2">
+                          <h3 className="mb-1.5 line-clamp-2 min-h-[3.125rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
                             {item.name || item.hotelName}
                           </h3>
-                          <p className="line-clamp-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                          <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                             <i className="fas fa-map-marker-alt mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
                             {item.address ? `${item.address}, ` : ''}{item.city}, {item.country}
                           </p>
                         </div>
 
                         {/* Review Score */}
-                        {typeof item.reviewScore === 'number' && item.reviewScore > 0 ? (
-                          <div className="mb-4 flex flex-wrap items-center gap-2">
+                        <div className="mb-2 flex min-h-8 flex-wrap items-start gap-2">
+                          {typeof item.reviewScore === 'number' && item.reviewScore > 0 && (<>
                             <span className="rounded-md bg-[#01796F] px-2 py-1 text-xs font-extrabold text-white">
                               {item.reviewScore.toFixed(1)}
                             </span>
@@ -791,20 +817,17 @@ export default function HotelsPage() {
                               {item.reviewScore >= 8.5 ? 'Excellent' : item.reviewScore >= 7.5 ? 'Très bien' : 'Bien'}
                               {item.reviewCount ? ` (${item.reviewCount} avis)` : ''}
                             </span>
-                          </div>
-                        ) : null}
+                          </>)}
+                        </div>
 
                         {/* Price & Primary Action */}
-                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-[#01796F]/25">
-                          <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-                            <div>
-                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">À partir de</span>
-                            <span className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">
+                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-3 dark:border-[#01796F]/25">
+                          <div className="min-w-0">
+                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">À partir de · par nuit</span>
+                            <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">
                               <PriceDisplay conversion={item.priceConversion} amount={item.pricePerNight} currency={item.currency} />
-                            </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400"> / nuit</span>
                             </div>
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">via {item.provider || 'NUITEE'}</span>
+                            <span className="mt-1 block text-[11px] font-medium text-slate-500 dark:text-slate-400">Offre via {item.provider || 'NUITEE'}</span>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
