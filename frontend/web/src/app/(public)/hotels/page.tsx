@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ApiError } from '@/lib/api-client';
@@ -63,6 +63,7 @@ export default function HotelsPage() {
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const placeRequestRef = useRef(0);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -125,8 +126,12 @@ export default function HotelsPage() {
   const totalChildren = occupancies.reduce((sum, r) => sum + (r.childrenAges?.length || 0), 0);
 
   const handleGeoPlaceSelect = async (place: GeoPlace | null) => {
+    const requestId = ++placeRequestRef.current;
     setSelectedGeoPlace(place);
     setSelectedPoi(null);
+    setDestinationPois([]);
+    setIsLoadingPois(false);
+    setShowDestinationGuide(Boolean(place?.latitude && place?.longitude));
     if (place) {
       const cityName = place.city || place.name;
       setSelectedCity(cityName);
@@ -137,7 +142,6 @@ export default function HotelsPage() {
       // Fetch nearby POIs if coordinates available
       if (place.latitude && place.longitude) {
         setIsLoadingPois(true);
-        setShowDestinationGuide(true);
         try {
           const pois = await geoService.getNearbyPlaces({
             lat: place.latitude,
@@ -145,18 +149,16 @@ export default function HotelsPage() {
             radius: 5000,
             limit: 20,
           });
-          setDestinationPois(pois);
+          if (requestId === placeRequestRef.current) setDestinationPois(pois);
         } catch {
-          setDestinationPois([]);
+          if (requestId === placeRequestRef.current) setDestinationPois([]);
         } finally {
-          setIsLoadingPois(false);
+          if (requestId === placeRequestRef.current) setIsLoadingPois(false);
         }
       }
     } else {
       setSelectedCity('');
       setDestinationInput('');
-      setDestinationPois([]);
-      setShowDestinationGuide(false);
     }
   };
 
@@ -257,6 +259,8 @@ export default function HotelsPage() {
 
     setIsSearching(true);
     setHasSearched(true);
+    setShowDestinationGuide(false);
+    setSelectedPoi(null);
     setExpandedHotelId(null);
     setFilterType('ALL');
 
@@ -353,7 +357,7 @@ export default function HotelsPage() {
             onSubmit={handleSearch}
             className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.3fr_auto] gap-2.5 items-end">
+            <div className="grid grid-cols-1 items-start gap-2.5 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.3fr_auto]">
               {/* Destination Field with GeoPlaceSelector */}
               <div className="text-left relative min-w-0">
                 <GeoPlaceSelector
@@ -551,7 +555,7 @@ export default function HotelsPage() {
               </div>
 
               {/* Search Submit Button */}
-              <div className="w-full lg:w-auto">
+              <div className="w-full md:mt-5 lg:w-auto">
                 <button
                   type="submit"
                   disabled={isSearching}
@@ -797,31 +801,32 @@ export default function HotelsPage() {
 
                       {/* Card Content */}
                       <div className="flex flex-1 flex-col p-4 text-slate-900 dark:text-slate-100">
-                        <div className="mb-2">
-                          <h3 className="mb-1.5 line-clamp-2 min-h-[3.125rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                        <div className="border-b border-slate-200 pb-3 dark:border-[#327a73]/50">
+                          <h3 className="line-clamp-2 min-h-[3.125rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
                             {item.name || item.hotelName}
                           </h3>
+                        </div>
+                        <div className="flex flex-1 flex-col justify-between gap-3 py-3">
                           <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                             <i className="fas fa-map-marker-alt mr-1.5 text-[#01796F] dark:text-[#02E0D5]" />
                             {item.address ? `${item.address}, ` : ''}{item.city}, {item.country}
                           </p>
-                        </div>
-
-                        {/* Review Score */}
-                        <div className="mb-2 flex min-h-8 flex-wrap items-start gap-2">
-                          {typeof item.reviewScore === 'number' && item.reviewScore > 0 && (<>
-                            <span className="rounded-md bg-[#01796F] px-2 py-1 text-xs font-extrabold text-white">
-                              {item.reviewScore.toFixed(1)}
-                            </span>
-                            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                              {item.reviewScore >= 8.5 ? 'Excellent' : item.reviewScore >= 7.5 ? 'Très bien' : 'Bien'}
-                              {item.reviewCount ? ` (${item.reviewCount} avis)` : ''}
-                            </span>
-                          </>)}
+                          {/* Review Score */}
+                          <div className="flex min-h-8 flex-wrap items-center gap-2">
+                            {typeof item.reviewScore === 'number' && item.reviewScore > 0 && (<>
+                              <span className="rounded-md bg-[#01796F] px-2 py-1 text-xs font-extrabold text-white">
+                                {item.reviewScore.toFixed(1)}
+                              </span>
+                              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                                {item.reviewScore >= 8.5 ? 'Excellent' : item.reviewScore >= 7.5 ? 'Très bien' : 'Bien'}
+                                {item.reviewCount ? ` (${item.reviewCount} avis)` : ''}
+                              </span>
+                            </>)}
+                          </div>
                         </div>
 
                         {/* Price & Primary Action */}
-                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-3 dark:border-[#01796F]/25">
+                        <div className="flex flex-col gap-3 border-t border-slate-300 pt-3 dark:border-[#327a73]/70">
                           <div className="min-w-0">
                             <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">À partir de · par nuit</span>
                             <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">

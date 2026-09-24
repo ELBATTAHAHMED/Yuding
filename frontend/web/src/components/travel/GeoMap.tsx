@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 
@@ -19,47 +19,65 @@ export const GeoMap: React.FC<GeoMapProps> = ({
   latitude,
   longitude,
   placeName,
-  pois = [],
   selectedPoi,
   height = 360,
   width = 640,
 }) => {
   const [zoom, setZoom] = useState(13);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgError, setImgError] = useState(false);
+  const [requestedZoom, setRequestedZoom] = useState(13);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef(zoom);
+  const wheelDistanceRef = useRef(0);
+  zoomRef.current = zoom;
 
   // Active focus center: if a POI is selected, center on that POI, otherwise on place
   const activeLat = selectedPoi ? selectedPoi.latitude : latitude;
   const activeLon = selectedPoi ? selectedPoi.longitude : longitude;
 
-  // Build marker query for Geoapify static map
+  // A single marker avoids a second map download when nearby places finish loading.
   const markersParam = useMemo(() => {
-    const markers: string[] = [];
+    return `lonlat:${activeLon},${activeLat}`;
+  }, [activeLat, activeLon]);
 
-    // Main destination marker
-    markers.push(`lonlat:${longitude},${latitude}`);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setRequestedZoom(zoom), 180);
+    return () => window.clearTimeout(timer);
+  }, [zoom]);
 
-    // Nearby POI markers
-    pois.slice(0, 10).forEach((p) => {
-      if (p.latitude && p.longitude) {
-        markers.push(`lonlat:${p.longitude},${p.latitude}`);
-      }
-    });
-
-    return markers.join('|');
-  }, [latitude, longitude, pois, selectedPoi]);
+  useEffect(() => {
+    const element = mapRef.current;
+    if (!element) return;
+    const onWheel = (event: WheelEvent) => {
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? height : 1);
+      if ((delta < 0 && zoomRef.current >= 18) || (delta > 0 && zoomRef.current <= 3)) return;
+      event.preventDefault();
+      wheelDistanceRef.current += delta;
+      const threshold = event.ctrlKey ? 18 : 75;
+      if (Math.abs(wheelDistanceRef.current) < threshold) return;
+      const step = wheelDistanceRef.current < 0 ? 1 : -1;
+      wheelDistanceRef.current = 0;
+      setZoom((current) => Math.max(3, Math.min(18, current + step)));
+    };
+    element.addEventListener('wheel', onWheel, { passive: false });
+    return () => element.removeEventListener('wheel', onWheel);
+  }, [height]);
 
   // Generate backend-proxied map URL (zero client API key)
   const mapUrl = useMemo(() => {
     return geoService.getStaticMapUrl({
       lat: activeLat,
       lon: activeLon,
-      zoom,
+      zoom: requestedZoom,
       width: Math.min(width, 1000),
       height: Math.min(height, 800),
       markers: markersParam,
     });
-  }, [activeLat, activeLon, zoom, width, height, markersParam]);
+  }, [activeLat, activeLon, requestedZoom, width, height, markersParam]);
+
+  const imgLoaded = loadedUrl === mapUrl;
+  const imgError = failedUrl === mapUrl;
 
   const handleZoomIn = () => {
     setZoom((prev) => Math.min(prev + 1, 18));
@@ -71,6 +89,7 @@ export const GeoMap: React.FC<GeoMapProps> = ({
 
   return (
     <div
+      ref={mapRef}
       style={{
         position: 'relative',
         width: '100%',
@@ -85,19 +104,22 @@ export const GeoMap: React.FC<GeoMapProps> = ({
       {/* Map image from backend proxy */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        key={mapUrl}
         src={mapUrl}
         alt={placeName ? `Carte de ${placeName}` : 'Carte géographique'}
+        loading="eager"
+        fetchPriority="high"
         onLoad={() => {
-          setImgLoaded(true);
-          setImgError(false);
+          setLoadedUrl(mapUrl);
+          setFailedUrl(null);
         }}
-        onError={() => setImgError(true)}
+        onError={() => setFailedUrl(mapUrl)}
         style={{
           width: '100%',
           height: '100%',
           objectFit: 'cover',
           display: 'block',
-          opacity: imgLoaded ? 1 : 0.6,
+          opacity: imgLoaded ? 1 : 0,
           transition: 'opacity 0.3s ease',
         }}
       />
@@ -121,6 +143,13 @@ export const GeoMap: React.FC<GeoMapProps> = ({
           Chargement de la carte...
         </div>
       )}
+
+      <div
+        aria-hidden="true"
+        style={{ position: 'absolute', bottom: '25px', left: '10px', zIndex: 10, borderRadius: '6px', background: 'rgba(255,255,255,.9)', color: '#31524d', padding: '3px 7px', fontSize: '11px' }}
+      >
+        Défilez pour zoomer
+      </div>
 
       {/* Error state */}
       {imgError && (

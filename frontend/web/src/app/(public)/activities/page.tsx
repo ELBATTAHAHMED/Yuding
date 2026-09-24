@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
@@ -33,10 +33,15 @@ export default function ActivitiesPage() {
   const [travelers, setTravelers] = useState(1);
   const [category, setCategory] = useState('ALL');
   const [sortKey, setSortKey] = useState<ActivitySortKey>('PRICE_ASC');
+  const placeRequestRef = useRef(0);
 
   const handlePlaceSelect = useCallback(async (place: GeoPlace | null) => {
+    const requestId = ++placeRequestRef.current;
     setSelectedGeoPlace(place);
     setSelectedPoi(null);
+    setDestinationPois([]);
+    setIsLoadingPois(false);
+    setShowDestinationGuide(Boolean(place?.latitude && place?.longitude));
     if (place) {
       const name = place.city || place.name;
       setDestination(name);
@@ -44,7 +49,6 @@ export default function ActivitiesPage() {
 
       if (place.latitude && place.longitude) {
         setIsLoadingPois(true);
-        setShowDestinationGuide(true);
         try {
           const pois = await geoService.getNearbyPlaces({
             lat: place.latitude,
@@ -52,16 +56,15 @@ export default function ActivitiesPage() {
             radius: 5000,
             limit: 20,
           });
-          setDestinationPois(pois);
+          if (requestId === placeRequestRef.current) setDestinationPois(pois);
         } catch {
-          setDestinationPois([]);
+          if (requestId === placeRequestRef.current) setDestinationPois([]);
         } finally {
-          setIsLoadingPois(false);
+          if (requestId === placeRequestRef.current) setIsLoadingPois(false);
         }
       }
     } else {
-      setDestinationPois([]);
-      setShowDestinationGuide(false);
+      setDestination('');
     }
   }, []);
 
@@ -121,6 +124,8 @@ export default function ActivitiesPage() {
     }
 
     setLoading(true);
+    setShowDestinationGuide(false);
+    setSelectedPoi(null);
     setErrorMessage(null);
     setProviderMessage(null);
     setHasSearched(true);
@@ -200,7 +205,7 @@ export default function ActivitiesPage() {
             onSubmit={handleSearch}
             className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1.2fr_auto] gap-2.5 items-end">
+            <div className="grid grid-cols-1 items-start gap-2.5 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1.2fr_auto]">
               <div className="min-w-0">
                 <GeoPlaceSelector
                   id="activity-destination"
@@ -245,7 +250,7 @@ export default function ActivitiesPage() {
                 />
               </div>
 
-              <div className="w-full lg:w-auto">
+              <div className="w-full md:mt-5 lg:w-auto">
                 <button
                   type="submit"
                   disabled={loading}
@@ -435,14 +440,15 @@ export default function ActivitiesPage() {
                           )}
                         </div>
 
-                        <h3 className="mb-2 line-clamp-2 min-h-[3.75rem] border-b border-slate-300 pb-2 text-lg font-bold leading-snug text-slate-900 dark:border-[#327a73] dark:text-white">
+                        <h3 className="mb-2 line-clamp-2 min-h-[3.125rem] text-lg font-bold leading-snug text-slate-900 dark:text-white">
                           {act.title}
                         </h3>
+                        <div aria-hidden="true" className="mb-3 h-px bg-slate-200 dark:bg-[#327a73]/50" />
                         <p className="mb-3 line-clamp-3 min-h-[3.75rem] text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                           {stripHtml(act.description)}
                         </p>
 
-                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-3 dark:border-[#01796F]/25">
+                        <div className="mt-auto flex flex-col gap-3 border-t border-slate-300 pt-3 dark:border-[#327a73]/70">
                           <div>
                             <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tarif par personne</span>
                             <div className="text-2xl font-extrabold leading-tight text-[#01796F] dark:text-[#02E0D5]">

@@ -140,15 +140,14 @@
 .travel-search-panel input::placeholder,
 .travel-search-panel textarea::placeholder { color: var(--travel-input-placeholder) !important; opacity: 1 !important; }
 .travel-search-panel input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: var(--travel-input-icon-filter); opacity: .8; }
-.travel-search-panel form button[type="button"] { background: var(--travel-input-bg) !important; border-color: var(--travel-line) !important; color: var(--travel-input-text) !important; min-height: 56px; }
 html.dark .travel-search-panel input,
 html.dark .travel-search-panel select,
 html.dark .travel-search-panel textarea,
 html[data-theme="dark"] .travel-search-panel input,
 html[data-theme="dark"] .travel-search-panel select,
 html[data-theme="dark"] .travel-search-panel textarea,
-html.dark .travel-search-panel form button[type="button"],
-html[data-theme="dark"] .travel-search-panel form button[type="button"] { background: var(--travel-input-bg) !important; color: var(--travel-input-text) !important; }
+html.dark .travel-search-panel .travel-passenger-trigger,
+html[data-theme="dark"] .travel-search-panel .travel-passenger-trigger { background: var(--travel-input-bg) !important; color: var(--travel-input-text) !important; }
 .travel-search-panel [role="listbox"],
 .travel-search-panel [role="dialog"] { background: var(--travel-surface-elevated) !important; border-color: var(--travel-line) !important; color: var(--travel-text) !important; }
 .travel-search-panel [role="option"] { color: var(--travel-text) !important; }
@@ -158,6 +157,10 @@ html[data-theme="dark"] .travel-search-panel form button[type="button"] { backgr
 .travel-search-panel [role="dialog"],
 .travel-search-panel .absolute { z-index: 60; }
 .travel-search-panel button[type="submit"] { min-height: 56px; border-radius: 11px !important; box-shadow: 0 8px 18px rgba(3, 102, 90, .22); }
+.travel-search-panel button[aria-label="Effacer la sélection"],
+.travel-search-panel button[aria-label="Effacer le lieu"] { background: transparent !important; border: 0 !important; min-height: 0 !important; box-shadow: none !important; }
+.travel-search-panel form button[title^="Inverser"] { background: color-mix(in srgb, var(--travel-primary) 12%, var(--travel-input-bg)) !important; border-color: color-mix(in srgb, var(--travel-primary) 35%, var(--travel-line)) !important; color: var(--travel-primary) !important; min-height: 40px; }
+.travel-search-panel form button[title^="Inverser"]:hover:not(:disabled) { background: color-mix(in srgb, var(--travel-primary) 10%, var(--travel-input-bg)) !important; }
 
 /* Shared traveler / guest control system. Keeps every count readable in both themes. */
 .travel-passenger-trigger {

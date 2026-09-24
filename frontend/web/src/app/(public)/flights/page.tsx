@@ -343,7 +343,7 @@ export default function FlightsPage() {
               </div>
 
               {/* Submit Button */}
-              <div className="w-full md:mt-[23px] lg:w-auto">
+              <div className="w-full md:mt-5 lg:w-auto">
                 <button
                   type="submit"
                   disabled={isSearching}
