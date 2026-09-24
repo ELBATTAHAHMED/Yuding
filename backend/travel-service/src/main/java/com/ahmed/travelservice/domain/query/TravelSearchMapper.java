@@ -108,8 +108,11 @@ public final class TravelSearchMapper {
 
     public static ActivitySearchQuery toQuery(ActivitySearchRequest req) {
         if (req == null) return null;
+        String rawDest = req.getDestination() != null ? req.getDestination().trim() : "";
+        String city = extractCity(rawDest);
+        String destination = (city != null && !city.isBlank()) ? city : rawDest;
         return ActivitySearchQuery.builder()
-                .destination(req.getDestination().trim())
+                .destination(destination)
                 .date(req.getDate())
                 .travelers(req.getTravelers() != null ? req.getTravelers() : 1)
                 .category(ActivityCategory.fromString(req.getCategory()))

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { ActivityOffer } from '@/types/travel.types';
@@ -28,7 +28,7 @@ export default function ActivitiesPage() {
   const [category, setCategory] = useState('ALL');
   const [sortKey, setSortKey] = useState<ActivitySortKey>('PRICE_ASC');
 
-  const handlePlaceSelect = async (place: GeoPlace | null) => {
+  const handlePlaceSelect = useCallback(async (place: GeoPlace | null) => {
     setSelectedGeoPlace(place);
     setSelectedPoi(null);
     if (place) {
@@ -54,16 +54,21 @@ export default function ActivitiesPage() {
         }
       }
     } else {
-      setDestination('');
       setDestinationPois([]);
       setShowDestinationGuide(false);
     }
-  };
+  }, []);
+
+  const handleQueryChange = useCallback((text: string) => {
+    setDestination(text);
+    setErrorMessage(null);
+  }, []);
 
   const [activities, setActivities] = useState<ActivityOffer[]>([]);
   const [providerMessage, setProviderMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
@@ -106,7 +111,7 @@ export default function ActivitiesPage() {
       setActivities(data.results || []);
       saveSearchOffers('ACTIVITY', data.results || []);
       if (data.status === 'PROVIDER_UNAVAILABLE') {
-        setProviderMessage(data.message);
+        setProviderMessage(data.message || 'Le fournisseur d’activités ne répond pas pour le moment.');
       }
     } catch (err: unknown) {
       setActivities([]);
@@ -115,11 +120,23 @@ export default function ActivitiesPage() {
         setErrorMessage('Limite de requêtes atteinte auprès du partenaire d’activités. Veuillez patienter un instant.');
       } else if (msg.includes('TIMEOUT') || msg.toLowerCase().includes('délai')) {
         setErrorMessage('Délai d’attente dépassé. Veuillez réessayer.');
-      } else {
+      } else if (msg.includes('503') || msg.toLowerCase().includes('indisponible') || msg.toLowerCase().includes('unavailable')) {
         setErrorMessage('Le fournisseur d’activités ne répond pas pour le moment. Veuillez réessayer ultérieurement.');
+      } else {
+        setErrorMessage(msg.length < 120 ? msg : 'Une erreur est survenue lors de la recherche d’activités. Veuillez réessayer.');
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (loading || isRetrying) return;
+    setIsRetrying(true);
+    try {
+      await handleSearch();
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -167,6 +184,7 @@ export default function ActivitiesPage() {
                   type="city"
                   selectedPlace={selectedGeoPlace}
                   onSelect={handlePlaceSelect}
+                  onQueryChange={handleQueryChange}
                   error={errorMessage && !destination.trim() ? errorMessage : null}
                   required
                 />
@@ -344,7 +362,7 @@ export default function ActivitiesPage() {
             <ErrorState
               title="Erreur de recherche"
               message={errorMessage}
-              onRetry={() => { setHasSearched(false); setErrorMessage(null); setActivities([]); }}
+              onRetry={handleRetry}
             />
           )}
 
