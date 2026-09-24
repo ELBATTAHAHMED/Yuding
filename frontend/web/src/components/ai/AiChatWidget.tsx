@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth/AuthContext';
 import { aiService } from '@/services/ai.service';
-import { ChatMessage } from '@/types/ai.types';
+import { ChatMessage, ConversationSummaryDto } from '@/types/ai.types';
 import Link from 'next/link';
 
 const INITIAL_GREETING: ChatMessage = {
@@ -20,10 +20,17 @@ const SUGGESTIONS = [
   "Convertir 150 EUR en MAD",
 ];
 
+const ACTIVE_CONV_STORAGE_KEY = 'yuding_ai_active_conv';
+
 export const AiChatWidget: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [conversationId, setConversationId] = useState<string>('');
+  const [conversationTitle, setConversationTitle] = useState<string>('Assistant Yuding');
+  const [conversations, setConversations] = useState<ConversationSummaryDto[]>([]);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_GREETING]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,42 +39,165 @@ export const AiChatWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Initialize unique conversation ID on client mount
-  useEffect(() => {
-    if (!conversationId) {
-      const newId = typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : 'conv-' + Math.random().toString(36).substring(2, 15);
-      setConversationId(newId);
-    }
-  }, [conversationId]);
-
   // Auto-scroll to bottom of messages
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isHistoryDrawerOpen) {
       scrollToBottom();
     }
-  }, [messages, isOpen, scrollToBottom]);
+  }, [messages, isOpen, isHistoryDrawerOpen, scrollToBottom]);
 
   // Focus textarea when opened
   useEffect(() => {
-    if (isOpen && isAuthenticated) {
+    if (isOpen && isAuthenticated && !isHistoryDrawerOpen) {
       setTimeout(() => textareaRef.current?.focus(), 150);
     }
-  }, [isOpen, isAuthenticated]);
+  }, [isOpen, isAuthenticated, isHistoryDrawerOpen]);
 
-  const handleStartNewConversation = () => {
-    const newId = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : 'conv-' + Math.random().toString(36).substring(2, 15);
-    setConversationId(newId);
-    setMessages([INITIAL_GREETING]);
+  // Load conversation messages from server
+  const loadConversationMessages = useCallback(async (convId: string, title?: string) => {
+    setIsLoadingHistory(true);
     setErrorMessage(null);
-    setInputValue('');
+    try {
+      const serverMessages = await aiService.getConversationMessages(convId);
+      setConversationId(convId);
+      if (title) {
+        setConversationTitle(title);
+      }
+      try {
+        sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, convId);
+      } catch {}
+
+      if (serverMessages.length === 0) {
+        setMessages([INITIAL_GREETING]);
+      } else {
+        const formatted: ChatMessage[] = serverMessages.map((m) => ({
+          id: m.id,
+          role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+          content: m.content,
+          timestamp: new Date(m.createdAt || Date.now()),
+          status: 'delivered',
+          grounded: m.grounded,
+          toolsUsed: m.toolsUsed,
+        }));
+        setMessages(formatted);
+      }
+    } catch (err: any) {
+      // If conversation is missing or access denied, create fresh conversation
+      setMessages([INITIAL_GREETING]);
+      try {
+        sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY);
+      } catch {}
+    } finally {
+      setIsLoadingHistory(false);
+      setIsHistoryDrawerOpen(false);
+    }
+  }, []);
+
+  // Fetch conversations list and resume active conversation on mount or auth change
+  const refreshConversations = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const list = await aiService.getConversations(25);
+      setConversations(list);
+
+      let targetId: string | null = null;
+      try {
+        targetId = sessionStorage.getItem(ACTIVE_CONV_STORAGE_KEY);
+      } catch {}
+
+      if (targetId && list.some((c) => c.id === targetId)) {
+        const targetConv = list.find((c) => c.id === targetId);
+        await loadConversationMessages(targetId, targetConv?.title);
+      } else if (list.length > 0) {
+        await loadConversationMessages(list[0].id, list[0].title);
+      } else {
+        // No conversations yet; generate or create a fresh thread
+        const newThread = await aiService.createConversation("Nouvelle conversation");
+        setConversationId(newThread.id);
+        setConversationTitle(newThread.title);
+        setMessages([INITIAL_GREETING]);
+        setConversations([
+          {
+            id: newThread.id,
+            title: newThread.title,
+            status: 'ACTIVE',
+            createdAt: newThread.createdAt,
+            updatedAt: newThread.updatedAt,
+            lastMessageAt: newThread.lastMessageAt,
+          },
+        ]);
+        try {
+          sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, newThread.id);
+        } catch {}
+      }
+    } catch (err) {
+      // Offline fallback: generate client UUID
+      const fallbackId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'conv-' + Math.random().toString(36).substring(2, 15);
+      setConversationId(fallbackId);
+      setMessages([INITIAL_GREETING]);
+    }
+  }, [isAuthenticated, loadConversationMessages]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshConversations();
+    } else {
+      // Logout cleanup: clear all state and sessionStorage
+      try {
+        sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY);
+      } catch {}
+      setConversationId('');
+      setConversationTitle('Assistant Yuding');
+      setConversations([]);
+      setMessages([INITIAL_GREETING]);
+      setIsHistoryDrawerOpen(false);
+    }
+  }, [isAuthenticated, refreshConversations]);
+
+  const handleStartNewConversation = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      if (isAuthenticated) {
+        const newConv = await aiService.createConversation("Nouvelle conversation");
+        setConversationId(newConv.id);
+        setConversationTitle(newConv.title);
+        setMessages([INITIAL_GREETING]);
+        setConversations((prev) => [
+          {
+            id: newConv.id,
+            title: newConv.title,
+            status: 'ACTIVE',
+            createdAt: newConv.createdAt,
+            updatedAt: newConv.updatedAt,
+            lastMessageAt: newConv.lastMessageAt,
+          },
+          ...prev.filter((c) => c.id !== newConv.id),
+        ]);
+        try {
+          sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, newConv.id);
+        } catch {}
+      } else {
+        const fallbackId = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : 'conv-' + Math.random().toString(36).substring(2, 15);
+        setConversationId(fallbackId);
+        setConversationTitle('Assistant Yuding');
+        setMessages([INITIAL_GREETING]);
+      }
+      setInputValue('');
+      setIsHistoryDrawerOpen(false);
+    } catch (err: any) {
+      setErrorMessage("Impossible de démarrer une nouvelle conversation.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -82,6 +212,25 @@ export const AiChatWidget: React.FC = () => {
     if (text.length > 8000) {
       setErrorMessage("Votre message dépasse la limite maximale de 8000 caractères.");
       return;
+    }
+
+    // Ensure we have a valid conversationId
+    let currentConvId = conversationId;
+    if (!currentConvId) {
+      try {
+        const newConv = await aiService.createConversation(text.slice(0, 60));
+        currentConvId = newConv.id;
+        setConversationId(newConv.id);
+        setConversationTitle(newConv.title);
+        try {
+          sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, newConv.id);
+        } catch {}
+      } catch {
+        currentConvId = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : 'conv-' + Date.now();
+        setConversationId(currentConvId);
+      }
     }
 
     const userMessageId = typeof crypto !== 'undefined' && crypto.randomUUID
@@ -103,7 +252,7 @@ export const AiChatWidget: React.FC = () => {
 
     try {
       const response = await aiService.sendMessage({
-        conversationId: conversationId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'conv-temp'),
+        conversationId: currentConvId,
         message: text,
       });
 
@@ -120,6 +269,9 @@ export const AiChatWidget: React.FC = () => {
       setMessages((prev) =>
         prev.map((m) => (m.id === userMessageId ? { ...m, status: 'delivered' as const } : m)).concat(assistantMsg)
       );
+
+      // Refresh conversations list to update title and order
+      aiService.getConversations(25).then(setConversations).catch(() => {});
     } catch (err: any) {
       const errorText =
         err?.status === 429
@@ -144,7 +296,7 @@ export const AiChatWidget: React.FC = () => {
     }
   };
 
-  // Safe formatting for assistant markdown text (bold, lists, paragraphs)
+  // Safe formatting for assistant markdown text
   const renderMessageContent = (content: string) => {
     const paragraphs = content.split('\n\n');
     return (
@@ -155,7 +307,6 @@ export const AiChatWidget: React.FC = () => {
             <div key={pIdx} className="space-y-1">
               {lines.map((line, lIdx) => {
                 const trimmed = line.trim();
-                // Bullet item
                 if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
                   const bulletText = trimmed.replace(/^(\*|-|•)\s+/, '');
                   return (
@@ -165,7 +316,6 @@ export const AiChatWidget: React.FC = () => {
                     </div>
                   );
                 }
-                // Numbered list item
                 const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
                 if (numMatch) {
                   return (
@@ -188,7 +338,6 @@ export const AiChatWidget: React.FC = () => {
     );
   };
 
-  // Basic inline bold and italic parsing
   const renderInlineFormatting = (text: string) => {
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
     return parts.map((part, index) => {
@@ -216,7 +365,6 @@ export const AiChatWidget: React.FC = () => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c7b8] opacity-75" />
             <span className="relative inline-flex rounded-full h-4 w-4 bg-[#22c7b8] border-2 border-white dark:border-[#151c1b]" />
           </span>
-          {/* Tooltip on hover */}
           <span className="absolute right-16 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[#021b19] text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-md">
             Assistant Voyage Yuding
           </span>
@@ -226,140 +374,220 @@ export const AiChatWidget: React.FC = () => {
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="flex flex-col w-[380px] sm:w-[420px] h-[580px] max-h-[85vh] bg-white dark:bg-[#151c1b] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#2d3937] overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5"
+          className="flex flex-col w-[380px] sm:w-[430px] h-[590px] max-h-[85vh] bg-white dark:bg-[#151c1b] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#2d3937] overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5"
           role="dialog"
           aria-labelledby="ai-chat-header-title"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#087d70] to-[#0ba392] text-white shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm">
-                <i className="fa-solid fa-robot text-lg text-white" />
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#087d70] to-[#0ba392] text-white shadow-sm">
+            <div className="flex items-center gap-2.5 overflow-hidden pr-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex-shrink-0">
+                <i className="fa-solid fa-robot text-base text-white" />
               </div>
-              <div>
-                <h2 id="ai-chat-header-title" className="font-semibold text-sm leading-tight">
-                  Assistant Yuding
+              <div className="overflow-hidden">
+                <h2 id="ai-chat-header-title" className="font-semibold text-xs sm:text-sm leading-tight truncate">
+                  {conversationTitle || 'Assistant Yuding'}
                 </h2>
-                <div className="flex items-center gap-1.5 text-xs text-white/80">
-                  <span className="w-2 h-2 rounded-full bg-[#22c7b8] inline-block animate-pulse" />
-                  <span>IA Voyage V2</span>
+                <div className="flex items-center gap-1.5 text-[11px] text-white/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#22c7b8] inline-block animate-pulse" />
+                  <span>Historique persistant • IA V2</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {/* History Drawer Toggle Button */}
+              {isAuthenticated && (
+                <button
+                  onClick={() => setIsHistoryDrawerOpen((prev) => !prev)}
+                  className={`p-1.5 rounded-lg transition-colors text-xs flex items-center gap-1 ${
+                    isHistoryDrawerOpen ? 'bg-white/30 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                  title="Historique des conversations"
+                  aria-label="Historique des conversations"
+                >
+                  <i className="fa-solid fa-clock-rotate-left text-sm" />
+                  {conversations.length > 0 && (
+                    <span className="text-[10px] bg-white/20 px-1 rounded-full font-medium">
+                      {conversations.length}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Start New Conversation Button */}
               <button
                 onClick={handleStartNewConversation}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-xs flex items-center gap-1"
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-xs"
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
               >
-                <i className="fa-solid fa-arrows-rotate text-sm" />
+                <i className="fa-solid fa-plus text-sm" />
               </button>
+
+              {/* Close Button */}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 title="Fermer"
                 aria-label="Fermer l'assistant"
               >
-                <i className="fa-solid fa-xmark text-lg" />
+                <i className="fa-solid fa-xmark text-base" />
               </button>
             </div>
           </div>
 
+          {/* History Drawer Overlay / Selector */}
+          {isHistoryDrawerOpen && (
+            <div className="bg-[#f0f5f4] dark:bg-[#0d1514] border-b border-gray-200 dark:border-[#2d3937] p-3 max-h-56 overflow-y-auto animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
+                  <i className="fa-solid fa-comments text-[#087d70] dark:text-[#21bcae]" />
+                  Vos conversations
+                </span>
+                <button
+                  onClick={handleStartNewConversation}
+                  className="text-[11px] text-[#087d70] dark:text-[#21bcae] hover:underline font-medium flex items-center gap-1"
+                >
+                  <i className="fa-solid fa-plus text-[10px]" />
+                  Nouvelle conversation
+                </button>
+              </div>
+
+              {conversations.length === 0 ? (
+                <p className="text-xs text-gray-400 italic py-2">Aucune conversation précédente.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {conversations.map((c) => {
+                    const isActive = c.id === conversationId;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => loadConversationMessages(c.id, c.title)}
+                        className={`w-full text-left px-2.5 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                          isActive
+                            ? 'bg-[#087d70] text-white font-medium shadow-sm'
+                            : 'bg-white dark:bg-[#182220] hover:bg-gray-100 dark:hover:bg-[#202d2a] text-gray-800 dark:text-gray-200 border border-gray-200/60 dark:border-[#2d3937]'
+                        }`}
+                      >
+                        <span className="truncate pr-2 flex items-center gap-1.5">
+                          <i className={`fa-regular fa-message text-[11px] ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                          {c.title || 'Conversation sans titre'}
+                        </span>
+                        <span className={`text-[10px] flex-shrink-0 ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
+                          {c.lastMessageAt || c.updatedAt
+                            ? new Date(c.lastMessageAt || c.updatedAt).toLocaleDateString([], {
+                                month: 'short',
+                                day: 'numeric',
+                              })
+                            : ''}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Messages Container */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f5f8fa] dark:bg-[#0d1110]">
-            {messages.map((message) => {
-              const isUser = message.role === 'user';
-              return (
-                <div
-                  key={message.id}
-                  className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}
-                >
-                  <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                    {/* Role avatar */}
-                    {!isUser && (
+            {isLoadingHistory ? (
+              <div className="flex flex-col items-center justify-center h-48 space-y-2">
+                <i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#087d70] dark:text-[#21bcae]" />
+                <span className="text-xs text-gray-500">Chargement de la conversation...</span>
+              </div>
+            ) : (
+              <>
+                {messages.map((message) => {
+                  const isUser = message.role === 'user';
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}
+                    >
+                      <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {!isUser && (
+                          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#087d70]/10 dark:bg-[#21bcae]/20 text-[#087d70] dark:text-[#21bcae] flex items-center justify-center text-xs mt-1">
+                            <i className="fa-solid fa-robot" />
+                          </div>
+                        )}
+
+                        <div>
+                          <div
+                            className={`p-3.5 rounded-2xl ${
+                              isUser
+                                ? 'bg-[#087d70] text-white rounded-br-sm'
+                                : 'bg-white dark:bg-[#1b2422] text-[#102220] dark:text-[#edf5f3] border border-gray-100 dark:border-[#2d3937] rounded-bl-sm shadow-sm'
+                            }`}
+                          >
+                            {isUser ? (
+                              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                            ) : (
+                              renderMessageContent(message.content)
+                            )}
+                          </div>
+
+                          {/* Grounding Badge */}
+                          {!isUser && message.grounded && (
+                            <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 w-fit">
+                              <i className="fa-solid fa-shield-halved text-emerald-600 dark:text-emerald-400 text-[10px]" />
+                              <span>Données Yuding vérifiées en direct</span>
+                            </div>
+                          )}
+
+                          {message.status === 'error' && (
+                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                              <i className="fa-solid fa-circle-exclamation" />
+                              <span>Échec de l&apos;envoi</span>
+                            </p>
+                          )}
+
+                          <p className={`text-[10px] text-gray-400 dark:text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
+                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Suggestions Chips (shown when conversation is fresh) */}
+                {messages.length === 1 && (
+                  <div className="pt-2 space-y-1.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Suggestions :</p>
+                    <div className="flex flex-col gap-1.5">
+                      {SUGGESTIONS.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSendMessage(suggestion)}
+                          disabled={isLoading || !isAuthenticated}
+                          className="text-left text-xs px-3 py-2 bg-white dark:bg-[#1b2422] hover:bg-[#087d70]/5 dark:hover:bg-[#21bcae]/10 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#2d3937] rounded-xl transition-colors disabled:opacity-50"
+                        >
+                          💡 {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading / Typing indicator */}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 max-w-[85%]">
                       <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#087d70]/10 dark:bg-[#21bcae]/20 text-[#087d70] dark:text-[#21bcae] flex items-center justify-center text-xs mt-1">
                         <i className="fa-solid fa-robot" />
                       </div>
-                    )}
-
-                    <div>
-                      {/* Bubble */}
-                      <div
-                        className={`p-3.5 rounded-2xl ${
-                          isUser
-                            ? 'bg-[#087d70] text-white rounded-br-sm'
-                            : 'bg-white dark:bg-[#1b2422] text-[#102220] dark:text-[#edf5f3] border border-gray-100 dark:border-[#2d3937] rounded-bl-sm shadow-sm'
-                        }`}
-                      >
-                        {isUser ? (
-                          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                        ) : (
-                          renderMessageContent(message.content)
-                        )}
+                      <div className="p-3 bg-white dark:bg-[#1b2422] border border-gray-100 dark:border-[#2d3937] rounded-2xl rounded-bl-sm shadow-sm flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="text-xs text-gray-400 ml-1.5">Recherche en cours...</span>
                       </div>
-
-                      {/* Grounding Badge */}
-                      {!isUser && message.grounded && (
-                        <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 w-fit">
-                          <i className="fa-solid fa-shield-halved text-emerald-600 dark:text-emerald-400 text-[10px]" />
-                          <span>Données Yuding vérifiées en direct</span>
-                        </div>
-                      )}
-
-                      {/* Error or delivery status */}
-                      {message.status === 'error' && (
-                        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                          <i className="fa-solid fa-circle-exclamation" />
-                          <span>Échec de l&apos;envoi</span>
-                        </p>
-                      )}
-
-                      {/* Timestamp */}
-                      <p className={`text-[10px] text-gray-400 dark:text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
-                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-
-            {/* Suggestions Chips (shown when conversation is fresh) */}
-            {messages.length === 1 && (
-              <div className="pt-2 space-y-1.5">
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Suggestions :</p>
-                <div className="flex flex-col gap-1.5">
-                  {SUGGESTIONS.map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSendMessage(suggestion)}
-                      disabled={isLoading || !isAuthenticated}
-                      className="text-left text-xs px-3 py-2 bg-white dark:bg-[#1b2422] hover:bg-[#087d70]/5 dark:hover:bg-[#21bcae]/10 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#2d3937] rounded-xl transition-colors disabled:opacity-50"
-                    >
-                      💡 {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Loading / Typing indicator */}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex gap-2 max-w-[85%]">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#087d70]/10 dark:bg-[#21bcae]/20 text-[#087d70] dark:text-[#21bcae] flex items-center justify-center text-xs mt-1">
-                    <i className="fa-solid fa-robot" />
-                  </div>
-                  <div className="p-3 bg-white dark:bg-[#1b2422] border border-gray-100 dark:border-[#2d3937] rounded-2xl rounded-bl-sm shadow-sm flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-[#087d70] dark:bg-[#21bcae] animate-bounce" style={{ animationDelay: '300ms' }} />
-                    <span className="text-xs text-gray-400 ml-1.5">Recherche en cours...</span>
-                  </div>
-                </div>
-              </div>
+                )}
+              </>
             )}
 
             {/* Global Error Banner */}

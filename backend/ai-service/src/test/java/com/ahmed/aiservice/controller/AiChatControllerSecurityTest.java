@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -44,6 +45,9 @@ class AiChatControllerSecurityTest {
 
     @MockitoBean
     private AiChatService aiChatService;
+
+    @MockitoBean
+    private com.ahmed.aiservice.domain.service.AiConversationService aiConversationService;
 
     @Test
     @DisplayName("Anonymous access to POST /api/ai/chat is rejected with 401 Unauthorized")
@@ -89,7 +93,7 @@ class AiChatControllerSecurityTest {
                 "Voici trois idées d'escapades : Annecy, Saint-Malo ou la Provence !"
         );
 
-        when(aiChatService.processChat(any(AiChatRequest.class))).thenReturn(response);
+        when(aiChatService.processChat(any(AiChatRequest.class), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/ai/chat")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
@@ -130,7 +134,7 @@ class AiChatControllerSecurityTest {
                 .message("Des hôtels à Nice ?")
                 .build();
 
-        when(aiChatService.processChat(any(AiChatRequest.class))).thenThrow(
+        when(aiChatService.processChat(any(AiChatRequest.class), any())).thenThrow(
                 new AiProviderException("All providers exhausted", "PROVIDER_UNAVAILABLE", true, HttpStatus.SERVICE_UNAVAILABLE)
         );
 
@@ -141,5 +145,59 @@ class AiChatControllerSecurityTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value(503));
+    }
+
+    @Test
+    @DisplayName("Anonymous access to POST /api/ai/conversations is rejected with 401 Unauthorized")
+    void anonymousAccess_createConversation_rejectedWith401() throws Exception {
+        mockMvc.perform(post("/api/ai/conversations"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    @DisplayName("Anonymous access to GET /api/ai/conversations is rejected with 401 Unauthorized")
+    void anonymousAccess_getConversations_rejectedWith401() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/ai/conversations"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    @DisplayName("Authenticated user can create a conversation successfully (201 Created)")
+    void authenticatedUser_createConversation_success() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID convId = UUID.randomUUID();
+
+        when(aiConversationService.createConversation(eq(userId), any())).thenReturn(
+                new com.ahmed.aiservice.dto.CreateConversationResponse(
+                        convId, "Nouveau voyage", java.time.Instant.now(), java.time.Instant.now(), null
+                )
+        );
+
+        mockMvc.perform(post("/api/ai/conversations")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(userId.toString()).claim("roles", "ROLE_USER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Nouveau voyage\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(convId.toString()))
+                .andExpect(jsonPath("$.title").value("Nouveau voyage"));
+    }
+
+    @Test
+    @DisplayName("IDOR Protection: Access to another user's conversation messages returns 404 Not Found")
+    void idorProtection_otherUserConversation_returns404() throws Exception {
+        UUID attackerId = UUID.randomUUID();
+        UUID victimConvId = UUID.randomUUID();
+
+        when(aiConversationService.getConversationMessages(eq(victimConvId), eq(attackerId)))
+                .thenThrow(new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation introuvable"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/ai/conversations/" + victimConvId + "/messages")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                                .jwt(j -> j.subject(attackerId.toString()).claim("roles", "ROLE_USER"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 }

@@ -161,4 +161,85 @@ describe('AI Assistant V2 — Service & Routing Contract Tests', () => {
     assert.deepEqual(result.toolsUsed, ['searchFlights']);
     assert.ok(result.content.includes('Air France'));
   });
+
+  test('routes createConversation to /api/ai/conversations via API Gateway', async () => {
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({
+        url: input.toString(),
+        method: init?.method || 'GET',
+        headers: (init?.headers as Record<string, string>) || {},
+        body: init?.body ? JSON.parse(init.body as string) : undefined,
+      });
+      return jsonResponse({
+        id: 'new-conv-uuid',
+        title: 'Nouveau voyage',
+        createdAt: '2026-09-24T12:00:00Z',
+        updatedAt: '2026-09-24T12:00:00Z',
+      });
+    };
+
+    const conv = await aiService.createConversation('Nouveau voyage');
+
+    assert.equal(capturedCalls.length, 1);
+    const call = capturedCalls[0];
+    const url = new URL(call.url);
+
+    assert.equal(url.origin, 'http://localhost:8888');
+    assert.equal(url.pathname, '/api/ai/conversations');
+    assert.equal(call.method, 'POST');
+    assert.equal(call.body.title, 'Nouveau voyage');
+    assert.equal(conv.id, 'new-conv-uuid');
+  });
+
+  test('routes getConversations and getConversationMessages via API Gateway', async () => {
+    globalThis.fetch = async (input, init) => {
+      capturedCalls.push({
+        url: input.toString(),
+        method: init?.method || 'GET',
+        headers: (init?.headers as Record<string, string>) || {},
+      });
+      const urlStr = input.toString();
+      if (urlStr.includes('/messages')) {
+        return jsonResponse([
+          {
+            id: 'msg-1',
+            conversationId: 'conv-123',
+            role: 'user',
+            content: 'Bonjour',
+            createdAt: '2026-09-24T12:00:00Z',
+          },
+          {
+            id: 'msg-2',
+            conversationId: 'conv-123',
+            role: 'assistant',
+            content: 'Bonjour ! Comment puis-je vous aider ?',
+            grounded: false,
+            createdAt: '2026-09-24T12:00:01Z',
+          },
+        ]);
+      }
+      return jsonResponse([
+        {
+          id: 'conv-123',
+          title: 'Séjour à Nice',
+          status: 'ACTIVE',
+          createdAt: '2026-09-24T12:00:00Z',
+          updatedAt: '2026-09-24T12:00:01Z',
+        },
+      ]);
+    };
+
+    const convs = await aiService.getConversations(10);
+    assert.equal(convs.length, 1);
+    assert.equal(convs[0].id, 'conv-123');
+
+    const msgs = await aiService.getConversationMessages('conv-123');
+    assert.equal(msgs.length, 2);
+    assert.equal(msgs[0].role, 'user');
+    assert.equal(msgs[1].role, 'assistant');
+
+    assert.equal(capturedCalls.length, 2);
+    assert.equal(new URL(capturedCalls[0].url).pathname, '/api/ai/conversations');
+    assert.equal(new URL(capturedCalls[1].url).pathname, '/api/ai/conversations/conv-123/messages');
+  });
 });
