@@ -3,6 +3,7 @@ package com.ahmed.aiservice.domain.service;
 import com.ahmed.aiservice.domain.entity.AiToolCallEntity;
 import com.ahmed.aiservice.domain.entity.ConversationEntity;
 import com.ahmed.aiservice.domain.entity.ConversationMessageEntity;
+import com.ahmed.aiservice.domain.attachment.entity.AttachmentEntity;
 import com.ahmed.aiservice.domain.repository.AiToolCallRepository;
 import com.ahmed.aiservice.domain.repository.ConversationMessageRepository;
 import com.ahmed.aiservice.domain.repository.ConversationRepository;
@@ -49,13 +50,49 @@ class AiConversationServiceTest {
     @Mock
     private com.ahmed.aiservice.domain.attachment.repository.MessageAttachmentRepository messageAttachmentRepository;
 
+    @Mock
+    private com.ahmed.aiservice.domain.attachment.repository.AttachmentRepository attachmentRepository;
+
+    @Mock
+    private com.ahmed.aiservice.domain.attachment.storage.AttachmentStorage attachmentStorage;
+
     private ObjectMapper objectMapper;
     private AiConversationService conversationService;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        conversationService = new AiConversationService(conversationRepository, messageRepository, toolCallRepository, messageSourceRepository, messageAttachmentRepository, objectMapper);
+        conversationService = new AiConversationService(conversationRepository, messageRepository, toolCallRepository, messageSourceRepository, messageAttachmentRepository, attachmentRepository, attachmentStorage, objectMapper);
+    }
+
+    @Test
+    void deleteConversationRemovesOwnedRecordAndStoredFiles() {
+        UUID userId = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        var conversation = ConversationEntity.builder().id(conversationId).userId(userId).build();
+        var attachment = AttachmentEntity.builder().storageKey("private_voice.webm").build();
+        when(conversationRepository.findByIdAndUserId(conversationId, userId)).thenReturn(Optional.of(conversation));
+        when(attachmentRepository.findByUserIdAndConversationIdOrderByCreatedAtAsc(userId, conversationId))
+                .thenReturn(List.of(attachment));
+        when(conversationRepository.deleteOwnedById(conversationId, userId)).thenReturn(1);
+
+        conversationService.deleteConversation(conversationId, userId);
+
+        verify(conversationRepository).deleteOwnedById(conversationId, userId);
+        verify(attachmentStorage).delete("private_voice.webm");
+        verifyNoInteractions(messageSourceRepository);
+    }
+
+    @Test
+    void deleteConversationRejectsOtherOwnerWithoutTouchingData() {
+        UUID otherUser = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        when(conversationRepository.findByIdAndUserId(conversationId, otherUser)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> conversationService.deleteConversation(conversationId, otherUser))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("404");
+        verify(conversationRepository, never()).deleteOwnedById(any(), any());
+        verifyNoInteractions(attachmentRepository, attachmentStorage);
     }
 
     @Test

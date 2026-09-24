@@ -45,6 +45,10 @@ export const aiService = {
     );
   },
 
+  async deleteConversation(conversationId: string): Promise<void> {
+    return apiClient.delete<void>(`/api/ai/conversations/${encodeURIComponent(conversationId)}`, true);
+  },
+
   /**
    * Sends a user prompt to the Yuding V2 AI Assistant.
    * Routed via API Gateway (/api/ai/chat) with RS256 JWT defense-in-depth.
@@ -131,5 +135,9 @@ export const aiService = {
       `/api/ai/attachments/${encodeURIComponent(attachmentId)}`,
       true // requiresAuth
     );
+  },
+
+  async getAttachmentContent(attachmentId: string): Promise<Blob> {
+    return apiClient.getBlob(`/api/ai/attachments/${encodeURIComponent(attachmentId)}/content`, true);
   },
 };

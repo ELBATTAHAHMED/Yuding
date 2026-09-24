@@ -19,7 +19,7 @@ function AssistantMark({ size = 22 }: { size?: number }) {
   return <span className={styles.assistantMark} style={{ width: size, height: size }} aria-hidden="true" />;
 }
 
-function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' | 'check' | 'warning' | 'paperclip' }) {
+function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' | 'check' | 'warning' | 'paperclip' | 'mic' | 'trash' | 'stop' }) {
   const paths = {
     history: <><path d="M3 12a9 9 0 1 0 2.5-6.2" /><path d="M3 4v4h4M12 7v5l3 2" /></>,
     plus: <path d="M12 5v14M5 12h14" />,
@@ -29,8 +29,38 @@ function Icon({ name }: { name: 'history' | 'plus' | 'close' | 'send' | 'back' |
     check: <path d="m5 12 4 4L19 6" />,
     warning: <><path d="M12 3 2.5 20h19L12 3Z" /><path d="M12 9v5M12 17h.01" /></>,
     paperclip: <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l7.88-7.88" />,
+    mic: <><rect x="9" y="2" width="6" height="13" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-4 0h8" /></>,
+    trash: <><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6" /></>,
+    stop: <rect x="6" y="6" width="12" height="12" rx="2" />,
   };
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+}
+
+function AttachmentMedia({ attachment, localUrl, onOpenImage, showTranscript = false }: { attachment: AiAttachmentDto; localUrl?: string; onOpenImage: (url: string) => void; showTranscript?: boolean }) {
+  const [url, setUrl] = useState<string | null>(localUrl || null);
+  useEffect(() => {
+    if (localUrl) { setUrl(localUrl); return; }
+    if (attachment.kind !== 'IMAGE' && attachment.kind !== 'AUDIO') return;
+    let active = true;
+    let objectUrl: string | null = null;
+    aiService.getAttachmentContent(attachment.id).then((blob) => {
+      if (!active) return;
+      objectUrl = URL.createObjectURL(blob);
+      setUrl(objectUrl);
+    }).catch(() => { if (active) setUrl(null); });
+    return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [attachment.id, attachment.kind, localUrl]);
+  if (attachment.kind === 'IMAGE') return url ? (
+    <button type="button" className={styles.imagePreview} onClick={() => onOpenImage(url)} aria-label={`Agrandir l’image ${attachment.originalFilename}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt={attachment.originalFilename} />
+    </button>
+  ) : <span className={styles.mediaLoading}>Image indisponible</span>;
+  if (attachment.kind === 'AUDIO') return <div className={styles.audioAttachment}>
+    {url ? <audio controls src={url} preload="metadata" aria-label="Lire le message vocal" /> : <span className={styles.mediaLoading}>Chargement du message vocal…</span>}
+    {showTranscript && (attachment.transcript ? <small>{attachment.transcript}</small> : attachment.status === 'FAILED' ? <small>Transcription indisponible. Réessayez.</small> : null)}
+  </div>;
+  return <span className={styles.messageAttachmentItem}><span className={styles.messageAttachmentIcon}>📄</span><span>{attachment.originalFilename}</span></span>;
 }
 
 function InlineText({ text }: { text: string }) {
@@ -113,6 +143,7 @@ export const AiChatWidget: React.FC = () => {
   const [isRendered, setIsRendered] = useState(false);
   const [view, setView] = useState<'chat' | 'history'>('chat');
   const [conversationId, setConversationId] = useState('');
+  const conversationIdRef = useRef('');
   const [conversations, setConversations] = useState<ConversationSummaryDto[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -121,7 +152,26 @@ export const AiChatWidget: React.FC = () => {
   const [notice, setNotice] = useState<string | null>(null);
   const [retryText, setRetryText] = useState<string | null>(null);
   const [stagedAttachments, setStagedAttachments] = useState<AiAttachmentDto[]>([]);
+  const stagedAttachmentsRef = useRef<AiAttachmentDto[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingMedia, setPendingMedia] = useState<Array<{ url: string; kind: 'IMAGE' | 'AUDIO' }>>([]);
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
+  const previewUrlsRef = useRef<Record<string, string>>({});
+  const pendingUrlsRef = useRef<Set<string>>(new Set());
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const cancelRecordingRef = useRef(false);
+  const recordingTimerRef = useRef<number | null>(null);
+  const pasteCounterRef = useRef(0);
+  const uploadLockRef = useRef(false);
+  const recordingElapsedRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,6 +182,33 @@ export const AiChatWidget: React.FC = () => {
 
   const firstName = user?.firstName?.trim().split(/\s+/)[0];
   const safeName = firstName && firstName.length <= 30 && !firstName.includes('@') ? firstName : null;
+
+  const releasePreviews = useCallback(() => {
+    Object.values(previewUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+    pendingUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    pendingUrlsRef.current.clear();
+    previewUrlsRef.current = {};
+    setPreviewUrls({});
+    setLightboxUrl(null);
+  }, []);
+
+  useEffect(() => { stagedAttachmentsRef.current = stagedAttachments; }, [stagedAttachments]);
+  useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
+
+  const discardStagedAttachments = useCallback(() => {
+    const discarded = stagedAttachmentsRef.current;
+    stagedAttachmentsRef.current = [];
+    setStagedAttachments([]);
+    discarded.forEach((attachment) => { void aiService.deleteAttachment(attachment.id).catch(() => {}); });
+  }, []);
+
+  useEffect(() => () => {
+    recorderRef.current?.stop();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
+    Object.values(previewUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+    pendingUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
   useEffect(() => {
     let header: HTMLElement | null = null;
@@ -211,6 +288,10 @@ export const AiChatWidget: React.FC = () => {
     try {
       const serverMessages = await aiService.getConversationMessages(id);
       if (sequence !== loadSequenceRef.current) return;
+      if (conversationIdRef.current !== id) {
+        discardStagedAttachments();
+        releasePreviews();
+      }
       setMessages(serverMessages.map((message) => ({
         id: message.id,
         role: message.role === 'user' ? 'user' : 'assistant',
@@ -224,6 +305,7 @@ export const AiChatWidget: React.FC = () => {
         attachments: message.attachments || [],
       })));
       setConversationId(id);
+      conversationIdRef.current = id;
       setView('chat');
       nearBottomRef.current = true;
       forceScrollRef.current = true;
@@ -235,7 +317,7 @@ export const AiChatWidget: React.FC = () => {
     } finally {
       if (sequence === loadSequenceRef.current) setIsLoadingHistory(false);
     }
-  }, []);
+  }, [discardStagedAttachments, releasePreviews]);
 
   useEffect(() => {
     let cancelled = false;
@@ -244,11 +326,14 @@ export const AiChatWidget: React.FC = () => {
     if (!isAuthenticated) {
       try { sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
       setConversationId('');
+      conversationIdRef.current = '';
       setConversations([]);
       setMessages([]);
       setView('chat');
       setNotice(null);
       setRetryText(null);
+      discardStagedAttachments();
+      releasePreviews();
       return;
     }
     const initialize = async () => {
@@ -265,6 +350,7 @@ export const AiChatWidget: React.FC = () => {
           const created = await aiService.createConversation('Nouvelle conversation');
           if (cancelled) return;
           setConversationId(created.id);
+          conversationIdRef.current = created.id;
           setMessages([]);
           setConversations([{ ...created, status: 'ACTIVE' }]);
           try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, created.id); } catch {}
@@ -275,17 +361,20 @@ export const AiChatWidget: React.FC = () => {
     };
     void initialize();
     return () => { cancelled = true; };
-  }, [isAuthenticated, isAuthLoading, readConversation]);
+  }, [isAuthenticated, isAuthLoading, readConversation, discardStagedAttachments, releasePreviews]);
 
   const startNewConversation = async () => {
-    if (!isAuthenticated || isLoading || isLoadingHistory) return;
+    if (!isAuthenticated || isLoading || isLoadingHistory || isUploading) return;
     setNotice(null);
     setRetryText(null);
     setIsLoadingHistory(true);
     try {
       const created = await aiService.createConversation('Nouvelle conversation');
       ++loadSequenceRef.current;
+      discardStagedAttachments();
+      releasePreviews();
       setConversationId(created.id);
+      conversationIdRef.current = created.id;
       setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current.filter((item) => item.id !== created.id)]);
       setMessages([]);
       setInputValue('');
@@ -301,13 +390,17 @@ export const AiChatWidget: React.FC = () => {
 
   const sendMessage = async (suggested?: string) => {
     const text = (suggested ?? inputValue).trim();
-    if (!text || isLoading || isLoadingHistory) return;
+    if ((!text && stagedAttachments.length === 0) || isLoading || isLoadingHistory || isUploading) return;
     if (!isAuthenticated) {
       setNotice('Connectez-vous pour échanger avec l’assistant.');
       return;
     }
     if (text.length > 8000) {
       setNotice('Votre message dépasse 8 000 caractères.');
+      return;
+    }
+    if (!text && stagedAttachments.some((attachment) => attachment.kind === 'AUDIO' && attachment.status === 'FAILED')) {
+      setNotice('Transcription indisponible. Supprimez le message vocal et réessayez.');
       return;
     }
     setIsLoading(true);
@@ -320,17 +413,21 @@ export const AiChatWidget: React.FC = () => {
         const created = await aiService.createConversation('Nouvelle conversation');
         id = created.id;
         setConversationId(id);
+        conversationIdRef.current = id;
         setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current]);
         try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, id); } catch {}
       }
       const currentStaged = [...stagedAttachments];
+      const voice = currentStaged.find((attachment) => attachment.kind === 'AUDIO');
+      const semanticText = text || (voice ? (voice.transcript?.trim() || 'Message vocal. Transcription indisponible. Réessayez.') : 'Veuillez analyser les pièces jointes.');
       setStagedAttachments([]);
+      stagedAttachmentsRef.current = [];
 
       const messageId = crypto.randomUUID();
       const userMessage: ChatMessage = {
         id: messageId,
         role: 'user',
-        content: text || (currentStaged.length > 0 ? `[Pièce(s) jointe(s) : ${currentStaged.map(a => a.originalFilename).join(', ')}]` : ''),
+        content: text || (voice ? (voice.transcript?.trim() || 'Message vocal. Transcription indisponible.') : ''),
         timestamp: new Date(),
         status: 'sending',
         attachments: currentStaged,
@@ -342,7 +439,7 @@ export const AiChatWidget: React.FC = () => {
       try {
         const response = await aiService.sendMessage({
           conversationId: id,
-          message: text || `Veuillez analyser ce fichier.`,
+          message: semanticText,
           attachmentIds: currentStaged.map((a) => a.id),
         });
         const assistantMessage: ChatMessage = {
@@ -361,7 +458,9 @@ export const AiChatWidget: React.FC = () => {
       } catch (error: unknown) {
         const status = (error as { status?: number })?.status;
         setNotice(status === 429 ? 'Trop de demandes. Réessayez dans un instant.' : 'L’assistant est momentanément indisponible.');
-        setRetryText(text);
+        setRetryText(semanticText);
+        stagedAttachmentsRef.current = currentStaged;
+        setStagedAttachments(currentStaged);
         setMessages((current) => current.map((message) => message.id === messageId ? { ...message, status: 'error' as const } : message));
       }
     } catch {
@@ -372,50 +471,171 @@ export const AiChatWidget: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (['svg', 'html', 'htm', 'exe', 'bat', 'sh'].includes(ext)) {
-      setNotice('Format de fichier non autorisé (.svg et .html interdits). Formats autorisés : images (.jpg, .png, .webp) et documents (.pdf, .txt, .md, .csv, .docx).');
-      return;
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length || uploadLockRef.current || !isAuthenticated) return;
+    const allowed = new Set(['jpg', 'jpeg', 'png', 'webp', 'pdf', 'txt', 'md', 'csv', 'docx', 'webm', 'ogg', 'mp3', 'm4a', 'mp4', 'wav']);
+    const totalBytes = stagedAttachments.reduce((sum, attachment) => sum + attachment.sizeBytes, 0) + files.reduce((sum, file) => sum + file.size, 0);
+    if (stagedAttachments.length + files.length > 4) { setNotice('Maximum 4 pièces jointes par message.'); return; }
+    if (totalBytes > 20 * 1024 * 1024) { setNotice('Les pièces jointes dépassent 20 Mo au total.'); return; }
+    for (const file of files) {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      if (!allowed.has(ext)) { setNotice('Format non autorisé. Choisissez une image, un document ou un message vocal.'); return; }
+      if (!file.size || file.size > (['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? 8 : 10) * 1024 * 1024) {
+        setNotice('Fichier vide ou trop volumineux. Limite : 8 Mo par image, 10 Mo sinon.'); return;
+      }
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setNotice('La taille du fichier ne doit pas dépasser 10 Mo.');
-      return;
-    }
-    if (stagedAttachments.length >= 4) {
-      setNotice('Maximum 4 pièces jointes par message.');
-      return;
-    }
-
+    uploadLockRef.current = true;
     setIsUploading(true);
     setNotice(null);
+    const localUrls = files.map((file) => /^(image|audio)\//.test(file.type) ? URL.createObjectURL(file) : null);
+    localUrls.forEach((url) => { if (url) pendingUrlsRef.current.add(url); });
+    setPendingMedia((current) => [...current, ...localUrls.flatMap((url, index) => url ? [{ url, kind: files[index].type.startsWith('audio/') ? 'AUDIO' as const : 'IMAGE' as const }] : [])]);
     try {
       let id = conversationId;
       if (!id) {
         const created = await aiService.createConversation('Nouvelle conversation');
         id = created.id;
         setConversationId(id);
+        conversationIdRef.current = id;
         setConversations((current) => [{ ...created, status: 'ACTIVE' }, ...current]);
         try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, id); } catch {}
       }
-      const uploaded = await aiService.uploadAttachment(id, file);
-      setStagedAttachments((prev) => [...prev, uploaded]);
+      for (let index = 0; index < files.length; index++) {
+        const uploaded = await aiService.uploadAttachment(id, files[index]);
+        stagedAttachmentsRef.current = [...stagedAttachmentsRef.current, uploaded];
+        setStagedAttachments((current) => [...current, uploaded]);
+        if (uploaded.kind === 'AUDIO' && uploaded.status === 'FAILED') {
+          setNotice('Transcription indisponible. Vous pouvez écouter puis supprimer ce message vocal.');
+        }
+        const localUrl = localUrls[index];
+        if (localUrl) {
+          pendingUrlsRef.current.delete(localUrl);
+          previewUrlsRef.current[uploaded.id] = localUrl;
+          setPreviewUrls({ ...previewUrlsRef.current });
+          setPendingMedia((current) => current.filter((item) => item.url !== localUrl));
+        }
+      }
     } catch (err: unknown) {
-      const msg = (err as { message?: string })?.message || 'Échec du téléversement du fichier.';
-      setNotice(msg);
+      setNotice((err as { message?: string })?.message || 'Échec du téléversement du fichier.');
+      for (const url of localUrls) {
+        if (url && pendingUrlsRef.current.delete(url)) URL.revokeObjectURL(url);
+      }
     } finally {
+      setPendingMedia([]);
       setIsUploading(false);
+      uploadLockRef.current = false;
     }
+  };
+
+  const removeAttachment = async (attachment: AiAttachmentDto) => {
+    stagedAttachmentsRef.current = stagedAttachmentsRef.current.filter((item) => item.id !== attachment.id);
+    setStagedAttachments((current) => current.filter((item) => item.id !== attachment.id));
+    const url = previewUrlsRef.current[attachment.id];
+    if (url) {
+      URL.revokeObjectURL(url);
+      delete previewUrlsRef.current[attachment.id];
+      setPreviewUrls({ ...previewUrlsRef.current });
+    }
+    try { await aiService.deleteAttachment(attachment.id); }
+    catch { setNotice('Impossible de supprimer cette pièce jointe.'); }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    void uploadFiles(files);
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const images = Array.from(event.clipboardData.items)
+      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      .map((item) => item.getAsFile()).filter((file): file is File => Boolean(file));
+    if (!images.length) return;
+    event.preventDefault();
+    const stamped = images.map((file) => {
+      const extension = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/webp' ? 'webp' : 'png';
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const name = `image-collee-${date}-${String(++pasteCounterRef.current).padStart(3, '0')}.${extension}`;
+      return new File([file], name, { type: file.type });
+    });
+    void uploadFiles(stamped);
+  };
+
+  const stopRecording = (cancel = false) => {
+    cancelRecordingRef.current = cancel;
+    if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    setIsRecording(false);
+  };
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setNotice('Enregistrement vocal non pris en charge par ce navigateur.'); return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+        .find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recorderRef.current = recorder;
+      recordingChunksRef.current = [];
+      cancelRecordingRef.current = false;
+      recordingElapsedRef.current = 0;
+      setRecordingSeconds(0);
+      recorder.ondataavailable = (event) => { if (event.data.size) recordingChunksRef.current.push(event.data); };
+      recorder.onerror = () => { setNotice('Enregistrement vocal interrompu.'); stopRecording(true); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        if (cancelRecordingRef.current || !recordingChunksRef.current.length) return;
+        const type = recorder.mimeType.split(';')[0] || 'audio/webm';
+        const extension = type === 'audio/ogg' ? 'ogg' : type === 'audio/mp4' ? 'm4a' : 'webm';
+        const file = new File(recordingChunksRef.current, `message-vocal-${Date.now()}.${extension}`, { type });
+        void uploadFiles([file]);
+      };
+      recorder.start(1000);
+      setIsRecording(true);
+      recordingTimerRef.current = window.setInterval(() => {
+        recordingElapsedRef.current += 1;
+        setRecordingSeconds(recordingElapsedRef.current);
+        if (recordingElapsedRef.current >= 300) stopRecording();
+      }, 1000);
+    } catch (error) {
+      setNotice((error as DOMException)?.name === 'NotAllowedError' ? 'Accès au microphone refusé.' : 'Microphone indisponible.');
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    }
+  };
+
+  const deleteConversation = async (id: string) => {
+    setIsDeleting(true);
+    setNotice(null);
+    try {
+      await aiService.deleteConversation(id);
+      setConversations((current) => current.filter((item) => item.id !== id));
+      setDeleteTarget(null);
+      if (conversationId === id) {
+        ++loadSequenceRef.current;
+        setConversationId('');
+        conversationIdRef.current = '';
+        setMessages([]);
+        setStagedAttachments([]);
+        stagedAttachmentsRef.current = [];
+        releasePreviews();
+        setInputValue('');
+        setView('chat');
+        try { sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
+      }
+    } catch {
+      setNotice('Impossible de supprimer la conversation.');
+    } finally { setIsDeleting(false); }
   };
 
   const retryMessage = () => {
     if (!retryText) return;
     const text = retryText;
-    setMessages((current) => current.filter((message) => !(message.role === 'user' && message.status === 'error' && message.content === text)));
+    setMessages((current) => current.filter((message) => !(message.role === 'user' && message.status === 'error')));
     void sendMessage(text);
   };
 
@@ -441,7 +661,12 @@ export const AiChatWidget: React.FC = () => {
   return (
     <div className={styles.root} ref={rootRef}>
       {isRendered && (
-        <section className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`} role="dialog" aria-label="Assistant Yuding" aria-hidden={!isOpen}>
+        <section className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`} role="dialog" aria-label="Assistant Yuding" aria-hidden={!isOpen}
+          onDragEnter={(event) => { if (Array.from(event.dataTransfer.types).includes('Files')) setDragActive(true); }}
+          onDragOver={(event) => { if (Array.from(event.dataTransfer.types).includes('Files')) { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; } }}
+          onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragActive(false); }}
+          onDrop={(event) => { event.preventDefault(); setDragActive(false); void uploadFiles(Array.from(event.dataTransfer.files)); }}>
+          {dragActive && <div className={styles.dropOverlay} aria-hidden="true">Déposez vos fichiers ici</div>}
           <header className={styles.header}>
             <span className={styles.headerMark}><AssistantMark size={29} /></span>
             <div className={styles.headerText}>
@@ -449,8 +674,8 @@ export const AiChatWidget: React.FC = () => {
               <p>Votre compagnon de voyage</p>
             </div>
             <div className={styles.actions}>
-              {isAuthenticated && <button type="button" className={`${styles.iconButton} ${view === 'history' ? styles.iconButtonActive : ''}`} title={view === 'history' ? 'Retour à la conversation' : 'Historique des conversations'} aria-label={view === 'history' ? 'Retour à la conversation' : 'Historique des conversations'} onClick={() => void openHistory()}><Icon name={view === 'history' ? 'back' : 'history'} /></button>}
-              <button type="button" className={styles.iconButton} title="Nouvelle conversation" aria-label="Nouvelle conversation" disabled={!isAuthenticated || isLoading || isLoadingHistory} onClick={() => void startNewConversation()}><Icon name="plus" /></button>
+              {isAuthenticated && <button type="button" className={`${styles.iconButton} ${view === 'history' ? styles.iconButtonActive : ''}`} title={view === 'history' ? 'Retour à la conversation' : 'Historique des conversations'} aria-label={view === 'history' ? 'Retour à la conversation' : 'Historique des conversations'} disabled={isUploading} onClick={() => void openHistory()}><Icon name={view === 'history' ? 'back' : 'history'} /></button>}
+              <button type="button" className={styles.iconButton} title="Nouvelle conversation" aria-label="Nouvelle conversation" disabled={!isAuthenticated || isLoading || isLoadingHistory || isUploading} onClick={() => void startNewConversation()}><Icon name="plus" /></button>
               <button type="button" className={styles.iconButton} title="Fermer" aria-label="Fermer l’assistant" onClick={() => setIsOpen(false)}><Icon name="close" /></button>
             </div>
           </header>
@@ -461,10 +686,19 @@ export const AiChatWidget: React.FC = () => {
                 <div className={styles.sectionHeading}><p>Conversations récentes</p><span>{conversations.length}</span></div>
                 {conversations.length === 0 && <p className={styles.emptyHistory}>Vos échanges apparaîtront ici.</p>}
                 {conversations.map((conversation) => (
-                  <button key={conversation.id} type="button" className={`${styles.historyRow} ${conversation.id === conversationId ? styles.historyRowActive : ''}`} onClick={() => void readConversation(conversation.id)}>
-                    <span className={styles.historyRowTitle}>{conversation.title || 'Nouvelle conversation'}</span>
-                    <span className={styles.historyRowDate}>{formatHistoryDate(conversation.lastMessageAt || conversation.updatedAt)}</span>
-                  </button>
+                  <div key={conversation.id} className={`${styles.historyRow} ${conversation.id === conversationId ? styles.historyRowActive : ''}`}>
+                    {deleteTarget === conversation.id ? <div className={styles.deleteConfirm}>
+                      <span>Supprimer cette conversation ?</span>
+                      <button type="button" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Annuler</button>
+                      <button type="button" onClick={() => void deleteConversation(conversation.id)} disabled={isDeleting} aria-label="Confirmer la suppression">Supprimer</button>
+                    </div> : <>
+                      <button type="button" className={styles.historyRowMain} disabled={isUploading} onClick={() => void readConversation(conversation.id)}>
+                        <span className={styles.historyRowTitle}>{conversation.title || 'Nouvelle conversation'}</span>
+                        <span className={styles.historyRowDate}>{formatHistoryDate(conversation.lastMessageAt || conversation.updatedAt)}</span>
+                      </button>
+                      <button type="button" className={styles.historyDelete} onClick={() => setDeleteTarget(conversation.id)} aria-label={`Supprimer la conversation ${conversation.title || 'Nouvelle conversation'}`}><Icon name="trash" /></button>
+                    </>}
+                  </div>
                 ))}
               </div>
             ) : isLoadingHistory ? (
@@ -494,14 +728,7 @@ export const AiChatWidget: React.FC = () => {
                             {message.content && <div>{message.content}</div>}
                             {message.attachments && message.attachments.length > 0 && (
                               <div className={styles.messageAttachments}>
-                                {message.attachments.map((att) => (
-                                  <span key={att.id} className={styles.messageAttachmentItem}>
-                                    <span className={styles.messageAttachmentIcon}>
-                                      {att.kind === 'IMAGE' ? '🖼️' : '📄'}
-                                    </span>
-                                    <span>{att.originalFilename}</span>
-                                  </span>
-                                ))}
+                                {message.attachments.map((att) => <AttachmentMedia key={att.id} attachment={att} localUrl={previewUrls[att.id]} onOpenImage={setLightboxUrl} />)}
                               </div>
                             )}
                           </div>
@@ -536,31 +763,40 @@ export const AiChatWidget: React.FC = () => {
           </div>
 
           <footer className={styles.footer}>
-            {stagedAttachments.length > 0 && (
+            {(stagedAttachments.length > 0 || pendingMedia.length > 0) && (
               <div className={styles.attachmentPreviewBar}>
                 {stagedAttachments.map((att) => (
-                  <span key={att.id} className={styles.attachmentChip}>
-                    <span>{att.kind === 'IMAGE' ? '🖼️' : '📄'}</span>
-                    <span className={styles.attachmentChipName} title={att.originalFilename}>{att.originalFilename}</span>
-                    <span className={styles.attachmentChipSize}>({Math.round(att.sizeBytes / 1024)} ko)</span>
+                  <div key={att.id} className={att.kind === 'IMAGE' ? styles.stagedImage : att.kind === 'AUDIO' ? styles.stagedAudio : styles.attachmentChip}>
+                    <AttachmentMedia attachment={att} localUrl={previewUrls[att.id]} onOpenImage={setLightboxUrl} showTranscript />
+                    {att.kind === 'DOCUMENT' && <span className={styles.attachmentChipSize}>({Math.round(att.sizeBytes / 1024)} ko)</span>}
                     <button
                       type="button"
                       className={styles.attachmentChipRemove}
-                      onClick={() => setStagedAttachments((prev) => prev.filter((a) => a.id !== att.id))}
+                      onClick={() => void removeAttachment(att)}
                       title="Supprimer la pièce jointe"
+                      aria-label={`Retirer ${att.originalFilename}`}
                     >
                       ×
                     </button>
-                  </span>
+                  </div>
                 ))}
+                {pendingMedia.map(({ url, kind }) => kind === 'IMAGE'
+                  ? <div key={url} className={styles.stagedImage}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={url} alt="Pièce jointe en cours de chargement" /></div>
+                  : <div key={url} className={styles.stagedAudio}><span className={styles.mediaLoading}>Préparation du message vocal…</span></div>)}
               </div>
             )}
-            <div className={styles.composer}>
+            {isRecording ? <div className={styles.recordingBar} role="status">
+              <span className={styles.recordingDot} aria-hidden="true" />
+              <span>{String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:{String(recordingSeconds % 60).padStart(2, '0')}</span>
+              <button type="button" onClick={() => stopRecording(true)} aria-label="Annuler l’enregistrement">Annuler</button>
+              <button type="button" onClick={() => stopRecording()} aria-label="Arrêter l’enregistrement"><Icon name="stop" /> Terminer</button>
+            </div> : <div className={styles.composer}>
               <input
                 type="file"
                 ref={fileInputRef}
                 style={{ display: 'none' }}
-                accept=".jpg,.jpeg,.png,.webp,.pdf,.txt,.md,.csv,.docx"
+                accept="image/jpeg,image/png,image/webp,.pdf,.txt,.md,.csv,.docx,audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/wav"
+                multiple
                 onChange={handleFileUpload}
               />
               <button
@@ -583,6 +819,7 @@ export const AiChatWidget: React.FC = () => {
                 placeholder={isAuthenticated ? 'Posez votre question…' : 'Connectez-vous pour échanger'}
                 disabled={!isAuthenticated || isLoading || isLoadingHistory}
                 onChange={(event) => setInputValue(event.target.value)}
+                onPaste={handlePaste}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                     event.preventDefault();
@@ -590,6 +827,7 @@ export const AiChatWidget: React.FC = () => {
                   }
                 }}
               />
+              <button type="button" className={styles.attachButton} disabled={!isAuthenticated || isLoading || isLoadingHistory || isUploading || stagedAttachments.length >= 4} onClick={() => void startRecording()} aria-label="Enregistrer un message vocal" title="Message vocal"><Icon name="mic" /></button>
               <button
                 type="button"
                 className={styles.sendButton}
@@ -600,10 +838,15 @@ export const AiChatWidget: React.FC = () => {
               >
                 <Icon name="send" />
               </button>
-            </div>
+            </div>}
           </footer>
         </section>
       )}
+      {lightboxUrl && <div className={styles.lightbox} role="dialog" aria-modal="true" aria-label="Aperçu de l’image" onClick={() => setLightboxUrl(null)}>
+        <button type="button" onClick={() => setLightboxUrl(null)} aria-label="Fermer l’aperçu"><Icon name="close" /></button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={lightboxUrl} alt="Aperçu agrandi" onClick={(event) => event.stopPropagation()} />
+      </div>}
       <button type="button" className={`${styles.trigger} ${isOpen ? styles.triggerOpen : ''}`} onClick={() => setIsOpen((current) => !current)} aria-label={isOpen ? 'Fermer l’assistant Yuding' : 'Ouvrir l’assistant Yuding'} aria-expanded={isOpen} title="Assistant Yuding"><AssistantMark size={38} /></button>
     </div>
   );

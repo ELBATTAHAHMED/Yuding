@@ -25,10 +25,14 @@ import java.time.Instant;
 import java.util.*;
 
 import com.ahmed.aiservice.domain.attachment.dto.AiAttachmentDto;
+import com.ahmed.aiservice.domain.attachment.repository.AttachmentRepository;
+import com.ahmed.aiservice.domain.attachment.storage.AttachmentStorage;
 import com.ahmed.aiservice.domain.attachment.repository.MessageAttachmentRepository;
 import com.ahmed.aiservice.domain.rag.entity.MessageSourceEntity;
 import com.ahmed.aiservice.domain.rag.repository.MessageSourceRepository;
 import com.ahmed.aiservice.dto.AiSourceDto;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +44,29 @@ public class AiConversationService {
     private final AiToolCallRepository toolCallRepository;
     private final MessageSourceRepository messageSourceRepository;
     private final MessageAttachmentRepository messageAttachmentRepository;
+    private final AttachmentRepository attachmentRepository;
+    private final AttachmentStorage attachmentStorage;
     private final ObjectMapper objectMapper;
+
+    @Transactional
+    public void deleteConversation(UUID conversationId, UUID userId) {
+        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
+        conversationRepository.findByIdAndUserId(conversationId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation introuvable"));
+        List<String> storageKeys = attachmentRepository.findByUserIdAndConversationIdOrderByCreatedAtAsc(userId, conversationId)
+                .stream().map(attachment -> attachment.getStorageKey()).toList();
+        if (conversationRepository.deleteOwnedById(conversationId, userId) != 1) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation introuvable");
+        }
+        Runnable cleanup = () -> storageKeys.forEach(attachmentStorage::delete);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { cleanup.run(); }
+            });
+        } else {
+            cleanup.run();
+        }
+    }
 
     @Transactional
     public CreateConversationResponse createConversation(UUID userId, String initialTitle) {
@@ -159,6 +185,7 @@ public class AiConversationService {
                                 .sizeBytes(ma.getAttachment().getSizeBytes())
                                 .kind(ma.getAttachment().getKind())
                                 .status(ma.getAttachment().getStatus())
+                                .transcript("AUDIO".equals(ma.getAttachment().getKind()) ? ma.getAttachment().getExtractedText() : null)
                                 .createdAt(ma.getAttachment().getCreatedAt())
                                 .build())
                         .toList();

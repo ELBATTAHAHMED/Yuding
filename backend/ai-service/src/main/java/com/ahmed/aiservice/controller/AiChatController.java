@@ -92,6 +92,14 @@ public class AiChatController {
         return ResponseEntity.ok(messages);
     }
 
+    @DeleteMapping(value = {"/api/ai/conversations/{id}", "/ai/conversations/{id}"})
+    public ResponseEntity<Void> deleteConversation(@PathVariable("id") UUID conversationId,
+                                                   @AuthenticationPrincipal Jwt jwt) {
+        if (aiConversationService == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
+        aiConversationService.deleteConversation(conversationId, resolveUserUuid(jwt));
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping(
             value = {"/api/ai/chat", "/ai/chat"},
             consumes = MediaType.APPLICATION_JSON_VALUE,

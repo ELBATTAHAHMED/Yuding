@@ -70,6 +70,7 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions extends RequestInit {
+  responseType?: 'blob';
   timeoutMs?: number;
   requiresAuth?: boolean;
   retries?: number;
@@ -350,6 +351,10 @@ export class ApiClient {
       return {} as T;
     }
 
+    if (options.responseType === 'blob') {
+      return await response.blob() as T;
+    }
+
     // Parse JSON body or return plain text
     const responseText = await response.text();
     if (!responseText) {
@@ -366,6 +371,10 @@ export class ApiClient {
   // Convenience HTTP method helpers
   public get<T>(endpoint: string, requiresAuth = false, options: RequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'GET' }, requiresAuth);
+  }
+
+  public getBlob(endpoint: string, requiresAuth = false, options: RequestOptions = {}): Promise<Blob> {
+    return this.request<Blob>(endpoint, { ...options, method: 'GET', responseType: 'blob', headers: { ...((options.headers as Record<string, string>) || {}), Accept: '*/*' } }, requiresAuth);
   }
 
   public post<T>(endpoint: string, body?: any, requiresAuth = false, options: RequestOptions = {}): Promise<T> {

@@ -23,10 +23,12 @@ public class AttachmentSafetyService {
 
     private static final long MAX_IMAGE_SIZE = 8 * 1024 * 1024L; // 8MB
     private static final long MAX_DOCUMENT_SIZE = 10 * 1024 * 1024L; // 10MB
+    private static final long MAX_AUDIO_SIZE = 10 * 1024 * 1024L;
     private static final int MAX_IMAGE_DIMENSION = 4096;
 
     private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
     private static final Set<String> ALLOWED_DOC_EXTENSIONS = Set.of("pdf", "txt", "md", "csv", "docx");
+    private static final Set<String> ALLOWED_AUDIO_EXTENSIONS = Set.of("webm", "ogg", "mp3", "m4a", "mp4", "wav");
     private static final Set<String> FORBIDDEN_EXTENSIONS = Set.of(
             "svg", "html", "htm", "js", "ts", "jsx", "tsx", "exe", "dll", "bat", "sh", "cmd", "vbs",
             "zip", "rar", "7z", "tar", "gz", "iso", "bin", "jar", "war", "ear"
@@ -41,7 +43,7 @@ public class AttachmentSafetyService {
     public record ValidatedFile(
             String originalFilename,
             String mimeType,
-            String kind, // IMAGE, DOCUMENT
+            String kind, // IMAGE, DOCUMENT, AUDIO
             long sizeBytes,
             String sha256Hash
     ) {}
@@ -67,9 +69,16 @@ public class AttachmentSafetyService {
         if (detectedMime == null) {
             throw new AiProviderException("Format de fichier non reconnu ou ne correspond pas au contenu", "ATTACHMENT_UNSUPPORTED_FORMAT", false, HttpStatus.BAD_REQUEST);
         }
+        if (!extensionMatchesMime(ext, detectedMime)) {
+            throw new AiProviderException("Extension et contenu du fichier incompatibles", "ATTACHMENT_MIME_MISMATCH", false, HttpStatus.BAD_REQUEST);
+        }
 
         boolean isImage = detectedMime.startsWith("image/");
-        boolean isDoc = !isImage;
+        boolean isAudio = detectedMime.startsWith("audio/");
+
+        if (isAudio && (!ALLOWED_AUDIO_EXTENSIONS.contains(ext) || bytes.length > MAX_AUDIO_SIZE)) {
+            throw new AiProviderException("Message vocal non autorisé ou trop volumineux", "ATTACHMENT_AUDIO_INVALID", false, HttpStatus.BAD_REQUEST);
+        }
 
         if (isImage) {
             if (bytes.length > MAX_IMAGE_SIZE) {
@@ -79,7 +88,7 @@ public class AttachmentSafetyService {
         }
 
         String sha256 = computeSha256(bytes);
-        String kind = isImage ? "IMAGE" : "DOCUMENT";
+        String kind = isImage ? "IMAGE" : isAudio ? "AUDIO" : "DOCUMENT";
 
         return new ValidatedFile(filename, detectedMime, kind, bytes.length, sha256);
     }
@@ -93,6 +102,25 @@ public class AttachmentSafetyService {
         }
         clean = clean.replaceAll("[^a-zA-Z0-9._-]", "_");
         return clean.isBlank() ? "file" : clean;
+    }
+
+    private boolean extensionMatchesMime(String ext, String mime) {
+        return switch (mime) {
+            case "image/jpeg" -> ext.equals("jpg") || ext.equals("jpeg");
+            case "image/png" -> ext.equals("png");
+            case "image/webp" -> ext.equals("webp");
+            case "application/pdf" -> ext.equals("pdf");
+            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> ext.equals("docx");
+            case "text/plain" -> ext.equals("txt");
+            case "text/markdown" -> ext.equals("md");
+            case "text/csv" -> ext.equals("csv");
+            case "audio/webm" -> ext.equals("webm");
+            case "audio/ogg" -> ext.equals("ogg");
+            case "audio/mpeg" -> ext.equals("mp3");
+            case "audio/mp4" -> ext.equals("m4a") || ext.equals("mp4");
+            case "audio/wav" -> ext.equals("wav");
+            default -> false;
+        };
     }
 
     private void validateImageDimensions(byte[] bytes, String mimeType) {
@@ -112,6 +140,20 @@ public class AttachmentSafetyService {
     }
 
     private String sniffMimeType(byte[] bytes, String ext) {
+        // Audio must match its container signature and its filename extension.
+        if (ALLOWED_AUDIO_EXTENSIONS.contains(ext)) {
+            if ("webm".equals(ext) && bytes.length > 12 && (bytes[0] & 0xff) == 0x1a && (bytes[1] & 0xff) == 0x45
+                    && (bytes[2] & 0xff) == 0xdf && (bytes[3] & 0xff) == 0xa3
+                    && new String(bytes, 0, Math.min(bytes.length, 128), StandardCharsets.ISO_8859_1).contains("webm")) return "audio/webm";
+            if ("ogg".equals(ext) && bytes.length > 8 && bytes[0] == 'O' && bytes[1] == 'g' && bytes[2] == 'g' && bytes[3] == 'S') return "audio/ogg";
+            if ("mp3".equals(ext) && bytes.length > 4 && ((bytes[0] == 'I' && bytes[1] == 'D' && bytes[2] == '3')
+                    || ((bytes[0] & 0xff) == 0xff && (bytes[1] & 0xe0) == 0xe0))) return "audio/mpeg";
+            if (("m4a".equals(ext) || "mp4".equals(ext)) && bytes.length > 12
+                    && bytes[4] == 'f' && bytes[5] == 't' && bytes[6] == 'y' && bytes[7] == 'p') return "audio/mp4";
+            if ("wav".equals(ext) && bytes.length > 12 && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+                    && bytes[8] == 'W' && bytes[9] == 'A' && bytes[10] == 'V' && bytes[11] == 'E') return "audio/wav";
+            return null;
+        }
         // 1. JPEG: FF D8 FF
         if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF) {
             return "image/jpeg";

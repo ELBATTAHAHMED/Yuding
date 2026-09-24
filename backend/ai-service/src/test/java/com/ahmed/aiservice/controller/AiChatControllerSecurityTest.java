@@ -22,6 +22,9 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -199,5 +202,30 @@ class AiChatControllerSecurityTest {
                                 .jwt(j -> j.subject(attackerId.toString()).claim("roles", "ROLE_USER"))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void anonymousCannotDeleteConversation() throws Exception {
+        mockMvc.perform(delete("/api/ai/conversations/" + UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void ownerCanDeleteConversation() throws Exception {
+        UUID owner = UUID.randomUUID(), conversationId = UUID.randomUUID();
+        mockMvc.perform(delete("/api/ai/conversations/" + conversationId)
+                        .with(jwt().jwt(j -> j.subject(owner.toString()))))
+                .andExpect(status().isNoContent());
+        verify(aiConversationService).deleteConversation(conversationId, owner);
+    }
+
+    @Test
+    void crossAccountDeletionReturns404() throws Exception {
+        UUID attacker = UUID.randomUUID(), conversationId = UUID.randomUUID();
+        doThrow(new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation introuvable"))
+                .when(aiConversationService).deleteConversation(conversationId, attacker);
+        mockMvc.perform(delete("/api/ai/conversations/" + conversationId)
+                        .with(jwt().jwt(j -> j.subject(attacker.toString()))))
+                .andExpect(status().isNotFound());
     }
 }

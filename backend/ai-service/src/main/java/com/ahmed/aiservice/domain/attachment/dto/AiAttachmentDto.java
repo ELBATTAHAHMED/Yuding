@@ -16,7 +16,8 @@ public class AiAttachmentDto {
     private String originalFilename;
     private String mimeType;
     private long sizeBytes;
-    private String kind; // IMAGE, DOCUMENT
+    private String kind; // IMAGE, DOCUMENT, AUDIO
     private String status; // UPLOADED, PROCESSED, FAILED
+    private String transcript;
     private Instant createdAt;
 }

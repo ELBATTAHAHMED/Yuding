@@ -4,6 +4,7 @@ import com.ahmed.aiservice.domain.attachment.dto.AiAttachmentDto;
 import com.ahmed.aiservice.domain.attachment.entity.AttachmentEntity;
 import com.ahmed.aiservice.domain.attachment.entity.MessageAttachmentEntity;
 import com.ahmed.aiservice.domain.attachment.provider.AttachmentUnderstandingProvider;
+import com.ahmed.aiservice.domain.attachment.provider.SpeechTranscriptionProvider;
 import com.ahmed.aiservice.domain.attachment.repository.AttachmentRepository;
 import com.ahmed.aiservice.domain.attachment.repository.MessageAttachmentRepository;
 import com.ahmed.aiservice.domain.attachment.storage.AttachmentStorage;
@@ -19,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -40,6 +43,9 @@ public class AttachmentService {
 
     @Autowired(required = false)
     private AttachmentUnderstandingProvider multimodalProvider;
+
+    @Autowired(required = false)
+    private SpeechTranscriptionProvider speechTranscriptionProvider;
 
     @Transactional
     public AiAttachmentDto uploadAttachment(UUID conversationId, UUID userId, MultipartFile file) {
@@ -71,10 +77,29 @@ public class AttachmentService {
             log.error("Failed to store attachment file {}: {}", publicRef, e.getMessage(), e);
             throw new AiProviderException("Échec du stockage du fichier", "ATTACHMENT_STORAGE_FAILED", true, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCompletion(int completionStatus) {
+                    if (completionStatus != STATUS_COMMITTED) attachmentStorage.delete(storageKey);
+                }
+            });
+        }
 
         String extractedText = "";
+        String status = "PROCESSED";
         if ("DOCUMENT".equals(validated.kind())) {
             extractedText = documentTextExtractor.extractText(bytes, validated.mimeType());
+        } else if ("AUDIO".equals(validated.kind())) {
+            try {
+                if (speechTranscriptionProvider == null || !speechTranscriptionProvider.isAvailable()) {
+                    throw new IllegalStateException("Transcription provider unavailable");
+                }
+                extractedText = speechTranscriptionProvider.transcribe(bytes, validated.originalFilename(), validated.mimeType());
+                if (extractedText.isBlank()) status = "FAILED";
+            } catch (Exception e) {
+                log.warn("Voice transcription unavailable for attachment {} (type={})", publicRef, e.getClass().getSimpleName());
+                status = "FAILED";
+            }
         } else if ("IMAGE".equals(validated.kind()) && multimodalProvider != null && multimodalProvider.isAvailable()) {
             try {
                 extractedText = multimodalProvider.analyzeImage(bytes, validated.mimeType(), null);
@@ -95,7 +120,7 @@ public class AttachmentService {
                 .sizeBytes(validated.sizeBytes())
                 .sha256Hash(validated.sha256Hash())
                 .kind(validated.kind())
-                .status("PROCESSED")
+                .status(status)
                 .extractedText(extractedText)
                 .build();
 
@@ -129,8 +154,14 @@ public class AttachmentService {
         AttachmentEntity entity = attachmentRepository.findByIdAndUserId(attachmentId, userId)
                 .orElseThrow(() -> new AiProviderException("Fichier introuvable ou non autorisé", "ATTACHMENT_NOT_FOUND", false, HttpStatus.NOT_FOUND));
 
-        attachmentStorage.delete(entity.getStorageKey());
         attachmentRepository.delete(entity);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { attachmentStorage.delete(entity.getStorageKey()); }
+            });
+        } else {
+            attachmentStorage.delete(entity.getStorageKey());
+        }
         log.info("Deleted attachment: id={}, ref={}", attachmentId, entity.getPublicReference());
     }
 
@@ -160,6 +191,26 @@ public class AttachmentService {
     }
 
     @Transactional(readOnly = true)
+    public void validateSelection(UUID conversationId, UUID userId, List<UUID> attachmentIds) {
+        if (attachmentIds == null || attachmentIds.isEmpty()) return;
+        if (attachmentIds.size() > 4 || new HashSet<>(attachmentIds).size() != attachmentIds.size()) {
+            throw new AiProviderException("Maximum 4 pièces jointes", "ATTACHMENT_LIMIT", false, HttpStatus.BAD_REQUEST);
+        }
+        long total = 0;
+        for (UUID id : attachmentIds) {
+            AttachmentEntity attachment = attachmentRepository.findByIdAndUserId(id, userId)
+                    .orElseThrow(() -> new AiProviderException("Pièce jointe introuvable", "ATTACHMENT_NOT_FOUND", false, HttpStatus.NOT_FOUND));
+            if (!attachment.getConversation().getId().equals(conversationId)) {
+                throw new AiProviderException("Pièce jointe hors conversation", "ATTACHMENT_CONVERSATION_MISMATCH", false, HttpStatus.NOT_FOUND);
+            }
+            total += attachment.getSizeBytes();
+            if (total > 20 * 1024 * 1024L) {
+                throw new AiProviderException("Pièces jointes trop volumineuses", "ATTACHMENT_TOTAL_TOO_LARGE", false, HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
+    @Transactional(readOnly = true)
     public List<AiAttachmentDto> getAttachmentsForMessage(UUID messageId) {
         return messageAttachmentRepository.findByMessageIdWithAttachment(messageId).stream()
                 .map(ma -> toDto(ma.getAttachment()))
@@ -175,6 +226,7 @@ public class AttachmentService {
                 .sizeBytes(entity.getSizeBytes())
                 .kind(entity.getKind())
                 .status(entity.getStatus())
+                .transcript("AUDIO".equals(entity.getKind()) ? entity.getExtractedText() : null)
                 .createdAt(entity.getCreatedAt())
                 .build();
     }

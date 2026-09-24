@@ -13,6 +13,7 @@ export interface AiAttachmentDto {
   sizeBytes: number;
   kind: 'IMAGE' | 'DOCUMENT' | string;
   status: string;
+  transcript?: string | null;
   createdAt: string;
 }
 
