@@ -58,7 +58,9 @@ export default function HotelDetailsPage() {
       const current = data.results?.find(result => result.hotelId === offerId);
       if (!current || !current.roomOffers?.length) {
         setRefreshError(data.status === 'PROVIDER_UNAVAILABLE'
-          ? (data.message || 'Le fournisseur hôtelier est temporairement indisponible.')
+          ? (data.message && !data.message.includes('No live') && !data.message.includes('Phase')
+              ? data.message
+              : 'Le fournisseur hôtelier est temporairement indisponible.')
           : 'Cette offre n’est plus disponible. Essayez d’autres dates de séjour.');
         return;
       }

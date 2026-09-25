@@ -71,4 +71,25 @@ describe('Phase 49 profile and traveler contracts', () => {
       assert.doesNotMatch(u, /:(?:8081|8082|8084|8090|8072|7777)/);
     }
   });
+
+  test('returns empty results without fetch when unauthenticated', async () => {
+    const { libraryService } = await import('../../services/library.service.ts');
+    apiClient.setAccessToken(null);
+    let fetchCalled = false;
+    globalThis.fetch = async () => {
+      fetchCalled = true;
+      return new Response('[]', { status: 200 });
+    };
+
+    const favs = await libraryService.getFavorites();
+    const trips = await libraryService.getSavedTrips();
+    const searches = await libraryService.getRecentSearches();
+    const views = await libraryService.getRecentViews();
+
+    assert.equal(fetchCalled, false, 'fetch should not be called when unauthenticated');
+    assert.deepEqual(favs, []);
+    assert.deepEqual(trips, []);
+    assert.deepEqual(searches, []);
+    assert.deepEqual(views, []);
+  });
 });

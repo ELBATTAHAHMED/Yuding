@@ -498,7 +498,11 @@ export default function TrainsPage() {
             }}
           >
             <i className="fas fa-satellite-dish" style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#94a3b8' }} />
-            <p style={{ margin: 0, fontSize: '0.95rem' }}>{providerMessage}</p>
+            <p style={{ margin: 0, fontSize: '0.95rem' }}>
+              {providerMessage && !providerMessage.includes('No live') && !providerMessage.includes('Phase')
+                ? providerMessage
+                : 'Les horaires de train en direct sont momentanément indisponibles auprès du réseau partenaire. Veuillez réessayer dans quelques instants.'}
+            </p>
           </div>
         )}
 

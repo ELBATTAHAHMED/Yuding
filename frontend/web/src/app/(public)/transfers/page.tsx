@@ -377,45 +377,47 @@ export default function TransfersPage() {
           )}
           {/* Mode Selector Tabs */}
           {hasSearched && transfers.length > 0 && (
-          <div className="flex justify-center gap-3 mb-6 flex-wrap">
-            <button
-              type="button"
-              onClick={() => setTransportType((prev) => (prev === 'TAXI' ? 'ALL' : 'TAXI'))}
-              className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
-                transportType === 'TAXI'
-                  ? 'bg-[#01796F] text-white shadow-md'
-                  : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
-              }`}
-            >
-              <i className="fas fa-taxi" />
-              Transfert Privé &amp; VTC {hasSearched && transfers.length > 0 && `(${categoryCounts.private})`}
-            </button>
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#062523] border border-slate-200 dark:border-slate-800 rounded-xl flex-wrap justify-center">
+              <button
+                type="button"
+                onClick={() => setTransportType((prev) => (prev === 'TAXI' ? 'ALL' : 'TAXI'))}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+                  transportType === 'TAXI'
+                    ? 'bg-white dark:bg-[#0a3531] text-[#01796F] dark:text-[#02E0D5] shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <i className="fas fa-taxi" />
+                Transfert Privé &amp; VTC {hasSearched && transfers.length > 0 && `(${categoryCounts.private})`}
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setTransportType((prev) => (prev === 'TRAIN' ? 'ALL' : 'TRAIN'))}
-              className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
-                transportType === 'TRAIN'
-                  ? 'bg-[#01796F] text-white shadow-md'
-                  : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
-              }`}
-            >
-              <i className="fas fa-train" />
-              Trains &amp; Navettes {hasSearched && transfers.length > 0 && `(${categoryCounts.shared})`}
-            </button>
+              <button
+                type="button"
+                onClick={() => setTransportType((prev) => (prev === 'TRAIN' ? 'ALL' : 'TRAIN'))}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+                  transportType === 'TRAIN'
+                    ? 'bg-white dark:bg-[#0a3531] text-[#01796F] dark:text-[#02E0D5] shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <i className="fas fa-train" />
+                Trains &amp; Navettes {hasSearched && transfers.length > 0 && `(${categoryCounts.shared})`}
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setTransportType((prev) => (prev === 'CAR_RENTAL' ? 'ALL' : 'CAR_RENTAL'))}
-              className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
-                transportType === 'CAR_RENTAL'
-                  ? 'bg-[#01796F] text-white shadow-md'
-                  : 'bg-slate-200/80 dark:bg-[#062523] text-slate-700 dark:text-slate-300 hover:bg-[#01796F]/15 dark:hover:bg-[#0a302d]'
-              }`}
-            >
-              <i className="fas fa-car" />
-              Minibus &amp; véhicules {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
-            </button>
+              <button
+                type="button"
+                onClick={() => setTransportType((prev) => (prev === 'CAR_RENTAL' ? 'ALL' : 'CAR_RENTAL'))}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+                  transportType === 'CAR_RENTAL'
+                    ? 'bg-white dark:bg-[#0a3531] text-[#01796F] dark:text-[#02E0D5] shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <i className="fas fa-car" />
+                Minibus &amp; véhicules {hasSearched && transfers.length > 0 && `(${categoryCounts.minibus})`}
+              </button>
+            </div>
           </div>
           )}
 
@@ -455,7 +457,9 @@ export default function TransfersPage() {
             <EmptyState
               icon="fa-car-side"
               title="Aucun moyen de transport disponible"
-              description={providerMessage || 'Aucune offre trouvée pour ce trajet. Vérifiez vos aéroports et dates de voyage.'}
+              description={providerMessage && !providerMessage.includes('No live') && !providerMessage.includes('Phase')
+                ? providerMessage
+                : 'Aucune offre trouvée pour ce trajet. Vérifiez vos aéroports et dates de voyage.'}
             />
           )}
 

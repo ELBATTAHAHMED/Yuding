@@ -480,12 +480,44 @@ export default function FlightsPage() {
                 onRetry={handleRetry}
               />
             ) : searchStatus === 'PROVIDER_UNAVAILABLE' && flights.length === 0 ? (
-              // Provider unavailable
-              <ErrorState
-                title="Service temporairement indisponible"
-                message={searchMessage || 'Le fournisseur de vols est temporairement indisponible.'}
-                onRetry={handleRetry}
-              />
+              // Provider unavailable — bespoke travel notice
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-8 text-center shadow-sm dark:border-[#01796F]/30 dark:bg-[#062523] max-w-2xl mx-auto">
+                <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-[#01796F] dark:text-[#02E0D5] ring-1 ring-[#01796F]/20 mx-auto flex items-center justify-center text-xl mb-4">
+                  <i className="fas fa-plane-departure" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
+                  Liaisons aériennes en direct
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto mb-6">
+                  {searchMessage && (searchMessage.includes('Phase') || searchMessage.includes('No live flight provider'))
+                    ? 'Les vols en temps réel pour cet itinéraire sont momentanément indisponibles auprès de nos partenaires. Vous pouvez ajuster vos dates de voyage ou explorer nos solutions de transport alternatives.'
+                    : (searchMessage || 'Les vols directs pour cet itinéraire sont momentanément indisponibles auprès des fournisseurs partenaires.')}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link
+                    href={`/trains?origin=${encodeURIComponent(selectedOrigin?.city || selectedOrigin?.name || '')}&destination=${encodeURIComponent(selectedDestination?.city || selectedDestination?.name || '')}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#01796F]/40 bg-slate-50 dark:bg-[#0a302d] text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-[#01796F] hover:text-[#01796F] transition-colors"
+                  >
+                    <i className="fas fa-train text-[#01796F] dark:text-[#02E0D5]" />
+                    <span>Explorer les trains</span>
+                  </Link>
+                  <Link
+                    href={`/transfers?origin=${encodeURIComponent(selectedOrigin?.city || selectedOrigin?.code || '')}&destination=${encodeURIComponent(selectedDestination?.city || selectedDestination?.code || '')}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#01796F]/40 bg-slate-50 dark:bg-[#0a302d] text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-[#01796F] hover:text-[#01796F] transition-colors"
+                  >
+                    <i className="fas fa-car text-[#01796F] dark:text-[#02E0D5]" />
+                    <span>Explorer les transferts</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold transition-colors shadow-sm"
+                  >
+                    <i className="fas fa-redo-alt text-[10px]" />
+                    <span>Réessayer</span>
+                  </button>
+                </div>
+              </div>
             ) : sortedFlights.length === 0 ? (
               // No results
               <EmptyState
