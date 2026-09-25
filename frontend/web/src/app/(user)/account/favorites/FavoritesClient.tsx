@@ -346,7 +346,7 @@ export default function FavoritesClient() {
                         case 'ACTIVITY':
                           return { label: 'Activité', icon: 'fas fa-ticket-alt', actionLabel: "Voir l'offre", ctaIcon: 'fas fa-arrow-right' };
                         case 'DESTINATION':
-                          return { label: 'Destination', icon: 'fas fa-map-marker-alt', actionLabel: 'Explorer', ctaIcon: 'fas fa-compass' };
+                          return { label: 'Destination', icon: 'fas fa-map-marker-alt', actionLabel: 'Explorer', ctaIcon: 'fas fa-arrow-right' };
                         case 'FLIGHT':
                           return { label: 'Vol', icon: 'fas fa-plane', actionLabel: 'Rechercher', ctaIcon: 'fas fa-redo-alt' };
                         case 'TRANSFER':
@@ -713,7 +713,7 @@ export default function FavoritesClient() {
                         <p>Les fiches d&apos;hôtels et d&apos;activités que vous consultez apparaîtront ici pour une reprise rapide.</p>
                       </div>
                       <Link href="/hotels" className="account-primary-action favorite">
-                        <i className="fas fa-compass" aria-hidden="true" /> Explorer le catalogue
+                        <i className="fas fa-layer-group" aria-hidden="true" /> Explorer le catalogue
                       </Link>
                     </section>
                   ) : (

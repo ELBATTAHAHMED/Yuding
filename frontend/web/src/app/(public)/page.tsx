@@ -19,7 +19,7 @@ const modes: TravelMode[] = [
 ];
 const intents = [
   { title: 'Se reposer', subtitle: 'Riads de charme et paysages apaisants.', image: '/image/marrakech.jpg', href: '/hotels?destination=Marrakech&countryCode=MA', icon: 'fa-spa', action: 'Voir nos séjours bien-être' },
-  { title: 'Explorer', subtitle: 'Villes impériales, villages berbères et grands espaces.', image: '/image/chefchaoun.jpeg', href: '/activities?destination=Chefchaouen&countryCode=MA', icon: 'fa-compass', action: 'Voir nos circuits découverte' },
+  { title: 'Explorer', subtitle: 'Villes impériales, villages berbères et grands espaces.', image: '/image/chefchaoun.jpeg', href: '/activities?destination=Chefchaouen&countryCode=MA', icon: 'fa-landmark', action: 'Voir nos circuits découverte' },
   { title: 'Bouger', subtitle: 'Randonnées, vagues et activités de plein air.', image: '/image/Dakhla.jpg', href: '/activities?destination=Dakhla&countryCode=MA', icon: 'fa-person-hiking', action: 'Voir nos aventures actives' },
   { title: 'Se retrouver', subtitle: 'Voyages en famille ou entre amis.', image: '/image/ami.jpg', href: '/hotels?destination=Essaouira&countryCode=MA', icon: 'fa-users', action: 'Voir nos voyages à plusieurs' },
 ];

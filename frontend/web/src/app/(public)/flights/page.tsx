@@ -7,7 +7,7 @@ import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
 import { AirportSelector } from '@/components/travel/AirportSelector';
 import { FlightSkeleton } from '@/components/travel/FlightSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
-import { TravelHero, TravelPage } from '@/components/travel';
+import { TravelHero, TravelPage, TravelSearchState } from '@/components/travel';
 import { EmptyState, ErrorState, PassengerSelector, SortBar } from '@/components/ui';
 import { sortFlights, buildActiveFilterChips } from '@/lib/search-ux';
 import { saveSearchOffers } from '@/lib/offer-store';
@@ -15,7 +15,6 @@ import { useSearchSession } from '@/lib/search-session';
 import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
 import { libraryService } from '@/services/library.service';
-import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
 import FavoriteButton from '@/components/common/FavoriteButton';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -436,14 +435,6 @@ export default function FlightsPage() {
                 ? `${flights.length} vol${flights.length > 1 ? 's' : ''} trouvé${flights.length > 1 ? 's' : ''} de ${selectedOrigin?.city || 'départ'} à ${selectedDestination?.city || 'destination'}`
                 : 'Sélectionnez votre vol et profitez des meilleurs tarifs'}
             </p>
-            {hasSearched && !isSearching && selectedOrigin && selectedDestination && departureDate && (
-              <SaveSearchButton key={`${selectedOrigin.code}:${selectedDestination.code}:${departureDate}:${adults}:${children}:${infants}:${cabinClass}`} request={{
-                searchType: 'FLIGHT', origin: selectedOrigin.code, destination: selectedDestination.code,
-                departureDate, travelersCount: adults + children + infants,
-                criteriaPayload: { originCity: selectedOrigin.city, destinationCity: selectedDestination.city,
-                  adults, children, infants, travelClass: cabinClass, currency: 'EUR' },
-              }} />
-            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -464,66 +455,41 @@ export default function FlightsPage() {
 
             {!hasSearched ? (
               // Initial idle state
-              <EmptyState
-                icon="fa-search"
-                title="Recherchez vos vols en temps réel"
-                description="Recherchez par ville (ex: Casablanca, Paris, Marrakech) ou par aéroport pour afficher les vols réels disponibles."
+              <TravelSearchState
+                vertical="FLIGHT"
+                status="INITIAL"
               />
             ) : isSearching ? (
               // Loading skeleton
               <FlightSkeleton count={5} />
             ) : searchStatus === 'ERROR' ? (
               // Error state
-              <ErrorState
-                title="Erreur de recherche"
-                message={searchMessage || 'Une erreur est survenue lors de la recherche.'}
+              <TravelSearchState
+                vertical="FLIGHT"
+                status="ERROR"
+                description={searchMessage || 'Une erreur est survenue lors de la recherche.'}
                 onRetry={handleRetry}
               />
             ) : searchStatus === 'PROVIDER_UNAVAILABLE' && flights.length === 0 ? (
-              // Provider unavailable — bespoke travel notice
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-8 text-center shadow-sm dark:border-[#01796F]/30 dark:bg-[#062523] max-w-2xl mx-auto">
-                <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-[#01796F] dark:text-[#02E0D5] ring-1 ring-[#01796F]/20 mx-auto flex items-center justify-center text-xl mb-4">
-                  <i className="fas fa-plane-departure" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
-                  Liaisons aériennes en direct
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto mb-6">
-                  {searchMessage && (searchMessage.includes('Phase') || searchMessage.includes('No live flight provider'))
-                    ? 'Les vols en temps réel pour cet itinéraire sont momentanément indisponibles auprès de nos partenaires. Vous pouvez ajuster vos dates de voyage ou explorer nos solutions de transport alternatives.'
-                    : (searchMessage || 'Les vols directs pour cet itinéraire sont momentanément indisponibles auprès des fournisseurs partenaires.')}
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Link
-                    href={`/trains?origin=${encodeURIComponent(selectedOrigin?.city || selectedOrigin?.name || '')}&destination=${encodeURIComponent(selectedDestination?.city || selectedDestination?.name || '')}`}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#01796F]/40 bg-slate-50 dark:bg-[#0a302d] text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-[#01796F] hover:text-[#01796F] transition-colors"
-                  >
-                    <i className="fas fa-train text-[#01796F] dark:text-[#02E0D5]" />
-                    <span>Explorer les trains</span>
-                  </Link>
-                  <Link
-                    href={`/transfers?origin=${encodeURIComponent(selectedOrigin?.city || selectedOrigin?.code || '')}&destination=${encodeURIComponent(selectedDestination?.city || selectedDestination?.code || '')}`}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#01796F]/40 bg-slate-50 dark:bg-[#0a302d] text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-[#01796F] hover:text-[#01796F] transition-colors"
-                  >
-                    <i className="fas fa-car text-[#01796F] dark:text-[#02E0D5]" />
-                    <span>Explorer les transferts</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleRetry}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#01796F] hover:bg-[#015f57] text-white text-xs font-semibold transition-colors shadow-sm"
-                  >
-                    <i className="fas fa-redo-alt text-[10px]" />
-                    <span>Réessayer</span>
-                  </button>
-                </div>
-              </div>
+              // Provider unavailable — standardized travel notice
+              <TravelSearchState
+                vertical="FLIGHT"
+                status="UNSUPPORTED"
+                title="Liaisons aériennes en direct"
+                description={
+                  searchMessage && (searchMessage.includes('Phase') || searchMessage.includes('No live flight provider'))
+                    ? 'Les vols en temps réel pour cet itinéraire sont momentanément indisponibles auprès de nos partenaires. Vous pouvez ajuster vos dates de voyage.'
+                    : (searchMessage || 'Les vols directs pour cet itinéraire sont momentanément indisponibles auprès des fournisseurs partenaires.')
+                }
+                onRetry={handleRetry}
+              />
             ) : sortedFlights.length === 0 ? (
               // No results
-              <EmptyState
-                icon="fa-plane-slash"
-                title="Aucun vol trouvé"
-                description={`Aucun vol n'a été trouvé entre ${selectedOrigin?.city} (${selectedOrigin?.code}) et ${selectedDestination?.city} (${selectedDestination?.code}) pour le ${departureDate}. Essayez une autre date.`}
+              <TravelSearchState
+                vertical="FLIGHT"
+                status="EMPTY"
+                title="Aucun vol disponible"
+                description={`Aucun vol n'a été trouvé entre ${selectedOrigin?.city || ''} (${selectedOrigin?.code || ''}) et ${selectedDestination?.city || ''} (${selectedDestination?.code || ''}) pour le ${departureDate}. Essayez une autre date.`}
               />
             ) : (
               // Real flight results list

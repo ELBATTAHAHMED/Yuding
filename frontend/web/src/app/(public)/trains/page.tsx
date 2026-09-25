@@ -6,13 +6,12 @@ import { travelService } from '@/services/travel.service';
 import { libraryService } from '@/services/library.service';
 import type { TrainOffer, TrainStation } from '@/types/travel.types';
 import { StationSelector } from '@/components/travel/StationSelector';
-import { TravelHero, TravelPage } from '@/components/travel';
+import { TravelHero, TravelPage, TravelSearchState } from '@/components/travel';
 import { TrainCard } from '@/components/travel/TrainCard';
 import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
-import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -420,19 +419,6 @@ export default function TrainsPage() {
       {/* ==================== CONTENT SECTION ==================== */}
       <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
-        {hasSearched && !loading && !errorMessage && originStation && destinationStation && date && (
-          <div className="mb-4 flex justify-end">
-            <SaveSearchButton key={`${originStation.id}:${destinationStation.id}:${date}:${departureTime}:${passengers}`} request={{
-              searchType: 'TRAIN', origin: originStation.name || originStation.id,
-              destination: destinationStation.name || destinationStation.id,
-              departureDate: date, travelersCount: passengers,
-              criteriaPayload: { originStation: originStation.name || originStation.id,
-                destinationStation: destinationStation.name || destinationStation.id,
-                originStationId: originStation.id, destinationStationId: destinationStation.id,
-                date, departureTime: departureTime || undefined, passengers },
-            }} />
-          </div>
-        )}
         {/* Freshness Gate Alert (Outdated Schedule Rejection) */}
         {outdatedNotice && (
           <div
@@ -486,24 +472,15 @@ export default function TrainsPage() {
 
         {/* Provider Unavailable message */}
         {providerMessage && (
-          <div
-            style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              color: '#64748b',
-              textAlign: 'center',
-            }}
-          >
-            <i className="fas fa-satellite-dish" style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#94a3b8' }} />
-            <p style={{ margin: 0, fontSize: '0.95rem' }}>
-              {providerMessage && !providerMessage.includes('No live') && !providerMessage.includes('Phase')
-                ? providerMessage
-                : 'Les horaires de train en direct sont momentanément indisponibles auprès du réseau partenaire. Veuillez réessayer dans quelques instants.'}
-            </p>
-          </div>
+          <TravelSearchState
+            vertical="TRAIN"
+            status="UNSUPPORTED"
+            title="Horaires ferroviaires momentanément inaccessibles"
+            description={providerMessage && !providerMessage.includes('No live') && !providerMessage.includes('Phase')
+              ? providerMessage
+              : 'Les horaires de train en direct sont momentanément indisponibles auprès du réseau partenaire. Veuillez réessayer dans quelques instants.'}
+            onRetry={handleSearch}
+          />
         )}
 
         {/* Loading skeleton */}
@@ -511,9 +488,10 @@ export default function TrainsPage() {
 
         {/* Error State */}
         {!loading && hasSearched && errorMessage && (
-          <ErrorState
-            title="Erreur de recherche"
-            message={errorMessage}
+          <TravelSearchState
+            vertical="TRAIN"
+            status="ERROR"
+            description={errorMessage}
             onRetry={handleSearch}
           />
         )}
@@ -584,8 +562,9 @@ export default function TrainsPage() {
 
         {/* Empty Filter State */}
         {!loading && hasSearched && trains.length > 0 && filteredTrains.length === 0 && (
-          <EmptyState
-            icon="fa-filter"
+          <TravelSearchState
+            vertical="TRAIN"
+            status="EMPTY"
             title="Aucune liaison ne correspond à vos filtres"
             description="Essayez de désactiver le filtre 'Directs uniquement' ou de sélectionner 'Tous les trains'."
           />
@@ -593,19 +572,19 @@ export default function TrainsPage() {
 
         {/* Empty Search State */}
         {!loading && hasSearched && trains.length === 0 && !outdatedNotice && !providerMessage && (
-          <EmptyState
-            icon="fa-train"
-            title="Aucun train trouvé pour cette liaison"
-            description="Aucune circulation directe ou horaire correspondant n’a été identifiée pour cette date ou cet horaire."
+          <TravelSearchState
+            vertical="TRAIN"
+            status="EMPTY"
+            title="Aucun trajet ferroviaire trouvé"
+            description="Aucune circulation directe ou horaire correspondant n’a été identifiée pour cette liaison et cette date."
           />
         )}
 
         {/* Initial Prompt State (before search) */}
         {!hasSearched && (
-          <EmptyState
-            icon="fa-route"
-            title="Recherchez votre itinéraire en train"
-            description="Sélectionnez une gare de départ, une gare d’arrivée et votre date de départ pour afficher les horaires."
+          <TravelSearchState
+            vertical="TRAIN"
+            status="INITIAL"
           />
         )}
 

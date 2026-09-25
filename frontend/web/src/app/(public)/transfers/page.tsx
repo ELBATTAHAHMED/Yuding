@@ -15,14 +15,13 @@ import {
 import { sortTransfers } from '@/lib/search-ux';
 import type { TransferSortKey } from '@/lib/search-ux';
 import { TransferLocationSelector, LocationSuggestion } from '@/components/travel/TransferLocationSelector';
-import { TravelHero, TravelPage } from '@/components/travel';
+import { TravelHero, TravelPage, TravelSearchState } from '@/components/travel';
 import { TransferSkeleton } from '@/components/travel/TransferSkeleton';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
 import { libraryService } from '@/services/library.service';
-import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
 import FavoriteButton from '@/components/common/FavoriteButton';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
@@ -365,16 +364,6 @@ export default function TransfersPage() {
       {/* ==================== CONTENT SECTION ==================== */}
       <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
-          {hasSearched && !loading && !errorMessage && pickup.trim() && dropoff.trim() && (
-            <div className="mb-4 flex justify-end">
-              <SaveSearchButton key={`${pickup}:${dropoff}:${date}:${time}:${passengers}`} request={{
-                searchType: 'TRANSFER', origin: providerLocation(pickup), destination: providerLocation(dropoff),
-                departureDate: date || defaultFutureDate, travelersCount: passengers,
-                criteriaPayload: { pickup: providerLocation(pickup), dropoff: providerLocation(dropoff),
-                  date: date || defaultFutureDate, time: time || '12:00', passengers },
-              }} />
-            </div>
-          )}
           {/* Mode Selector Tabs */}
           {hasSearched && transfers.length > 0 && (
           <div className="flex justify-center mb-6">
@@ -436,27 +425,28 @@ export default function TransfersPage() {
           )}
 
           {!hasSearched && (
-            <EmptyState
-              icon="fa-route"
-              title="Trouvez votre transfert depuis l'aéroport"
-              description="Entrez votre aéroport d'arrivée (ex: CDG pour Paris, BCN pour Barcelone, RAK pour Marrakech) et votre destination pour afficher les véhicules et tarifs en direct."
+            <TravelSearchState
+              vertical="TRANSFER"
+              status="INITIAL"
             />
           )}
 
           {hasSearched && loading && <TransferSkeleton count={5} />}
 
           {hasSearched && !loading && errorMessage && (
-            <ErrorState
-              title="Erreur de recherche"
-              message={errorMessage}
+            <TravelSearchState
+              vertical="TRANSFER"
+              status="ERROR"
+              description={errorMessage}
               onRetry={handleSearch}
             />
           )}
 
           {hasSearched && !loading && !errorMessage && transfers.length === 0 && (
-            <EmptyState
-              icon="fa-car-side"
-              title="Aucun moyen de transport disponible"
+            <TravelSearchState
+              vertical="TRANSFER"
+              status="EMPTY"
+              title="Aucun transfert disponible"
               description={providerMessage && !providerMessage.includes('No live') && !providerMessage.includes('Phase')
                 ? providerMessage
                 : 'Aucune offre trouvée pour ce trajet. Vérifiez vos aéroports et dates de voyage.'}

@@ -9,7 +9,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +30,13 @@ public class InternalTravelClient {
 
     public InternalTravelClient(@Value("${yuding.services.travel-url:http://localhost:8082}") String travelServiceUrl,
                                 ObjectMapper objectMapper) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(10));
+        requestFactory.setReadTimeout(Duration.ofSeconds(45));
+
         this.restClient = RestClient.builder()
                 .baseUrl(travelServiceUrl)
+                .requestFactory(requestFactory)
                 .build();
         this.objectMapper = objectMapper;
     }

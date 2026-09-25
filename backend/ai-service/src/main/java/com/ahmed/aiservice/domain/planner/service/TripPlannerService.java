@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -51,13 +52,22 @@ public class TripPlannerService {
         long numberOfDays = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
         long numberOfNights = Math.max(1, numberOfDays - 1);
 
-        // 1. Gather live candidates concurrently / safely
-        List<CandidateItem> flightCandidates = searchFlightCandidates(request);
-        List<CandidateItem> hotelCandidates = searchHotelCandidates(request, numberOfNights);
-        List<CandidateItem> activityCandidates = searchActivityCandidates(request);
-        List<CandidateItem> transferCandidates = searchTransferCandidates(request);
-        String weatherInfo = fetchWeatherInfo(request);
-        List<AiSourceDto> knowledgeSources = fetchDestinationKnowledge(request.getDestination());
+        // 1. Gather live candidates concurrently & safely
+        CompletableFuture<List<CandidateItem>> flightsFuture = CompletableFuture.supplyAsync(() -> searchFlightCandidates(request));
+        CompletableFuture<List<CandidateItem>> hotelsFuture = CompletableFuture.supplyAsync(() -> searchHotelCandidates(request, numberOfNights));
+        CompletableFuture<List<CandidateItem>> activitiesFuture = CompletableFuture.supplyAsync(() -> searchActivityCandidates(request));
+        CompletableFuture<List<CandidateItem>> transfersFuture = CompletableFuture.supplyAsync(() -> searchTransferCandidates(request));
+        CompletableFuture<String> weatherFuture = CompletableFuture.supplyAsync(() -> fetchWeatherInfo(request));
+        CompletableFuture<List<AiSourceDto>> knowledgeFuture = CompletableFuture.supplyAsync(() -> fetchDestinationKnowledge(request.getDestination()));
+
+        CompletableFuture.allOf(flightsFuture, hotelsFuture, activitiesFuture, transfersFuture, weatherFuture, knowledgeFuture).join();
+
+        List<CandidateItem> flightCandidates = flightsFuture.join();
+        List<CandidateItem> hotelCandidates = hotelsFuture.join();
+        List<CandidateItem> activityCandidates = activitiesFuture.join();
+        List<CandidateItem> transferCandidates = transfersFuture.join();
+        String weatherInfo = weatherFuture.join();
+        List<AiSourceDto> knowledgeSources = knowledgeFuture.join();
 
         // 2. Select candidates (constrained to returned candidate pool)
         CandidateItem selectedFlight = selectBestFlight(flightCandidates, request);
@@ -77,7 +87,7 @@ public class TripPlannerService {
                     .multiply(BigDecimal.valueOf(request.getTravelers()));
             pricedTotal = pricedTotal.add(flightCost);
         } else if (flightCandidates.isEmpty()) {
-            warnings.add("Aucun vol direct ou avec escale trouvé pour les dates demandées.");
+            warnings.add("Aucun vol direct ou avec escale disponible auprès des fournisseurs partenaires pour ces critères.");
             unpricedCount++;
         }
 
@@ -86,8 +96,12 @@ public class TripPlannerService {
                     .multiply(BigDecimal.valueOf(numberOfNights));
             pricedTotal = pricedTotal.add(hotelCost);
         } else if (hotelCandidates.isEmpty()) {
-            warnings.add("Aucun hébergement disponible trouvé pour les dates de séjour.");
+            warnings.add("Aucun hébergement disponible auprès des fournisseurs partenaires pour ces dates.");
             unpricedCount++;
+        }
+
+        if (activityCandidates.isEmpty()) {
+            warnings.add("Aucune activité partenaire disponible pour cette destination.");
         }
 
         if (selectedTransfer != null && selectedTransfer.price() != null) {
@@ -111,12 +125,12 @@ public class TripPlannerService {
 
         BigDecimal remainingBudget = budget.subtract(pricedTotal);
         String budgetStatus;
-        if (unpricedCount > 0) {
-            budgetStatus = "PARTIALLY_PRICED";
-        } else if (remainingBudget.compareTo(BigDecimal.ZERO) >= 0) {
-            budgetStatus = "WITHIN_BUDGET";
-        } else {
+        if (remainingBudget.compareTo(BigDecimal.ZERO) < 0) {
             budgetStatus = "OVER_BUDGET";
+        } else if (unpricedCount > 0) {
+            budgetStatus = "PARTIALLY_PRICED";
+        } else {
+            budgetStatus = "WITHIN_BUDGET";
         }
 
         // 4. Persist Trip Plan to DB
@@ -261,6 +275,17 @@ public class TripPlannerService {
 
     // ---------------- Candidate Searches ----------------
 
+    private JsonNode extractResults(JsonNode res) {
+        if (res == null) return null;
+        if (res.has("results") && res.path("results").isArray()) {
+            return res.path("results");
+        }
+        if (res.isArray()) {
+            return res;
+        }
+        return null;
+    }
+
     private List<CandidateItem> searchFlightCandidates(TripPlanRequest request) {
         List<CandidateItem> candidates = new ArrayList<>();
         try {
@@ -269,18 +294,22 @@ public class TripPlannerService {
                     "destination", request.getDestination(),
                     "departureDate", request.getStartDate().toString(),
                     "returnDate", request.getEndDate().toString(),
-                    "adults", request.getTravelers()
+                    "adults", Math.max(1, request.getTravelers())
             );
             JsonNode res = travelClient.searchFlights(req);
-            if (res != null && res.isArray()) {
-                for (JsonNode f : res) {
-                    String id = f.path("id").asText(f.path("flightNumber").asText(UUID.randomUUID().toString()));
-                    String airline = f.path("airline").asText("Compagnie aérienne");
+            JsonNode items = extractResults(res);
+            if (items != null) {
+                for (JsonNode f : items) {
+                    String id = f.path("offerId").asText(f.path("id").asText(f.path("flightNumber").asText(UUID.randomUUID().toString())));
+                    String airline = f.path("airlineName").asText(f.path("airlineCode").asText(f.path("airline").asText("Compagnie aérienne")));
                     String flightNum = f.path("flightNumber").asText("");
-                    BigDecimal price = f.has("price") ? new BigDecimal(f.path("price").asText()) : null;
+                    BigDecimal price = f.has("price") && !f.path("price").isNull()
+                            ? new BigDecimal(f.path("price").asText())
+                            : (f.has("totalPrice") && !f.path("totalPrice").isNull() ? new BigDecimal(f.path("totalPrice").asText()) : null);
                     String currency = f.path("currency").asText("MAD");
-                    String title = "Vol " + airline + " " + flightNum;
-                    candidates.add(new CandidateItem(id, "FLIGHT", title, "Scrappa/Amadeus", price, currency, "ALL_DAY"));
+                    String provider = f.path("provider").asText("Scrappa/Amadeus");
+                    String title = flightNum.isBlank() ? "Vol " + airline : "Vol " + airline + " " + flightNum;
+                    candidates.add(new CandidateItem(id, "FLIGHT", title, provider, price, currency, "ALL_DAY"));
                 }
             }
         } catch (Exception e) {
@@ -296,17 +325,27 @@ public class TripPlannerService {
                     "destination", request.getDestination(),
                     "checkIn", request.getStartDate().toString(),
                     "checkOut", request.getEndDate().toString(),
-                    "adults", request.getTravelers(),
+                    "adults", Math.max(1, request.getTravelers()),
                     "rooms", 1
             );
             JsonNode res = travelClient.searchHotels(req);
-            if (res != null && res.isArray()) {
-                for (JsonNode h : res) {
-                    String id = h.path("id").asText(UUID.randomUUID().toString());
-                    String name = h.path("name").asText("Hôtel");
-                    BigDecimal price = h.has("price") ? new BigDecimal(h.path("price").asText()) : (h.has("pricePerNight") ? new BigDecimal(h.path("pricePerNight").asText()) : null);
+            JsonNode items = extractResults(res);
+            if (items != null) {
+                for (JsonNode h : items) {
+                    String id = h.path("offerId").asText(h.path("hotelId").asText(h.path("id").asText(UUID.randomUUID().toString())));
+                    String name = h.path("hotelName").asText(h.path("name").asText("Hôtel"));
+                    BigDecimal price = null;
+                    if (h.has("totalPrice") && !h.path("totalPrice").isNull()) {
+                        price = new BigDecimal(h.path("totalPrice").asText());
+                    } else if (h.has("pricePerNight") && !h.path("pricePerNight").isNull()) {
+                        long nights = numberOfNights > 0 ? numberOfNights : 1;
+                        price = new BigDecimal(h.path("pricePerNight").asText()).multiply(BigDecimal.valueOf(nights));
+                    } else if (h.has("price") && !h.path("price").isNull()) {
+                        price = new BigDecimal(h.path("price").asText());
+                    }
                     String currency = h.path("currency").asText("MAD");
-                    candidates.add(new CandidateItem(id, "HOTEL", name, "Nuitee/LiteAPI", price, currency, "ALL_DAY"));
+                    String provider = h.path("provider").asText("Nuitee/LiteAPI");
+                    candidates.add(new CandidateItem(id, "HOTEL", name, provider, price, currency, "ALL_DAY"));
                 }
             }
         } catch (Exception e) {
@@ -319,16 +358,20 @@ public class TripPlannerService {
         List<CandidateItem> candidates = new ArrayList<>();
         try {
             Map<String, Object> req = Map.of(
-                    "destination", request.getDestination()
+                    "destination", request.getDestination(),
+                    "date", request.getStartDate().toString(),
+                    "travelers", Math.max(1, request.getTravelers())
             );
             JsonNode res = travelClient.searchActivities(req);
-            if (res != null && res.isArray()) {
-                for (JsonNode a : res) {
-                    String id = a.path("id").asText(UUID.randomUUID().toString());
-                    String title = a.path("name").asText(a.path("title").asText("Visite touristique"));
-                    BigDecimal price = a.has("price") ? new BigDecimal(a.path("price").asText()) : null;
+            JsonNode items = extractResults(res);
+            if (items != null) {
+                for (JsonNode a : items) {
+                    String id = a.path("offerId").asText(a.path("id").asText(UUID.randomUUID().toString()));
+                    String title = a.path("title").asText(a.path("name").asText("Visite touristique"));
+                    BigDecimal price = a.has("price") && !a.path("price").isNull() ? new BigDecimal(a.path("price").asText()) : null;
                     String currency = a.path("currency").asText("MAD");
-                    candidates.add(new CandidateItem(id, "ACTIVITY", title, "HBX", price, currency, "AFTERNOON"));
+                    String provider = a.path("provider").asText("HBX");
+                    candidates.add(new CandidateItem(id, "ACTIVITY", title, provider, price, currency, "AFTERNOON"));
                 }
             }
         } catch (Exception e) {
@@ -344,16 +387,19 @@ public class TripPlannerService {
                     "pickup", request.getDestination() + " Airport",
                     "dropoff", request.getDestination() + " Centre-Ville",
                     "date", request.getStartDate().toString(),
-                    "time", "12:00"
+                    "time", "12:00",
+                    "passengers", Math.max(1, request.getTravelers())
             );
             JsonNode res = travelClient.searchTransfers(req);
-            if (res != null && res.isArray()) {
-                for (JsonNode t : res) {
-                    String id = t.path("id").asText(UUID.randomUUID().toString());
-                    String vehicle = t.path("vehicleType").asText("Transfert privé / Berline");
-                    BigDecimal price = t.has("price") ? new BigDecimal(t.path("price").asText()) : null;
+            JsonNode items = extractResults(res);
+            if (items != null) {
+                for (JsonNode t : items) {
+                    String id = t.path("offerId").asText(t.path("id").asText(UUID.randomUUID().toString()));
+                    String vehicle = t.path("vehicleModel").asText(t.path("transferType").asText("Transfert privé / Berline"));
+                    BigDecimal price = t.has("price") && !t.path("price").isNull() ? new BigDecimal(t.path("price").asText()) : null;
                     String currency = t.path("currency").asText("MAD");
-                    candidates.add(new CandidateItem(id, "TRANSFER", "Transfert : " + vehicle, "TransfersProvider", price, currency, "MORNING"));
+                    String provider = t.path("provider").asText("TransfersProvider");
+                    candidates.add(new CandidateItem(id, "TRANSFER", "Transfert : " + vehicle, provider, price, currency, "MORNING"));
                 }
             }
         } catch (Exception e) {
@@ -367,18 +413,20 @@ public class TripPlannerService {
         long daysUntilTrip = ChronoUnit.DAYS.between(today, request.getStartDate());
 
         if (daysUntilTrip > 14 || request.getEndDate().isBefore(today)) {
-            return "Dates au-delà de l'horizon de prévision météorologique (max 14 jours). Prévisions saisonnières disponibles via le guide Yuding.";
+            return "Prévisions météo indisponibles pour ces dates (horizon de 14 jours dépassé).";
         }
 
         try {
             JsonNode geo = travelClient.geocode(request.getDestination());
             if (geo != null && geo.isArray() && !geo.isEmpty()) {
-                double lat = geo.get(0).path("lat").asDouble();
-                double lon = geo.get(0).path("lon").asDouble();
+                JsonNode first = geo.get(0);
+                double lat = first.has("latitude") ? first.path("latitude").asDouble() : first.path("lat").asDouble();
+                double lon = first.has("longitude") ? first.path("longitude").asDouble() : first.path("lon").asDouble();
                 JsonNode weather = travelClient.getWeather(lat, lon, 7);
                 if (weather != null && weather.has("current")) {
-                    double temp = weather.path("current").path("temperature").asDouble();
-                    String condition = weather.path("current").path("weatherDescription").asText("Ensoleillé");
+                    JsonNode curr = weather.path("current");
+                    double temp = curr.path("temperature").asDouble();
+                    String condition = curr.has("conditionLabel") ? curr.path("conditionLabel").asText() : curr.path("weatherDescription").asText("Ensoleillé");
                     return String.format("Météo actuelle : %.1f °C, %s", temp, condition);
                 }
             }
@@ -427,8 +475,13 @@ public class TripPlannerService {
         }
         try {
             JsonNode res = travelClient.convertCurrency(amount, from, to);
-            if (res != null && res.has("convertedAmount")) {
-                return new BigDecimal(res.path("convertedAmount").asText()).setScale(2, RoundingMode.HALF_UP);
+            if (res != null) {
+                if (res.has("convertedAmount") && !res.path("convertedAmount").isNull()) {
+                    return new BigDecimal(res.path("convertedAmount").asText()).setScale(2, RoundingMode.HALF_UP);
+                } else if (res.has("exchangeRate") && !res.path("exchangeRate").isNull()) {
+                    BigDecimal rate = new BigDecimal(res.path("exchangeRate").asText());
+                    return amount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
+                }
             }
         } catch (Exception e) {
             log.warn("Currency conversion from {} to {} failed: {}", from, to, e.getMessage());
@@ -493,12 +546,15 @@ public class TripPlannerService {
 
     private TripPlanItemEntity saveItem(TripPlanEntity plan, String type, CandidateItem item, String budgetCurrency, Integer dayNumber, String slot) {
         BigDecimal convPrice = convertAmount(item.price(), item.currency(), budgetCurrency);
+        String safeTitle = item.title() != null && item.title().length() > 250 ? item.title().substring(0, 250) : item.title();
+        String safeOfferRef = item.id() != null && item.id().length() > 500 ? item.id().substring(0, 500) : item.id();
+
         TripPlanItemEntity e = TripPlanItemEntity.builder()
                 .tripPlan(plan)
                 .itemType(type)
-                .title(item.title())
+                .title(safeTitle != null ? safeTitle : type)
                 .provider(item.provider())
-                .offerReference(item.id())
+                .offerReference(safeOfferRef)
                 .price(item.price())
                 .currency(item.currency())
                 .priceInBudgetCurrency(convPrice)

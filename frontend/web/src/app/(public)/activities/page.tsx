@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { apiClient } from '@/lib/api-client';
 import { ActivityOffer } from '@/types/travel.types';
-import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage, ActivitySkeleton } from '@/components/travel';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage, ActivitySkeleton, TravelSearchState } from '@/components/travel';
 import { TravelHero, TravelPage } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
@@ -230,7 +230,7 @@ export default function ActivitiesPage() {
         country={selectedGeoPlace?.country}
         defaultImageQuery="travel adventure activity excursion"
         defaultImageIndex={3}
-        icon="fas fa-compass"
+        icon="fas fa-ticket-alt"
         compact={hasSearched}
       />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
@@ -406,27 +406,28 @@ export default function ActivitiesPage() {
           )}
 
           {!hasSearched && (
-            <EmptyState
-              icon="fa-compass"
-              title="Prêt à explorer votre prochaine destination ?"
-              description="Indiquez une ville ci-dessus (ex: Paris, Barcelone, Rome ou Marrakech) et cliquez sur Rechercher pour découvrir les offres en direct."
+            <TravelSearchState
+              vertical="ACTIVITY"
+              status="INITIAL"
             />
           )}
 
           {hasSearched && loading && <ActivitySkeleton count={6} />}
 
           {hasSearched && !loading && errorMessage && (
-            <ErrorState
-              title="Erreur de recherche"
-              message={errorMessage}
+            <TravelSearchState
+              vertical="ACTIVITY"
+              status="ERROR"
+              description={errorMessage}
               onRetry={handleRetry}
             />
           )}
 
           {hasSearched && !loading && !errorMessage && sortedActivities.length === 0 && (
-            <EmptyState
-              icon="fa-search-location"
-              title="Aucune activité disponible pour le moment"
+            <TravelSearchState
+              vertical="ACTIVITY"
+              status="EMPTY"
+              title="Aucune activité trouvée"
               description="Aucune offre fournisseur trouvée pour cette destination et cette date. Essayez une autre ville ou date."
             />
           )}
