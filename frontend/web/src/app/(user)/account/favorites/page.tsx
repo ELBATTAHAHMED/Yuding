@@ -1,70 +1,11 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 
 export default function AccountFavoritesPage() {
-  return (
-    <div>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text, #001b1a)' }}>
-          Mes Favoris
-        </h1>
-        <p style={{ color: '#666' }}>Retrouvez les hébergements, vols et activités que vous avez sauvegardés</p>
-      </div>
-
-      <div
-        style={{
-          background: 'var(--card, #fff)',
-          borderRadius: '16px',
-          padding: '4rem 2rem',
-          textAlign: 'center',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-        }}
-      >
-        <div
-          style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: 'rgba(225, 29, 72, 0.1)',
-            color: '#e11d48',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2rem',
-            margin: '0 auto 1.5rem',
-          }}
-        >
-          <i className="fas fa-heart" />
-        </div>
-
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text, #001b1a)' }}>
-          Aucun favori enregistré
-        </h2>
-
-        <p style={{ color: '#666', maxWidth: '480px', margin: '0 auto 2rem', lineHeight: '1.6' }}>
-          Explorez nos offres d&apos;hébergements, de séjours et d&apos;expériences pour constituer votre liste d&apos;envies de voyage.
-        </p>
-
-        <Link
-          href="/hotels"
-          className="btn-booking"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.8rem 2rem',
-            borderRadius: '6px',
-            color: '#fff',
-            textDecoration: 'none',
-            fontWeight: 600,
-          }}
-        >
-          <i className="fas fa-bed" />
-          Découvrir les hébergements
-        </Link>
-      </div>
-    </div>
-  );
+  return <main className="account-empty-page">
+    <header className="account-page-header"><div><p className="account-kicker">VOTRE ESPACE VOYAGEUR</p><h1>Mes favoris</h1><p>Gardez vos hébergements, vols et expériences préférés sous la main.</p></div><span className="account-header-mark favorite"><i className="fas fa-heart" aria-hidden="true" /></span></header>
+    <section className="account-empty-panel" aria-labelledby="favorites-empty-title"><div className="account-empty-icon favorite"><i className="fas fa-heart" aria-hidden="true" /></div><div className="account-empty-copy"><p className="account-kicker">VOTRE LISTE D&apos;ENVIES</p><h2 id="favorites-empty-title">Aucun favori enregistré</h2><p>Explorez nos hébergements, trajets et activités, puis ajoutez vos coups de cœur pour les retrouver rapidement.</p></div><Link href="/hotels" className="account-primary-action favorite"><i className="fas fa-bed" aria-hidden="true" /> Découvrir les hébergements</Link></section>
+    <section className="account-help-row"><div><strong>Une destination vous tente déjà&nbsp;?</strong><span>Commencez par choisir une ville et composez votre prochaine escapade.</span></div><Link href="/activities">Explorer les activités <i className="fas fa-arrow-right" aria-hidden="true" /></Link></section>
+  </main>;
 }
