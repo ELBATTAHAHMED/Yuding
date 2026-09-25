@@ -1,12 +1,14 @@
 .root { position: relative; display: inline-flex; align-items: center; }
 .avatar { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #006d64; border-radius: 50%; background: #087d70; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,83,75,.15); transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
 .avatar img { width: 23px; height: 23px; object-fit: contain; }
+.avatar .profileAvatarImage { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .avatar:hover, .avatar[aria-expanded="true"] { background: #006f65; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,83,75,.2); }
 .avatar:focus-visible, .links a:focus-visible, .logout:focus-visible { outline: 3px solid #02e0d5; outline-offset: 2px; }
 .panel { position: absolute; top: calc(100% + 13px); right: 0; z-index: 150; width: min(264px,calc(100vw - 24px)); overflow: hidden; border: 1px solid #dce9e7; border-radius: 14px; background: #fff; color: #163331; box-shadow: 0 16px 36px rgba(0,35,32,.18); text-align: left; }
 .identity { display: flex; align-items: center; gap: 10px; padding: 15px 16px 13px; border-bottom: 1px solid #e6efed; }
 .identityAvatar { display: grid; flex: 0 0 34px; place-items: center; height: 34px; border-radius: 50%; background: #087d70; }
 .identityAvatar img { width: 20px; height: 20px; object-fit: contain; }
+.identityAvatar .profileAvatarImage { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .identityText { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .identityText strong, .identityText small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .identityText strong { font-size: 13px; }
