@@ -19,6 +19,7 @@ import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
+import { libraryService } from '@/services/library.service';
 
 function addDays(dateStr: string, days: number): string {
   if (!dateStr) return '';
@@ -281,6 +282,21 @@ export default function HotelsPage() {
       saveSearchOffers('HOTEL', data.results || []);
       setSearchStatus(data.status);
       setSearchMessage(data.message);
+
+      libraryService.recordRecentSearch({
+        searchType: 'HOTEL',
+        destination: destinationInput.trim() || selectedCity,
+        departureDate: checkIn,
+        returnDate: checkOut,
+        travelersCount: totalAdults + totalChildren,
+        criteriaPayload: {
+          city: selectedCity,
+          rooms: occupancies.length,
+          adults: totalAdults,
+          children: totalChildren,
+          currency,
+        },
+      }).catch(() => {});
     } catch (err: unknown) {
       setAllHotels([]);
       setSearchStatus('ERROR');

@@ -7,6 +7,8 @@ import { getOfferDetail } from '@/lib/offer-store';
 import type { HotelOffer, HotelRoomOffer } from '@/types/travel.types';
 import { SafeEntityImage } from '@/components/travel/SafeEntityImage';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
+import { libraryService } from '@/services/library.service';
+import FavoriteButton from '@/components/common/FavoriteButton';
 import {
   OfferDetailsShell,
   OfferDetailsHeader,
@@ -31,6 +33,16 @@ export default function HotelDetailsPage() {
       setHotel(resolved);
       if (resolved && resolved.roomOffers && resolved.roomOffers.length > 0) {
         setSelectedRoomOfferId(resolved.roomOffers[0].offerId);
+      }
+      if (resolved) {
+        libraryService.recordRecentView({
+          resourceType: 'HOTEL',
+          resourceReference: resolved.offerId || resolved.hotelId || offerId,
+          title: resolved.name || resolved.hotelName || 'Hôtel',
+          destination: `${resolved.city || ''}, ${resolved.country || ''}`,
+          thumbnailUrl: resolved.imageUrl,
+          providerLabel: resolved.provider || 'NUITEE',
+        }).catch(() => {});
       }
     }
     setLoading(false);
@@ -222,6 +234,18 @@ export default function HotelDetailsPage() {
             entityType="HOTEL"
             className="w-full h-full object-cover"
           />
+          <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, background: 'rgba(255, 255, 255, 0.9)', borderRadius: '50%', padding: '6px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}>
+            <FavoriteButton
+              resourceType="HOTEL"
+              resourceReference={hotel.offerId || hotel.hotelId || offerId}
+              title={hotelDisplayName}
+              destination={`${hotel.city || ''}, ${hotel.country || ''}`}
+              thumbnailUrl={hotel.imageUrl}
+              providerLabel={hotel.provider || 'NUITEE'}
+              priceSnapshot={activePrice}
+              currencySnapshot={activeCurrency}
+            />
+          </div>
         </div>
       </div>
 

@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/AuthContext';
 import { aiService } from '@/services/ai.service';
+import { libraryService } from '@/services/library.service';
 import type { TripPlanDto, TripPlanRequest } from '@/types/ai.types';
+import type { SavedTripItem } from '@/types/library.types';
 
 const PREFERENCE_OPTIONS = [
   { id: 'food', label: 'Gastronomie & Cafés', icon: '🍽️' },
@@ -17,6 +20,8 @@ const PREFERENCE_OPTIONS = [
 
 export function PlanifierClient() {
   const { isAuthenticated, user } = useAuth();
+  const searchParams = useSearchParams();
+  const tripRefParam = searchParams.get('tripRef');
 
   // Form State
   const [origin, setOrigin] = useState('Casablanca');
@@ -32,9 +37,11 @@ export function PlanifierClient() {
   // Execution State
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<TripPlanDto | null>(null);
   const [userPlans, setUserPlans] = useState<TripPlanDto[]>([]);
+  const [savedTrips, setSavedTrips] = useState<SavedTripItem[]>([]);
   const [activeTab, setActiveTab] = useState<'itinerary' | 'budget' | 'details'>('itinerary');
 
   // Set default dates (15 days from now for 5 days)
@@ -60,8 +67,43 @@ export function PlanifierClient() {
       aiService.getUserTripPlans()
         .then((plans) => setUserPlans(plans))
         .catch(() => {});
+      libraryService.getSavedTrips()
+        .then((trips) => setSavedTrips(trips))
+        .catch(() => {});
     }
   }, [isAuthenticated]);
+
+  // Load specific trip if tripRef param is provided
+  useEffect(() => {
+    if (tripRefParam && isAuthenticated) {
+      aiService.getTripPlanByReference(tripRefParam)
+        .then((plan: TripPlanDto) => setCurrentPlan(plan))
+        .catch(console.error);
+    }
+  }, [tripRefParam, isAuthenticated]);
+
+  const isTripSaved = currentPlan ? savedTrips.some(st => st.tripPlanReference === currentPlan.reference) : false;
+  const currentSavedTrip = currentPlan ? savedTrips.find(st => st.tripPlanReference === currentPlan.reference) : undefined;
+
+  const handleToggleSaveTrip = async () => {
+    if (!currentPlan || !isAuthenticated) return;
+    setIsSavingTrip(true);
+    try {
+      if (isTripSaved && currentSavedTrip) {
+        await libraryService.unsaveTrip(currentSavedTrip.publicReference);
+        setSavedTrips(prev => prev.filter(st => st.publicReference !== currentSavedTrip.publicReference));
+      } else {
+        const saved = await libraryService.saveTrip({
+          tripPlanReference: currentPlan.reference,
+        });
+        setSavedTrips(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Failed to toggle save trip:', err);
+    } finally {
+      setIsSavingTrip(false);
+    }
+  };
 
   const togglePreference = (id: string) => {
     setSelectedPreferences((prev) =>
@@ -106,6 +148,20 @@ export function PlanifierClient() {
       const plan = await aiService.createTripPlan(request);
       setCurrentPlan(plan);
       setUserPlans((prev) => [plan, ...prev.filter((p) => p.reference !== plan.reference)]);
+      libraryService.recordRecentSearch({
+        searchType: 'TRIP',
+        origin: origin.trim(),
+        destination: destination.trim(),
+        departureDate: startDate,
+        returnDate: endDate,
+        travelersCount: Number(travelers),
+        criteriaPayload: {
+          budget: numBudget,
+          budgetCurrency,
+          preferences: selectedPreferences,
+          pace,
+        },
+      }).catch(() => {});
     } catch (err: unknown) {
       const msg = (err as { message?: string })?.message || 'Échec de la génération du plan de voyage.';
       setError(msg);
@@ -420,15 +476,33 @@ export function PlanifierClient() {
                       </h2>
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={isRefreshing}
-                      onClick={handleRefreshPlan}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                    >
-                      <span className={isRefreshing ? 'animate-spin' : ''}>🔄</span>
-                      <span>{isRefreshing ? 'Actualisation…' : 'Actualiser tarifs'}</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {isAuthenticated && (
+                        <button
+                          type="button"
+                          disabled={isSavingTrip}
+                          onClick={handleToggleSaveTrip}
+                          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                            isTripSaved
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                              : 'border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <i className={isTripSaved ? 'fas fa-bookmark text-emerald-600' : 'far fa-bookmark'} aria-hidden="true" />
+                          <span>{isTripSaved ? 'Voyage enregistré' : 'Enregistrer ce voyage'}</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={isRefreshing}
+                        onClick={handleRefreshPlan}
+                        className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                      >
+                        <span className={isRefreshing ? 'animate-spin' : ''}>🔄</span>
+                        <span>{isRefreshing ? 'Actualisation…' : 'Actualiser tarifs'}</span>
+                      </button>
+                    </div>
                   </div>
 
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">

@@ -14,6 +14,7 @@ import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
 import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
+import { libraryService } from '@/services/library.service';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -180,6 +181,23 @@ export default function FlightsPage() {
       saveSearchOffers('FLIGHT', data.results || []);
       setSearchStatus(data.status);
       setSearchMessage(data.message);
+
+      libraryService.recordRecentSearch({
+        searchType: 'FLIGHT',
+        origin: selectedOrigin.code,
+        destination: selectedDestination.code,
+        departureDate,
+        travelersCount: adults + children + infants,
+        criteriaPayload: {
+          originCity: selectedOrigin.city,
+          destinationCity: selectedDestination.city,
+          adults,
+          children,
+          infants,
+          travelClass: cabinClass,
+          currency: 'EUR',
+        },
+      }).catch(() => {});
     } catch (err: unknown) {
       setFlights([]);
       setSearchStatus('ERROR');
