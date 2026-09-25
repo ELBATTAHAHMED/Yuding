@@ -34,7 +34,7 @@ public class UserRecentView {
     @Column(name = "resource_type", nullable = false, length = 32)
     private String resourceType;
 
-    @Column(name = "resource_reference", nullable = false, length = 128)
+    @Column(name = "resource_reference", nullable = false, length = 512)
     private String resourceReference;
 
     @Column(name = "title", nullable = false, length = 255)
@@ -43,7 +43,7 @@ public class UserRecentView {
     @Column(name = "destination", length = 255)
     private String destination;
 
-    @Column(name = "thumbnail_url", length = 1024)
+    @Column(name = "thumbnail_url", length = 2048)
     private String thumbnailUrl;
 
     @Column(name = "provider_label", length = 64)

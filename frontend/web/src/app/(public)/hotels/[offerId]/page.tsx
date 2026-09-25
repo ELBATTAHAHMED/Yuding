@@ -27,6 +27,8 @@ export default function HotelDetailsPage() {
   const [hotel, setHotel] = useState<HotelOffer | null>(null);
   const [selectedRoomOfferId, setSelectedRoomOfferId] = useState<string | null>(null);
 
+  const [isFavorited, setIsFavorited] = useState(false);
+
   useEffect(() => {
     if (offerId) {
       const resolved = getOfferDetail<HotelOffer>('HOTEL', offerId);
@@ -35,13 +37,21 @@ export default function HotelDetailsPage() {
         setSelectedRoomOfferId(resolved.roomOffers[0].offerId);
       }
       if (resolved) {
+        const hotelRef = (resolved.hotelId || resolved.id || (offerId.length <= 128 ? offerId : offerId.substring(0, 128)));
         libraryService.recordRecentView({
           resourceType: 'HOTEL',
-          resourceReference: resolved.offerId || resolved.hotelId || offerId,
+          resourceReference: hotelRef,
           title: resolved.name || resolved.hotelName || 'Hôtel',
-          destination: `${resolved.city || ''}, ${resolved.country || ''}`,
-          thumbnailUrl: resolved.imageUrl,
+          destination: [resolved.city, resolved.country].filter(Boolean).join(', ') || 'Maroc',
+          thumbnailUrl: resolved.imageUrl ? resolved.imageUrl.substring(0, 2000) : null,
           providerLabel: resolved.provider || 'NUITEE',
+        }).catch(() => {});
+
+        libraryService.getFavorites().then((favs) => {
+          if (Array.isArray(favs)) {
+            const hasIt = favs.some((f) => f.resourceReference === hotelRef || f.resourceReference === resolved.offerId);
+            setIsFavorited(hasIt);
+          }
         }).catch(() => {});
       }
     }
@@ -215,6 +225,19 @@ export default function HotelDetailsPage() {
         icon="fas fa-hotel"
         provider={hotel.provider || 'NUITEE'}
         badges={badges}
+        action={
+          <FavoriteButton
+            resourceType="HOTEL"
+            resourceReference={hotel.hotelId || hotel.id || (offerId.length <= 128 ? offerId : offerId.substring(0, 128))}
+            title={hotelDisplayName}
+            destination={[hotel.city, hotel.country].filter(Boolean).join(', ')}
+            thumbnailUrl={hotel.imageUrl}
+            priceSnapshot={activePrice}
+            currencySnapshot={activeCurrency}
+            isInitiallyFavorited={isFavorited}
+            onToggle={(fav) => setIsFavorited(fav)}
+          />
+        }
       />
 
       {/* Hotel Image (Authoritative Provider Image or SafeEntityImage fallback) */}

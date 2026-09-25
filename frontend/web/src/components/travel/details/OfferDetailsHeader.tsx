@@ -13,6 +13,8 @@ export interface OfferDetailsHeaderProps {
   sourceLabel?: string;
   /** Badges (e.g. ["Direct", "Classe Économique"]) */
   badges?: string[];
+  /** Optional action slot (e.g. FavoriteButton) */
+  action?: React.ReactNode;
 }
 
 export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
@@ -22,6 +24,7 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
   provider,
   sourceLabel,
   badges = [],
+  action,
 }) => {
   return (
     <div className="travel-details-header bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
@@ -43,7 +46,7 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
           </div>
         </div>
 
-        {/* Provider & Badges */}
+        {/* Provider, Badges & Action */}
         <div className="flex items-center gap-2 flex-wrap">
           {provider && (
             <span className="text-[11px] font-bold text-[#01796F] dark:text-[#02E0D5] bg-[#01796F]/10 dark:bg-[#01796F]/20 border border-[#01796F]/30 px-2.5 py-1 rounded-md uppercase tracking-wider">
@@ -59,6 +62,8 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
               {b}
             </span>
           ))}
+
+          {action && <div className="ml-1">{action}</div>}
         </div>
       </div>
     </div>

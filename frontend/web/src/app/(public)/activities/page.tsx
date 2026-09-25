@@ -430,7 +430,7 @@ export default function ActivitiesPage() {
               <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {sortedActivities.map((act) => {
                   const isCustom = act.source === 'YUDING_CUSTOM';
-                  const offerKey = act.offerId || act.id || act.title;
+                  const offerKey = act.id || act.offerId || act.title;
 
                   return (
                     <div
