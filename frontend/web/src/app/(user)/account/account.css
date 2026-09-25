@@ -496,10 +496,10 @@
 .library-tabs-nav {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: 4px;
   width: 100%;
-  margin-top: 18px;
-  margin-bottom: 28px;
+  margin-top: 10px;
+  margin-bottom: 18px;
   border-bottom: 1px solid var(--account-line);
   overflow-x: auto;
 }
@@ -509,16 +509,16 @@
 .library-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   flex: 0 0 auto;
-  padding: 13px 17px 15px;
+  padding: 8px 12px 10px;
   border: none;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--account-muted);
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -526,7 +526,7 @@
   text-decoration: none;
 }
 .library-tab-btn > i {
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .library-tab-btn:hover,
@@ -540,10 +540,12 @@
 }
 
 .library-tab-count {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1.2;
-  padding: 2px 7px;
+  padding: 1px 5px;
+  min-width: 16px;
+  text-align: center;
   border-radius: 9999px;
   background: rgba(8, 125, 112, 0.12);
   color: var(--account-green);
@@ -557,12 +559,12 @@
 .library-subfilters {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   background: #f1f5f9;
-  padding: 4px;
-  border-radius: 10px;
+  padding: 2px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.03);
 }
 
@@ -571,13 +573,13 @@
 .library-subfilter-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 7px;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.2;
   border: 1px solid transparent;
   background: transparent;
@@ -586,12 +588,12 @@
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
-.library-subfilter-btn > i { font-size: 12px; }
+.library-subfilter-btn > i { font-size: 11px; }
 .library-subfilter-btn .library-tab-count {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  padding: 1px 7px;
+  padding: 0 5px;
   border-radius: 9999px;
   background: #e2e8f0;
   color: #64748b;

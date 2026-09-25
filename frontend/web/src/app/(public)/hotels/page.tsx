@@ -11,8 +11,7 @@ import {
 } from '@/lib/hotel-filters';
 import { sortHotels, buildActiveFilterChips } from '@/lib/search-ux';
 import type { HotelSortKey } from '@/lib/search-ux';
-import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, HotelSkeleton } from '@/components/travel';
-import { TravelHero, TravelPage } from '@/components/travel';
+import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, HotelSkeleton, TravelHero, TravelPage, TravelSearchState } from '@/components/travel';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
@@ -773,22 +772,23 @@ export default function HotelsPage() {
 
           {/* Results State Management */}
           {!hasSearched ? (
-            <EmptyState
-              icon="fa-hotel"
-              title="Recherchez vos hébergements en temps réel"
-              description="Renseignez votre destination et vos dates de séjour ci-dessus pour accéder aux disponibilités et tarifs réels en direct via le réseau Nuitee Connect."
+            <TravelSearchState
+              vertical="HOTEL"
+              status="INITIAL"
             />
           ) : isSearching ? (
             <HotelSkeleton count={6} />
           ) : searchStatus === 'ERROR' ? (
-            <ErrorState
-              title="Erreur de recherche"
-              message={searchMessage || 'Une erreur est survenue lors de la recherche des hébergements.'}
+            <TravelSearchState
+              vertical="HOTEL"
+              status="ERROR"
+              description={searchMessage || 'Une erreur est survenue lors de la recherche des hébergements.'}
               onRetry={() => { handleSearch(); }}
             />
           ) : filteredHotels.length === 0 ? (
-            <EmptyState
-              icon="fa-bed"
+            <TravelSearchState
+              vertical="HOTEL"
+              status={searchStatus === 'PROVIDER_UNAVAILABLE' ? 'UNSUPPORTED' : 'EMPTY'}
               title="Aucun hébergement trouvé"
               description={
                 allHotels.length > 0 && filterType !== 'ALL'
@@ -801,6 +801,7 @@ export default function HotelsPage() {
                       ? searchMessage
                       : "Aucun hôtel disponible pour cette destination et ces dates. Essayez d'autres dates ou une autre ville.")
               }
+              onRetry={() => { handleSearch(); }}
             />
           ) : (
             /* Results Grid */

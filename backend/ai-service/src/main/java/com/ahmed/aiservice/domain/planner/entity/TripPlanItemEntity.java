@@ -33,7 +33,7 @@ public class TripPlanItemEntity {
     @Column(name = "provider", length = 50)
     private String provider;
 
-    @Column(name = "offer_reference", length = 150)
+    @Column(name = "offer_reference", length = 512)
     private String offerReference;
 
     @Column(name = "start_time")

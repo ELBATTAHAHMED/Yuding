@@ -21,3 +21,4 @@ export * from './ActivitySkeleton';
 export * from './TrainSkeleton';
 export * from './TransferSkeleton';
 export * from './details';
+export * from './TravelSearchState';
