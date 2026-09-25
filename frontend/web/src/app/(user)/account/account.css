@@ -164,6 +164,7 @@
 }
 
 .photo-column { text-align: center; }
+.photo-menu-wrap { position: relative; width: max-content; margin-inline: auto; }
 
 .photo-frame {
   position: relative;
@@ -190,7 +191,7 @@
 }
 
 .profile-photo img { width: 100%; height: 100%; object-fit: cover; }
-.photo-actions {
+.photo-edit {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -198,19 +199,23 @@
   height: 50%;
   display: grid;
   place-items: center;
+  width: 100%;
   padding: 0;
   border: 0;
   border-radius: 0 0 50% 50%;
   background: rgba(7, 47, 43, .72);
   opacity: 0;
+  color: #fff;
   transition: opacity .16s ease;
 }
-.photo-frame:hover .photo-actions,
-.photo-frame:focus-within .photo-actions { opacity: 1; }
-.photo-action {
+.photo-frame:hover .photo-edit,
+.photo-frame:focus-within .photo-edit,
+.photo-edit:focus-visible { opacity: 1; }
+.photo-edit-content {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-width: 0;
   padding: 5px 13px;
   border: 1px solid rgba(255,255,255,.55);
@@ -222,8 +227,44 @@
   line-height: 1.15;
   white-space: nowrap;
 }
-.photo-action:hover,
-.photo-action:focus-visible { background: rgba(255,255,255,.2); }
+.photo-edit:hover .photo-edit-content,
+.photo-edit:focus-visible .photo-edit-content { background: rgba(255,255,255,.2); }
+.photo-edit-content i { font-size: 13px; }
+.photo-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  z-index: 30;
+  display: grid;
+  min-width: 176px;
+  padding: 5px;
+  transform: translateX(-50%);
+  border: 1px solid var(--account-line);
+  border-radius: 11px;
+  background: var(--account-card);
+  box-shadow: 0 12px 28px rgba(23, 50, 47, .14);
+}
+.photo-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--account-ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+.photo-menu-item:hover,
+.photo-menu-item:focus-visible { background: #edf7f4; outline: none; }
+.photo-menu-item i { width: 15px; color: var(--account-green); text-align: center; }
+.photo-menu-item.danger { color: #ad4b4b; }
+.photo-menu-item.danger i { color: #c25757; }
+.photo-menu-item:disabled { cursor: not-allowed; opacity: .45; }
 .identity-copy h2 { margin: 0; font-size: 23px; line-height: 1.25; }
 .identity-copy > p:not(.eyebrow) { margin: 4px 0 0; color: var(--account-muted); font-size: 14px; overflow-wrap: anywhere; }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
@@ -252,26 +293,15 @@
 .profile-page .subtle-button { color: var(--account-muted); }
 .profile-page .row-action.danger { color: #b34545; }
 
-.account-content .profile-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(320px, .85fr);
-  align-items: start;
-  gap: clamp(28px, 4vw, 56px);
-  margin-top: 28px;
+.profile-flow { width: 100%; }
+.account-content .profile-flow .profile-section {
+  padding: 30px 0 !important;
+  border-bottom: 1px solid var(--account-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-
-.profile-section,
-.account-content .security-events {
-  padding: 24px 26px !important;
-  border: 1px solid var(--account-line);
-  border-radius: 14px;
-  background: var(--account-card);
-  box-shadow: 0 8px 24px rgba(23, 50, 47, .04);
-}
-
-.profile-section + .profile-section { margin-top: 22px; }
-.profile-section h2,
-.security-events h2 { margin: 0; font-size: 19px; line-height: 1.3; }
+.profile-flow .profile-section h2 { margin: 0; font-size: 19px; line-height: 1.3; }
 .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .profile-page .outline-button { padding: 7px 11px; border: 1px solid #bfd9d2; border-radius: 7px; background: transparent; color: var(--account-green); font-size: 12px; font-weight: 700; }
 
@@ -298,16 +328,14 @@
 .session-row span { color: var(--account-muted); font-size: 12px; }
 .traveler-form { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--account-line); }
 .traveler-form h3 { margin: 0; font-size: 16px; }
-.security-card form { display: grid; gap: 11px; margin-top: 16px; }
-.security-card label { display: grid; gap: 6px; color: var(--account-muted); font-size: 12px; font-weight: 700; }
+.security-section .password-form { display: grid; gap: 11px; width: min(100%, 560px); margin-top: 18px; }
+.security-section .password-form label { display: grid; gap: 6px; color: var(--account-muted); font-size: 12px; font-weight: 700; }
+.security-section .password-form .primary-button { justify-self: start; }
+.security-sessions { margin-top: 28px; }
+.security-sessions h3 { margin: 0 0 4px; font-size: 16px; }
 .session-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 0 0; }
 .session-row div { display: grid; gap: 3px; font-size: 13px; }
-.account-content .security-events { margin-top: 22px; }
-.events-list { margin-top: 12px; }
-.events-list > div { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--account-line); font-size: 13px; }
-.events-list span,
-.loading-line { color: var(--account-muted); }
-.loading-line { padding: 15px 0; font-size: 13px; }
+.loading-line { padding: 15px 0; color: var(--account-muted); font-size: 13px; }
 
 /* Reservations and favorites */
 .account-empty-page { color: var(--account-ink); }
@@ -336,7 +364,6 @@
 .account-help-row a { display: inline-flex; align-items: center; gap: 8px; color: var(--account-green); font-size: 13px; font-weight: 700; white-space: nowrap; }
 
 @media (max-width: 900px) {
-  .account-content .profile-grid { grid-template-columns: 1fr; }
   .identity-aside { display: none; }
   .account-content .account-empty-panel { grid-template-columns: 70px minmax(0, 1fr); }
   .account-primary-action { grid-column: 2; justify-self: start; }
@@ -354,9 +381,9 @@
   .photo-frame { width: 84px; height: 84px; }
   .profile-photo { width: 84px; height: 84px; }
   .identity-copy h2 { font-size: 19px; }
-  .profile-section,
-  .account-content .security-events { padding: 18px !important; }
-  .photo-actions { opacity: 1; }
+  .account-content .profile-flow .profile-section { padding: 24px 0 !important; }
+  .photo-edit { opacity: 1; }
+  .photo-menu { left: 0; transform: none; }
   .details-grid,
   .form-grid { gap: 15px; }
   .account-content .account-empty-panel { grid-template-columns: 52px minmax(0, 1fr); gap: 15px; padding: 26px 0 !important; }
