@@ -167,7 +167,10 @@
 
 .photo-frame {
   position: relative;
-  width: 106px;
+  width: 104px;
+  height: 104px;
+  overflow: hidden;
+  border-radius: 50%;
   margin-inline: auto;
 }
 
@@ -189,26 +192,28 @@
 .profile-photo img { width: 100%; height: 100%; object-fit: cover; }
 .photo-actions {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid rgba(255,255,255,.9);
-  border-radius: 9px;
-  background: rgba(19, 49, 46, .94);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 52%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 52px 52px;
+  background: rgba(7, 47, 43, .76);
   opacity: 0;
-  transform: translateY(4px);
+  transform: scale(.94);
   transition: opacity .16s ease, transform .16s ease;
 }
 .photo-frame:hover .photo-actions,
-.photo-frame:focus-within .photo-actions { opacity: 1; transform: translateY(0); }
+.photo-frame:focus-within .photo-actions { opacity: 1; transform: scale(1); }
 .photo-action {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 7px;
+  justify-content: center;
+  padding: 7px 9px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -219,7 +224,7 @@
 }
 .photo-action:hover,
 .photo-action:focus-visible { background: rgba(255,255,255,.16); }
-.photo-action.danger { color: #ffd2d2; }
+.photo-action:first-child { min-width: 76px; border: 1px solid rgba(255,255,255,.7); border-radius: 999px; }
 .identity-copy h2 { margin: 0; font-size: 23px; line-height: 1.25; }
 .identity-copy > p:not(.eyebrow) { margin: 4px 0 0; color: var(--account-muted); font-size: 14px; overflow-wrap: anywhere; }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
@@ -258,10 +263,11 @@
 
 .profile-section,
 .account-content .security-events {
-  padding: 22px !important;
-  border: 1px solid var(--account-line);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, .72);
+  padding: 22px 0 !important;
+  border: 0;
+  border-bottom: 1px solid var(--account-line);
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
 }
 
@@ -285,7 +291,7 @@
 .profile-page .primary-button { padding: 9px 14px; border: 0; border-radius: 7px; background: var(--account-green); color: #fff; font-size: 12px; font-weight: 800; }
 .profile-page .primary-button:disabled { opacity: .65; cursor: wait; }
 .traveler-list { margin-top: 17px; }
-.empty-state { display: grid; gap: 4px; padding: 16px; border: 1px dashed #cbded9; border-radius: 9px; color: var(--account-muted); font-size: 13px; }
+.empty-state { display: grid; gap: 4px; padding: 16px 0; color: var(--account-muted); font-size: 13px; }
 .empty-state strong { color: var(--account-ink); }
 .traveler-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--account-line); }
 .traveler-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; background: #e5f4f1; color: var(--account-green); font-weight: 800; }
@@ -347,12 +353,12 @@
   .profile-hero-meta,
   .account-header-mark { display: none; }
   .account-content .identity-strip { grid-template-columns: 72px minmax(0, 1fr); gap: 16px; padding: 22px 0 !important; }
-  .photo-frame { width: 84px; }
+  .photo-frame { width: 84px; height: 84px; }
   .profile-photo { width: 84px; height: 84px; }
   .identity-copy h2 { font-size: 19px; }
   .profile-section,
-  .account-content .security-events { padding: 18px !important; }
-  .photo-actions { opacity: 1; transform: none; }
+  .account-content .security-events { padding: 18px 0 !important; }
+  .photo-actions { opacity: 1; transform: scale(1); }
   .details-grid,
   .form-grid { gap: 15px; }
   .account-content .account-empty-panel { grid-template-columns: 52px minmax(0, 1fr); gap: 15px; padding: 26px 0 !important; }
