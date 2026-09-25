@@ -23,6 +23,7 @@ import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
 import { libraryService } from '@/services/library.service';
 import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -538,16 +539,26 @@ export default function TransfersPage() {
                           <div className="text-[11px] text-slate-400">Tarif garanti par véhicule</div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2">
+                          <FavoriteButton
+                            resourceType="TRANSFER"
+                            resourceReference={offerKey}
+                            title={`${item.vehicleModel || 'Transfert'} (${item.pickup || item.departureCity || 'Aéroport'} → ${item.dropoff || item.arrivalCity || 'Destination'})`}
+                            destination={`${item.pickup || item.departureCity || 'Aéroport'} → ${item.dropoff || item.arrivalCity || 'Destination'}`}
+                            providerLabel={item.provider || 'HBX'}
+                            priceSnapshot={item.price}
+                            currencySnapshot={item.currency || 'EUR'}
+                            size="md"
+                          />
                           <Link
                             href={`/transfers/${encodeURIComponent(offerKey)}`}
-                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
+                            className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                           >
                             Détails
                           </Link>
                           <Link
                             href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(item.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
-                            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
+                            className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                           >
                             Réserver
                           </Link>

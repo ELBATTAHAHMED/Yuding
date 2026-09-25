@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import type { TrainOffer, TrainLeg } from '@/types/travel.types';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 export interface TrainCardProps {
   offer: TrainOffer;
@@ -176,10 +177,21 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
             Tarif non disponible via cette source
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2">
+            <FavoriteButton
+              resourceType="TRAIN"
+              resourceReference={offer.offerId}
+              title={`${offer.productType || 'Train'}${offer.trainNumber ? ` N°${offer.trainNumber}` : ''}: ${offer.originStation} → ${offer.destinationStation}`}
+              destination={`${offer.originStation} → ${offer.destinationStation}`}
+              providerLabel={offer.operator || offer.provider || 'ONCF'}
+              priceSnapshot={offer.price}
+              currencySnapshot={offer.currency || 'MAD'}
+              size="md"
+            />
+
             <Link
               href={`/trains/${encodeURIComponent(offer.offerId)}`}
-              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
+              className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
             >
               Détails
             </Link>
@@ -187,7 +199,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({ offer }) => {
             <button
               type="button"
               onClick={() => setSelected((prev) => !prev)}
-              className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-center text-xs font-bold text-white shadow-sm transition-colors ${
+              className={`flex-1 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-center text-xs font-bold text-white shadow-sm transition-colors ${
                 selected ? 'bg-emerald-600' : 'bg-[#01796F] hover:bg-[#015f57]'
               }`}
               title="Mémoriser ce trajet pour votre itinéraire Yuding"

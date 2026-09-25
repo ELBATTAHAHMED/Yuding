@@ -1,4 +1,4 @@
-export type FavoriteResourceType = 'HOTEL' | 'ACTIVITY' | 'DESTINATION';
+export type FavoriteResourceType = 'HOTEL' | 'ACTIVITY' | 'DESTINATION' | 'FLIGHT' | 'TRANSFER' | 'TRAIN';
 
 export interface FavoriteItem {
   publicReference: string;

@@ -95,7 +95,7 @@ public class IdempotencyService {
         }
 
         // Complete the idempotency record in a dedicated short transaction
-        String resourceRef = refExtractor != null ? refExtractor.apply(result) : null;
+        String resourceRef = (refExtractor != null && result != null) ? refExtractor.apply(result) : null;
         completeExecution(recordId, successStatus, result, resourceRef);
         return result;
     }

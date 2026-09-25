@@ -20,6 +20,7 @@ import {
   type TimelineSegment,
   type ConditionItem,
 } from '@/components/travel/details';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 export default function TransferDetailsPage() {
   const params = useParams();
@@ -179,6 +180,17 @@ export default function TransferDetailsPage() {
         icon={categoryInfo.icon}
         provider={transfer.provider || 'HBX'}
         badges={badges}
+        action={
+          <FavoriteButton
+            resourceType="TRANSFER"
+            resourceReference={transfer.offerId || transfer.id || offerId}
+            title={`${transfer.vehicleModel || 'Transfert'} (${transfer.pickup || 'Départ'} → ${transfer.dropoff || 'Arrivée'})`}
+            destination={`${transfer.pickup || 'Départ'} → ${transfer.dropoff || 'Arrivée'}`}
+            providerLabel={transfer.provider || 'HBX'}
+            priceSnapshot={transfer.price}
+            currencySnapshot={transfer.currency || 'EUR'}
+          />
+        }
       />
 
       {/* Point-to-point Route Timeline */}

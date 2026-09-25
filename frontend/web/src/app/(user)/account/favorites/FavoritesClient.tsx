@@ -251,6 +251,9 @@ export default function FavoritesClient() {
               {favorites.length > 0 && (() => {
                 const hotelCount = favorites.filter(f => f.resourceType === 'HOTEL').length;
                 const activityCount = favorites.filter(f => f.resourceType === 'ACTIVITY').length;
+                const flightCount = favorites.filter(f => f.resourceType === 'FLIGHT').length;
+                const transferCount = favorites.filter(f => f.resourceType === 'TRANSFER').length;
+                const trainCount = favorites.filter(f => f.resourceType === 'TRAIN').length;
                 const destinationCount = favorites.filter(f => f.resourceType === 'DESTINATION').length;
                 return (
                   <div className="library-subfilters">
@@ -259,7 +262,7 @@ export default function FavoritesClient() {
                       className={`library-subfilter-btn ${favoriteFilter === 'ALL' ? 'active' : ''}`}
                       onClick={() => setFavoriteFilter('ALL')}
                     >
-                      Tous ({favorites.length})
+                      Tous {favorites.length > 0 && <span className="library-tab-count">{favorites.length}</span>}
                     </button>
                     {hotelCount > 0 && (
                       <button
@@ -267,7 +270,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'HOTEL' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('HOTEL')}
                       >
-                        Hôtels ({hotelCount})
+                        Hôtels <span className="library-tab-count">{hotelCount}</span>
                       </button>
                     )}
                     {activityCount > 0 && (
@@ -276,7 +279,34 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'ACTIVITY' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('ACTIVITY')}
                       >
-                        Activités ({activityCount})
+                        Activités <span className="library-tab-count">{activityCount}</span>
+                      </button>
+                    )}
+                    {flightCount > 0 && (
+                      <button
+                        type="button"
+                        className={`library-subfilter-btn ${favoriteFilter === 'FLIGHT' ? 'active' : ''}`}
+                        onClick={() => setFavoriteFilter('FLIGHT')}
+                      >
+                        Vols <span className="library-tab-count">{flightCount}</span>
+                      </button>
+                    )}
+                    {transferCount > 0 && (
+                      <button
+                        type="button"
+                        className={`library-subfilter-btn ${favoriteFilter === 'TRANSFER' ? 'active' : ''}`}
+                        onClick={() => setFavoriteFilter('TRANSFER')}
+                      >
+                        Transferts <span className="library-tab-count">{transferCount}</span>
+                      </button>
+                    )}
+                    {trainCount > 0 && (
+                      <button
+                        type="button"
+                        className={`library-subfilter-btn ${favoriteFilter === 'TRAIN' ? 'active' : ''}`}
+                        onClick={() => setFavoriteFilter('TRAIN')}
+                      >
+                        Trains <span className="library-tab-count">{trainCount}</span>
                       </button>
                     )}
                     {destinationCount > 0 && (
@@ -285,7 +315,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'DESTINATION' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('DESTINATION')}
                       >
-                        Destinations ({destinationCount})
+                        Destinations <span className="library-tab-count">{destinationCount}</span>
                       </button>
                     )}
                   </div>
@@ -309,24 +339,80 @@ export default function FavoritesClient() {
               ) : (
                 <div className="library-grid">
                   {filteredFavorites.map(fav => {
-                    const viewUrl = fav.resourceType === 'HOTEL'
-                      ? `/hotels/${fav.resourceReference}`
-                      : fav.resourceType === 'ACTIVITY'
-                      ? `/activities/${fav.resourceReference}`
-                      : `/destinations/${fav.resourceReference}`;
+                    const getFavoriteTypeInfo = (type: FavoriteResourceType) => {
+                      switch (type) {
+                        case 'HOTEL':
+                          return { label: 'Hôtel', icon: 'fas fa-hotel', actionLabel: "Voir l'offre", ctaIcon: 'fas fa-arrow-right' };
+                        case 'ACTIVITY':
+                          return { label: 'Activité', icon: 'fas fa-ticket-alt', actionLabel: "Voir l'offre", ctaIcon: 'fas fa-arrow-right' };
+                        case 'DESTINATION':
+                          return { label: 'Destination', icon: 'fas fa-map-marker-alt', actionLabel: 'Explorer', ctaIcon: 'fas fa-compass' };
+                        case 'FLIGHT':
+                          return { label: 'Vol', icon: 'fas fa-plane', actionLabel: 'Rechercher', ctaIcon: 'fas fa-redo-alt' };
+                        case 'TRANSFER':
+                          return { label: 'Transfert', icon: 'fas fa-car', actionLabel: 'Rechercher', ctaIcon: 'fas fa-redo-alt' };
+                        case 'TRAIN':
+                          return { label: 'Train', icon: 'fas fa-train', actionLabel: 'Horaires', ctaIcon: 'fas fa-redo-alt' };
+                        default:
+                          return { label: type, icon: 'fas fa-bookmark', actionLabel: 'Voir', ctaIcon: 'fas fa-arrow-right' };
+                      }
+                    };
+
+                    const getFavoriteUrl = (item: FavoriteItem): string => {
+                      if (item.resourceType === 'HOTEL') return `/hotels/${item.resourceReference}`;
+                      if (item.resourceType === 'ACTIVITY') return `/activities/${item.resourceReference}`;
+                      if (item.resourceType === 'DESTINATION') return `/destinations/${item.resourceReference}`;
+                      if (item.resourceType === 'FLIGHT') {
+                        if (item.destination && item.destination.includes('→')) {
+                          const parts = item.destination.split('→').map(s => s.trim());
+                          if (parts[0] && parts[1]) {
+                            return `/flights?origin=${encodeURIComponent(parts[0])}&destination=${encodeURIComponent(parts[1])}&rerun=1`;
+                          }
+                        }
+                        return `/flights/${encodeURIComponent(item.resourceReference)}`;
+                      }
+                      if (item.resourceType === 'TRANSFER') {
+                        if (item.destination && item.destination.includes('→')) {
+                          const parts = item.destination.split('→').map(s => s.trim());
+                          if (parts[0] && parts[1]) {
+                            return `/transfers?pickup=${encodeURIComponent(parts[0])}&dropoff=${encodeURIComponent(parts[1])}&rerun=1`;
+                          }
+                        }
+                        return `/transfers/${encodeURIComponent(item.resourceReference)}`;
+                      }
+                      if (item.resourceType === 'TRAIN') {
+                        if (item.destination && item.destination.includes('→')) {
+                          const parts = item.destination.split('→').map(s => s.trim());
+                          if (parts[0] && parts[1]) {
+                            return `/trains?origin=${encodeURIComponent(parts[0])}&destination=${encodeURIComponent(parts[1])}&rerun=1`;
+                          }
+                        }
+                        return `/trains/${encodeURIComponent(item.resourceReference)}`;
+                      }
+                      return '/';
+                    };
+
+                    const typeInfo = getFavoriteTypeInfo(fav.resourceType);
+                    const viewUrl = getFavoriteUrl(fav);
 
                     return (
                       <article key={fav.publicReference} className="library-card">
                         <div className="library-card-img-wrap">
-                          <img
-                            src={fav.thumbnailUrl || '/images/destination-placeholder.jpg'}
-                            alt={fav.title}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/images/destination-placeholder.jpg';
-                            }}
-                          />
+                          {fav.thumbnailUrl ? (
+                            <img
+                              src={fav.thumbnailUrl}
+                              alt={fav.title}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="library-card-icon-placeholder">
+                              <i className={typeInfo.icon} aria-hidden="true" />
+                            </div>
+                          )}
                           <span className="library-card-type-badge">
-                            {fav.resourceType === 'HOTEL' ? 'Hôtel' : fav.resourceType === 'ACTIVITY' ? 'Activité' : 'Destination'}
+                            {typeInfo.label}
                           </span>
                           <div className="library-card-fav-btn">
                             <FavoriteButton
@@ -351,6 +437,11 @@ export default function FavoritesClient() {
                           <p className="library-card-subtitle">
                             <i className="fas fa-map-marker-alt" aria-hidden="true" />
                             <span>{fav.destination || 'Maroc'}</span>
+                            {fav.providerLabel && (
+                              <span style={{ marginLeft: '6px', fontSize: '11px', color: '#94a3b8' }}>
+                                · {fav.providerLabel}
+                              </span>
+                            )}
                           </p>
 
                           <div className="library-card-footer">
@@ -372,7 +463,7 @@ export default function FavoritesClient() {
                             </div>
 
                             <Link href={viewUrl} className="btn-secondary-sm">
-                              Voir l&apos;offre <i className="fas fa-arrow-right" aria-hidden="true" />
+                              {typeInfo.actionLabel} <i className={typeInfo.ctaIcon} aria-hidden="true" />
                             </Link>
                           </div>
                         </div>
@@ -586,10 +677,10 @@ export default function FavoritesClient() {
                                 type="button"
                                 onClick={() => handleDeleteSearch(item.publicReference)}
                                 className="btn-danger-ghost"
-                                title="Supprimer cette recherche"
-                                aria-label="Supprimer cette recherche"
+                                title="Supprimer de l'historique"
+                                aria-label="Supprimer de l'historique"
                               >
-                                <i className="fas fa-times" aria-hidden="true" />
+                                <i className="fas fa-trash-alt" aria-hidden="true" />
                               </button>
                               <Link href={rerunUrl} className="btn-secondary-sm">
                                 <i className="fas fa-redo-alt" aria-hidden="true" /> Relancer
@@ -668,10 +759,10 @@ export default function FavoritesClient() {
                                 type="button"
                                 onClick={() => handleDeleteView(view.publicReference)}
                                 className="btn-danger-ghost"
-                                title="Supprimer cette consultation"
-                                aria-label="Supprimer cette consultation"
+                                title="Supprimer de l'historique"
+                                aria-label="Supprimer de l'historique"
                               >
-                                <i className="fas fa-times" aria-hidden="true" />
+                                <i className="fas fa-trash-alt" aria-hidden="true" />
                               </button>
                               <Link href={itemUrl} className="btn-secondary-sm">
                                 Consulter <i className="fas fa-arrow-right" aria-hidden="true" />

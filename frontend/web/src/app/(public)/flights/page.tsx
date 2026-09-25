@@ -16,6 +16,7 @@ import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
 import { libraryService } from '@/services/library.service';
 import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -576,10 +577,21 @@ export default function FlightsPage() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2">
+                      <FavoriteButton
+                        resourceType="FLIGHT"
+                        resourceReference={flight.offerId}
+                        title={`${flight.airlineName || flight.airlineCode || 'Vol'} (${flight.origin} → ${flight.destination})`}
+                        destination={`${flight.origin} → ${flight.destination}`}
+                        providerLabel={flight.provider || flight.airlineName || 'Vol'}
+                        priceSnapshot={flight.price}
+                        currencySnapshot={flight.currency || 'EUR'}
+                        size="md"
+                      />
+
                       <Link
                         href={`/flights/${encodeURIComponent(flight.offerId)}`}
-                        className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
+                        className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                       >
                         Voir détails
                       </Link>
@@ -589,13 +601,13 @@ export default function FlightsPage() {
                           href={`/booking?serviceType=FLIGHT&serviceId=${encodeURIComponent(flight.offerId)}&selectionRef=${encodeURIComponent(flight.selectionRef || flight.offerId)}&serviceTitle=${encodeURIComponent(
                             `${flight.airlineName || flight.airlineCode} (${flight.origin} → ${flight.destination})`
                           )}&price=${flight.price}&currency=${encodeURIComponent(flight.currency || 'EUR')}`}
-                          className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
+                          className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                         >
                           Réserver
                         </Link>
                       ) : (
                         <span
-                          className="inline-flex min-h-10 items-center justify-center rounded-lg bg-gray-200 px-2 text-center text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                          className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg bg-gray-200 px-2 text-center text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                           title="Tarif indisponible pour ce vol"
                         >
                           Indisponible

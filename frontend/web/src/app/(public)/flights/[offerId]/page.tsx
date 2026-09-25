@@ -15,6 +15,7 @@ import {
   type TimelineSegment,
   type ConditionItem,
 } from '@/components/travel/details';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 export default function FlightDetailsPage() {
   const params = useParams();
@@ -217,6 +218,17 @@ export default function FlightDetailsPage() {
         icon="fas fa-plane"
         provider={flight.provider}
         badges={[stopsLabel, ...(flight.cabinClass ? [flight.cabinClass] : [])]}
+        action={
+          <FavoriteButton
+            resourceType="FLIGHT"
+            resourceReference={flight.offerId}
+            title={`${airlineDisplayName} (${flight.origin} → ${flight.destination})`}
+            destination={`${flight.origin} → ${flight.destination}`}
+            providerLabel={flight.provider || flight.airlineName || 'Vol'}
+            priceSnapshot={flight.price}
+            currencySnapshot={flight.currency || 'EUR'}
+          />
+        }
       />
 
       {/* Itinerary Timeline */}

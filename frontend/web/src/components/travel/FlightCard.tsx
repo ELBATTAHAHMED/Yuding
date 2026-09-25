@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { FlightOffer } from '@/types/travel.types';
 import { Card } from '@/components/ui/Card';
 import { PriceDisplay } from './PriceDisplay';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 export interface FlightCardProps {
   flight: FlightOffer;
@@ -94,6 +95,16 @@ export const FlightCard: React.FC<FlightCardProps> = ({ flight, className = '' }
         </div>
 
         <div className="flex items-center gap-2">
+          <FavoriteButton
+            resourceType="FLIGHT"
+            resourceReference={flight.offerId}
+            title={`${displayName} (${flight.origin} → ${flight.destination})`}
+            destination={`${flight.origin} → ${flight.destination}`}
+            providerLabel={flight.provider || flight.airlineName || 'Vol'}
+            priceSnapshot={flight.price}
+            currencySnapshot={flight.currency || 'EUR'}
+            size="sm"
+          />
           <Link
             href={`/flights/${encodeURIComponent(flight.offerId)}`}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md border border-[#01796F] text-[#01796F] dark:text-[#02E0D5] hover:bg-[#01796F]/10 text-sm font-semibold transition-colors shrink-0"
