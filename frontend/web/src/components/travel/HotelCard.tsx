@@ -4,6 +4,7 @@ import { HotelOffer } from '@/types/travel.types';
 import { Card } from '@/components/ui/Card';
 import { PriceDisplay } from './PriceDisplay';
 import { SafeEntityImage } from './SafeEntityImage';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 export interface HotelCardProps {
   hotel: HotelOffer;
@@ -29,6 +30,17 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
           entityType="HOTEL"
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
+        <div className="absolute top-3 left-3 z-10 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full p-1 shadow-sm">
+          <FavoriteButton
+            resourceType="HOTEL"
+            resourceReference={hotel.offerId || hotel.hotelId || hotel.id || ''}
+            title={hotelDisplayName}
+            destination={`${hotel.city}, ${hotel.country}`}
+            thumbnailUrl={hotel.imageUrl}
+            priceSnapshot={hotel.pricePerNight}
+            currencySnapshot={hotel.currency}
+          />
+        </div>
         {hotel.rating && (
           <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-[#ffb300] px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1">
             <i className="fas fa-star" />

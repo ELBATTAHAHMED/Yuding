@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { getOfferDetail } from '@/lib/offer-store';
 import type { ActivityOffer } from '@/types/travel.types';
 import { SafeEntityImage } from '@/components/travel/SafeEntityImage';
+import { libraryService } from '@/services/library.service';
+import FavoriteButton from '@/components/common/FavoriteButton';
 import {
   OfferDetailsShell,
   OfferDetailsHeader,
@@ -31,6 +33,16 @@ export default function ActivityDetailsPage() {
     if (offerId) {
       const resolved = getOfferDetail<ActivityOffer>('ACTIVITY', offerId);
       setActivity(resolved);
+      if (resolved) {
+        libraryService.recordRecentView({
+          resourceType: 'ACTIVITY',
+          resourceReference: resolved.id || offerId,
+          title: resolved.title,
+          destination: `${resolved.destination || resolved.city || ''} ${resolved.country ? `• ${resolved.country}` : ''}`,
+          thumbnailUrl: resolved.imageUrl,
+          providerLabel: resolved.provider || 'HBX',
+        }).catch(() => {});
+      }
     }
     setLoading(false);
   }, [offerId]);
@@ -160,6 +172,18 @@ export default function ActivityDetailsPage() {
             entityType="ACTIVITY"
             className="w-full h-full object-cover"
           />
+          <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, background: 'rgba(255, 255, 255, 0.9)', borderRadius: '50%', padding: '6px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}>
+            <FavoriteButton
+              resourceType="ACTIVITY"
+              resourceReference={activity.id || offerId}
+              title={activity.title}
+              destination={`${activity.destination || activity.city || ''} ${activity.country ? `• ${activity.country}` : ''}`}
+              thumbnailUrl={activity.imageUrl}
+              providerLabel={activity.provider || 'HBX'}
+              priceSnapshot={activity.price}
+              currencySnapshot={activity.currency}
+            />
+          </div>
         </div>
       </div>
 

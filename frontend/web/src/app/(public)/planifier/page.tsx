@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import { PlanifierClient } from './PlanifierClient';
 
@@ -8,5 +8,13 @@ export const metadata: Metadata = {
 };
 
 export default function PlanifierPage() {
-  return <PlanifierClient />;
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-20 text-center">
+        <i className="fas fa-spinner fa-spin fa-2x text-emerald-600" aria-hidden="true" />
+      </div>
+    }>
+      <PlanifierClient />
+    </Suspense>
+  );
 }

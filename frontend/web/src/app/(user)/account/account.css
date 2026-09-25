@@ -486,3 +486,330 @@
   .profile-hero h1,
   .account-page-header h1 { font-size: 30px; }
 }
+
+/* ==========================================================================
+   User Library (Favorites, Saved Trips, Searches, History)
+   ========================================================================== */
+
+.library-tabs-nav {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid var(--account-border);
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.library-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--account-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.library-tab-btn:hover {
+  background: var(--account-bg-subtle, rgba(0, 0, 0, 0.04));
+  color: var(--account-text);
+}
+
+.library-tab-btn.active {
+  background: var(--account-green, #0ea5e9);
+  color: #ffffff;
+  border-color: var(--account-green, #0ea5e9);
+}
+
+.library-tab-count {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+
+.library-tab-btn.active .library-tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.library-subfilters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.library-subfilter-btn {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--account-border);
+  background: var(--account-card-bg, #ffffff);
+  color: var(--account-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.library-subfilter-btn:hover {
+  border-color: var(--account-green, #0ea5e9);
+}
+
+.library-subfilter-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.library-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.library-card {
+  border: 1px solid var(--account-border);
+  border-radius: 16px;
+  background: var(--account-card-bg, #ffffff);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.library-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.library-card-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #f1f5f9;
+}
+
+.library-card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.library-card-type-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.library-card-fav-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  padding: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.library-card-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.library-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--account-text);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.library-card-subtitle {
+  font-size: 13px;
+  color: var(--account-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.library-card-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--account-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.library-price-display {
+  display: flex;
+  flex-direction: column;
+}
+
+.library-price-amount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--account-text);
+}
+
+.library-price-note {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.library-list-item {
+  border: 1px solid var(--account-border);
+  border-radius: 12px;
+  background: var(--account-card-bg, #ffffff);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.15s ease;
+}
+
+.library-list-item:hover {
+  border-color: var(--account-green, #0ea5e9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.library-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.library-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.library-item-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--account-text);
+}
+
+.library-badge-expired {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+}
+
+.library-item-details {
+  font-size: 13px;
+  color: var(--account-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.library-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-secondary-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--account-border);
+  background: transparent;
+  color: var(--account-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-secondary-sm:hover {
+  background: var(--account-bg-subtle, #f8fafc);
+  border-color: #94a3b8;
+}
+
+.btn-primary-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: var(--account-green, #0ea5e9);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-primary-sm:hover {
+  filter: brightness(0.92);
+}
+
+.btn-danger-ghost {
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-danger-ghost:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}

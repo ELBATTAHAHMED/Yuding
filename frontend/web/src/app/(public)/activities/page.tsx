@@ -14,6 +14,7 @@ import { useSearchSession } from '@/lib/search-session';
 import type { ActivitySortKey } from '@/lib/search-ux';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
+import { libraryService } from '@/services/library.service';
 
 function stripHtml(text?: string | null): string {
   if (!text) return '';
@@ -141,6 +142,17 @@ export default function ActivitiesPage() {
       if (data.status === 'PROVIDER_UNAVAILABLE') {
         setProviderMessage(data.message || 'Le fournisseur d’activités ne répond pas pour le moment.');
       }
+
+      libraryService.recordRecentSearch({
+        searchType: 'ACTIVITY',
+        destination: destination.trim(),
+        departureDate: date || undefined,
+        travelersCount: travelers > 0 ? travelers : 1,
+        criteriaPayload: {
+          city: destination.trim(),
+          category: category !== 'ALL' ? category : undefined,
+        },
+      }).catch(() => {});
     } catch (err: unknown) {
       setActivities([]);
       const msg = err instanceof Error ? err.message : 'Erreur de connexion';
