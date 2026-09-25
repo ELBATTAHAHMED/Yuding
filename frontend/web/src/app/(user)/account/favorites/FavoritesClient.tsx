@@ -573,10 +573,10 @@ export default function FavoritesClient() {
                     onClick={() => handleSubTabChange('searches')}
                     className={`library-subfilter-btn ${historySubTab === 'searches' ? 'active' : ''}`}
                   >
-                    <i className="fas fa-search" aria-hidden="true" style={{ marginRight: '6px' }} />
-                    Recherches récentes
+                    <i className="fas fa-search" aria-hidden="true" />
+                    <span>Recherches récentes</span>
                     {recentSearches.length > 0 && (
-                      <span className="library-tab-count" style={{ marginLeft: '6px' }}>{recentSearches.length}</span>
+                      <span className="library-tab-count">{recentSearches.length}</span>
                     )}
                   </button>
 
@@ -587,10 +587,10 @@ export default function FavoritesClient() {
                     onClick={() => handleSubTabChange('views')}
                     className={`library-subfilter-btn ${historySubTab === 'views' ? 'active' : ''}`}
                   >
-                    <i className="fas fa-eye" aria-hidden="true" style={{ marginRight: '6px' }} />
-                    Consultés récemment
+                    <i className="fas fa-eye" aria-hidden="true" />
+                    <span>Consultés récemment</span>
                     {recentViews.length > 0 && (
-                      <span className="library-tab-count" style={{ marginLeft: '6px' }}>{recentViews.length}</span>
+                      <span className="library-tab-count">{recentViews.length}</span>
                     )}
                   </button>
                 </div>

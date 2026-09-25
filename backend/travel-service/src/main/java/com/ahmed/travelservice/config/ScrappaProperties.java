@@ -29,12 +29,12 @@ public class ScrappaProperties {
     /**
      * HTTP connect timeout in milliseconds.
      */
-    private int connectTimeoutMs = 5000;
+    private int connectTimeoutMs = 10000;
 
     /**
      * HTTP read timeout in milliseconds.
      */
-    private int readTimeoutMs = 15000;
+    private int readTimeoutMs = 35000;
 
     public boolean isConfigured() {
         return apiKey != null && !apiKey.isBlank();
