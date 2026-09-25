@@ -45,6 +45,8 @@ public class TravelServiceApplication {
                                     System.setProperty("travel.providers.hotels", val);
                                 } else if ("SCRAPPA_API_KEY".equals(key)) {
                                     System.setProperty("travel.scrappa.api-key", val);
+                                } else if ("SCRAPPA_BASE_URL".equals(key)) {
+                                    System.setProperty("travel.scrappa.base-url", val);
                                 } else if ("TRAVEL_FLIGHTS_PROVIDER".equals(key)) {
                                     System.setProperty("travel.providers.flights", val);
                                 } else if ("TRAVEL_ACTIVITIES_PROVIDER".equals(key)) {
@@ -85,7 +87,6 @@ public class TravelServiceApplication {
                             }
                         }
                     }
-                    break;
                 } catch (Exception ignored) {
                     // Fail-safe: continue startup if file cannot be read
                 }
@@ -103,8 +104,22 @@ public class TravelServiceApplication {
 
         logHbxStatus("HBX Activities", "HBX_ACTIVITIES_API_KEY", "HBX_ACTIVITIES_SECRET");
         logHbxStatus("HBX Transfers", "HBX_TRANSFERS_API_KEY", "HBX_TRANSFERS_SECRET");
+        logFlightStatus();
         logTransitlandStatus();
         logGeoapifyStatus();
+    }
+
+    private static void logFlightStatus() {
+        String provider = System.getProperty("TRAVEL_FLIGHTS_PROVIDER");
+        if (provider == null) {
+            provider = System.getenv("TRAVEL_FLIGHTS_PROVIDER");
+        }
+        String key = System.getProperty("SCRAPPA_API_KEY");
+        if (key == null) {
+            key = System.getenv("SCRAPPA_API_KEY");
+        }
+        boolean keyCfg = key != null && !key.isBlank();
+        System.out.println("[DIAGNOSTIC] Flights: provider=" + provider + ", scrappaKey=" + (keyCfg ? "configured" : "missing"));
     }
 
     private static void logTransitlandStatus() {
