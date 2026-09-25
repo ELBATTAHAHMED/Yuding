@@ -42,6 +42,17 @@ public class User {
     @Column(name = "country_code", length = 3)
     private String countryCode;
 
+    @Column(name = "profile_image_key", length = 100)
+    private String profileImageKey;
+
+    @Column(name = "preferred_currency", nullable = false, length = 3)
+    @Builder.Default
+    private String preferredCurrency = "MAD";
+
+    @Column(name = "preferred_language", nullable = false, length = 2)
+    @Builder.Default
+    private String preferredLanguage = "fr";
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 24)
     @Builder.Default

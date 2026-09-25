@@ -29,7 +29,7 @@ spring:
         - id: identity-route
           uri: lb://IDENTITY-SERVICE
           predicates:
-            - Path=/auth/**,/admin/**
+            - Path=/auth/**,/admin/**,/api/account/**
         - id: ai-route
           uri: lb://AI-SERVICE
           predicates:

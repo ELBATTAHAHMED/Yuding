@@ -9,7 +9,19 @@ export interface UserProfile {
   status?: string;
   isEmailVerified: boolean;
   createdAt?: string;
+  updatedAt?: string;
   lastLoginAt?: string;
+  preferredCurrency?: string;
+  preferredLanguage?: string;
+  hasProfilePhoto?: boolean;
+}
+
+export interface SavedTraveler {
+  reference: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  travelerType: 'ADULT' | 'CHILD' | 'INFANT';
 }
 
 export interface AuthResponse {
