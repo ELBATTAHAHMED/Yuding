@@ -46,7 +46,7 @@ if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
 }
 
-function Import-EnvironmentFile ([string]$path) {
+function Import-EnvironmentFile ([string]$path, [switch]$Override) {
     if (-not (Test-Path $path)) {
         return
     }
@@ -64,14 +64,16 @@ function Import-EnvironmentFile ([string]$path) {
 
         $key = $line.Substring(0, $eq).Trim()
         $value = $line.Substring($eq + 1).Trim().Trim('"').Trim("'")
-        if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($key, 'Process'))) {
+        if ($Override -or [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($key, 'Process'))) {
             [Environment]::SetEnvironmentVariable($key, $value, 'Process')
         }
     }
 }
 
 Import-EnvironmentFile (Join-Path $repoRoot '.env')
-Import-EnvironmentFile (Join-Path $repoRoot '.env.local')
+# Local overrides win over the shared .env file so Gmail SMTP credentials
+# in .env.local are actually passed to notification-service.
+Import-EnvironmentFile (Join-Path $repoRoot '.env.local') -Override
 
 Write-Host @"
 ==================================================================
