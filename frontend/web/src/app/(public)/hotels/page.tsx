@@ -845,25 +845,34 @@ export default function HotelsPage() {
 
                         {/* Top-Right Favorite Button */}
                         <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
-                          <FavoriteButton
-                            resourceType="HOTEL"
-                            resourceReference={item.offerId || item.hotelId || item.id || ''}
-                            title={item.name || item.hotelName || 'Hôtel'}
-                            destination={`${item.city}, ${item.country}`}
-                            thumbnailUrl={item.imageUrl}
-                            priceSnapshot={item.pricePerNight}
-                            currencySnapshot={item.currency}
-                            isInitiallyFavorited={favoriteHotelRefs.has(item.offerId || item.hotelId || item.id || '')}
-                            onToggle={(fav) => {
-                              const ref = item.offerId || item.hotelId || item.id || '';
-                              setFavoriteHotelRefs(prev => {
-                                const next = new Set(prev);
-                                if (fav) next.add(ref);
-                                else next.delete(ref);
-                                return next;
-                              });
-                            }}
-                          />
+                          {(() => {
+                            const hotelRef = item.hotelId || item.id || (item.offerId && item.offerId.length <= 128 ? item.offerId : item.offerId?.substring(0, 128)) || '';
+                            return (
+                              <FavoriteButton
+                                resourceType="HOTEL"
+                                resourceReference={hotelRef}
+                                title={item.name || item.hotelName || 'Hôtel'}
+                                destination={`${item.city}, ${item.country}`}
+                                thumbnailUrl={item.imageUrl}
+                                priceSnapshot={item.pricePerNight}
+                                currencySnapshot={item.currency}
+                                isInitiallyFavorited={favoriteHotelRefs.has(hotelRef) || (item.offerId ? favoriteHotelRefs.has(item.offerId) : false)}
+                                onToggle={(fav) => {
+                                  setFavoriteHotelRefs(prev => {
+                                    const next = new Set(prev);
+                                    if (fav) {
+                                      next.add(hotelRef);
+                                      if (item.offerId) next.add(item.offerId);
+                                    } else {
+                                      next.delete(hotelRef);
+                                      if (item.offerId) next.delete(item.offerId);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                              />
+                            );
+                          })()}
                         </div>
                       </div>
 

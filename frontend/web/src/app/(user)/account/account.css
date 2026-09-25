@@ -493,9 +493,9 @@
 
 .library-tabs-nav {
   display: flex;
-  gap: 12px;
-  border-bottom: 1px solid var(--account-border);
-  padding-bottom: 8px;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--account-line, #d9e7e3);
   margin-bottom: 24px;
   overflow-x: auto;
 }
@@ -503,71 +503,131 @@
 .library-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid transparent;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-bottom: 2.5px solid transparent;
   background: transparent;
-  color: var(--account-muted);
+  color: var(--account-muted, #607771);
+  font-size: 13.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
   text-decoration: none;
 }
 
 .library-tab-btn:hover {
-  background: var(--account-bg-subtle, rgba(0, 0, 0, 0.04));
-  color: var(--account-text);
+  color: var(--account-green, #087d70);
+  background: rgba(8, 125, 112, 0.04);
 }
 
 .library-tab-btn.active {
-  background: var(--account-green, #0ea5e9);
-  color: #ffffff;
-  border-color: var(--account-green, #0ea5e9);
+  color: var(--account-green, #087d70);
+  border-bottom-color: var(--account-green, #087d70);
+  background: transparent;
+  font-weight: 700;
 }
 
 .library-tab-count {
   font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(8, 125, 112, 0.1);
+  color: var(--account-green, #087d70);
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .library-tab-btn.active .library-tab-count {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--account-green, #087d70);
   color: #ffffff;
 }
 
 .library-subfilters {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--account-line, #d9e7e3);
   margin-bottom: 20px;
-  flex-wrap: wrap;
 }
 
 .library-subfilter-btn {
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 6px;
+  font-size: 12.5px;
   font-weight: 500;
-  border: 1px solid var(--account-border);
-  background: var(--account-card-bg, #ffffff);
-  color: var(--account-text);
+  border: none;
+  background: transparent;
+  color: var(--account-muted, #607771);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .library-subfilter-btn:hover {
-  border-color: var(--account-green, #0ea5e9);
+  color: var(--account-ink, #17322f);
 }
 
 .library-subfilter-btn.active {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
+  background: #ffffff;
+  color: var(--account-ink, #17322f);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .library-tabs-nav {
+  border-bottom-color: var(--account-line, #36504a);
+}
+
+[data-theme="dark"] .library-tab-btn {
+  color: var(--account-muted, #a9beb7);
+}
+
+[data-theme="dark"] .library-tab-btn:hover {
+  color: #78d5c4;
+  background: rgba(120, 213, 196, 0.06);
+}
+
+[data-theme="dark"] .library-tab-btn.active {
+  color: #78d5c4;
+  border-bottom-color: #78d5c4;
+}
+
+[data-theme="dark"] .library-tab-count {
+  background: rgba(120, 213, 196, 0.15);
+  color: #78d5c4;
+}
+
+[data-theme="dark"] .library-tab-btn.active .library-tab-count {
+  background: #78d5c4;
+  color: #062523;
+}
+
+[data-theme="dark"] .library-subfilters {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--account-line, #36504a);
+}
+
+[data-theme="dark"] .library-subfilter-btn {
+  color: var(--account-muted, #a9beb7);
+}
+
+[data-theme="dark"] .library-subfilter-btn:hover {
+  color: var(--account-ink, #e7f1ee);
+}
+
+[data-theme="dark"] .library-subfilter-btn.active {
+  background: var(--account-card, #202e2a);
+  color: var(--account-ink, #e7f1ee);
 }
 
 .library-header-actions {
@@ -812,4 +872,139 @@
 .btn-danger-ghost:hover {
   color: #ef4444;
   background: #fef2f2;
+}
+
+/* ==========================================================================
+   Bookings List & Status Badges
+   ========================================================================== */
+
+.booking-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.booking-status-badge.confirmed {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.booking-status-badge.paid {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.booking-status-badge.pending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.booking-status-badge.draft {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.booking-status-badge.failed {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.booking-status-badge.cancelled {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.booking-status-badge.refunded {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.booking-ref-badge {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(8, 125, 112, 0.08);
+  color: var(--account-green, #087d70);
+  border: 1px solid rgba(8, 125, 112, 0.2);
+}
+
+.booking-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(8, 125, 112, 0.08);
+  color: var(--account-green, #087d70);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .booking-status-badge.confirmed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .booking-status-badge.paid {
+  background: rgba(20, 184, 166, 0.15);
+  color: #2dd4bf;
+  border-color: rgba(20, 184, 166, 0.3);
+}
+
+[data-theme="dark"] .booking-status-badge.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .booking-status-badge.draft {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] .booking-status-badge.failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .booking-status-badge.cancelled {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .booking-status-badge.refunded {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+[data-theme="dark"] .booking-ref-badge {
+  background: rgba(120, 213, 196, 0.12);
+  color: #78d5c4;
+  border-color: rgba(120, 213, 196, 0.25);
+}
+
+[data-theme="dark"] .booking-type-icon {
+  background: rgba(120, 213, 196, 0.12);
+  color: #78d5c4;
 }

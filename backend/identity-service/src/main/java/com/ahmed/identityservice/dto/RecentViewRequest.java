@@ -9,7 +9,7 @@ public record RecentViewRequest(
         String resourceType,
 
         @NotBlank(message = "La référence de la ressource est obligatoire")
-        @Size(max = 128)
+        @Size(max = 512)
         String resourceReference,
 
         @NotBlank(message = "Le titre est obligatoire")
@@ -19,7 +19,7 @@ public record RecentViewRequest(
         @Size(max = 255)
         String destination,
 
-        @Size(max = 1024)
+        @Size(max = 2048)
         String thumbnailUrl,
 
         @Size(max = 64)

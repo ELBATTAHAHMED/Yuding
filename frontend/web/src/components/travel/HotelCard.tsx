@@ -46,7 +46,7 @@ export const HotelCard: React.FC<HotelCardProps> = ({
         <div className="absolute top-3 right-3 z-10">
           <FavoriteButton
             resourceType="HOTEL"
-            resourceReference={hotel.offerId || hotel.hotelId || hotel.id || ''}
+            resourceReference={hotel.hotelId || hotel.id || (hotel.offerId && hotel.offerId.length <= 128 ? hotel.offerId : hotel.offerId?.substring(0, 128)) || ''}
             title={hotelDisplayName}
             destination={`${hotel.city}, ${hotel.country}`}
             thumbnailUrl={hotel.imageUrl}

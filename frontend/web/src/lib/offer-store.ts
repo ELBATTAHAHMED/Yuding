@@ -33,23 +33,28 @@ export function saveSearchOffers<T extends { offerId?: string; id?: string }>(
 
   const now = Date.now();
   for (const offer of offers) {
-    const id = offer.offerId || offer.id;
-    if (!id) continue;
+    const rawIds = [offer.offerId, offer.id, (offer as any).hotelId].filter(
+      (id): id is string => typeof id === 'string' && id.trim().length > 0
+    );
+    const uniqueIds = Array.from(new Set(rawIds));
+    if (uniqueIds.length === 0) continue;
 
-    const key = buildStoreKey(product, id);
+    for (const id of uniqueIds) {
+      const key = buildStoreKey(product, id);
 
-    // Save to memory
-    memoryStore.set(key, { product, data: offer, timestamp: now });
+      // Save to memory
+      memoryStore.set(key, { product, data: offer, timestamp: now });
 
-    // Save to sessionStorage (safe fallback if window is available)
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      try {
-        window.sessionStorage.setItem(
-          key,
-          JSON.stringify({ product, data: offer, timestamp: now })
-        );
-      } catch {
-        // Ignore quota errors in storage
+      // Save to sessionStorage (safe fallback if window is available)
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        try {
+          window.sessionStorage.setItem(
+            key,
+            JSON.stringify({ product, data: offer, timestamp: now })
+          );
+        } catch {
+          // Ignore quota errors in storage
+        }
       }
     }
   }

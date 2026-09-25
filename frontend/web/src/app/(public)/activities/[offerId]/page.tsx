@@ -28,19 +28,28 @@ export default function ActivityDetailsPage() {
 
   const [loading, setLoading] = useState(true);
   const [activity, setActivity] = useState<ActivityOffer | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
     if (offerId) {
       const resolved = getOfferDetail<ActivityOffer>('ACTIVITY', offerId);
       setActivity(resolved);
       if (resolved) {
+        const ref = resolved.id || offerId;
         libraryService.recordRecentView({
           resourceType: 'ACTIVITY',
-          resourceReference: resolved.id || offerId,
+          resourceReference: ref,
           title: resolved.title,
           destination: `${resolved.destination || resolved.city || ''} ${resolved.country ? `• ${resolved.country}` : ''}`,
           thumbnailUrl: resolved.imageUrl,
           providerLabel: resolved.provider || 'HBX',
+        }).catch(() => {});
+
+        libraryService.getFavorites().then((favs) => {
+          if (Array.isArray(favs)) {
+            const hasIt = favs.some((f) => f.resourceReference === ref || f.resourceReference === offerId);
+            setIsFavorited(hasIt);
+          }
         }).catch(() => {});
       }
     }
@@ -182,6 +191,8 @@ export default function ActivityDetailsPage() {
               providerLabel={activity.provider || 'HBX'}
               priceSnapshot={activity.price}
               currencySnapshot={activity.currency}
+              isInitiallyFavorited={isFavorited}
+              onToggle={(fav) => setIsFavorited(fav)}
             />
           </div>
         </div>
