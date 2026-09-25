@@ -79,5 +79,5 @@ function ProfileAvatar() {
   const { user } = useAuth();
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => { let active = true; let objectUrl: string | null = null; void import('@/services/auth.service').then(({ authService }) => authService.getProfilePhoto()).then(blob => { if (active) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); } }).catch(() => {}); return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); }; }, [user?.hasProfilePhoto, user?.updatedAt]);
-  return url ? <img src={url} alt="" /> : <span aria-hidden="true">{user?.firstName?.charAt(0)?.toUpperCase() || 'U'}</span>;
+  return url ? <img className={styles.profileAvatarImage} src={url} alt="" /> : <span aria-hidden="true">{user?.firstName?.charAt(0)?.toUpperCase() || 'U'}</span>;
 }
