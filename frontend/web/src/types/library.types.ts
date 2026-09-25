@@ -44,7 +44,7 @@ export interface SavedTripRequest {
   tripPlanReference: string;
 }
 
-export type SearchVerticalType = 'FLIGHT' | 'HOTEL' | 'ACTIVITY' | 'TRIP' | 'FLIGHTS' | 'HOTELS' | 'ACTIVITIES';
+export type SearchVerticalType = 'FLIGHT' | 'HOTEL' | 'ACTIVITY' | 'TRANSFER' | 'TRAIN' | 'TRIP' | 'FLIGHTS' | 'HOTELS' | 'ACTIVITIES' | 'TRANSFERS' | 'TRAINS';
 
 export interface RecentSearchItem {
   publicReference: string;

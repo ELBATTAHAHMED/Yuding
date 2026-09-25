@@ -20,6 +20,20 @@ import { useSearchSession } from '@/lib/search-session';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 import { libraryService } from '@/services/library.service';
+import FavoriteButton from '@/components/common/FavoriteButton';
+
+function inferCountryCode(destination: string, currentCode?: string): string {
+  if (currentCode && currentCode !== 'MA') return currentCode;
+  const lower = destination.toLowerCase().trim();
+  if (lower.includes('paris') || lower.includes('france') || lower.includes('nice') || lower.includes('lyon') || lower.includes('marseille')) return 'FR';
+  if (lower.includes('rome') || lower.includes('roma') || lower.includes('italy') || lower.includes('italie') || lower.includes('milan') || lower.includes('venise') || lower.includes('florence')) return 'IT';
+  if (lower.includes('madrid') || lower.includes('barcelona') || lower.includes('barcelone') || lower.includes('spain') || lower.includes('espagne') || lower.includes('seville')) return 'ES';
+  if (lower.includes('london') || lower.includes('londres') || lower.includes('royaume') || lower.includes('uk') || lower.includes('manchester')) return 'GB';
+  if (lower.includes('new york') || lower.includes('usa') || lower.includes('etats') || lower.includes('miami') || lower.includes('los angeles')) return 'US';
+  if (lower.includes('dubai') || lower.includes('emirats') || lower.includes('uae')) return 'AE';
+  if (lower.includes('istanbul') || lower.includes('turquie') || lower.includes('turkey')) return 'TR';
+  return currentCode || 'MA';
+}
 
 function addDays(dateStr: string, days: number): string {
   if (!dateStr) return '';
@@ -64,7 +78,16 @@ export default function HotelsPage() {
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [favoriteHotelRefs, setFavoriteHotelRefs] = useState<Set<string>>(new Set());
   const placeRequestRef = useRef(0);
+  const searchRequestIdRef = useRef(0);
+
+  useEffect(() => {
+    libraryService.getFavorites().then((favs) => {
+      const hotelFavs = favs.filter(f => f.resourceType === 'HOTEL');
+      setFavoriteHotelRefs(new Set(hotelFavs.map(f => f.resourceReference)));
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -233,8 +256,8 @@ export default function HotelsPage() {
     );
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     setValidationError(null);
 
     if (!destinationInput.trim()) {
@@ -258,16 +281,18 @@ export default function HotelsPage() {
       return;
     }
 
+    const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
     setHasSearched(true);
     setExpandedHotelId(null);
     setFilterType('ALL');
 
     try {
+      const effectiveCountryCode = inferCountryCode(destinationInput.trim(), selectedCountryCode);
       const data = await travelService.searchHotels({
         destination: destinationInput.trim(),
         city: selectedCity || destinationInput.trim(),
-        countryCode: selectedCountryCode || 'MA',
+        countryCode: effectiveCountryCode,
         checkIn,
         checkOut,
         rooms: occupancies.length,
@@ -277,6 +302,8 @@ export default function HotelsPage() {
         guestNationality,
         currency,
       });
+
+      if (requestId !== searchRequestIdRef.current) return;
 
       setAllHotels(data.results || []);
       saveSearchOffers('HOTEL', data.results || []);
@@ -291,6 +318,7 @@ export default function HotelsPage() {
         travelersCount: totalAdults + totalChildren,
         criteriaPayload: {
           city: selectedCity,
+          countryCode: effectiveCountryCode,
           rooms: occupancies.length,
           adults: totalAdults,
           children: totalChildren,
@@ -298,6 +326,7 @@ export default function HotelsPage() {
         },
       }).catch(() => {});
     } catch (err: unknown) {
+      if (requestId !== searchRequestIdRef.current) return;
       setAllHotels([]);
       setSearchStatus('ERROR');
       if (err instanceof ApiError) {
@@ -324,7 +353,9 @@ export default function HotelsPage() {
         }
       }
     } finally {
-      setIsSearching(false);
+      if (requestId === searchRequestIdRef.current) {
+        setIsSearching(false);
+      }
     }
   };
 
@@ -716,7 +747,7 @@ export default function HotelsPage() {
             <ErrorState
               title="Erreur de recherche"
               message={searchMessage || 'Une erreur est survenue lors de la recherche des hébergements.'}
-              onRetry={() => { setHasSearched(false); setSearchStatus(null); setAllHotels([]); }}
+              onRetry={() => { handleSearch(); }}
             />
           ) : filteredHotels.length === 0 ? (
             <EmptyState
@@ -794,8 +825,8 @@ export default function HotelsPage() {
                           <div
                             style={{
                               position: 'absolute',
-                              top: '10px',
-                              right: '10px',
+                              bottom: '10px',
+                              left: '10px',
                               background: 'rgba(0,0,0,0.7)',
                               color: '#ffb300',
                               padding: '0.25rem 0.6rem',
@@ -811,6 +842,29 @@ export default function HotelsPage() {
                             <span>{item.starRating || item.rating}</span>
                           </div>
                         )}
+
+                        {/* Top-Right Favorite Button */}
+                        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
+                          <FavoriteButton
+                            resourceType="HOTEL"
+                            resourceReference={item.offerId || item.hotelId || item.id || ''}
+                            title={item.name || item.hotelName || 'Hôtel'}
+                            destination={`${item.city}, ${item.country}`}
+                            thumbnailUrl={item.imageUrl}
+                            priceSnapshot={item.pricePerNight}
+                            currencySnapshot={item.currency}
+                            isInitiallyFavorited={favoriteHotelRefs.has(item.offerId || item.hotelId || item.id || '')}
+                            onToggle={(fav) => {
+                              const ref = item.offerId || item.hotelId || item.id || '';
+                              setFavoriteHotelRefs(prev => {
+                                const next = new Set(prev);
+                                if (fav) next.add(ref);
+                                else next.delete(ref);
+                                return next;
+                              });
+                            }}
+                          />
+                        </div>
                       </div>
 
                       {/* Card Content */}

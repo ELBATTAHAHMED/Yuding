@@ -15,6 +15,7 @@ import type { ActivitySortKey } from '@/lib/search-ux';
 import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 import { libraryService } from '@/services/library.service';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 function stripHtml(text?: string | null): string {
   if (!text) return '';
@@ -34,7 +35,16 @@ export default function ActivitiesPage() {
   const [travelers, setTravelers] = useState(1);
   const [category, setCategory] = useState('ALL');
   const [sortKey, setSortKey] = useState<ActivitySortKey>('PRICE_ASC');
+  const [favoriteActivityRefs, setFavoriteActivityRefs] = useState<Set<string>>(new Set());
   const placeRequestRef = useRef(0);
+  const searchRequestIdRef = useRef(0);
+
+  useEffect(() => {
+    libraryService.getFavorites().then((favs) => {
+      const actFavs = favs.filter(f => f.resourceType === 'ACTIVITY');
+      setFavoriteActivityRefs(new Set(actFavs.map(f => f.resourceReference)));
+    }).catch(() => {});
+  }, []);
 
   const handlePlaceSelect = useCallback(async (place: GeoPlace | null) => {
     const requestId = ++placeRequestRef.current;
@@ -124,6 +134,7 @@ export default function ActivitiesPage() {
       return;
     }
 
+    const requestId = ++searchRequestIdRef.current;
     setLoading(true);
     setErrorMessage(null);
     setProviderMessage(null);
@@ -136,6 +147,8 @@ export default function ActivitiesPage() {
         travelers: travelers > 0 ? travelers : 1,
         category: category !== 'ALL' ? category : undefined,
       });
+
+      if (requestId !== searchRequestIdRef.current) return;
 
       setActivities(data.results || []);
       saveSearchOffers('ACTIVITY', data.results || []);
@@ -154,6 +167,7 @@ export default function ActivitiesPage() {
         },
       }).catch(() => {});
     } catch (err: unknown) {
+      if (requestId !== searchRequestIdRef.current) return;
       setActivities([]);
       const msg = err instanceof Error ? err.message : 'Erreur de connexion';
       if (msg.includes('429') || msg.toLowerCase().includes('rate')) {
@@ -166,7 +180,9 @@ export default function ActivitiesPage() {
         setErrorMessage(msg.length < 120 ? msg : 'Une erreur est survenue lors de la recherche d’activités. Veuillez réessayer.');
       }
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -429,12 +445,32 @@ export default function ActivitiesPage() {
                           className="h-full w-full object-cover"
                         />
                         <span
-                          className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm ${
+                          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm z-10 ${
                             isCustom ? 'bg-amber-600' : 'bg-[#01796F]'
                           }`}
                         >
                           {isCustom ? 'Yuding Sélect' : 'Partenaire HBX'}
                         </span>
+                        <div className="absolute right-3 top-3 z-10">
+                          <FavoriteButton
+                            resourceType="ACTIVITY"
+                            resourceReference={offerKey}
+                            title={act.title}
+                            destination={destination.trim() || undefined}
+                            thumbnailUrl={act.imageUrl}
+                            priceSnapshot={act.price}
+                            currencySnapshot={act.currency}
+                            isInitiallyFavorited={favoriteActivityRefs.has(offerKey)}
+                            onToggle={(fav) => {
+                              setFavoriteActivityRefs(prev => {
+                                const next = new Set(prev);
+                                if (fav) next.add(offerKey);
+                                else next.delete(offerKey);
+                                return next;
+                              });
+                            }}
+                          />
+                        </div>
                       </div>
 
                       <div className="flex flex-1 flex-col p-4 text-slate-900 dark:text-slate-100">

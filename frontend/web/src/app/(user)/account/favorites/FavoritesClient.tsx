@@ -13,18 +13,29 @@ import type {
 } from '@/types/library.types';
 import FavoriteButton from '@/components/common/FavoriteButton';
 
-type ActiveTab = 'favorites' | 'saved-trips' | 'recent-searches' | 'recent-views';
+type ActiveTab = 'favorites' | 'saved-trips' | 'history';
+type HistorySubTab = 'searches' | 'views';
 
 export default function FavoritesClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const tabParam = searchParams.get('tab') as ActiveTab;
-  const initialTab: ActiveTab = ['favorites', 'saved-trips', 'recent-searches', 'recent-views'].includes(tabParam)
-    ? tabParam
-    : 'favorites';
+  const tabParam = searchParams.get('tab');
+  const subParam = searchParams.get('sub');
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
+  const getInitialTab = (): ActiveTab => {
+    if (tabParam === 'saved-trips') return 'saved-trips';
+    if (tabParam === 'history' || tabParam === 'recent-searches' || tabParam === 'recent-views') return 'history';
+    return 'favorites';
+  };
+
+  const getInitialSubTab = (): HistorySubTab => {
+    if (tabParam === 'recent-views' || subParam === 'views') return 'views';
+    return 'searches';
+  };
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(getInitialTab);
+  const [historySubTab, setHistorySubTab] = useState<HistorySubTab>(getInitialSubTab);
   const [favoriteFilter, setFavoriteFilter] = useState<'ALL' | FavoriteResourceType>('ALL');
 
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
@@ -35,16 +46,34 @@ export default function FavoritesClient() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync state when URL param changes
+  // Sync state when URL params change
   useEffect(() => {
-    if (tabParam && ['favorites', 'saved-trips', 'recent-searches', 'recent-views'].includes(tabParam)) {
-      setActiveTab(tabParam);
+    if (tabParam === 'saved-trips') {
+      setActiveTab('saved-trips');
+    } else if (tabParam === 'history' || tabParam === 'recent-searches' || tabParam === 'recent-views') {
+      setActiveTab('history');
+      if (tabParam === 'recent-views' || subParam === 'views') {
+        setHistorySubTab('views');
+      } else if (tabParam === 'recent-searches' || subParam === 'searches') {
+        setHistorySubTab('searches');
+      }
+    } else if (tabParam === 'favorites') {
+      setActiveTab('favorites');
     }
-  }, [tabParam]);
+  }, [tabParam, subParam]);
 
   const setTab = (tab: ActiveTab) => {
     setActiveTab(tab);
-    router.replace(`/account/favorites?tab=${tab}`);
+    if (tab === 'history') {
+      router.replace(`/account/favorites?tab=history&sub=${historySubTab}`);
+    } else {
+      router.replace(`/account/favorites?tab=${tab}`);
+    }
+  };
+
+  const handleSubTabChange = (sub: HistorySubTab) => {
+    setHistorySubTab(sub);
+    router.replace(`/account/favorites?tab=history&sub=${sub}`);
   };
 
   const loadAllData = useCallback(async () => {
@@ -129,13 +158,19 @@ export default function FavoritesClient() {
     const p = search.criteriaPayload || {};
     const type = (search.searchType || '').toUpperCase();
     if (type.includes('FLIGHT')) {
-      return `/vols?origin=${encodeURIComponent(search.origin || p.origin || '')}&destination=${encodeURIComponent(search.destination || p.destination || '')}&departureDate=${encodeURIComponent(search.departureDate || p.departureDate || '')}`;
+      return `/flights?origin=${encodeURIComponent(search.origin || p.origin || '')}&destination=${encodeURIComponent(search.destination || p.destination || '')}&departureDate=${encodeURIComponent(search.departureDate || p.departureDate || '')}`;
     }
     if (type.includes('HOTEL')) {
       return `/hotels?destination=${encodeURIComponent(search.destination || p.destination || p.city || '')}&checkIn=${encodeURIComponent(search.departureDate || p.checkInDate || '')}&checkOut=${encodeURIComponent(search.returnDate || p.checkOutDate || '')}`;
     }
     if (type.includes('ACTIVIT')) {
       return `/activities?city=${encodeURIComponent(search.destination || p.city || p.destination || '')}`;
+    }
+    if (type.includes('TRANSFER')) {
+      return `/transfers?pickup=${encodeURIComponent(search.origin || p.pickup || '')}&dropoff=${encodeURIComponent(search.destination || p.dropoff || '')}&date=${encodeURIComponent(search.departureDate || p.date || '')}`;
+    }
+    if (type.includes('TRAIN')) {
+      return `/trains?origin=${encodeURIComponent(search.origin || p.originStation || '')}&destination=${encodeURIComponent(search.destination || p.destinationStation || '')}&date=${encodeURIComponent(search.departureDate || p.date || '')}`;
     }
     if (type.includes('TRIP')) {
       return `/planifier?origin=${encodeURIComponent(search.origin || p.origin || '')}&destination=${encodeURIComponent(search.destination || p.destination || '')}`;
@@ -164,8 +199,10 @@ export default function FavoritesClient() {
 
   const filteredFavorites = favorites.filter(f => favoriteFilter === 'ALL' || f.resourceType === favoriteFilter);
 
+  const totalHistoryCount = recentSearches.length + recentViews.length;
+
   return (
-    <main className="account-empty-page" style={{ maxWidth: '1140px', margin: '0 auto', width: '100%' }}>
+    <main className="account-empty-page">
       {/* Header */}
       <header className="account-page-header">
         <div>
@@ -187,7 +224,7 @@ export default function FavoritesClient() {
         >
           <i className="fas fa-heart" aria-hidden="true" />
           <span>Coups de cœur</span>
-          <span className="library-tab-count">{favorites.length}</span>
+          {favorites.length > 0 && <span className="library-tab-count">{favorites.length}</span>}
         </button>
 
         <button
@@ -197,27 +234,17 @@ export default function FavoritesClient() {
         >
           <i className="fas fa-suitcase-rolling" aria-hidden="true" />
           <span>Voyages enregistrés</span>
-          <span className="library-tab-count">{savedTrips.length}</span>
+          {savedTrips.length > 0 && <span className="library-tab-count">{savedTrips.length}</span>}
         </button>
 
         <button
           type="button"
-          onClick={() => setTab('recent-searches')}
-          className={`library-tab-btn ${activeTab === 'recent-searches' ? 'active' : ''}`}
-        >
-          <i className="fas fa-search" aria-hidden="true" />
-          <span>Recherches récentes</span>
-          <span className="library-tab-count">{recentSearches.length}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTab('recent-views')}
-          className={`library-tab-btn ${activeTab === 'recent-views' ? 'active' : ''}`}
+          onClick={() => setTab('history')}
+          className={`library-tab-btn ${activeTab === 'history' ? 'active' : ''}`}
         >
           <i className="fas fa-history" aria-hidden="true" />
-          <span>Consultés récemment</span>
-          <span className="library-tab-count">{recentViews.length}</span>
+          <span>Historique</span>
+          {totalHistoryCount > 0 && <span className="library-tab-count">{totalHistoryCount}</span>}
         </button>
       </nav>
 
@@ -245,38 +272,49 @@ export default function FavoritesClient() {
               <h2 id="tab-fav-heading" className="sr-only">Mes coups de cœur</h2>
 
               {/* Sub-filters */}
-              {favorites.length > 0 && (
-                <div className="library-subfilters">
-                  <button
-                    type="button"
-                    className={`library-subfilter-btn ${favoriteFilter === 'ALL' ? 'active' : ''}`}
-                    onClick={() => setFavoriteFilter('ALL')}
-                  >
-                    Tous ({favorites.length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`library-subfilter-btn ${favoriteFilter === 'HOTEL' ? 'active' : ''}`}
-                    onClick={() => setFavoriteFilter('HOTEL')}
-                  >
-                    Hôtels ({favorites.filter(f => f.resourceType === 'HOTEL').length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`library-subfilter-btn ${favoriteFilter === 'ACTIVITY' ? 'active' : ''}`}
-                    onClick={() => setFavoriteFilter('ACTIVITY')}
-                  >
-                    Activités ({favorites.filter(f => f.resourceType === 'ACTIVITY').length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`library-subfilter-btn ${favoriteFilter === 'DESTINATION' ? 'active' : ''}`}
-                    onClick={() => setFavoriteFilter('DESTINATION')}
-                  >
-                    Destinations ({favorites.filter(f => f.resourceType === 'DESTINATION').length})
-                  </button>
-                </div>
-              )}
+              {favorites.length > 0 && (() => {
+                const hotelCount = favorites.filter(f => f.resourceType === 'HOTEL').length;
+                const activityCount = favorites.filter(f => f.resourceType === 'ACTIVITY').length;
+                const destinationCount = favorites.filter(f => f.resourceType === 'DESTINATION').length;
+                return (
+                  <div className="library-subfilters">
+                    <button
+                      type="button"
+                      className={`library-subfilter-btn ${favoriteFilter === 'ALL' ? 'active' : ''}`}
+                      onClick={() => setFavoriteFilter('ALL')}
+                    >
+                      Tous ({favorites.length})
+                    </button>
+                    {hotelCount > 0 && (
+                      <button
+                        type="button"
+                        className={`library-subfilter-btn ${favoriteFilter === 'HOTEL' ? 'active' : ''}`}
+                        onClick={() => setFavoriteFilter('HOTEL')}
+                      >
+                        Hôtels ({hotelCount})
+                      </button>
+                    )}
+                    {activityCount > 0 && (
+                      <button
+                        type="button"
+                        className={`library-subfilter-btn ${favoriteFilter === 'ACTIVITY' ? 'active' : ''}`}
+                        onClick={() => setFavoriteFilter('ACTIVITY')}
+                      >
+                        Activités ({activityCount})
+                      </button>
+                    )}
+                    {destinationCount > 0 && (
+                      <button
+                        type="button"
+                        className={`library-subfilter-btn ${favoriteFilter === 'DESTINATION' ? 'active' : ''}`}
+                        onClick={() => setFavoriteFilter('DESTINATION')}
+                      >
+                        Destinations ({destinationCount})
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
 
               {filteredFavorites.length === 0 ? (
                 <section className="account-empty-panel" aria-labelledby="favorites-empty-title">
@@ -455,14 +493,42 @@ export default function FavoritesClient() {
             </section>
           )}
 
-          {/* TAB 3: RECHERCHES RÉCENTES */}
-          {activeTab === 'recent-searches' && (
-            <section aria-labelledby="tab-searches-heading">
-              <div className="library-header-actions">
-                <h2 id="tab-searches-heading" style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
-                  Vos dernières recherches ({recentSearches.length})
-                </h2>
-                {recentSearches.length > 0 && (
+          {/* TAB 3: HISTORIQUE */}
+          {activeTab === 'history' && (
+            <section aria-labelledby="tab-history-heading">
+              {/* Segmented controls for History sub-tabs */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                <div className="library-subfilters" style={{ marginBottom: 0 }} role="tablist" aria-label="Sous-sections de l'historique">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={historySubTab === 'searches'}
+                    onClick={() => handleSubTabChange('searches')}
+                    className={`library-subfilter-btn ${historySubTab === 'searches' ? 'active' : ''}`}
+                  >
+                    <i className="fas fa-search" aria-hidden="true" style={{ marginRight: '6px' }} />
+                    Recherches récentes
+                    {recentSearches.length > 0 && (
+                      <span className="library-tab-count" style={{ marginLeft: '6px' }}>{recentSearches.length}</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={historySubTab === 'views'}
+                    onClick={() => handleSubTabChange('views')}
+                    className={`library-subfilter-btn ${historySubTab === 'views' ? 'active' : ''}`}
+                  >
+                    <i className="fas fa-eye" aria-hidden="true" style={{ marginRight: '6px' }} />
+                    Consultés récemment
+                    {recentViews.length > 0 && (
+                      <span className="library-tab-count" style={{ marginLeft: '6px' }}>{recentViews.length}</span>
+                    )}
+                  </button>
+                </div>
+
+                {historySubTab === 'searches' && recentSearches.length > 0 && (
                   <button
                     type="button"
                     onClick={handleClearSearches}
@@ -472,86 +538,8 @@ export default function FavoritesClient() {
                     <i className="fas fa-trash-alt" aria-hidden="true" /> Tout effacer
                   </button>
                 )}
-              </div>
 
-              {recentSearches.length === 0 ? (
-                <section className="account-empty-panel">
-                  <div className="account-empty-icon favorite" style={{ background: '#fef3c7', color: '#d97706' }}>
-                    <i className="fas fa-search" aria-hidden="true" />
-                  </div>
-                  <div className="account-empty-copy">
-                    <p className="account-kicker">HISTORIQUE DE RECHERCHE</p>
-                    <h2>Aucune recherche récente</h2>
-                    <p>Vos critères de recherche seront automatiquement conservés ici pour vous faire gagner du temps.</p>
-                  </div>
-                  <Link href="/vols" className="account-primary-action favorite">
-                    <i className="fas fa-plane-departure" aria-hidden="true" /> Rechercher des vols
-                  </Link>
-                </section>
-              ) : (
-                <div className="library-list">
-                  {recentSearches.map(item => {
-                    const searchTitle = item.origin && item.destination
-                      ? `${item.origin} → ${item.destination}`
-                      : item.destination || item.origin || 'Recherche de voyage';
-                    const searchSubtitle = [
-                      item.departureDate && `${item.departureDate}${item.returnDate ? ` → ${item.returnDate}` : ''}`,
-                      item.travelersCount && `${item.travelersCount} voyageur(s)`,
-                    ].filter(Boolean).join(' • ');
-
-                    const rerunUrl = getSearchRerunUrl(item);
-
-                    return (
-                      <div key={item.publicReference} className="library-list-item">
-                        <div className="library-item-content">
-                          <div className="library-item-main">
-                            <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
-                              {item.searchType}
-                            </span>
-                            <span className="library-item-title">{searchTitle}</span>
-                            {item.isExpired && (
-                              <span className="library-badge-expired">
-                                <i className="fas fa-clock" style={{ marginRight: '4px' }} /> Dates expirées
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="library-item-details">
-                            {searchSubtitle && <span>{searchSubtitle}</span>}
-                            <span>• Effectuée {formatRelativeTime(item.lastSearchedAt || item.createdAt)}</span>
-                          </div>
-                        </div>
-
-                        <div className="library-item-actions">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSearch(item.publicReference)}
-                            className="btn-danger-ghost"
-                            title="Supprimer cette recherche"
-                            aria-label="Supprimer cette recherche"
-                          >
-                            <i className="fas fa-times" aria-hidden="true" />
-                          </button>
-                          <Link href={rerunUrl} className="btn-secondary-sm">
-                            <i className="fas fa-redo-alt" aria-hidden="true" /> Relancer
-                          </Link>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* TAB 4: CONSULTÉS RÉCEMMENT */}
-          {activeTab === 'recent-views' && (
-            <section aria-labelledby="tab-views-heading">
-              <div className="library-header-actions">
-                <h2 id="tab-views-heading" style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
-                  Vos consultations récentes ({recentViews.length})
-                </h2>
-                {recentViews.length > 0 && (
+                {historySubTab === 'views' && recentViews.length > 0 && (
                   <button
                     type="button"
                     onClick={handleClearViews}
@@ -563,76 +551,164 @@ export default function FavoritesClient() {
                 )}
               </div>
 
-              {recentViews.length === 0 ? (
-                <section className="account-empty-panel">
-                  <div className="account-empty-icon favorite" style={{ background: '#f3e8ff', color: '#9333ea' }}>
-                    <i className="fas fa-eye" aria-hidden="true" />
+              {historySubTab === 'searches' && (
+                <>
+                  <div className="library-header-actions">
+                    <h2 id="tab-searches-heading" style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                      Vos dernières recherches ({recentSearches.length})
+                    </h2>
                   </div>
-                  <div className="account-empty-copy">
-                    <p className="account-kicker">HISTORIQUE DE NAVIGATION</p>
-                    <h2>Aucune consultation récente</h2>
-                    <p>Les fiches d&apos;hôtels et d&apos;activités que vous consultez apparaîtront ici pour une reprise rapide.</p>
-                  </div>
-                  <Link href="/hotels" className="account-primary-action favorite">
-                    <i className="fas fa-compass" aria-hidden="true" /> Explorer le catalogue
-                  </Link>
-                </section>
-              ) : (
-                <div className="library-list">
-                  {recentViews.map(view => {
-                    const itemUrl = view.resourceType === 'HOTEL'
-                      ? `/hotels/${view.resourceReference}`
-                      : view.resourceType === 'ACTIVITY'
-                      ? `/activities/${view.resourceReference}`
-                      : `/destinations/${view.resourceReference}`;
 
-                    return (
-                      <div key={view.publicReference} className="library-list-item">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexGrow: 1, minWidth: 0 }}>
-                          {view.thumbnailUrl && (
-                            <img
-                              src={view.thumbnailUrl}
-                              alt={view.title}
-                              style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
-                          )}
+                  {recentSearches.length === 0 ? (
+                    <section className="account-empty-panel">
+                      <div className="account-empty-icon favorite" style={{ background: '#fef3c7', color: '#d97706' }}>
+                        <i className="fas fa-search" aria-hidden="true" />
+                      </div>
+                      <div className="account-empty-copy">
+                        <p className="account-kicker">HISTORIQUE DE RECHERCHE</p>
+                        <h2>Aucune recherche récente</h2>
+                        <p>Vos critères de recherche seront automatiquement conservés ici pour vous faire gagner du temps.</p>
+                      </div>
+                      <Link href="/flights" className="account-primary-action favorite">
+                        <i className="fas fa-plane-departure" aria-hidden="true" /> Rechercher des vols
+                      </Link>
+                    </section>
+                  ) : (
+                    <div className="library-list">
+                      {recentSearches.map(item => {
+                        const searchTitle = item.origin && item.destination
+                          ? `${item.origin} → ${item.destination}`
+                          : item.destination || item.origin || 'Recherche de voyage';
+                        const searchSubtitle = [
+                          item.departureDate && `${item.departureDate}${item.returnDate ? ` → ${item.returnDate}` : ''}`,
+                          item.travelersCount && `${item.travelersCount} voyageur(s)`,
+                        ].filter(Boolean).join(' • ');
 
-                          <div className="library-item-content">
-                            <div className="library-item-main">
-                              <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
-                                {view.resourceType === 'HOTEL' ? 'Hôtel' : view.resourceType === 'ACTIVITY' ? 'Activité' : 'Destination'}
-                              </span>
-                              <span className="library-item-title">{view.title}</span>
+                        const rerunUrl = getSearchRerunUrl(item);
+
+                        return (
+                          <div key={item.publicReference} className="library-list-item">
+                            <div className="library-item-content">
+                              <div className="library-item-main">
+                                <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
+                                  {item.searchType}
+                                </span>
+                                <span className="library-item-title">{searchTitle}</span>
+                                {item.isExpired && (
+                                  <span className="library-badge-expired">
+                                    <i className="fas fa-clock" style={{ marginRight: '4px' }} /> Dates expirées
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="library-item-details">
+                                {searchSubtitle && <span>{searchSubtitle}</span>}
+                                <span>• Effectuée {formatRelativeTime(item.lastSearchedAt || item.createdAt)}</span>
+                              </div>
                             </div>
 
-                            <div className="library-item-details">
-                              {view.destination && <span>{view.destination}</span>}
-                              <span>• Consulté {formatRelativeTime(view.lastViewedAt || view.createdAt)}</span>
+                            <div className="library-item-actions">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSearch(item.publicReference)}
+                                className="btn-danger-ghost"
+                                title="Supprimer cette recherche"
+                                aria-label="Supprimer cette recherche"
+                              >
+                                <i className="fas fa-times" aria-hidden="true" />
+                              </button>
+                              <Link href={rerunUrl} className="btn-secondary-sm">
+                                <i className="fas fa-redo-alt" aria-hidden="true" /> Relancer
+                              </Link>
                             </div>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
 
-                        <div className="library-item-actions">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteView(view.publicReference)}
-                            className="btn-danger-ghost"
-                            title="Supprimer cette consultation"
-                            aria-label="Supprimer cette consultation"
-                          >
-                            <i className="fas fa-times" aria-hidden="true" />
-                          </button>
-                          <Link href={itemUrl} className="btn-secondary-sm">
-                            Consulter <i className="fas fa-arrow-right" aria-hidden="true" />
-                          </Link>
-                        </div>
+              {historySubTab === 'views' && (
+                <>
+                  <div className="library-header-actions">
+                    <h2 id="tab-views-heading" style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                      Vos consultations récentes ({recentViews.length})
+                    </h2>
+                  </div>
+
+                  {recentViews.length === 0 ? (
+                    <section className="account-empty-panel">
+                      <div className="account-empty-icon favorite" style={{ background: '#f3e8ff', color: '#9333ea' }}>
+                        <i className="fas fa-eye" aria-hidden="true" />
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="account-empty-copy">
+                        <p className="account-kicker">HISTORIQUE DE NAVIGATION</p>
+                        <h2>Aucune consultation récente</h2>
+                        <p>Les fiches d&apos;hôtels et d&apos;activités que vous consultez apparaîtront ici pour une reprise rapide.</p>
+                      </div>
+                      <Link href="/hotels" className="account-primary-action favorite">
+                        <i className="fas fa-compass" aria-hidden="true" /> Explorer le catalogue
+                      </Link>
+                    </section>
+                  ) : (
+                    <div className="library-list">
+                      {recentViews.map(view => {
+                        const itemUrl = view.resourceType === 'HOTEL'
+                          ? `/hotels/${view.resourceReference}`
+                          : view.resourceType === 'ACTIVITY'
+                          ? `/activities/${view.resourceReference}`
+                          : `/destinations/${view.resourceReference}`;
+
+                        return (
+                          <div key={view.publicReference} className="library-list-item">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexGrow: 1, minWidth: 0 }}>
+                              {view.thumbnailUrl && (
+                                <img
+                                  src={view.thumbnailUrl}
+                                  alt={view.title}
+                                  style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              )}
+
+                              <div className="library-item-content">
+                                <div className="library-item-main">
+                                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
+                                    {view.resourceType === 'HOTEL' ? 'Hôtel' : view.resourceType === 'ACTIVITY' ? 'Activité' : 'Destination'}
+                                  </span>
+                                  <span className="library-item-title">{view.title}</span>
+                                </div>
+
+                                <div className="library-item-details">
+                                  {view.destination && <span>{view.destination}</span>}
+                                  <span>• Consulté {formatRelativeTime(view.lastViewedAt || view.createdAt)}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="library-item-actions">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteView(view.publicReference)}
+                                className="btn-danger-ghost"
+                                title="Supprimer cette consultation"
+                                aria-label="Supprimer cette consultation"
+                              >
+                                <i className="fas fa-times" aria-hidden="true" />
+                              </button>
+                              <Link href={itemUrl} className="btn-secondary-sm">
+                                Consulter <i className="fas fa-arrow-right" aria-hidden="true" />
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </section>
           )}

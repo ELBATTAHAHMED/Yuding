@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
@@ -71,6 +71,7 @@ export default function FlightsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [sortKey, setSortKey] = useState<FlightSortKey>('PRICE_ASC');
+  const searchRequestIdRef = useRef(0);
 
   useSearchSession('FLIGHT', {
     selectedOrigin, selectedDestination, departureDate, adults, children, infants,
@@ -135,8 +136,8 @@ export default function FlightsPage() {
     departureDate >= today
   );
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     setValidationError(null);
 
     if (!selectedOrigin) {
@@ -160,6 +161,7 @@ export default function FlightsPage() {
       return;
     }
 
+    const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
     setHasSearched(true);
     setShowPassengerDropdown(false);
@@ -176,6 +178,8 @@ export default function FlightsPage() {
         nonStop: false,
         currency: 'EUR',
       });
+
+      if (requestId !== searchRequestIdRef.current) return;
 
       setFlights(data.results || []);
       saveSearchOffers('FLIGHT', data.results || []);
@@ -199,6 +203,7 @@ export default function FlightsPage() {
         },
       }).catch(() => {});
     } catch (err: unknown) {
+      if (requestId !== searchRequestIdRef.current) return;
       setFlights([]);
       setSearchStatus('ERROR');
       const msg = err instanceof Error ? err.message : 'Erreur de connexion';
@@ -208,16 +213,15 @@ export default function FlightsPage() {
           : 'Impossible de contacter le service de voyage. Vérifiez que les services backend sont démarrés.'
       );
     } finally {
-      setIsSearching(false);
+      if (requestId === searchRequestIdRef.current) {
+        setIsSearching(false);
+      }
     }
   };
 
   const handleRetry = useCallback(() => {
-    setSearchStatus(null);
-    setSearchMessage(null);
-    setFlights([]);
-    setHasSearched(false);
-  }, []);
+    handleSearch();
+  }, [selectedOrigin, selectedDestination, departureDate, adults, children, infants, cabinClass]);
 
   return (
     <TravelPage page="flights">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { TransferOffer } from '@/types/travel.types';
@@ -21,6 +21,7 @@ import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
+import { libraryService } from '@/services/library.service';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -66,6 +67,7 @@ export default function TransfersPage() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [sortKey, setSortKey] = useState<TransferSortKey>('PRICE_ASC');
+  const searchRequestIdRef = useRef(0);
 
   useSearchSession('TRANSFER', {
     pickup, dropoff, date, time, passengers, transportType, transfers,
@@ -118,6 +120,7 @@ export default function TransfersPage() {
     // Destination suggestions use UI identifiers, not real airport IATA codes.
     const providerDropoff = POPULAR_DESTINATIONS.find((item) => item.code === cleanDropoff)?.title || cleanDropoff;
 
+    const requestId = ++searchRequestIdRef.current;
     setLoading(true);
     setErrorMessage(null);
     setProviderMessage(null);
@@ -132,12 +135,30 @@ export default function TransfersPage() {
         passengers: passengers > 0 ? passengers : 2,
       });
 
+      if (requestId !== searchRequestIdRef.current) return;
+
       setTransfers(data.results || []);
       saveSearchOffers('TRANSFER', data.results || []);
       if (data.status === 'PROVIDER_UNAVAILABLE') {
         setProviderMessage(data.message);
       }
+
+      libraryService.recordRecentSearch({
+        searchType: 'TRANSFER',
+        origin: providerPickup,
+        destination: providerDropoff,
+        departureDate: date || defaultFutureDate,
+        travelersCount: passengers > 0 ? passengers : 2,
+        criteriaPayload: {
+          pickup: providerPickup,
+          dropoff: providerDropoff,
+          date: date || defaultFutureDate,
+          time: time || '12:00',
+          passengers: passengers > 0 ? passengers : 2,
+        },
+      }).catch(() => {});
     } catch (err: unknown) {
+      if (requestId !== searchRequestIdRef.current) return;
       setTransfers([]);
       const msg = err instanceof Error ? err.message : 'Erreur de connexion';
       if (msg.includes('429') || msg.toLowerCase().includes('rate')) {
@@ -150,7 +171,9 @@ export default function TransfersPage() {
         setErrorMessage('Impossible de contacter le service de transfert. Vérifiez la passerelle API.');
       }
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -385,7 +408,7 @@ export default function TransfersPage() {
             <ErrorState
               title="Erreur de recherche"
               message={errorMessage}
-              onRetry={() => { setHasSearched(false); setErrorMessage(null); setTransfers([]); }}
+              onRetry={handleSearch}
             />
           )}
 

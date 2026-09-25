@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
+import { libraryService } from '@/services/library.service';
 import type { TrainOffer, TrainStation } from '@/types/travel.types';
 import { StationSelector } from '@/components/travel/StationSelector';
 import { TravelHero, TravelPage } from '@/components/travel';
@@ -15,6 +16,7 @@ import { useSearchSession } from '@/lib/search-session';
 const TODAY = new Date().toISOString().split('T')[0];
 
 export default function TrainsPage() {
+  const searchRequestIdRef = useRef(0);
   const [stations, setStations] = useState<TrainStation[]>([]);
   const [originStation, setOriginStation] = useState<TrainStation | null>(null);
   const [destinationStation, setDestinationStation] = useState<TrainStation | null>(null);
@@ -102,6 +104,7 @@ export default function TrainsPage() {
       return;
     }
 
+    const requestId = ++searchRequestIdRef.current;
     setLoading(true);
     setErrorMessage(null);
     setOutdatedNotice(null);
@@ -135,6 +138,8 @@ export default function TrainsPage() {
         destinationCountryCode: destinationStation.countryCode,
       });
 
+      if (requestId !== searchRequestIdRef.current) return;
+
       if (response.status === 'PROVIDER_UNAVAILABLE') {
         setProviderMessage(response.message);
         setTrains([]);
@@ -143,7 +148,23 @@ export default function TrainsPage() {
         setTrains(results);
         saveSearchOffers('TRAIN', results);
       }
+
+      libraryService.recordRecentSearch({
+        searchType: 'TRAIN',
+        origin: originStation.name || originStation.id,
+        destination: destinationStation.name || destinationStation.id,
+        departureDate: date,
+        travelersCount: passengers,
+        criteriaPayload: {
+          originStation: originStation.name || originStation.id,
+          destinationStation: destinationStation.name || destinationStation.id,
+          date,
+          departureTime: departureTime || undefined,
+          passengers,
+        },
+      }).catch(() => {});
     } catch (err: unknown) {
+      if (requestId !== searchRequestIdRef.current) return;
       setTrains([]);
       const errMsg = err instanceof Error ? err.message : String(err);
 
@@ -168,7 +189,9 @@ export default function TrainsPage() {
         );
       }
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -436,6 +459,15 @@ export default function TrainsPage() {
 
         {/* Loading skeleton */}
         {loading && <TrainSkeleton count={5} />}
+
+        {/* Error State */}
+        {!loading && hasSearched && errorMessage && (
+          <ErrorState
+            title="Erreur de recherche"
+            message={errorMessage}
+            onRetry={handleSearch}
+          />
+        )}
 
         {/* Filters and sorting bar when results exist */}
         {!loading && hasSearched && trains.length > 0 && (

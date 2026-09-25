@@ -138,7 +138,10 @@ public class NuiteeTravelProvider implements TravelProvider {
     private NuiteeRatesRequest buildRatesRequest(HotelSearchQuery query) {
         String rawCity = query.getCity() != null && !query.getCity().isBlank() ? query.getCity() : query.getDestination();
         String city = com.ahmed.travelservice.service.AirportDirectory.normalizeCityName(rawCity);
-        String countryCode = query.getCountryCode() != null && !query.getCountryCode().isBlank() ? query.getCountryCode() : "MA";
+        String resolvedCountry = com.ahmed.travelservice.service.AirportDirectory.resolveCountryCode(rawCity);
+        String countryCode = query.getCountryCode() != null && !query.getCountryCode().isBlank() && !"MA".equalsIgnoreCase(query.getCountryCode())
+                ? query.getCountryCode().toUpperCase()
+                : resolvedCountry;
 
         List<HotelSearchQuery.RoomOccupancy> domainOccupancies = query.getOccupanciesOrDefault();
         List<NuiteeOccupancy> nuiteeOccupancies = domainOccupancies.stream()

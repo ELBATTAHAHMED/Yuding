@@ -9,9 +9,16 @@ import FavoriteButton from '@/components/common/FavoriteButton';
 export interface HotelCardProps {
   hotel: HotelOffer;
   className?: string;
+  isInitiallyFavorited?: boolean;
+  onToggleFavorite?: (favorited: boolean) => void;
 }
 
-export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) => {
+export const HotelCard: React.FC<HotelCardProps> = ({
+  hotel,
+  className = '',
+  isInitiallyFavorited = false,
+  onToggleFavorite,
+}) => {
   const hotelDisplayName = hotel.name || hotel.hotelName || 'Hôtel';
   const selRef = hotel.selectionRef || hotel.offerId || hotel.id || hotel.hotelId || '';
   const bookingUrl = `/booking?serviceType=HOTEL&serviceId=${encodeURIComponent(hotel.id || hotel.hotelId || '')}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(
@@ -30,7 +37,13 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
           entityType="HOTEL"
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
-        <div className="absolute top-3 left-3 z-10 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full p-1 shadow-sm">
+        {hotel.rating && (
+          <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-[#ffb300] px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
+            <i className="fas fa-star" />
+            <span>{hotel.rating}</span>
+          </div>
+        )}
+        <div className="absolute top-3 right-3 z-10">
           <FavoriteButton
             resourceType="HOTEL"
             resourceReference={hotel.offerId || hotel.hotelId || hotel.id || ''}
@@ -39,14 +52,10 @@ export const HotelCard: React.FC<HotelCardProps> = ({ hotel, className = '' }) =
             thumbnailUrl={hotel.imageUrl}
             priceSnapshot={hotel.pricePerNight}
             currencySnapshot={hotel.currency}
+            isInitiallyFavorited={isInitiallyFavorited}
+            onToggle={onToggleFavorite}
           />
         </div>
-        {hotel.rating && (
-          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-[#ffb300] px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <i className="fas fa-star" />
-            <span>{hotel.rating}</span>
-          </div>
-        )}
       </div>
 
       <div className="p-5 flex-1 flex flex-col justify-between">

@@ -115,6 +115,32 @@ public final class AirportDirectory {
         return clean;
     }
 
+    public static String resolveCountryCode(String location) {
+        if (location == null || location.isBlank()) return "MA";
+        String s = stripDiacritics(location);
+        if (s.contains("FRANCE") || s.contains("PARIS") || s.contains("NICE") || s.contains("LYON") || s.contains("MARSEILLE")) return "FR";
+        if (s.contains("SPAIN") || s.contains("ESPAGNE") || s.contains("MADRID") || s.contains("BARCELONA") || s.contains("BARCELONE") || s.contains("SEVILLE")) return "ES";
+        if (s.contains("ITALY") || s.contains("ITALIE") || s.contains("ROME") || s.contains("ROMA") || s.contains("MILAN") || s.contains("VENISE") || s.contains("FLORENCE")) return "IT";
+        if (s.contains("UNITED KINGDOM") || s.contains("ROYAUME UNI") || s.contains("LONDON") || s.contains("LONDRES") || s.contains("MANCHESTER")) return "GB";
+        if (s.contains("UNITED STATES") || s.contains("ETATS UNIS") || s.contains("NEW YORK") || s.contains("MIAMI") || s.contains("LOS ANGELES")) return "US";
+        if (s.contains("UNITED ARAB EMIRATES") || s.contains("EMIRATS") || s.contains("DUBAI") || s.contains("ABU DHABI")) return "AE";
+        if (s.contains("TURKEY") || s.contains("TURQUIE") || s.contains("ISTANBUL") || s.contains("ANTALYA")) return "TR";
+
+        Optional<AirportDto> airport = findAirport(location);
+        if (airport.isPresent()) {
+            String country = airport.get().getCountry();
+            if ("France".equalsIgnoreCase(country)) return "FR";
+            if ("Spain".equalsIgnoreCase(country)) return "ES";
+            if ("Italy".equalsIgnoreCase(country)) return "IT";
+            if ("United Kingdom".equalsIgnoreCase(country)) return "GB";
+            if ("United States".equalsIgnoreCase(country)) return "US";
+            if ("United Arab Emirates".equalsIgnoreCase(country)) return "AE";
+            if ("Turkey".equalsIgnoreCase(country)) return "TR";
+            if ("Morocco".equalsIgnoreCase(country)) return "MA";
+        }
+        return "MA";
+    }
+
     public static String stripDiacritics(String str) {
         if (str == null) return "";
         String n = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
