@@ -201,7 +201,7 @@
   padding: 0;
   border: 0;
   border-radius: 0 0 50% 50%;
-  background: rgba(7, 47, 43, .76);
+  background: rgba(7, 47, 43, .72);
   opacity: 0;
   transition: opacity .16s ease;
 }
@@ -212,10 +212,10 @@
   align-items: center;
   justify-content: center;
   min-width: 0;
-  padding: 5px 12px;
-  border: 1px solid rgba(255,255,255,.78);
+  padding: 5px 13px;
+  border: 1px solid rgba(255,255,255,.55);
   border-radius: 999px;
-  background: rgba(255,255,255,.08);
+  background: rgba(6, 48, 44, .94);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -262,12 +262,11 @@
 
 .profile-section,
 .account-content .security-events {
-  padding: 22px 0 !important;
-  border: 0;
-  border-bottom: 1px solid var(--account-line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  padding: 24px 26px !important;
+  border: 1px solid var(--account-line);
+  border-radius: 14px;
+  background: var(--account-card);
+  box-shadow: 0 8px 24px rgba(23, 50, 47, .04);
 }
 
 .profile-section + .profile-section { margin-top: 22px; }
@@ -303,7 +302,7 @@
 .security-card label { display: grid; gap: 6px; color: var(--account-muted); font-size: 12px; font-weight: 700; }
 .session-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 0 0; }
 .session-row div { display: grid; gap: 3px; font-size: 13px; }
-.account-content .security-events { margin-top: 18px; }
+.account-content .security-events { margin-top: 22px; }
 .events-list { margin-top: 12px; }
 .events-list > div { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--account-line); font-size: 13px; }
 .events-list span,
@@ -356,7 +355,7 @@
   .profile-photo { width: 84px; height: 84px; }
   .identity-copy h2 { font-size: 19px; }
   .profile-section,
-  .account-content .security-events { padding: 18px 0 !important; }
+  .account-content .security-events { padding: 18px !important; }
   .photo-actions { opacity: 1; }
   .details-grid,
   .form-grid { gap: 15px; }
