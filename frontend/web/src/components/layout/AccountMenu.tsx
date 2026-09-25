@@ -47,14 +47,14 @@ export function AccountMenu() {
         onClick={() => setOpen((value) => !value)}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/image/compte.png" alt="" aria-hidden="true" />
+        {user?.hasProfilePhoto ? <ProfileAvatar /> : <img src="/image/compte.png" alt="" aria-hidden="true" />}
       </button>
       {open && (
         <div id="yuding-account-menu" className={styles.panel}>
           <div className={styles.identity}>
             <span className={styles.identityAvatar} aria-hidden="true">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/image/compte.png" alt="" />
+              {user?.hasProfilePhoto ? <ProfileAvatar /> : <img src="/image/compte.png" alt="" />}
             </span>
             <span className={styles.identityText}>
               <strong>{displayName}</strong>
@@ -73,4 +73,11 @@ export function AccountMenu() {
       )}
     </div>
   );
+}
+
+function ProfileAvatar() {
+  const { user } = useAuth();
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => { let active = true; let objectUrl: string | null = null; void import('@/services/auth.service').then(({ authService }) => authService.getProfilePhoto()).then(blob => { if (active) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); } }).catch(() => {}); return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); }; }, [user?.hasProfilePhoto, user?.updatedAt]);
+  return url ? <img src={url} alt="" /> : <span aria-hidden="true">{user?.firstName?.charAt(0)?.toUpperCase() || 'U'}</span>;
 }

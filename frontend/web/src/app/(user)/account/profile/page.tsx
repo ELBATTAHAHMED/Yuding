@@ -1,384 +1,62 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/features/auth/useAuth';
-import {
-  useActiveSessions,
-  useSecurityEvents,
-  useRevokeSessionMutation,
-  useChangePasswordMutation,
-} from '@/hooks/queries/useAccountQueries';
+import { authService } from '@/services/auth.service';
+import type { SavedTraveler } from '@/types/auth.types';
+import { useActiveSessions, useSecurityEvents, useRevokeSessionMutation, useChangePasswordMutation } from '@/hooks/queries/useAccountQueries';
 
-export default function AccountPage() {
-  const { user, logout, logoutAll } = useAuth();
+const currencies = [{ value: 'MAD', label: 'MAD — Dirham marocain' }, { value: 'EUR', label: 'EUR — Euro' }, { value: 'USD', label: 'USD — Dollar américain' }, { value: 'GBP', label: 'GBP — Livre sterling' }];
+const languages = [{ value: 'fr', label: 'Français' }, { value: 'en', label: 'English' }];
+type TravelerDraft = { firstName: string; lastName: string; dateOfBirth: string; travelerType: 'ADULT' | 'CHILD' | 'INFANT' };
+const emptyTraveler: TravelerDraft = { firstName: '', lastName: '', dateOfBirth: '', travelerType: 'ADULT' };
 
-  // Server state managed via TanStack Query
-  const { data: activeSessions = [], isLoading: loadingSessions } = useActiveSessions();
-  const { data: securityEvents = [], isLoading: loadingEvents } = useSecurityEvents();
-  const revokeSessionMutation = useRevokeSessionMutation();
-  const changePasswordMutation = useChangePasswordMutation();
+export default function ProfilePage() {
+  const { user, reloadProfile } = useAuth();
+  const [profile, setProfile] = useState({ firstName: '', lastName: '', preferredCurrency: 'MAD', preferredLanguage: 'fr' });
+  const [travelers, setTravelers] = useState<SavedTraveler[]>([]);
+  const [travelerForm, setTravelerForm] = useState<TravelerDraft>(emptyTraveler);
+  const [travelerFormOpen, setTravelerFormOpen] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [loadingTravelers, setLoadingTravelers] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { data: sessions = [], isLoading: sessionsLoading } = useActiveSessions();
+  const { data: securityEvents = [], isLoading: eventsLoading } = useSecurityEvents();
+  const revokeSession = useRevokeSessionMutation();
+  const changePassword = useChangePasswordMutation();
+  const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
-  // Change password local form state
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  useEffect(() => { if (user) setProfile({ firstName: user.firstName, lastName: user.lastName, preferredCurrency: user.preferredCurrency || 'MAD', preferredLanguage: user.preferredLanguage || 'fr' }); }, [user]);
+  useEffect(() => { void authService.getTravelers().then(setTravelers).catch(() => setFeedback({ type: 'error', text: 'Impossible de charger vos voyageurs.' })).finally(() => setLoadingTravelers(false)); }, []);
+  const notify = (type: 'success' | 'error', text: string) => { setFeedback({ type, text }); window.setTimeout(() => setFeedback(null), 3500); };
 
-  // General feedback
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const saveProfile = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); try { await authService.updateProfile(profile); await reloadProfile(); setEditingProfile(false); notify('success', 'Modifications enregistrées.'); } catch (e: any) { notify('error', e.message || 'Impossible d’enregistrer les modifications.'); } finally { setSaving(false); } };
+  const resend = async () => { try { await authService.resendVerification(); notify('success', 'E-mail de vérification envoyé.'); } catch (e: any) { notify('error', e.message || 'Impossible de renvoyer l’e-mail.'); } };
+  const uploadPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { notify('error', 'Choisissez une image JPEG, PNG ou WEBP de 5 Mo maximum.'); return; } setPhotoBusy(true); try { await authService.uploadProfilePhoto(file); await reloadProfile(); notify('success', 'Photo de profil mise à jour.'); } catch (e: any) { notify('error', e.message || 'Impossible d’enregistrer la photo.'); } finally { setPhotoBusy(false); } };
+  const removePhoto = async () => { setPhotoBusy(true); try { await authService.removeProfilePhoto(); await reloadProfile(); notify('success', 'Photo supprimée.'); } catch (e: any) { notify('error', e.message || 'Impossible de supprimer la photo.'); } finally { setPhotoBusy(false); } };
+  const saveTraveler = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); try { const saved = editing ? await authService.updateTraveler(editing, travelerForm) : await authService.createTraveler(travelerForm); setTravelers(current => editing ? current.map(item => item.reference === editing ? saved : item) : [...current, saved]); setEditing(null); setTravelerForm(emptyTraveler); setTravelerFormOpen(false); notify('success', editing ? 'Voyageur modifié.' : 'Voyageur ajouté.'); } catch (e: any) { notify('error', e.message || 'Impossible d’enregistrer ce voyageur.'); } finally { setSaving(false); } };
+  const deleteTraveler = async (reference: string) => { if (!window.confirm('Supprimer ce voyageur enregistré ?')) return; try { await authService.deleteTraveler(reference); setTravelers(current => current.filter(item => item.reference !== reference)); notify('success', 'Voyageur supprimé.'); } catch (e: any) { notify('error', e.message || 'Impossible de supprimer ce voyageur.'); } };
+  const changePasswordSubmit = async (event: React.FormEvent) => { event.preventDefault(); if (passwords.newPassword !== passwords.confirmPassword) return notify('error', 'Les nouveaux mots de passe ne correspondent pas.'); try { const result = await changePassword.mutateAsync({ currentPassword: passwords.currentPassword, newPassword: passwords.newPassword }); setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' }); notify('success', result.message || 'Mot de passe modifié.'); } catch (e: any) { notify('error', e.message || 'Impossible de modifier le mot de passe.'); } };
 
-  const handleRevokeSession = async (sessionId: string) => {
-    try {
-      await revokeSessionMutation.mutateAsync(sessionId);
-      setFeedback('Session révoquée avec succès.');
-      setTimeout(() => setFeedback(null), 3000);
-    } catch (err: any) {
-      setFeedback(err.message || 'Erreur lors de la révocation.');
-    }
-  };
-
-  const handleLogoutAll = async () => {
-    if (confirm('Êtes-vous certain de vouloir déconnecter toutes vos sessions actives sur tous vos appareils ?')) {
-      await logoutAll();
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordStatus(null);
-
-    if (newPassword !== confirmPassword) {
-      setPasswordStatus({ type: 'error', message: 'Les nouveaux mots de passe ne correspondent pas.' });
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setPasswordStatus({ type: 'error', message: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' });
-      return;
-    }
-
-    try {
-      const res = await changePasswordMutation.mutateAsync({ currentPassword, newPassword });
-      setPasswordStatus({ type: 'success', message: res.message || 'Mot de passe modifié avec succès.' });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err: any) {
-      setPasswordStatus({ type: 'error', message: err.message || 'Erreur lors du changement de mot de passe.' });
-    }
-  };
-
-  return (
-    <div>
-      {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text, #001b1a)' }}>
-                Espace Compte &amp; Sécurité
-              </h1>
-              <p style={{ color: '#666' }}>Gérez vos informations personnelles, vos appareils connectés et votre sécurité</p>
-            </div>
-
-            <button
-              onClick={() => logout()}
-              style={{
-                padding: '0.65rem 1.25rem',
-                borderRadius: '6px',
-                border: '1px solid #d32f2f',
-                color: '#d32f2f',
-                background: 'transparent',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              <i className="fas fa-sign-out-alt" style={{ marginRight: '0.4rem' }}></i>
-              Se déconnecter
-            </button>
-          </div>
-
-          {feedback && (
-            <div style={{ padding: '1rem', background: '#e0f2f1', color: '#004d40', borderRadius: '8px', marginBottom: '1.5rem' }}>
-              <i className="fas fa-check-circle" style={{ marginRight: '0.5rem' }}></i>
-              {feedback}
-            </div>
-          )}
-
-          {/* Profile Overview Card */}
-          <div style={{ background: 'var(--card, #fff)', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-              <div
-                style={{
-                  width: '70px',
-                  height: '70px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #00796b, #004d40)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  fontWeight: 700,
-                }}
-              >
-                {user?.firstName ? user.firstName[0].toUpperCase() : 'U'}
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>
-                  {user?.firstName} {user?.lastName}
-                </h2>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.25rem', flexWrap: 'wrap' }}>
-                  <span style={{ color: '#666', fontSize: '0.95rem' }}>
-                    <i className="fas fa-envelope" style={{ marginRight: '0.4rem' }}></i>
-                    {user?.email}
-                  </span>
-
-                  {user?.isEmailVerified ? (
-                    <span style={{ padding: '0.2rem 0.6rem', background: '#e8f5e9', color: '#2e7d32', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>
-                      <i className="fas fa-check-circle" style={{ marginRight: '0.25rem' }}></i>
-                      Email Vérifié
-                    </span>
-                  ) : (
-                    <span style={{ padding: '0.2rem 0.6rem', background: '#fff3e0', color: '#e65100', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>
-                      <i className="fas fa-exclamation-triangle" style={{ marginRight: '0.25rem' }}></i>
-                      Email Non Vérifié
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', textAlign: 'right' }}>Rôles assignés</span>
-                <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.3rem' }}>
-                  {user?.roles?.map((r) => (
-                    <span key={r} style={{ padding: '0.2rem 0.6rem', background: '#eceff1', color: '#37474f', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
-                      {r}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-            {/* Active Sessions */}
-            <div style={{ background: 'var(--card, #fff)', borderRadius: '12px', padding: '1.75rem', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                  <i className="fas fa-laptop" style={{ marginRight: '0.5rem', color: '#01796F' }}></i>
-                  Sessions actives ({activeSessions.length})
-                </h3>
-
-                <button
-                  onClick={handleLogoutAll}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#d32f2f',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Déconnecter tout
-                </button>
-              </div>
-
-              {loadingSessions ? (
-                <div style={{ textAlign: 'center', padding: '2rem' }}>
-                  <i className="fas fa-spinner fa-spin"></i>
-                </div>
-              ) : activeSessions.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {activeSessions.map((s) => (
-                    <div
-                      key={s.sessionId}
-                      style={{
-                        padding: '1rem',
-                        borderRadius: '8px',
-                        background: 'var(--bg, #f9f9f9)',
-                        border: s.isCurrent ? '1px solid #00796b' : '1px solid #eee',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {s.deviceLabel}
-                          {s.isCurrent && (
-                            <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', background: '#00796b', color: '#fff', borderRadius: '4px' }}>
-                              Session actuelle
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>
-                          IP: {s.ipAddressMasked} • Connexion: {new Date(s.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-
-                      {!s.isCurrent && (
-                        <button
-                          onClick={() => handleRevokeSession(s.sessionId)}
-                          style={{
-                            padding: '0.4rem 0.75rem',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            background: '#fff',
-                            color: '#d32f2f',
-                            fontSize: '0.8rem',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Révoquer
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: '#888', fontSize: '0.9rem' }}>Aucune autre session enregistrée.</p>
-              )}
-            </div>
-
-            {/* Change Password Form */}
-            <div id="account-security" style={{ background: 'var(--card, #fff)', borderRadius: '12px', padding: '1.75rem', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', scrollMarginTop: '110px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>
-                <i className="fas fa-key" style={{ marginRight: '0.5rem', color: '#01796F' }}></i>
-                Modifier mon mot de passe
-              </h3>
-
-              {!user?.isEmailVerified && (
-                <div style={{ padding: '0.75rem', background: '#fff3e0', color: '#e65100', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                  <i className="fas fa-lock" style={{ marginRight: '0.4rem' }}></i>
-                  La vérification d&apos;email est requise pour modifier votre mot de passe.
-                </div>
-              )}
-
-              {passwordStatus && (
-                <div
-                  style={{
-                    padding: '0.75rem',
-                    background: passwordStatus.type === 'success' ? '#e8f5e9' : '#ffebee',
-                    color: passwordStatus.type === 'success' ? '#2e7d32' : '#c62828',
-                    borderRadius: '6px',
-                    fontSize: '0.85rem',
-                    marginBottom: '1rem',
-                  }}
-                >
-                  {passwordStatus.message}
-                </div>
-              )}
-
-              <form onSubmit={handleChangePassword}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem' }}>
-                    Mot de passe actuel
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem' }}>
-                    Nouveau mot de passe
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem' }}>
-                    Confirmer le nouveau mot de passe
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', border: '1px solid #ccc' }}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={changePasswordMutation.isPending || !user?.isEmailVerified}
-                  className="btn-booking"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    fontWeight: 700,
-                    borderRadius: '6px',
-                    cursor: !user?.isEmailVerified ? 'not-allowed' : 'pointer',
-                    color: '#fff',
-                    opacity: !user?.isEmailVerified ? 0.6 : 1,
-                  }}
-                >
-                  {changePasswordMutation.isPending ? <i className="fas fa-spinner fa-spin"></i> : 'Mettre à jour le mot de passe'}
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Security Events Audit Log */}
-          <div style={{ background: 'var(--card, #fff)', borderRadius: '12px', padding: '1.75rem', boxShadow: '0 4px 15px rgba(0,0,0,0.06)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>
-              <i className="fas fa-shield-alt" style={{ marginRight: '0.5rem', color: '#01796F' }}></i>
-              Historique de sécurité récent
-            </h3>
-
-            {loadingEvents ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <i className="fas fa-spinner fa-spin"></i>
-              </div>
-            ) : securityEvents.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #eee', color: '#666' }}>
-                      <th style={{ padding: '0.75rem' }}>Événement</th>
-                      <th style={{ padding: '0.75rem' }}>Appareil / Navigateur</th>
-                      <th style={{ padding: '0.75rem' }}>Adresse IP</th>
-                      <th style={{ padding: '0.75rem' }}>Date &amp; Heure</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {securityEvents.map((ev) => (
-                      <tr key={ev.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                        <td style={{ padding: '0.75rem', fontWeight: 600, color: '#01796F' }}>
-                          {ev.eventType}
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#555' }}>
-                          {ev.deviceLabel || 'Inconnu'}
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#555', fontFamily: 'monospace' }}>
-                          {ev.ipAddressMasked}
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#888' }}>
-                          {new Date(ev.createdAt).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p style={{ color: '#888', fontSize: '0.9rem' }}>Aucun événement de sécurité consigné pour le moment.</p>
-            )}
-          </div>
-    </div>
-  );
+  return <main className="profile-page">
+    <section className="profile-hero"><div><p className="eyebrow">ESPACE VOYAGEUR</p><h1>Mon profil</h1><p className="hero-copy">Préparez vos prochains départs et gardez vos préférences à portée de main.</p></div><div className="profile-hero-meta"><span className="hero-dot" />Compte personnel</div></section>
+    {feedback && <div className={`feedback ${feedback.type}`} role="status">{feedback.text}</div>}
+    <section className="identity-strip"><div className="photo-column"><div className="profile-photo">{user?.hasProfilePhoto ? <ProfilePhoto /> : <span>{user?.firstName?.charAt(0)?.toUpperCase() || 'U'}</span>}</div><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={uploadPhoto} /><button className="text-button" onClick={() => fileRef.current?.click()} disabled={photoBusy}>{photoBusy ? 'Enregistrement…' : user?.hasProfilePhoto ? 'Remplacer la photo' : 'Ajouter une photo'}</button>{user?.hasProfilePhoto && <button className="subtle-button" onClick={removePhoto} disabled={photoBusy}>Supprimer</button>}</div><div className="identity-copy"><p className="eyebrow">VOTRE IDENTITÉ</p><h2>{user?.firstName} {user?.lastName}</h2><p>{user?.email}</p><div className="badges"><span className={user?.isEmailVerified ? 'badge verified' : 'badge pending'}>{user?.isEmailVerified ? '✓ E-mail vérifié' : 'E-mail non vérifié'}</span>{!user?.isEmailVerified && <button className="link-button" onClick={resend}>Renvoyer l’e-mail</button>}</div></div><div className="identity-aside"><span>Préférence d’affichage</span><strong>{user?.preferredCurrency || 'MAD'} · {user?.preferredLanguage === 'en' ? 'English' : 'Français'}</strong></div></section>
+    <section className="profile-grid"><div className="content-column">
+      <article className="profile-section"><div className="section-heading"><div><p className="eyebrow">INFORMATIONS PERSONNELLES</p><h2>Votre profil</h2></div>{!editingProfile && <button className="outline-button" onClick={() => setEditingProfile(true)}>Modifier</button>}</div>{editingProfile ? <form onSubmit={saveProfile} className="form-grid"><label>Prénom<input value={profile.firstName} onChange={e => setProfile({ ...profile, firstName: e.target.value })} required maxLength={100} /></label><label>Nom<input value={profile.lastName} onChange={e => setProfile({ ...profile, lastName: e.target.value })} required maxLength={100} /></label><label>Devise préférée<select value={profile.preferredCurrency} onChange={e => setProfile({ ...profile, preferredCurrency: e.target.value })}>{currencies.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label>Langue préférée<select value={profile.preferredLanguage} onChange={e => setProfile({ ...profile, preferredLanguage: e.target.value })}>{languages.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><div className="form-actions"><button className="primary-button" disabled={saving}>{saving ? 'Enregistrement…' : 'Enregistrer'}</button><button type="button" className="subtle-button" onClick={() => setEditingProfile(false)}>Annuler</button></div></form> : <div className="details-grid"><div><span>Prénom</span><strong>{user?.firstName}</strong></div><div><span>Nom</span><strong>{user?.lastName}</strong></div><div><span>Devise</span><strong>{currencies.find(item => item.value === user?.preferredCurrency)?.label || 'MAD — Dirham marocain'}</strong></div><div><span>Langue</span><strong>{user?.preferredLanguage === 'en' ? 'English' : 'Français'}</strong></div></div>}</article>
+      <article className="profile-section travelers-section"><div className="section-heading"><div><p className="eyebrow">POUR VOS PROCHAINS DÉPARTS</p><h2>Voyageurs enregistrés</h2><p className="section-copy">Ajoutez uniquement les informations utiles pour préremplir vos futurs voyages.</p></div><button className="primary-button" onClick={() => { setEditing(null); setTravelerForm(emptyTraveler); setTravelerFormOpen(true); }}>+ Ajouter</button></div>{loadingTravelers ? <div className="loading-line">Chargement…</div> : <div className="traveler-list">{travelers.length === 0 && <div className="empty-state"><strong>Aucun voyageur enregistré</strong><span>Créez un profil pour gagner du temps lors de votre prochaine recherche.</span></div>}{travelers.map(traveler => <div className="traveler-row" key={traveler.reference}><div className="traveler-avatar">{traveler.firstName.charAt(0).toUpperCase()}</div><div className="traveler-info"><strong>{traveler.firstName} {traveler.lastName}</strong><span>{traveler.travelerType === 'ADULT' ? 'Adulte' : traveler.travelerType === 'CHILD' ? 'Enfant' : 'Bébé'}{traveler.dateOfBirth ? ` · ${traveler.dateOfBirth}` : ''}</span></div><button className="row-action" onClick={() => { setEditing(traveler.reference); setTravelerForm({ firstName: traveler.firstName, lastName: traveler.lastName, dateOfBirth: traveler.dateOfBirth || '', travelerType: traveler.travelerType }); setTravelerFormOpen(true); }}>Modifier</button><button className="row-action danger" onClick={() => deleteTraveler(traveler.reference)}>Supprimer</button></div>)}</div>}{travelerFormOpen && <form onSubmit={saveTraveler} className="traveler-form"><h3>{editing ? 'Modifier le voyageur' : 'Nouveau voyageur'}</h3><div className="form-grid"><label>Prénom<input value={travelerForm.firstName} onChange={e => setTravelerForm({ ...travelerForm, firstName: e.target.value })} required maxLength={100} /></label><label>Nom<input value={travelerForm.lastName} onChange={e => setTravelerForm({ ...travelerForm, lastName: e.target.value })} required maxLength={100} /></label><label>Date de naissance (optionnel)<input type="date" value={travelerForm.dateOfBirth} onChange={e => setTravelerForm({ ...travelerForm, dateOfBirth: e.target.value })} /></label><label>Type<select value={travelerForm.travelerType} onChange={e => setTravelerForm({ ...travelerForm, travelerType: e.target.value as typeof travelerForm.travelerType })}><option value="ADULT">Adulte</option><option value="CHILD">Enfant</option><option value="INFANT">Bébé</option></select></label></div><div className="form-actions"><button className="primary-button" disabled={saving}>{saving ? 'Enregistrement…' : 'Enregistrer'}</button><button type="button" className="subtle-button" onClick={() => { setEditing(null); setTravelerForm(emptyTraveler); setTravelerFormOpen(false); }}>Annuler</button></div></form>}</article>
+    </div><aside className="side-column"><article className="profile-section security-card"><p className="eyebrow">SÉCURITÉ</p><h2>Mot de passe</h2><p className="section-copy">Un mot de passe unique protège votre espace voyageur.</p><form onSubmit={changePasswordSubmit}><input type="password" placeholder="Mot de passe actuel" value={passwords.currentPassword} onChange={e => setPasswords({ ...passwords, currentPassword: e.target.value })} required /><input type="password" placeholder="Nouveau mot de passe" minLength={8} value={passwords.newPassword} onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })} required /><input type="password" placeholder="Confirmer le mot de passe" minLength={8} value={passwords.confirmPassword} onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })} required /><button className="primary-button" disabled={changePassword.isPending}>Mettre à jour</button></form></article><article className="profile-section sessions-card"><p className="eyebrow">ACCÈS AU COMPTE</p><h2>Sessions actives</h2>{sessionsLoading ? <div className="loading-line">Chargement…</div> : sessions.map(session => <div className="session-row" key={session.sessionId}><div><strong>{session.deviceLabel}</strong><span>{session.isCurrent ? 'Session actuelle' : new Date(session.lastUsedAt).toLocaleDateString()}</span></div>{!session.isCurrent && <button className="row-action danger" onClick={() => revokeSession.mutate(session.sessionId)}>Révoquer</button>}</div>)}</article></aside></section>
+    <section className="security-events"><p className="eyebrow">JOURNAL DU COMPTE</p><h2>Activité de sécurité récente</h2>{eventsLoading ? <div className="loading-line">Chargement…</div> : securityEvents.length === 0 ? <p className="section-copy">Aucun événement récent.</p> : <div className="events-list">{securityEvents.slice(0, 5).map(event => <div key={event.id}><strong>{event.eventType}</strong><span>{new Date(event.createdAt).toLocaleString()}</span></div>)}</div>}</section>
+    <style jsx>{styles}</style>
+  </main>;
 }
+
+function ProfilePhoto() { const { user } = useAuth(); const [url, setUrl] = useState<string | null>(null); useEffect(() => { let active = true; let objectUrl: string | null = null; setUrl(null); void authService.getProfilePhoto().then(blob => { if (active) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); } }).catch(() => {}); return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); }; }, [user?.updatedAt]); return url ? <img src={url} alt="" /> : <span>{user?.firstName?.charAt(0)?.toUpperCase() || 'U'}</span>; }
+
+const styles = `
+.profile-page{width:100%;max-width:1280px;margin:0 auto;color:var(--text,#103331)}.profile-hero{display:flex;justify-content:space-between;align-items:end;padding:1rem 0 2.4rem;border-bottom:1px solid rgba(0,109,100,.14)}.eyebrow{margin:0 0 .55rem;color:#087d70;font-size:.72rem;font-weight:800;letter-spacing:.13em}.profile-hero h1{margin:0;font-size:clamp(2rem,4vw,3.5rem);letter-spacing:-.04em}.hero-copy,.section-copy{margin:.65rem 0 0;color:var(--text-secondary,#68807b);line-height:1.65}.profile-hero-meta{display:flex;align-items:center;gap:.5rem;color:#68807b;font-size:.85rem}.hero-dot{width:9px;height:9px;border-radius:50%;background:#00a99d}.feedback{margin:1rem 0;padding:.8rem 1rem;border-radius:10px;font-size:.9rem}.feedback.success{background:#e9f8f3;color:#096858}.feedback.error{background:#fff0f0;color:#ad3636}.identity-strip{display:grid;grid-template-columns:130px 1fr auto;gap:1.5rem;align-items:center;padding:1.65rem 0;border-bottom:1px solid rgba(0,109,100,.14)}.photo-column{text-align:center}.profile-photo{width:92px;height:92px;margin:auto;border-radius:50%;display:grid;place-items:center;background:#087d70;color:#fff;font-size:2.1rem;font-weight:800;overflow:hidden;box-shadow:0 0 0 6px rgba(0,169,157,.12)}.profile-photo img{width:100%;height:100%;object-fit:cover}.identity-copy h2{margin:0;font-size:1.55rem}.identity-copy>p:not(.eyebrow){margin:.35rem 0;color:#68807b}.badges{display:flex;align-items:center;gap:.6rem;margin-top:.7rem;flex-wrap:wrap}.badge{padding:.32rem .58rem;border-radius:5px;font-size:.75rem;font-weight:700}.verified{background:#e9f8f3;color:#087d70}.pending{background:#fff4e5;color:#a76100}.identity-aside{padding-left:2rem;border-left:1px solid rgba(0,109,100,.14);display:grid;gap:.35rem;color:#68807b;font-size:.8rem}.identity-aside strong{color:var(--text,#103331)}.text-button,.link-button,.subtle-button,.outline-button,.row-action{border:0;background:none;color:#087d70;cursor:pointer;font-weight:700;font-size:.78rem}.text-button{display:block;margin:.8rem auto .2rem}.subtle-button{color:#78908b}.profile-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.8fr);gap:1.25rem;margin-top:1.25rem}.profile-section,.security-events{border:1px solid rgba(0,109,100,.13);border-radius:16px;background:var(--card,#fff);padding:1.45rem}.profile-section+.profile-section{margin-top:1.25rem}.section-heading{display:flex;justify-content:space-between;align-items:start;gap:1rem}.section-heading h2,.profile-section h2,.security-events h2{margin:0;font-size:1.25rem;letter-spacing:-.02em}.outline-button{border:1px solid #b9d8d2;border-radius:7px;padding:.55rem .85rem}.details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;margin-top:1.4rem}.details-grid div{display:grid;gap:.35rem}.details-grid span{font-size:.76rem;color:#78908b}.details-grid strong{font-size:.94rem}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1.25rem}.form-grid label{display:grid;gap:.4rem;color:#55716b;font-size:.8rem;font-weight:700}.form-grid input,.form-grid select,.security-card input{width:100%;padding:.72rem .75rem;border:1px solid #cfe0dc;border-radius:8px;background:var(--bg,#fff);color:inherit;font:inherit;font-weight:400}.form-actions{grid-column:1/-1;display:flex;gap:.7rem;align-items:center}.primary-button{border:0;border-radius:8px;background:#087d70;color:#fff;padding:.7rem 1rem;font-weight:800;cursor:pointer}.primary-button:disabled{opacity:.6;cursor:wait}.travelers-section{min-height:260px}.traveler-list{margin-top:1.3rem}.empty-state{display:grid;gap:.35rem;padding:1.25rem;border:1px dashed #cfe0dc;border-radius:10px;color:#68807b}.empty-state strong{color:var(--text,#103331)}.traveler-row{display:flex;align-items:center;gap:.8rem;padding:.8rem 0;border-bottom:1px solid #edf2f0}.traveler-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e5f4f1;color:#087d70;font-weight:800}.traveler-info{display:grid;gap:.2rem;flex:1}.traveler-info span,.session-row span{color:#78908b;font-size:.76rem}.row-action{padding:.35rem}.row-action.danger{color:#ad4a4a}.traveler-form{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #edf2f0}.traveler-form h3{margin:0;font-size:1rem}.security-card form{display:grid;gap:.7rem;margin-top:1.1rem}.sessions-card{margin-top:1.25rem}.session-row{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.8rem 0;border-bottom:1px solid #edf2f0}.session-row div{display:grid;gap:.2rem}.security-events{margin-top:1.25rem}.events-list{margin-top:1rem}.events-list>div{display:flex;justify-content:space-between;padding:.65rem 0;border-bottom:1px solid #edf2f0;font-size:.8rem}.events-list span{color:#78908b}.loading-line{padding:1rem 0;color:#78908b}@media(max-width:800px){.profile-grid{grid-template-columns:1fr}.identity-aside{display:none}}@media(max-width:560px){.profile-hero{display:block}.profile-hero-meta{margin-top:1rem}.identity-strip{grid-template-columns:1fr;text-align:center}.identity-copy{display:grid;justify-items:center}.form-grid,.details-grid{grid-template-columns:1fr}.traveler-row{flex-wrap:wrap}.traveler-info{min-width:calc(100% - 50px)}.traveler-row .row-action{margin-left:42px}.profile-section,.security-events{padding:1rem}.profile-page{padding:0 .1rem}}
+`;

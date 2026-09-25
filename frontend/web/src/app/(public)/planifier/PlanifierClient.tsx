@@ -49,6 +49,11 @@ export function PlanifierClient() {
     setEndDate(end.toISOString().split('T')[0]);
   }, []);
 
+  // The saved preference is only a default; the currency selector remains an explicit override.
+  useEffect(() => {
+    if (user?.preferredCurrency) setBudgetCurrency(user.preferredCurrency);
+  }, [user?.preferredCurrency]);
+
   // Load existing plans for user
   useEffect(() => {
     if (isAuthenticated) {

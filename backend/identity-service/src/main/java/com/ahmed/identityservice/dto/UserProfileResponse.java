@@ -18,7 +18,11 @@ public record UserProfileResponse(
         UserStatus status,
         boolean isEmailVerified,
         Set<String> roles,
-        Instant createdAt
+        Instant createdAt,
+        Instant updatedAt,
+        String preferredCurrency,
+        String preferredLanguage,
+        boolean hasProfilePhoto
 ) {
     public static UserProfileResponse from(User user) {
         Set<String> roleNames = user.getRoles().stream()
@@ -35,7 +39,11 @@ public record UserProfileResponse(
                 user.getStatus(),
                 user.isEmailVerified(),
                 roleNames,
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getPreferredCurrency(),
+                user.getPreferredLanguage(),
+                user.getProfileImageKey() != null
         );
     }
 }
