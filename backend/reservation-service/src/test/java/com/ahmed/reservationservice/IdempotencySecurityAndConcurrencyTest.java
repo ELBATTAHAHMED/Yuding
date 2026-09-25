@@ -312,6 +312,8 @@ class IdempotencySecurityAndConcurrencyTest {
                 .currency("EUR")
                 .build();
 
+        when(paymentService.initiatePaymentOrder(eq(testRef), any(), any(), any(), eq(testUserId.toString()), any()))
+                .thenReturn(orderDto);
         when(paymentService.initiatePaymentOrder(eq(testRef), any(), any(), eq(testUserId.toString()), any()))
                 .thenReturn(orderDto);
 

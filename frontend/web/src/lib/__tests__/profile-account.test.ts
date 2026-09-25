@@ -23,4 +23,52 @@ describe('Phase 49 profile and traveler contracts', () => {
     assert.match(url, /\/api\/account\/travelers$/);
     assert.doesNotMatch(url, /:8081/);
   });
+
+  test('routes favorites through Gateway and supports all vertical resource types', async () => {
+    const { libraryService } = await import('../../services/library.service.ts');
+    let url = '';
+    let body = '';
+    globalThis.fetch = async (input, init) => {
+      url = String(input);
+      body = String(init?.body || '');
+      return new Response(JSON.stringify({ publicReference: 'fav-123' }), { status: 201 });
+    };
+
+    const types = ['HOTEL', 'ACTIVITY', 'DESTINATION', 'FLIGHT', 'TRANSFER', 'TRAIN'] as const;
+    for (const resType of types) {
+      await libraryService.addFavorite({
+        resourceType: resType,
+        resourceReference: `ref-${resType}`,
+        title: `Test ${resType}`,
+      });
+      assert.match(url, /\/api\/account\/favorites$/);
+      assert.doesNotMatch(url, /:8081/);
+      assert.equal(JSON.parse(body).resourceType, resType);
+    }
+  });
+
+  test('routes recent search and view deletion through Gateway account endpoints', async () => {
+    const { libraryService } = await import('../../services/library.service.ts');
+    let deleteUrls: string[] = [];
+    globalThis.fetch = async (input, init) => {
+      if (init?.method === 'DELETE') {
+        deleteUrls.push(String(input));
+      }
+      return new Response(null, { status: 204 });
+    };
+
+    await libraryService.deleteRecentSearch('srch-1');
+    await libraryService.deleteRecentView('view-1');
+    await libraryService.clearRecentSearches();
+    await libraryService.clearRecentViews();
+
+    assert.equal(deleteUrls.length, 4);
+    assert.match(deleteUrls[0], /\/api\/account\/recent-searches\/srch-1$/);
+    assert.match(deleteUrls[1], /\/api\/account\/recent-views\/view-1$/);
+    assert.match(deleteUrls[2], /\/api\/account\/recent-searches$/);
+    assert.match(deleteUrls[3], /\/api\/account\/recent-views$/);
+    for (const u of deleteUrls) {
+      assert.doesNotMatch(u, /:(?:8081|8082|8084|8090|8072|7777)/);
+    }
+  });
 });

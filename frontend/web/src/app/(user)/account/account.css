@@ -494,31 +494,31 @@
 .library-tabs-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   border-bottom: 1px solid var(--account-line, #d9e7e3);
-  margin-top: 15px;
-  margin-bottom: 20px;
+  margin-top: 18px;
+  margin-bottom: 26px;
   overflow-x: auto;
 }
 
 .library-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 10px;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2.5px solid transparent;
   background: transparent;
   color: var(--account-muted, #607771);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
   text-decoration: none;
 }
-.library-tab-btn > i { font-size: 11px; }
+.library-tab-btn > i { font-size: 13px; }
 
 .library-tab-btn:hover {
   color: var(--account-green, #087d70);
@@ -533,9 +533,9 @@
 }
 
 .library-tab-count {
-  font-size: 10px;
-  padding: 0 5px;
-  border-radius: 8px;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
   background: rgba(8, 125, 112, 0.1);
   color: var(--account-green, #087d70);
   font-weight: 700;
@@ -550,22 +550,22 @@
 .library-subfilters {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  background: rgba(0, 0, 0, 0.04);
-  padding: 2px;
-  border-radius: 6px;
-  border: 1px solid var(--account-line, #d9e7e3);
-  margin-bottom: 20px;
+  gap: 3px;
+  background: rgba(8, 125, 112, 0.04);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(8, 125, 112, 0.15);
+  margin-bottom: 22px;
 }
 
 .library-subfilter-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 27px;
-  padding: 0 8px;
-  border-radius: 4px;
-  font-size: 11.5px;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
   border: none;
   background: transparent;
@@ -574,33 +574,52 @@
   transition: all 0.15s ease;
   white-space: nowrap;
 }
-.library-subfilter-btn > i { font-size: 10px; }
-.library-subfilter-btn .library-tab-count { font-size: 9px; }
-.library-clear-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: 0;
-  background: transparent;
-  padding: 4px 2px;
-  color: #a34c4c;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
+.library-subfilter-btn > i { font-size: 11px; }
+.library-subfilter-btn .library-tab-count {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: rgba(8, 125, 112, 0.12);
+  color: var(--account-green, #087d70);
 }
-.library-clear-action:hover, .library-clear-action:focus-visible { color: #c72f3c; text-decoration: underline; }
-.library-clear-action > i { font-size: 10px; }
 
 .library-subfilter-btn:hover {
   color: var(--account-ink, #17322f);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .library-subfilter-btn.active {
   background: #ffffff;
-  color: var(--account-ink, #17322f);
-  font-weight: 600;
+  color: var(--account-green, #087d70);
+  font-weight: 700;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+.library-subfilter-btn.active .library-tab-count {
+  background: var(--account-green, #087d70);
+  color: #ffffff;
+}
+
+.library-clear-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 5px 10px;
+  color: #718096;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.library-clear-action:hover, .library-clear-action:focus-visible {
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fee2e2;
+  text-decoration: none;
+}
+.library-clear-action > i { font-size: 11px; }
 
 [data-theme="dark"] .library-tabs-nav {
   border-bottom-color: var(--account-line, #36504a);
@@ -631,8 +650,8 @@
 }
 
 [data-theme="dark"] .library-subfilters {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--account-line, #36504a);
+  background: rgba(120, 213, 196, 0.06);
+  border-color: rgba(120, 213, 196, 0.2);
 }
 
 [data-theme="dark"] .library-subfilter-btn {
@@ -640,12 +659,27 @@
 }
 
 [data-theme="dark"] .library-subfilter-btn:hover {
-  color: var(--account-ink, #e7f1ee);
+  color: #e7f1ee;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .library-subfilter-btn.active {
   background: var(--account-card, #202e2a);
-  color: var(--account-ink, #e7f1ee);
+  color: #78d5c4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .library-subfilter-btn.active .library-tab-count {
+  background: #78d5c4;
+  color: #062523;
+}
+
+[data-theme="dark"] .library-clear-action {
+  color: #94a3b8;
+}
+[data-theme="dark"] .library-clear-action:hover, [data-theme="dark"] .library-clear-action:focus-visible {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 .library-header-actions {
@@ -878,18 +912,51 @@
 }
 
 .btn-danger-ghost {
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid transparent;
   background: transparent;
   color: #94a3b8;
   cursor: pointer;
   transition: all 0.15s ease;
+  padding: 0;
+  font-size: 13px;
 }
 
 .btn-danger-ghost:hover {
   color: #ef4444;
   background: #fef2f2;
+  border-color: #fee2e2;
+}
+
+[data-theme="dark"] .btn-danger-ghost {
+  color: #64748b;
+}
+
+[data-theme="dark"] .btn-danger-ghost:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.library-card-icon-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(8, 125, 112, 0.08) 0%, rgba(8, 125, 112, 0.18) 100%);
+  color: var(--account-green, #087d70);
+  font-size: 44px;
+}
+
+[data-theme="dark"] .library-card-icon-placeholder {
+  background: linear-gradient(135deg, rgba(120, 213, 196, 0.08) 0%, rgba(120, 213, 196, 0.2) 100%);
+  color: #78d5c4;
 }
 
 /* ==========================================================================

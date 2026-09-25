@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '../lib/api-client.ts';
 import type {
   FavoriteItem,
   FavoriteRequest,
@@ -8,7 +8,7 @@ import type {
   RecentSearchRequest,
   RecentViewItem,
   RecentViewRequest,
-} from '@/types/library.types';
+} from '../types/library.types.ts';
 
 export const libraryService = {
   // Favorites

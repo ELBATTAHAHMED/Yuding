@@ -25,7 +25,7 @@ import java.util.*;
 @Slf4j
 public class UserLibraryService {
 
-    private static final Set<String> FAVORITE_RESOURCE_TYPES = Set.of("HOTEL", "ACTIVITY", "DESTINATION");
+    private static final Set<String> FAVORITE_RESOURCE_TYPES = Set.of("HOTEL", "ACTIVITY", "DESTINATION", "FLIGHT", "TRANSFER", "TRAIN");
     private static final Set<String> SEARCH_TYPES = Set.of(
             "FLIGHT", "HOTEL", "ACTIVITY", "TRIP", "TRANSFER", "TRAIN",
             "FLIGHTS", "HOTELS", "ACTIVITIES", "TRANSFERS", "TRAINS"

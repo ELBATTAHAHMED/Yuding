@@ -15,6 +15,7 @@ import {
   type TimelineSegment,
   type ConditionItem,
 } from '@/components/travel/details';
+import FavoriteButton from '@/components/common/FavoriteButton';
 
 export default function TrainDetailsPage() {
   const params = useParams();
@@ -209,6 +210,17 @@ export default function TrainDetailsPage() {
         provider={isTransitous ? 'TRANSITOUS' : 'ONCF GTFS'}
         sourceLabel="Source"
         badges={badges}
+        action={
+          <FavoriteButton
+            resourceType="TRAIN"
+            resourceReference={train.offerId || offerId}
+            title={`${train.productType || 'Train'}${train.trainNumber ? ` N°${train.trainNumber}` : ''}: ${train.originStation} → ${train.destinationStation}`}
+            destination={`${train.originStation} → ${train.destinationStation}`}
+            providerLabel={isTransitous ? 'TRANSITOUS' : 'ONCF GTFS'}
+            priceSnapshot={train.price}
+            currencySnapshot={train.currency || 'MAD'}
+          />
+        }
       />
 
       {/* Train Journey Timeline */}
