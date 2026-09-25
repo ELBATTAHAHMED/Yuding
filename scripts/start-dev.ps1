@@ -10,6 +10,7 @@
       3. Service Discovery (discovery-service / Eureka:8761)
       4. Downstream Microservices:
          - identity-service (8081)
+         - notification-service (8085)
          - travel-service (8082, with local .env.local secrets)
          - reservation-service (8084)
          - commentaire-service (8090)
@@ -44,6 +45,33 @@ $pidsFile = Join-Path $repoRoot '.dev-pids.json'
 if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
 }
+
+function Import-EnvironmentFile ([string]$path) {
+    if (-not (Test-Path $path)) {
+        return
+    }
+
+    Get-Content $path | ForEach-Object {
+        $line = $_.Trim()
+        if ([string]::IsNullOrWhiteSpace($line) -or $line.StartsWith('#')) {
+            return
+        }
+
+        $eq = $line.IndexOf('=')
+        if ($eq -le 0) {
+            return
+        }
+
+        $key = $line.Substring(0, $eq).Trim()
+        $value = $line.Substring($eq + 1).Trim().Trim('"').Trim("'")
+        if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($key, 'Process'))) {
+            [Environment]::SetEnvironmentVariable($key, $value, 'Process')
+        }
+    }
+}
+
+Import-EnvironmentFile (Join-Path $repoRoot '.env')
+Import-EnvironmentFile (Join-Path $repoRoot '.env.local')
 
 Write-Host @"
 ==================================================================
@@ -144,6 +172,7 @@ if ($Build) {
     Write-Host "`n[Build] Rebuilding backend services and frontend bundle..." -ForegroundColor Yellow
     $backendDirs = @(
         'config-service', 'discovery-service', 'identity-service',
+        'notification-service',
         'travel-service', 'reservation-service', 'commentaire-service',
         'ai-service', 'gateway-service'
     )
@@ -223,6 +252,9 @@ Write-Host "`n[4/6] Starting Downstream Microservices..." -ForegroundColor Yello
 
 # Identity Service (8081)
 Start-BackendService 'identity-service' 8081 | Out-Null
+
+# Notification Service (8085) — durable email queue and SMTP worker
+Start-BackendService 'notification-service' 8085 | Out-Null
 
 # Travel Service (8082, load .env.local secrets into process environment)
 # Ensure ONCF GTFS dataset is present for train search
