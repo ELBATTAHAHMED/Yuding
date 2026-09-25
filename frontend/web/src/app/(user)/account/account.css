@@ -233,12 +233,11 @@
 .photo-menu {
   position: absolute;
   top: calc(100% + 10px);
-  left: 50%;
+  left: 0;
   z-index: 30;
   display: grid;
   min-width: 176px;
   padding: 5px;
-  transform: translateX(-50%);
   border: 1px solid var(--account-line);
   border-radius: 11px;
   background: var(--account-card);
@@ -383,7 +382,6 @@
   .identity-copy h2 { font-size: 19px; }
   .account-content .profile-flow .profile-section { padding: 24px 0 !important; }
   .photo-edit { opacity: 1; }
-  .photo-menu { left: 0; transform: none; }
   .details-grid,
   .form-grid { gap: 15px; }
   .account-content .account-empty-panel { grid-template-columns: 52px minmax(0, 1fr); gap: 15px; padding: 26px 0 !important; }
