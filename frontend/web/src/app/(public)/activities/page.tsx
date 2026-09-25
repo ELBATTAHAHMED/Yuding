@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
+import { apiClient } from '@/lib/api-client';
 import { ActivityOffer } from '@/types/travel.types';
 import { DestinationWeather, GeoPlaceSelector, GeoMap, NearbyPoiPanel, DestinationImageGallery, SafeEntityImage, ActivitySkeleton } from '@/components/travel';
 import { TravelHero, TravelPage } from '@/components/travel';
@@ -41,6 +42,7 @@ export default function ActivitiesPage() {
   const rerunRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!apiClient.getAccessToken()) return;
     libraryService.getFavorites().then((favs) => {
       const actFavs = favs.filter(f => f.resourceType === 'ACTIVITY');
       setFavoriteActivityRefs(new Set(actFavs.map(f => f.resourceReference)));
@@ -159,7 +161,11 @@ export default function ActivitiesPage() {
       setActivities(data.results || []);
       saveSearchOffers('ACTIVITY', data.results || []);
       if (data.status === 'PROVIDER_UNAVAILABLE') {
-        setProviderMessage(data.message || 'Le fournisseur d’activités ne répond pas pour le moment.');
+        const rawMsg = data.message || '';
+        const cleanMsg = rawMsg && !rawMsg.includes('No live') && !rawMsg.includes('Phase')
+          ? rawMsg
+          : 'Le fournisseur d’activités ne répond pas pour le moment. Veuillez réessayer dans un instant.';
+        setProviderMessage(cleanMsg);
       }
 
       libraryService.recordRecentSearch({

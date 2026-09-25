@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
-import { ApiError } from '@/lib/api-client';
+import { apiClient, ApiError } from '@/lib/api-client';
 import type { HotelOffer, HotelRoomOffer, RoomOccupancy } from '@/types/travel.types';
 import {
   filterHotels,
@@ -84,6 +84,7 @@ export default function HotelsPage() {
   const rerunRef = useRef<{ destination: string; checkIn: string; checkOut: string } | null>(null);
 
   useEffect(() => {
+    if (!apiClient.getAccessToken()) return;
     libraryService.getFavorites().then((favs) => {
       const hotelFavs = favs.filter(f => f.resourceType === 'HOTEL');
       setFavoriteHotelRefs(new Set(hotelFavs.map(f => f.resourceReference)));
@@ -746,25 +747,27 @@ export default function HotelsPage() {
         <div className="max-w-6xl mx-auto">
           {/* Filter Categories */}
           {hasSearched && allHotels.length > 0 && (
-          <div className="flex justify-center gap-2 mb-6 flex-wrap">
-            {[
-              { label: 'Tous les hébergements', value: 'ALL' as const },
-              { label: 'Hôtels & Riads', value: 'HOTEL_RIAD' as const },
-              { label: 'Villas & Maisons', value: 'VILLA_HOUSE' as const },
-              { label: 'Appartements', value: 'APARTMENT' as const },
-            ].map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setFilterType(tab.value)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all border ${
-                  filterType === tab.value
-                    ? 'bg-[#01796F] text-white border-[#01796F] shadow-sm'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#01796F]/40'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#062523] border border-slate-200 dark:border-slate-800 rounded-xl flex-wrap justify-center">
+              {[
+                { label: 'Tous les hébergements', value: 'ALL' as const },
+                { label: 'Hôtels & Riads', value: 'HOTEL_RIAD' as const },
+                { label: 'Villas & Maisons', value: 'VILLA_HOUSE' as const },
+                { label: 'Appartements', value: 'APARTMENT' as const },
+              ].map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setFilterType(tab.value)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    filterType === tab.value
+                      ? 'bg-white dark:bg-[#0a3531] text-[#01796F] dark:text-[#02E0D5] shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
           )}
 
@@ -791,8 +794,12 @@ export default function HotelsPage() {
                 allHotels.length > 0 && filterType !== 'ALL'
                   ? 'Aucun hébergement de cette catégorie dans les résultats. Essayez "Tous les hébergements".'
                   : searchStatus === 'PROVIDER_UNAVAILABLE'
-                  ? (searchMessage || 'Le service Nuitee Connect est temporairement indisponible.')
-                  : (searchMessage || "Aucun hôtel disponible pour cette destination et ces dates. Essayez d'autres dates ou une autre ville.")
+                  ? (searchMessage && !searchMessage.includes('No live') && !searchMessage.includes('Phase')
+                      ? searchMessage
+                      : 'Le service hôtelier partenaire est momentanément indisponible. Veuillez réessayer dans quelques instants.')
+                  : (searchMessage && !searchMessage.includes('No live') && !searchMessage.includes('Phase')
+                      ? searchMessage
+                      : "Aucun hôtel disponible pour cette destination et ces dates. Essayez d'autres dates ou une autre ville.")
               }
             />
           ) : (

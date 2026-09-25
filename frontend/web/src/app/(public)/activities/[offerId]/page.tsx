@@ -57,7 +57,9 @@ export default function ActivityDetailsPage() {
       const current = data.results?.find(item => (item.id || item.offerId) === offerId);
       if (current) showActivity(current);
       else setRefreshError(data.status === 'PROVIDER_UNAVAILABLE'
-        ? (data.message || 'Le fournisseur d’activités est temporairement indisponible.')
+        ? (data.message && !data.message.includes('No live') && !data.message.includes('Phase')
+            ? data.message
+            : 'Le fournisseur d’activités est temporairement indisponible.')
         : 'Cette activité n’est plus disponible pour cette destination.');
     } catch {
       setRefreshError('Impossible d’actualiser cette activité pour le moment. Réessayez.');

@@ -18,13 +18,13 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 }) => {
   return (
     <div
-      className={`text-center py-12 px-4 rounded-xl border border-red-100 dark:border-red-950/50 bg-red-50/50 dark:bg-red-950/20 max-w-lg mx-auto ${className}`}
+      className={`text-center py-10 px-6 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#062523] shadow-sm max-w-lg mx-auto ${className}`}
     >
-      <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center text-2xl mb-4">
-        <i className="fas fa-exclamation-triangle" />
+      <div className="w-12 h-12 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20 mx-auto flex items-center justify-center text-lg mb-3.5">
+        <i className="fas fa-exclamation-circle" />
       </div>
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">{message}</p>
+      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1.5 tracking-tight">{title}</h3>
+      <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed max-w-sm mx-auto">{message}</p>
       {onRetry && (
         <Button
           variant="outline"

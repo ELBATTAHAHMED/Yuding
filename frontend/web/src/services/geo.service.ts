@@ -28,7 +28,12 @@ export const geoService = {
     if (params.biasLat !== undefined) query.set('biasLat', String(params.biasLat));
     if (params.biasLon !== undefined) query.set('biasLon', String(params.biasLon));
 
-    return apiClient.get<GeoPlace[]>(`/travel/geo/autocomplete?${query.toString()}`);
+    try {
+      const res = await apiClient.get<GeoPlace[]>(`/travel/geo/autocomplete?${query.toString()}`);
+      return res ?? [];
+    } catch {
+      return [];
+    }
   },
 
   /**
@@ -46,7 +51,12 @@ export const geoService = {
     if (params.country) query.set('country', params.country);
     if (params.limit) query.set('limit', String(params.limit));
 
-    return apiClient.get<GeoPlace[]>(`/travel/geo/geocode?${query.toString()}`);
+    try {
+      const res = await apiClient.get<GeoPlace[]>(`/travel/geo/geocode?${query.toString()}`);
+      return res ?? [];
+    } catch {
+      return [];
+    }
   },
 
   /**
@@ -85,7 +95,12 @@ export const geoService = {
       }
     }
 
-    return apiClient.get<NearbyPlace[]>(`/travel/geo/places/nearby?${query.toString()}`);
+    try {
+      const res = await apiClient.get<NearbyPlace[]>(`/travel/geo/places/nearby?${query.toString()}`);
+      return res ?? [];
+    } catch {
+      return [];
+    }
   },
 
   /**
