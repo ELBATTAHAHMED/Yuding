@@ -38,6 +38,7 @@ export default function ActivitiesPage() {
   const [favoriteActivityRefs, setFavoriteActivityRefs] = useState<Set<string>>(new Set());
   const placeRequestRef = useRef(0);
   const searchRequestIdRef = useRef(0);
+  const rerunRef = useRef<string | null>(null);
 
   useEffect(() => {
     libraryService.getFavorites().then((favs) => {
@@ -93,9 +94,14 @@ export default function ActivitiesPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const city = params.get('destination')?.trim();
+    const city = (params.get('destination') || params.get('city'))?.trim();
     if (!city) return;
     setDestination(city);
+    if (params.get('date')) setDate(params.get('date')!);
+    const rerunTravelers = Number(params.get('travelers'));
+    if (Number.isInteger(rerunTravelers) && rerunTravelers > 0 && rerunTravelers <= 20) setTravelers(rerunTravelers);
+    if (params.get('category')) setCategory(params.get('category')!);
+    if (params.get('rerun') === '1') rerunRef.current = city;
     setSelectedGeoPlace({
       id: `home-${city}`,
       name: city,
@@ -195,6 +201,12 @@ export default function ActivitiesPage() {
       setIsRetrying(false);
     }
   };
+
+  useEffect(() => {
+    if (!rerunRef.current || destination !== rerunRef.current) return;
+    rerunRef.current = null;
+    void handleSearch();
+  }, [destination, date, travelers, category]);
 
   const filtered = useMemo(() => activities.filter((act) => {
     if (category === 'ALL') return true;
@@ -409,7 +421,7 @@ export default function ActivitiesPage() {
             <EmptyState
               icon="fa-search-location"
               title="Aucune activité disponible pour le moment"
-              description={providerMessage || 'Aucune offre trouvée pour cette sélection. Essayez une autre ville ou date.'}
+              description="Aucune offre fournisseur trouvée pour cette destination et cette date. Essayez une autre ville ou date."
             />
           )}
 

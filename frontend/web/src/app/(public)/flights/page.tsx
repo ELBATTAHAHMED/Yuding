@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
@@ -15,6 +15,7 @@ import { useSearchSession } from '@/lib/search-session';
 import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
 import { libraryService } from '@/services/library.service';
+import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -72,6 +73,36 @@ export default function FlightsPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [sortKey, setSortKey] = useState<FlightSortKey>('PRICE_ASC');
   const searchRequestIdRef = useRef(0);
+  const rerunRef = useRef<{ origin: string; destination: string; departureDate: string } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('rerun') !== '1' || airports.length === 0) return;
+    const origin = params.get('origin') || '';
+    const destination = params.get('destination') || '';
+    const date = params.get('departureDate') || '';
+    const from = airports.find(airport => airport.code === origin);
+    const to = airports.find(airport => airport.code === destination);
+    if (!from || !to || !date) {
+      setValidationError('Impossible de relancer cette recherche : un aéroport ou une date est indisponible.');
+      return;
+    }
+    rerunRef.current = { origin, destination, departureDate: date };
+    setSelectedOrigin(from);
+    setSelectedDestination(to);
+    setDepartureDate(date);
+    const number = (key: string, fallback: number) => {
+      const value = Number(params.get(key));
+      return Number.isInteger(value) && value >= 0 && value <= 9 ? value : fallback;
+    };
+    setAdults(Math.max(1, number('adults', 1)));
+    setChildren(number('children', 0));
+    setInfants(number('infants', 0));
+    const travelClass = params.get('travelClass');
+    if (CABIN_OPTIONS.some(option => option.value === travelClass)) {
+      setCabinClass(travelClass as FlightSearchRequest['travelClass']);
+    }
+  }, [airports]);
 
   useSearchSession('FLIGHT', {
     selectedOrigin, selectedDestination, departureDate, adults, children, infants,
@@ -221,6 +252,13 @@ export default function FlightsPage() {
 
   const handleRetry = useCallback(() => {
     handleSearch();
+  }, [selectedOrigin, selectedDestination, departureDate, adults, children, infants, cabinClass]);
+
+  useEffect(() => {
+    const target = rerunRef.current;
+    if (!target || selectedOrigin?.code !== target.origin || selectedDestination?.code !== target.destination || departureDate !== target.departureDate) return;
+    rerunRef.current = null;
+    void handleSearch();
   }, [selectedOrigin, selectedDestination, departureDate, adults, children, infants, cabinClass]);
 
   return (
@@ -397,6 +435,14 @@ export default function FlightsPage() {
                 ? `${flights.length} vol${flights.length > 1 ? 's' : ''} trouvé${flights.length > 1 ? 's' : ''} de ${selectedOrigin?.city || 'départ'} à ${selectedDestination?.city || 'destination'}`
                 : 'Sélectionnez votre vol et profitez des meilleurs tarifs'}
             </p>
+            {hasSearched && !isSearching && selectedOrigin && selectedDestination && departureDate && (
+              <SaveSearchButton key={`${selectedOrigin.code}:${selectedDestination.code}:${departureDate}:${adults}:${children}:${infants}:${cabinClass}`} request={{
+                searchType: 'FLIGHT', origin: selectedOrigin.code, destination: selectedDestination.code,
+                departureDate, travelersCount: adults + children + infants,
+                criteriaPayload: { originCity: selectedOrigin.city, destinationCity: selectedDestination.city,
+                  adults, children, infants, travelClass: cabinClass, currency: 'EUR' },
+              }} />
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

@@ -2,6 +2,8 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { travelService } from '../../services/travel.service.ts';
 import { apiClient } from '../api-client.ts';
+import { getSearchRerunUrl } from '../recent-search-rerun.ts';
+import type { RecentSearchItem } from '../../types/library.types.ts';
 import type {
   FlightSearchRequest,
   HotelSearchRequest,
@@ -27,6 +29,35 @@ function createMockResponse(body: any, status = 200): Response {
     json: async () => (bodyText ? JSON.parse(bodyText) : {}),
   } as unknown as Response;
 }
+
+describe('Phase 50 recent-search rerun criteria', () => {
+  const makeSearch = (searchType: RecentSearchItem['searchType'], criteriaPayload: Record<string, unknown>): RecentSearchItem => ({
+    publicReference: 'rs-1', searchType, origin: 'CMN', destination: 'CDG',
+    departureDate: '2026-10-08', returnDate: '2026-10-10', travelersCount: 2,
+    criteriaPayload, lastSearchedAt: '', createdAt: '', isExpired: false,
+  });
+
+  it('passes a fresh-rerun marker and the original flight passengers', () => {
+    const url = new URL(getSearchRerunUrl(makeSearch('FLIGHT', { adults: 2, children: 1, travelClass: 'BUSINESS' })), 'http://localhost');
+    assert.equal(url.pathname, '/flights');
+    assert.equal(url.searchParams.get('rerun'), '1');
+    assert.equal(url.searchParams.get('origin'), 'CMN');
+    assert.equal(url.searchParams.get('children'), '1');
+    assert.equal(url.searchParams.get('travelClass'), 'BUSINESS');
+  });
+
+  it('preserves hotel occupancy, activity date, transfer time and stable train station IDs', () => {
+    const hotel = new URL(getSearchRerunUrl(makeSearch('HOTEL', { occupancies: [{ adults: 2, childrenAges: [7] }] })), 'http://localhost');
+    assert.deepEqual(JSON.parse(hotel.searchParams.get('occupancies') || 'null'), [{ adults: 2, childrenAges: [7] }]);
+    const activity = new URL(getSearchRerunUrl(makeSearch('ACTIVITY', { category: 'CULTURE' })), 'http://localhost');
+    assert.equal(activity.searchParams.get('date'), '2026-10-08');
+    const transfer = new URL(getSearchRerunUrl(makeSearch('TRANSFER', { time: '12:30' })), 'http://localhost');
+    assert.equal(transfer.searchParams.get('time'), '12:30');
+    const train = new URL(getSearchRerunUrl(makeSearch('TRAIN', { originStationId: 'st-1', destinationStationId: 'st-2' })), 'http://localhost');
+    assert.equal(train.searchParams.get('originId'), 'st-1');
+    assert.equal(train.searchParams.get('destinationId'), 'st-2');
+  });
+});
 
 describe('Phase 20 — Travel Search Models & Service Contract Tests', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -338,4 +369,3 @@ describe('Phase 20 — Travel Search Models & Service Contract Tests', () => {
     });
   });
 });
-

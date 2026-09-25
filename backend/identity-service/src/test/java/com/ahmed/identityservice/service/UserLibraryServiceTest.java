@@ -289,6 +289,27 @@ class UserLibraryServiceTest {
     }
 
     @Test
+    void recordRecentSearch_preservesRerunCriteria_withoutNestedProviderFields() {
+        Map<String, Object> room = new HashMap<>();
+        room.put("adults", 2);
+        room.put("childrenAges", List.of(8));
+        room.put("providerResults", List.of("must-not-store"));
+        RecentSearchRequest req = new RecentSearchRequest(
+                "HOTEL", null, "Marrakech", LocalDate.of(2026, 10, 8), LocalDate.of(2026, 10, 10),
+                3, Map.of("countryCode", "MA", "guestNationality", "MA", "occupancies", List.of(room))
+        );
+        when(recentSearchRepository.findByUserIdAndSearchTypeAndCriteriaHash(eq(userA), eq("HOTEL"), anyString()))
+                .thenReturn(Optional.empty());
+        when(recentSearchRepository.save(any(UserRecentSearch.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecentSearchResponse res = service.recordRecentSearch(userA, req);
+
+        assertThat(res.criteriaPayload()).containsEntry("countryCode", "MA").containsEntry("guestNationality", "MA");
+        assertThat(res.criteriaPayload().get("occupancies").toString()).contains("adults=2", "childrenAges=[8]")
+                .doesNotContain("providerResults");
+    }
+
+    @Test
     void clearRecentSearches_deletesOnlyUserSearches() {
         service.clearRecentSearches(userA);
         verify(recentSearchRepository).deleteAllByUserId(userA);

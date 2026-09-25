@@ -105,11 +105,7 @@ export const bookingService = {
    * Lists all bookings belonging to the currently authenticated user.
    */
   async getMyBookings(): Promise<BookingResponseDto[]> {
-    try {
-      return await apiClient.get<BookingResponseDto[]>('/bookings/me', true);
-    } catch {
-      return apiClient.get<BookingResponseDto[]>('/apir/reservations/me', true);
-    }
+    return apiClient.get<BookingResponseDto[]>('/bookings/me', true);
   },
 
   /**

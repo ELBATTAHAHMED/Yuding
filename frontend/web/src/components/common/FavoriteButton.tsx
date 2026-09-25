@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/useAuth';
 import { libraryService } from '@/services/library.service';
 import type { FavoriteResourceType } from '@/types/library.types';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 
 export interface FavoriteButtonProps {
   resourceType: FavoriteResourceType;
@@ -133,13 +134,13 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
         </span>
       )}
 
-      {feedback && (
+      {feedback && typeof document !== 'undefined' && createPortal(
         <div
           role="status"
-          className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded shadow pointer-events-none z-30 animate-fade-in"
+          className="fixed bottom-5 left-1/2 z-[1000] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-center text-xs font-medium text-white shadow-lg pointer-events-none animate-fade-in"
         >
           {feedback}
-        </div>
+        </div>, document.body
       )}
     </div>
   );

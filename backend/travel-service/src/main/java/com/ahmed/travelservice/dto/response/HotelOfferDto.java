@@ -57,6 +57,12 @@ public class HotelOfferDto {
     /** Brief summary of room options (e.g. "Standard King Room"). */
     private String roomSummary;
 
+    /** Provider-supplied property description, when available. */
+    private String description;
+
+    /** Provider-supplied images only; may contain just a primary photo. */
+    private List<String> galleryUrls;
+
     /** Check-in date. */
     private LocalDate checkIn;
 

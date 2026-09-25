@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { travelService } from '@/services/travel.service';
 import { TransferOffer } from '@/types/travel.types';
@@ -22,6 +22,7 @@ import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/u
 import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
 import { libraryService } from '@/services/library.service';
+import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -50,6 +51,12 @@ const POPULAR_DESTINATIONS: LocationSuggestion[] = [
   { code: 'AER', title: 'Aéroport (Trajet retour)', subtitle: 'Transfert vers le terminal de départ', badge: 'RETOUR' },
 ];
 
+function providerLocation(value: string): string {
+  const raw = value.trim();
+  const clean = raw.includes('—') ? raw.split('—')[0].trim() : (raw.includes(' - ') ? raw.split(' - ')[0].trim() : raw);
+  return POPULAR_DESTINATIONS.find(item => item.code === clean)?.title || clean;
+}
+
 export default function TransfersPage() {
   const today = new Date().toISOString().split('T')[0];
   const defaultFutureDate = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
@@ -68,6 +75,26 @@ export default function TransfersPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [sortKey, setSortKey] = useState<TransferSortKey>('PRICE_ASC');
   const searchRequestIdRef = useRef(0);
+  const rerunRef = useRef<{ pickup: string; dropoff: string; date: string } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('rerun') !== '1') return;
+    const nextPickup = params.get('pickup') || '';
+    const nextDropoff = params.get('dropoff') || '';
+    const nextDate = params.get('date') || '';
+    if (!nextPickup || !nextDropoff || !nextDate) {
+      setErrorMessage('Impossible de relancer cette recherche : les critères sont incomplets.');
+      return;
+    }
+    rerunRef.current = { pickup: nextPickup, dropoff: nextDropoff, date: nextDate };
+    setPickup(nextPickup);
+    setDropoff(nextDropoff);
+    setDate(nextDate);
+    if (params.get('time')) setTime(params.get('time')!);
+    const count = Number(params.get('passengers'));
+    if (Number.isInteger(count) && count > 0 && count <= 20) setPassengers(count);
+  }, []);
 
   useSearchSession('TRANSFER', {
     pickup, dropoff, date, time, passengers, transportType, transfers,
@@ -104,21 +131,15 @@ export default function TransfersPage() {
       setErrorMessage('Veuillez renseigner un lieu de départ (ex: CDG, BCN, MAD, RAK, CMN).');
       return;
     }
-    const cleanPickup = rawPickup.includes('—')
-      ? rawPickup.split('—')[0].trim()
-      : (rawPickup.includes(' - ') ? rawPickup.split(' - ')[0].trim() : rawPickup);
-    const providerPickup = POPULAR_DESTINATIONS.find((item) => item.code === cleanPickup)?.title || cleanPickup;
+    const providerPickup = providerLocation(rawPickup);
 
     const rawDropoff = dropoff.trim();
     if (!rawDropoff) {
       setErrorMessage('Veuillez renseigner une destination (ex: Hôtel, adresse ou centre-ville).');
       return;
     }
-    const cleanDropoff = rawDropoff.includes('—')
-      ? rawDropoff.split('—')[0].trim()
-      : (rawDropoff.includes(' - ') ? rawDropoff.split(' - ')[0].trim() : rawDropoff);
     // Destination suggestions use UI identifiers, not real airport IATA codes.
-    const providerDropoff = POPULAR_DESTINATIONS.find((item) => item.code === cleanDropoff)?.title || cleanDropoff;
+    const providerDropoff = providerLocation(rawDropoff);
 
     const requestId = ++searchRequestIdRef.current;
     setLoading(true);
@@ -176,6 +197,13 @@ export default function TransfersPage() {
       }
     }
   };
+
+  useEffect(() => {
+    const target = rerunRef.current;
+    if (!target || pickup !== target.pickup || dropoff !== target.dropoff || date !== target.date) return;
+    rerunRef.current = null;
+    void handleSearch();
+  }, [pickup, dropoff, date, time, passengers]);
 
   return (
     <TravelPage page="transfers">
@@ -336,6 +364,16 @@ export default function TransfersPage() {
       {/* ==================== CONTENT SECTION ==================== */}
       <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
+          {hasSearched && !loading && !errorMessage && pickup.trim() && dropoff.trim() && (
+            <div className="mb-4 flex justify-end">
+              <SaveSearchButton key={`${pickup}:${dropoff}:${date}:${time}:${passengers}`} request={{
+                searchType: 'TRANSFER', origin: providerLocation(pickup), destination: providerLocation(dropoff),
+                departureDate: date || defaultFutureDate, travelersCount: passengers,
+                criteriaPayload: { pickup: providerLocation(pickup), dropoff: providerLocation(dropoff),
+                  date: date || defaultFutureDate, time: time || '12:00', passengers },
+              }} />
+            </div>
+          )}
           {/* Mode Selector Tabs */}
           {hasSearched && transfers.length > 0 && (
           <div className="flex justify-center gap-3 mb-6 flex-wrap">

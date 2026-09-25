@@ -81,6 +81,7 @@ export default function HotelsPage() {
   const [favoriteHotelRefs, setFavoriteHotelRefs] = useState<Set<string>>(new Set());
   const placeRequestRef = useRef(0);
   const searchRequestIdRef = useRef(0);
+  const rerunRef = useRef<{ destination: string; checkIn: string; checkOut: string } | null>(null);
 
   useEffect(() => {
     libraryService.getFavorites().then((favs) => {
@@ -113,8 +114,20 @@ export default function HotelsPage() {
     if (arrival) setCheckIn(arrival);
     if (departure) setCheckOut(departure);
     const adults = Number(params.get('adults'));
-    if (Number.isInteger(adults) && adults >= 1 && adults <= 4) {
-      setOccupancies([{ adults, childrenAges: [] }]);
+    let parsedOccupancies: RoomOccupancy[] | null = null;
+    try {
+      const raw = params.get('occupancies');
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.length <= 4 &&
+          parsed.every(room => Number.isInteger(room.adults) && room.adults >= 1 && room.adults <= 4 && Array.isArray(room.childrenAges))) {
+        parsedOccupancies = parsed;
+      }
+    } catch { /* An older history entry may lack room context. */ }
+    if (parsedOccupancies) setOccupancies(parsedOccupancies);
+    else if (Number.isInteger(adults) && adults >= 1 && adults <= 4) setOccupancies([{ adults, childrenAges: [] }]);
+    if (params.get('guestNationality')) setGuestNationality(params.get('guestNationality')!);
+    if (params.get('rerun') === '1' && arrival && departure) {
+      rerunRef.current = { destination, checkIn: arrival, checkOut: departure };
     }
   }, []);
 
@@ -323,6 +336,8 @@ export default function HotelsPage() {
           adults: totalAdults,
           children: totalChildren,
           currency,
+          occupancies,
+          guestNationality,
         },
       }).catch(() => {});
     } catch (err: unknown) {
@@ -359,8 +374,27 @@ export default function HotelsPage() {
     }
   };
 
+  useEffect(() => {
+    const target = rerunRef.current;
+    if (!target || destinationInput !== target.destination || checkIn !== target.checkIn || checkOut !== target.checkOut) return;
+    rerunRef.current = null;
+    void handleSearch();
+  }, [destinationInput, checkIn, checkOut, occupancies]);
+
   const filteredHotels = useMemo(() => filterHotels(allHotels, filterType), [allHotels, filterType]);
   const sortedHotels = useMemo(() => sortHotels(filteredHotels, sortKey), [filteredHotels, sortKey]);
+
+  const getHotelDetailHref = (hotelId: string) => {
+    const params = new URLSearchParams({
+      destination: destinationInput.trim(),
+      checkIn,
+      checkOut,
+      countryCode: inferCountryCode(destinationInput.trim(), selectedCountryCode),
+      guestNationality,
+      occupancies: JSON.stringify(occupancies),
+    });
+    return `/hotels/${encodeURIComponent(hotelId)}?${params}`;
+  };
 
   const hotelActiveChips = useMemo(() => buildActiveFilterChips([
     { key: 'HOTEL_RIAD', label: 'Hôtels & Riads', active: filterType === 'HOTEL_RIAD' },
@@ -914,7 +948,7 @@ export default function HotelsPage() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <Link
-                              href={`/hotels/${encodeURIComponent(item.offerId || hotelId)}`}
+                              href={getHotelDetailHref(hotelId)}
                               className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#01796F]/50 bg-[#01796F]/10 px-2 text-center text-xs font-bold text-[#01796F] transition-colors hover:bg-[#01796F]/20 dark:border-[#02E0D5]/50 dark:bg-[#02E0D5]/10 dark:text-[#02E0D5]"
                             >
                               Détails
@@ -942,7 +976,7 @@ export default function HotelsPage() {
 
                         {/* Expanded Room Offers List */}
                         {isExpanded && roomOffers.length > 0 && (
-                          <div className="mt-5 flex flex-col gap-3 border-t border-dashed border-slate-200 pt-4 dark:border-[#01796F]/30">
+                          <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-[#01796F]/30">
                             <h4 className="m-0 text-sm font-bold text-slate-800 dark:text-slate-100">
                               Chambres et tarifs disponibles :
                             </h4>
