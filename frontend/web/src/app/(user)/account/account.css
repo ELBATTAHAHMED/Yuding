@@ -439,8 +439,10 @@
 
 @media (max-width: 600px) {
   .account-surface { padding: 18px 16px 44px; }
-  .account-nav { gap: 0; margin-bottom: 22px; }
-  .account-nav a { gap: 6px; padding: 12px 10px; font-size: 12px; }
+  .account-nav,
+  .library-tabs-nav { gap: 0; margin-bottom: 22px; }
+  .account-nav a,
+  .library-tab-btn { gap: 6px; padding: 12px 10px; font-size: 12px; }
   .profile-hero,
   .account-page-header { align-items: flex-start; padding-bottom: 19px !important; }
   .profile-hero-meta,
@@ -493,57 +495,59 @@
 
 .library-tabs-nav {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  border-bottom: 1px solid var(--account-line, #d9e7e3);
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
   margin-top: 18px;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--account-line);
   overflow-x: auto;
 }
 
 .library-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 14px;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 13px 17px 15px;
   border: none;
-  border-bottom: 2.5px solid transparent;
+  border-bottom: 3px solid transparent;
   background: transparent;
-  color: var(--account-muted, #607771);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--account-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
   text-decoration: none;
 }
-.library-tab-btn > i { font-size: 13px; }
+.library-tab-btn > i {
+  font-size: 14px;
+}
 
-.library-tab-btn:hover {
-  color: var(--account-green, #087d70);
-  background: rgba(8, 125, 112, 0.04);
+.library-tab-btn:hover,
+.library-tab-btn.active {
+  color: var(--account-green);
+  background: transparent;
 }
 
 .library-tab-btn.active {
-  color: var(--account-green, #087d70);
-  border-bottom-color: var(--account-green, #087d70);
-  background: transparent;
-  font-weight: 700;
+  border-bottom-color: var(--account-green);
 }
 
 .library-tab-count {
   font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: rgba(8, 125, 112, 0.1);
-  color: var(--account-green, #087d70);
   font-weight: 700;
   line-height: 1.2;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(8, 125, 112, 0.12);
+  color: var(--account-green);
 }
 
 .library-tab-btn.active .library-tab-count {
-  background: var(--account-green, #087d70);
+  background: var(--account-green);
   color: #ffffff;
 }
 
@@ -635,13 +639,13 @@
   color: var(--account-muted, #a9beb7);
 }
 
-[data-theme="dark"] .library-tab-btn:hover {
+[data-theme="dark"] .library-tab-btn:hover,
+[data-theme="dark"] .library-tab-btn.active {
   color: #78d5c4;
-  background: rgba(120, 213, 196, 0.06);
+  background: transparent;
 }
 
 [data-theme="dark"] .library-tab-btn.active {
-  color: #78d5c4;
   border-bottom-color: #78d5c4;
 }
 
