@@ -41,7 +41,9 @@ public class UserLibraryService {
                 "originCity", "destinationCity", "travelClass", "startDate", "endDate",
                 "preferences", "pace",
                 "category", "pickup", "dropoff", "classType", "tripType", "directOnly",
-                "budget", "currency"
+                "budget", "budgetCurrency", "currency", "countryCode", "guestNationality",
+                "infants", "occupancies", "time", "passengers", "date", "departureTime",
+                "originStation", "destinationStation", "originStationId", "destinationStationId"
         );
         for (String k : keys) {
             map.put(k, k);
@@ -394,7 +396,27 @@ public class UserLibraryService {
                 continue; // Strictly discard injected/auth keys
             }
             if (CANONICAL_ALLOWED_KEYS.containsKey(key) && entry.getValue() != null) {
-                clean.put(CANONICAL_ALLOWED_KEYS.get(key), entry.getValue());
+                String canonicalKey = CANONICAL_ALLOWED_KEYS.get(key);
+                if ("occupancies".equals(canonicalKey)) {
+                    if (entry.getValue() instanceof List<?> rooms && rooms.size() <= 4) {
+                        List<Map<String, Object>> safeRooms = new ArrayList<>();
+                        for (Object room : rooms) {
+                            if (!(room instanceof Map<?, ?> fields) || !(fields.get("adults") instanceof Number adults)
+                                    || adults.intValue() < 1 || adults.intValue() > 10) continue;
+                            List<Integer> ages = new ArrayList<>();
+                            if (fields.get("childrenAges") instanceof List<?> rawAges) {
+                                for (Object age : rawAges) {
+                                    if (age instanceof Number number && number.intValue() >= 0 && number.intValue() <= 17 && ages.size() < 8)
+                                        ages.add(number.intValue());
+                                }
+                            }
+                            safeRooms.add(Map.of("adults", adults.intValue(), "childrenAges", ages));
+                        }
+                        if (!safeRooms.isEmpty()) clean.put(canonicalKey, safeRooms);
+                    }
+                } else {
+                    clean.put(canonicalKey, entry.getValue());
+                }
             }
         }
         return clean;

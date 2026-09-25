@@ -31,8 +31,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -158,6 +160,25 @@ class BookingServiceTest {
         Booking result = bookingService.getBookingByReference(ref, userId, false);
         assertThat(result.getBookingReference()).isEqualTo(ref);
         assertThat(result.getUserId()).isEqualTo(userId);
+    }
+
+    @Test
+    @DisplayName("Listing owned bookings expires old drafts in a writable transaction")
+    void getUserBookings_expiresDraftAndKeepsOwnerScope() throws Exception {
+        UUID ownerId = UUID.randomUUID();
+        Booking expiredDraft = Booking.createDraft(ownerId, ProductType.HOTEL,
+                "YUD-K7M4P2Q8", fixedInstant.minus(Duration.ofHours(1)), fixedInstant.minus(Duration.ofMinutes(30)));
+        when(bookingRepository.findByUserIdOrderByCreatedAtDesc(ownerId)).thenReturn(List.of(expiredDraft));
+
+        List<Booking> result = bookingService.getUserBookings(ownerId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(BookingStatus.EXPIRED);
+        verify(bookingRepository).saveAndFlush(expiredDraft);
+        assertThat(BookingService.class.getMethod("getUserBookings", UUID.class)
+                .getAnnotation(Transactional.class).readOnly()).isFalse();
+        assertThat(BookingService.class.getMethod("getSnapshotByBookingReference", String.class, UUID.class, boolean.class)
+                .getAnnotation(Transactional.class).readOnly()).isFalse();
     }
 
     @Test

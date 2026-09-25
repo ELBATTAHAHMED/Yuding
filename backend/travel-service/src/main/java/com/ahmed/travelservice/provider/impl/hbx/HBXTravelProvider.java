@@ -128,7 +128,7 @@ public class HBXTravelProvider implements TravelProvider {
             throw e;
         }
 
-        List<ActivityOfferDto> normalized = normalizeActivities(response, query);
+        List<ActivityOfferDto> normalized = normalizeActivities(response, query, destCode);
 
         // Fallback policy: only supply curated YUDING_CUSTOM for specifically curated markets (e.g. Marrakech)
         if (normalized.isEmpty() && isCuratedMarket(destCode, query.getDestination())) {
@@ -152,7 +152,7 @@ public class HBXTravelProvider implements TravelProvider {
         }
     }
 
-    private List<ActivityOfferDto> normalizeActivities(HBXActivitySearchResponse response, ActivitySearchQuery query) {
+    private List<ActivityOfferDto> normalizeActivities(HBXActivitySearchResponse response, ActivitySearchQuery query, String destCode) {
         if (response == null || response.getActivities() == null || response.getActivities().isEmpty()) {
             return Collections.emptyList();
         }
@@ -161,6 +161,14 @@ public class HBXTravelProvider implements TravelProvider {
 
         for (HBXActivitySearchResponse.HBXActivity act : response.getActivities()) {
             if (act == null || act.getCode() == null || act.getName() == null) {
+                continue;
+            }
+            // HBX currently returns La Romana (DO) for the metropolitan code ROM.
+            // Never present that inventory as Rome, Italy merely because the query said Rome.
+            if ("ROM".equals(destCode) && act.getCountryCode() != null
+                    && !"IT".equalsIgnoreCase(act.getCountryCode())) {
+                log.warn("HBXTravelProvider: Discarding activity {} from country {} for Rome search",
+                        act.getCode(), act.getCountryCode());
                 continue;
             }
 

@@ -318,6 +318,11 @@ public class NuiteeTravelProvider implements TravelProvider {
                             hotelMeta != null && hotelMeta.getHotelTypeId() != null
                                     ? hotelMeta.getHotelTypeId() : hotelTypeIds.get(hotelId)))
                     .roomSummary(startingRoomName != null ? startingRoomName : "Chambre disponible")
+                    .description(hotelMeta != null ? hotelMeta.getStory() : null)
+                    .galleryUrls(hotelMeta == null ? Collections.emptyList() :
+                            java.util.stream.Stream.of(hotelMeta.getMainPhoto(), hotelMeta.getThumbnail())
+                                    .filter(photo -> photo != null && !photo.isBlank())
+                                    .distinct().toList())
                     .checkIn(query.getCheckIn())
                     .checkOut(query.getCheckOut())
                     .pricePerNight(startingPricePerNight)

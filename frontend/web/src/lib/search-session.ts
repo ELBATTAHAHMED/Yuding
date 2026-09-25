@@ -38,7 +38,10 @@ export function useSearchSession<T>(product: string, snapshot: T, restore: (save
   restoreRef.current = restore;
 
   useEffect(() => {
-    const saved = readSnapshot<T>(product);
+    // A library "Relancer" navigation must execute a new provider request, never
+    // revive previously rendered offer arrays for the same URL.
+    const saved = new URLSearchParams(window.location.search).get('rerun') === '1'
+      ? null : readSnapshot<T>(product);
     if (saved) restoreRef.current(saved);
     setRestored(true);
   }, [product]);

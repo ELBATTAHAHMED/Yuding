@@ -12,11 +12,13 @@ import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
+import { SaveSearchButton } from '@/components/travel/SaveSearchButton';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
 export default function TrainsPage() {
   const searchRequestIdRef = useRef(0);
+  const rerunRef = useRef<{ originId: string; destinationId: string; date: string } | null>(null);
   const [stations, setStations] = useState<TrainStation[]>([]);
   const [originStation, setOriginStation] = useState<TrainStation | null>(null);
   const [destinationStation, setDestinationStation] = useState<TrainStation | null>(null);
@@ -58,6 +60,27 @@ export default function TrainsPage() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('rerun') !== '1' || loadingStations) return;
+    const findStation = (id: string, name: string) => stations.find(station =>
+      (id && station.id === id) || (name && station.name.toLocaleLowerCase() === name.toLocaleLowerCase()));
+    const from = findStation(params.get('originId') || '', params.get('origin') || '');
+    const to = findStation(params.get('destinationId') || '', params.get('destination') || '');
+    const nextDate = params.get('date') || '';
+    if (!from || !to || !nextDate) {
+      setErrorMessage('Impossible de relancer cette recherche : une gare ou une date est indisponible.');
+      return;
+    }
+    rerunRef.current = { originId: from.id, destinationId: to.id, date: nextDate };
+    setOriginStation(from);
+    setDestinationStation(to);
+    setDate(nextDate);
+    setDepartureTime(params.get('departureTime') || '');
+    const count = Number(params.get('passengers'));
+    if (Number.isInteger(count) && count > 0 && count <= 20) setPassengers(count);
+  }, [stations, loadingStations]);
 
   useSearchSession('TRAIN', {
     originStation, destinationStation, date, departureTime, passengers, trains,
@@ -158,6 +181,8 @@ export default function TrainsPage() {
         criteriaPayload: {
           originStation: originStation.name || originStation.id,
           destinationStation: destinationStation.name || destinationStation.id,
+          originStationId: originStation.id,
+          destinationStationId: destinationStation.id,
           date,
           departureTime: departureTime || undefined,
           passengers,
@@ -194,6 +219,13 @@ export default function TrainsPage() {
       }
     }
   };
+
+  useEffect(() => {
+    const target = rerunRef.current;
+    if (!target || originStation?.id !== target.originId || destinationStation?.id !== target.destinationId || date !== target.date) return;
+    rerunRef.current = null;
+    void handleSearch();
+  }, [originStation, destinationStation, date, departureTime, passengers]);
 
   // Dynamically extract unique products from current results
   const availableProducts = useMemo(() => {
@@ -388,6 +420,19 @@ export default function TrainsPage() {
       {/* ==================== CONTENT SECTION ==================== */}
       <section className="travel-results-section py-6 px-4 bg-slate-50 dark:bg-[#021817]">
         <div className="max-w-6xl mx-auto">
+        {hasSearched && !loading && !errorMessage && originStation && destinationStation && date && (
+          <div className="mb-4 flex justify-end">
+            <SaveSearchButton key={`${originStation.id}:${destinationStation.id}:${date}:${departureTime}:${passengers}`} request={{
+              searchType: 'TRAIN', origin: originStation.name || originStation.id,
+              destination: destinationStation.name || destinationStation.id,
+              departureDate: date, travelersCount: passengers,
+              criteriaPayload: { originStation: originStation.name || originStation.id,
+                destinationStation: destinationStation.name || destinationStation.id,
+                originStationId: originStation.id, destinationStationId: destinationStation.id,
+                date, departureTime: departureTime || undefined, passengers },
+            }} />
+          </div>
+        )}
         {/* Freshness Gate Alert (Outdated Schedule Rejection) */}
         {outdatedNotice && (
           <div

@@ -144,6 +144,26 @@ class HBXTravelProviderTest {
     }
 
     @Test
+    @DisplayName("Rome searches do not show Dominican Republic activities returned for ROM")
+    void searchActivities_romeRejectsLaRomana() throws Exception {
+        HBXActivitySearchResponse.HBXActivity wrongCountry = new HBXActivitySearchResponse.HBXActivity();
+        wrongCountry.setCode("E-RD1-A0DLNO0050");
+        wrongCountry.setName("Santo Domingo City Tour from La Romana");
+        wrongCountry.setCountryCode("DO");
+        HBXActivitySearchResponse response = new HBXActivitySearchResponse();
+        response.setActivities(List.of(wrongCountry));
+        when(activitiesClient.searchActivities(any())).thenReturn(response);
+
+        List<ActivityOfferDto> offers = provider.searchActivities(ActivitySearchQuery.builder()
+                .destination("Rome")
+                .date(LocalDate.now().plusDays(5))
+                .travelers(2)
+                .build());
+
+        assertThat(offers).isEmpty();
+    }
+
+    @Test
     @DisplayName("searchTransfers normalizes HBX transfer services into TransferOfferDto")
     void searchTransfers_normalizesResponseCorrectly() throws Exception {
         HBXTransferAvailabilityResponse.TransferService svc = new HBXTransferAvailabilityResponse.TransferService();

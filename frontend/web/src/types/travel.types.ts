@@ -98,7 +98,7 @@ export interface HotelRoomOffer {
   pricePerNightConversion?: PriceConversionSnapshot;
 }
 
-export interface HotelOffer {
+  export interface HotelOffer {
   id?: string;
   offerId: string;
   selectionRef?: string;
@@ -128,8 +128,12 @@ export interface HotelOffer {
   imageUrl?: string;
   availabilityState?: string;
   roomSummary?: string;
-  roomOffers?: HotelRoomOffer[];
-}
+    roomOffers?: HotelRoomOffer[];
+    checkIn?: string;
+    checkOut?: string;
+    description?: string;
+    galleryUrls?: string[];
+  }
 
 export interface ActivityOffer {
   id?: string;

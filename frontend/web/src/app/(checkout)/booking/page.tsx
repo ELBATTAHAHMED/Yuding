@@ -24,11 +24,11 @@ function BookingContent() {
   const rawCurrency = searchParams.get('currency');
   const currency = rawCurrency ? rawCurrency.trim().toUpperCase() : 'EUR';
 
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(searchParams.get('startDate') || new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(
-    new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    searchParams.get('endDate') || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(Math.max(1, Number(searchParams.get('travelers')) || 1));
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -54,7 +54,7 @@ function BookingContent() {
   const displayTotal = hasAuthoritativePrice
     ? `${pricingData.totalAmount} ${pricingData.currency || currency}`
     : isPriced && basePrice != null
-    ? `${(basePrice * quantity).toFixed(2).replace(/\.00$/, '')} ${currency}`
+    ? `${(basePrice * (serviceType === 'HOTEL' ? 1 : quantity)).toFixed(2).replace(/\.00$/, '')} ${currency}`
     : 'Tarif indisponible';
 
   const displayUnitPrice = isPriced && basePrice != null
@@ -292,13 +292,13 @@ function BookingContent() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
-              <span style={{ color: '#666' }}>Prix indicatif unitaire</span>
+              <span style={{ color: '#666' }}>{serviceType === 'HOTEL' ? 'Prix indicatif du séjour' : 'Prix indicatif unitaire'}</span>
               <span style={{ fontWeight: 600 }}>{displayUnitPrice}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
               <span style={{ color: '#666' }}>Nombre de personnes</span>
-              <span style={{ fontWeight: 600 }}>× {quantity}</span>
+              <span style={{ fontWeight: 600 }}>{serviceType === 'HOTEL' ? quantity : `× ${quantity}`}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.95rem' }}>

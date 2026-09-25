@@ -168,7 +168,7 @@ public class BookingService {
     /**
      * Retrieves the offer snapshot associated with a booking by reference.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<OfferSnapshot> getSnapshotByBookingReference(String bookingReference, UUID requestingUserId, boolean privileged) {
         Booking booking = getBookingByReference(bookingReference, requestingUserId, privileged);
         if (offerSnapshotRepository == null) {
@@ -239,9 +239,18 @@ public class BookingService {
     /**
      * Retrieves all bookings owned by the authenticated user.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<Booking> getUserBookings(UUID userId) {
-        return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        Instant current = now();
+        return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(booking -> {
+                    if (booking.isExpired(current)) {
+                        booking.transitionTo(BookingStatus.EXPIRED, current);
+                        return saveWithOptimisticLockHandling(booking);
+                    }
+                    return booking;
+                })
+                .toList();
     }
 
     /**

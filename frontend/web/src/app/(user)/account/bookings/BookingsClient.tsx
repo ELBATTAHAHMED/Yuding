@@ -240,10 +240,9 @@ export default function BookingsClient() {
               details.title ||
               details.hotelName ||
               details.name ||
+              (details.originStation ? `${details.originStation} → ${details.destinationStation || ''}` : '') ||
               details.airline ||
-              details.originStation
-                ? `${details.originStation} → ${details.destinationStation || ''}`
-                : `${productInfo.label} — ${booking.bookingReference}`;
+              `${productInfo.label} — ${booking.bookingReference}`;
 
             const itemDestination =
               details.destination ||

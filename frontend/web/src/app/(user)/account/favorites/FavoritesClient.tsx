@@ -12,6 +12,7 @@ import type {
   FavoriteResourceType,
 } from '@/types/library.types';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { getSearchRerunUrl } from '@/lib/recent-search-rerun';
 
 type ActiveTab = 'favorites' | 'saved-trips' | 'history';
 type HistorySubTab = 'searches' | 'views';
@@ -81,10 +82,10 @@ export default function FavoritesClient() {
     setError(null);
     try {
       const [favs, trips, searches, views] = await Promise.all([
-        libraryService.getFavorites().catch(() => []),
-        libraryService.getSavedTrips().catch(() => []),
-        libraryService.getRecentSearches().catch(() => []),
-        libraryService.getRecentViews().catch(() => []),
+        libraryService.getFavorites(),
+        libraryService.getSavedTrips(),
+        libraryService.getRecentSearches(),
+        libraryService.getRecentViews(),
       ]);
       setFavorites(favs);
       setSavedTrips(trips);
@@ -151,31 +152,6 @@ export default function FavoritesClient() {
     } catch (err) {
       console.error('Failed to clear views:', err);
     }
-  };
-
-  // Build rerun URL for recent searches
-  const getSearchRerunUrl = (search: RecentSearchItem): string => {
-    const p = search.criteriaPayload || {};
-    const type = (search.searchType || '').toUpperCase();
-    if (type.includes('FLIGHT')) {
-      return `/flights?origin=${encodeURIComponent(search.origin || p.origin || '')}&destination=${encodeURIComponent(search.destination || p.destination || '')}&departureDate=${encodeURIComponent(search.departureDate || p.departureDate || '')}`;
-    }
-    if (type.includes('HOTEL')) {
-      return `/hotels?destination=${encodeURIComponent(search.destination || p.destination || p.city || '')}&checkIn=${encodeURIComponent(search.departureDate || p.checkInDate || '')}&checkOut=${encodeURIComponent(search.returnDate || p.checkOutDate || '')}`;
-    }
-    if (type.includes('ACTIVIT')) {
-      return `/activities?city=${encodeURIComponent(search.destination || p.city || p.destination || '')}`;
-    }
-    if (type.includes('TRANSFER')) {
-      return `/transfers?pickup=${encodeURIComponent(search.origin || p.pickup || '')}&dropoff=${encodeURIComponent(search.destination || p.dropoff || '')}&date=${encodeURIComponent(search.departureDate || p.date || '')}`;
-    }
-    if (type.includes('TRAIN')) {
-      return `/trains?origin=${encodeURIComponent(search.origin || p.originStation || '')}&destination=${encodeURIComponent(search.destination || p.destinationStation || '')}&date=${encodeURIComponent(search.departureDate || p.date || '')}`;
-    }
-    if (type.includes('TRIP')) {
-      return `/planifier?origin=${encodeURIComponent(search.origin || p.origin || '')}&destination=${encodeURIComponent(search.destination || p.destination || '')}`;
-    }
-    return '/';
   };
 
   // Format relative date
@@ -532,8 +508,7 @@ export default function FavoritesClient() {
                   <button
                     type="button"
                     onClick={handleClearSearches}
-                    className="btn-secondary-sm"
-                    style={{ color: '#ef4444' }}
+                    className="library-clear-action"
                   >
                     <i className="fas fa-trash-alt" aria-hidden="true" /> Tout effacer
                   </button>
@@ -543,8 +518,7 @@ export default function FavoritesClient() {
                   <button
                     type="button"
                     onClick={handleClearViews}
-                    className="btn-secondary-sm"
-                    style={{ color: '#ef4444' }}
+                    className="library-clear-action"
                   >
                     <i className="fas fa-trash-alt" aria-hidden="true" /> Tout effacer
                   </button>

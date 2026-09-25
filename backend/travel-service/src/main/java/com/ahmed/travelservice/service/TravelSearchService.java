@@ -309,6 +309,8 @@ public class TravelSearchService {
                 details.put("propertyType", hotel.getPropertyType());
                 details.put("accommodationType", hotel.getAccommodationType());
                 details.put("roomSummary", hotel.getRoomSummary());
+                details.put("description", hotel.getDescription());
+                details.put("galleryUrls", hotel.getGalleryUrls());
                 details.put("checkIn", hotel.getCheckIn() != null ? hotel.getCheckIn().toString() : null);
                 details.put("checkOut", hotel.getCheckOut() != null ? hotel.getCheckOut().toString() : null);
                 details.put("starRating", hotel.getStarRating());
@@ -334,6 +336,10 @@ public class TravelSearchService {
                             room.setSelectionRef(roomRef);
                         }
                         Map<String, Object> roomDetails = new LinkedHashMap<>(details);
+                        // A room snapshot needs only its own rate. Copying every room into
+                        // every rate multiplies large provider responses into megabytes of
+                        // repeated Redis writes and can time out an otherwise valid search.
+                        roomDetails.remove("roomOffers");
                         roomDetails.put("selectedRoom", Map.of(
                                 "roomName", room.getRoomName() != null ? room.getRoomName() : "",
                                 "rateId", room.getRateId() != null ? room.getRateId() : "",

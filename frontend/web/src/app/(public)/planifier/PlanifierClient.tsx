@@ -489,7 +489,7 @@ export function PlanifierClient() {
                           }`}
                         >
                           <i className={isTripSaved ? 'fas fa-bookmark text-emerald-600' : 'far fa-bookmark'} aria-hidden="true" />
-                          <span>{isTripSaved ? 'Voyage enregistré' : 'Enregistrer ce voyage'}</span>
+                          <span>{isTripSaved ? 'Voyage enregistré' : 'Enregistrer le voyage'}</span>
                         </button>
                       )}
 
