@@ -32,7 +32,7 @@ export const Header: React.FC = () => {
   const navigation = [
     { href: '/hotels', label: 'Hébergements', icon: 'fas fa-bed' },
     { href: '/flights', label: 'Vols', icon: 'fas fa-plane' },
-    { href: '/activities', label: 'Activités', icon: 'fas fa-ticket-alt' },
+    { href: '/activities', label: 'Activités', icon: 'fas fa-person-hiking' },
     { href: '/transfers', label: 'Transferts', icon: 'fas fa-taxi' },
     { href: '/trains', label: 'Trains', icon: 'fas fa-train' },
   ];
