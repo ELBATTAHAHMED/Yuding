@@ -352,6 +352,7 @@ Write-Host @"
   Eureka Dashboard:      http://localhost:8761
   Config Server:         http://localhost:9091
   Identity Service:      http://localhost:8081
+  Notification Service:  http://localhost:8085
   Travel Service:        http://localhost:8082
   Reservation Service:   http://localhost:8084
   Commentaire Service:   http://localhost:8090
