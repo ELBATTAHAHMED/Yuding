@@ -230,7 +230,7 @@ export default function ActivitiesPage() {
         country={selectedGeoPlace?.country}
         defaultImageQuery="travel adventure activity excursion"
         defaultImageIndex={3}
-        icon="fas fa-ticket-alt"
+        icon="fas fa-person-hiking"
         compact={hasSearched}
       />
       {/* ==================== COMPACT SEARCH HEADER ==================== */}
