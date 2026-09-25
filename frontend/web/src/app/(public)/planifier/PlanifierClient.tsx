@@ -8,7 +8,7 @@ import { aiService } from '@/services/ai.service';
 import { libraryService } from '@/services/library.service';
 import type { TripPlanDto, TripPlanItemDto, TripPlanRequest } from '@/types/ai.types';
 import type { SavedTripItem } from '@/types/library.types';
-import '../account/account.css';
+import '../../(user)/account/account.css';
 
 // ─── Preference options with FA icons, zero emojis ──────────────────────────
 const PREFERENCE_OPTIONS = [
