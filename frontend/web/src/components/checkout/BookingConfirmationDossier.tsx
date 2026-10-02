@@ -108,28 +108,35 @@ function ConfirmationDetails({ confirmation, presentation, rechecks = 0, refresh
     .map(([key, value]) => [key, renderSummaryValue(value)] as const)
     .filter((entry): entry is readonly [string, string] => entry[1] !== null);
 
-  return <ConfirmationFrame reference={reference} tone={presentation.tone} icon={presentation.icon} title={presentation.title}>
-    <p className="checkout-confirmation__description">{presentation.description}</p>
+  return <ConfirmationFrame reference={reference} tone={presentation.tone} icon={presentation.icon} title="Votre dossier de voyage">
+    <div className="checkout-confirmation__hero" role="status">
+      <span className="checkout-confirmation__hero-icon"><i className={`fas ${presentation.icon}`} aria-hidden="true" /></span>
+      <div><p className="checkout-kicker">ÉTAT DU DOSSIER</p><h2>{presentation.title}</h2><p>{presentation.description}</p></div>
+    </div>
     {isPollingTimedOut && <div className="checkout-notice" role="status">La vérification est encore en cours. Actualisez le statut sans relancer le paiement.</div>}
     <div className="checkout-grid checkout-grid--confirmation">
-      <section className="checkout-primary checkout-confirmation__details">
-        <div className="checkout-section__heading"><span>03</span><div><h2>État du dossier</h2><p>Informations vérifiées auprès du serveur.</p></div></div>
-        <dl className="checkout-detail-list">
-          <ReceiptRow label="Référence dossier" value={confirmation.bookingReference} strong />
-          <ReceiptRow label="Statut réservation" value={BOOKING_STATUS_LABELS[confirmation.bookingStatus] || confirmation.bookingStatus} />
-          {confirmation.paymentReference && <ReceiptRow label="Référence paiement" value={confirmation.paymentReference} />}
-          {confirmation.paymentStatus && <ReceiptRow label="Statut paiement" value={PAYMENT_STATUS_LABELS[confirmation.paymentStatus] || confirmation.paymentStatus} />}
-          {provider && <ReceiptRow label="Prestataire" value={provider} />}
-          {verifiedAt && <ReceiptRow label="Vérifié le" value={verifiedAt} />}
-        </dl>
+      <div className="checkout-primary checkout-confirmation__details">
+        <section className="checkout-confirmation__block">
+          <div className="checkout-confirmation__block-heading"><h2>Réservation</h2><span>01</span></div>
+          <dl className="checkout-detail-list"><ReceiptRow label="État du voyage" value={BOOKING_STATUS_LABELS[confirmation.bookingStatus] || confirmation.bookingStatus} strong /></dl>
+        </section>
+        <section className="checkout-confirmation__block">
+          <div className="checkout-confirmation__block-heading"><h2>Paiement</h2><span>02</span></div>
+          <dl className="checkout-detail-list">
+            <ReceiptRow label="État du paiement" value={confirmation.paymentStatus ? PAYMENT_STATUS_LABELS[confirmation.paymentStatus] || confirmation.paymentStatus : confirmation.confirmationState === 'AWAITING_PAYMENT' ? 'En attente' : 'À vérifier'} strong />
+            {verifiedAt && <ReceiptRow label="Paiement vérifié le" value={verifiedAt} />}
+            {confirmation.paymentReference && <ReceiptRow label="Référence paiement" value={confirmation.paymentReference} />}
+            {provider && <ReceiptRow label="Moyen de paiement" value={provider} />}
+          </dl>
+        </section>
         <div className="checkout-confirmation__actions">
           {presentation.shouldPoll && <button type="button" onClick={onRecheck} className="checkout-button" disabled={refreshing}><i className={refreshing ? 'fas fa-spinner fa-spin' : 'fas fa-rotate'} aria-hidden="true" />Actualiser le statut</button>}
           {presentation.canRetryPayment && <Link href={`/booking/${confirmation.bookingReference}/payment`} className="checkout-button">Procéder au paiement</Link>}
           <ConfirmationActions />
         </div>
-      </section>
+      </div>
 
-      <aside className="checkout-aside"><div className="checkout-summary"><p className="checkout-kicker">VOTRE VOYAGE</p><h2>Récapitulatif</h2>{summaryEntries.length > 0 && <dl className="checkout-summary__rows">{summaryEntries.map(([key, value]) => <ReceiptRow key={key} label={key} value={value} />)}</dl>}<div className="checkout-summary__total"><span>Montant</span><strong>{amount || 'Indisponible'}</strong></div>{provider && <p className="checkout-summary__note">{(provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) ? 'Mode démo' : 'Sandbox / test'} · {provider}</p>}</div></aside>
+      <aside className="checkout-aside"><div className="checkout-summary"><p className="checkout-kicker">VOTRE VOYAGE</p><h2>Récapitulatif</h2>{summaryEntries.length > 0 && <dl className="checkout-summary__rows">{summaryEntries.map(([key, value]) => <ReceiptRow key={key} label={key} value={value} />)}</dl>}<div className="checkout-summary__total"><span>Montant du dossier</span><strong>{amount || 'Indisponible'}</strong></div><p className="checkout-summary__note">Tarif et état transmis par le serveur.</p></div></aside>
     </div>
   </ConfirmationFrame>;
 }
@@ -145,7 +152,7 @@ function ConfirmationActions() {
 function ConfirmationFrame({ reference, icon, tone, title, children }: { reference?: string; icon: string; tone: 'pending' | 'success' | 'danger' | 'neutral'; title: string; children: React.ReactNode }) {
   return <div className={`checkout-page checkout-confirmation checkout-confirmation--${tone}`}>
     <CheckoutSteps current="confirmation" />
-    <header className="checkout-heading"><div><p className="checkout-kicker">CONFIRMATION</p><h1>{title}</h1><p>{reference ? `Dossier ${reference}` : 'Suivi de votre réservation'}</p></div><span className="checkout-heading__context"><i className={`fas ${icon}`} aria-hidden="true" /> Statut du dossier</span></header>
+    <header className="checkout-heading"><div><p className="checkout-kicker">CONFIRMATION</p><h1>{title}</h1><p>Suivez votre réservation et son paiement.</p></div>{reference && <span className="checkout-heading__context"><i className={`fas ${icon}`} aria-hidden="true" /> Référence {reference}</span>}</header>
     {children}
   </div>;
 }

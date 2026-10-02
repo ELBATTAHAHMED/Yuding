@@ -126,7 +126,7 @@ describe('Phase 39 & 41 Demo Card & Mock Payment Flow', () => {
     });
 
     assert.equal(mockPresentation.title, 'Paiement démo validé');
-    assert.ok(mockPresentation.description.includes('fournisseur n’est pas encore confirmée'));
+    assert.ok(mockPresentation.description.includes('confirmation du fournisseur'));
     assert.equal(mockPresentation.tone, 'success');
   });
 });

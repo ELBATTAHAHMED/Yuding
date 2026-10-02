@@ -31,9 +31,15 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
 
   return (
     <div
+      className="checkout-card-preview"
+      role={onToggleFlip ? 'button' : undefined}
+      tabIndex={onToggleFlip ? 0 : undefined}
+      aria-label={onToggleFlip ? 'Retourner la carte de démonstration' : undefined}
+      aria-pressed={onToggleFlip ? isFlipped : undefined}
+      onKeyDown={onToggleFlip ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onToggleFlip(); } } : undefined}
       style={{
         width: '100%',
-        maxWidth: '360px',
+        maxWidth: '420px',
         margin: '0 auto',
         perspective: '1200px',
         userSelect: 'none',
@@ -62,12 +68,12 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
             borderRadius: '18px',
             padding: '1.4rem 1.6rem',
             background: isVisa
-              ? 'linear-gradient(135deg, #022421 0%, #015c54 45%, #01796F 85%, #02E0D5 125%)'
-              : 'linear-gradient(135deg, #090d16 0%, #172033 45%, #1e293b 85%, #334155 125%)',
+              ? 'linear-gradient(135deg, #101d50 0%, #1434cb 58%, #526bea 100%)'
+              : 'linear-gradient(135deg, #1c2430 0%, #302e3d 58%, #593a36 100%)',
             color: '#ffffff',
             boxShadow: isVisa
-              ? '0 18px 36px -10px rgba(1, 121, 111, 0.45), 0 4px 12px rgba(0, 0, 0, 0.15)'
-              : '0 18px 36px -10px rgba(15, 23, 42, 0.55), 0 4px 12px rgba(0, 0, 0, 0.2)',
+              ? '0 16px 30px -15px rgba(20, 52, 203, 0.42)'
+              : '0 16px 30px -15px rgba(104, 45, 36, 0.35)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -94,8 +100,8 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
               height: '80%',
               borderRadius: '50%',
               background: isVisa
-                ? 'radial-gradient(circle, rgba(2, 224, 213, 0.15) 0%, transparent 70%)'
-                : 'radial-gradient(circle, rgba(235, 0, 27, 0.12) 0%, transparent 70%)',
+                ? 'radial-gradient(circle, rgba(170, 194, 255, 0.28) 0%, transparent 70%)'
+                : 'radial-gradient(circle, rgba(255, 137, 71, 0.22) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
@@ -152,7 +158,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                   fontSize: '0.58rem',
                   fontWeight: 700,
                   letterSpacing: '1.2px',
-                  color: isVisa ? '#02E0D5' : '#f59e0b',
+                  color: isVisa ? '#d5e4ff' : '#ffbe84',
                   marginTop: '2px',
                   textTransform: 'uppercase',
                 }}
@@ -258,8 +264,8 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
             transform: 'rotateY(180deg)',
             borderRadius: '18px',
             background: isVisa
-              ? 'linear-gradient(135deg, #011816 0%, #013833 60%, #015c54 100%)'
-              : 'linear-gradient(135deg, #090d16 0%, #111827 60%, #1e293b 100%)',
+              ? 'linear-gradient(135deg, #10183c 0%, #162a80 60%, #1434cb 100%)'
+              : 'linear-gradient(135deg, #1c222d 0%, #342e37 60%, #593a36 100%)',
             color: '#ffffff',
             boxShadow: '0 18px 36px -10px rgba(0, 0, 0, 0.55)',
             display: 'flex',
