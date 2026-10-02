@@ -37,6 +37,7 @@ function detailLabel(key: string): string {
   const labels: Record<string, string> = {
     hotelName: 'Hébergement', title: 'Prestation', name: 'Nom',
     origin: 'Départ', destination: 'Destination', city: 'Ville',
+    address: 'Adresse', country: 'Pays',
     checkIn: 'Arrivée', checkOut: 'Départ', provider: 'Fournisseur',
   };
   return labels[key] || key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
@@ -181,18 +182,22 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
               <i className={`fas ${presentation.icon}`} aria-hidden="true" />
               <div><strong>{presentation.title}</strong><p>{presentation.description}</p></div>
             </div>
-            <h3 className="booking-dossier-section-title">Informations du dossier</h3>
-            <dl className="booking-dossier-facts">
-              <div><dt>Référence</dt><dd>{confirmation.bookingReference}</dd></div>
-              {formatDate(confirmation.createdAt) && <div><dt>Créé le</dt><dd>{formatDate(confirmation.createdAt)}</dd></div>}
-              {confirmation.paymentStatus && <div><dt>Paiement</dt><dd>{paymentLabels[confirmation.paymentStatus]}</dd></div>}
-              {amount && <div className="booking-dossier-amount"><dt>Montant</dt><dd>{amount}</dd></div>}
-              {snapshot?.provider && <div><dt>Fournisseur</dt><dd>{snapshot.provider}</dd></div>}
-            </dl>
-            {summary.length > 0 && <div className="booking-dossier-more">
-              <h3 className="booking-dossier-section-title">Détails du voyage</h3>
-              <dl>{summary.map(([key, value]) => <div key={key}><dt>{detailLabel(key)}</dt><dd>{value}</dd></div>)}</dl>
-            </div>}
+            <div className={`booking-dossier-grid${summary.length === 0 ? ' booking-dossier-grid--single' : ''}`}>
+              <section>
+                <h3 className="booking-dossier-section-title">Informations du dossier</h3>
+                <dl className="booking-dossier-facts">
+                  <div><dt>Référence</dt><dd>{confirmation.bookingReference}</dd></div>
+                  {formatDate(confirmation.createdAt) && <div><dt>Créé le</dt><dd>{formatDate(confirmation.createdAt)}</dd></div>}
+                  {confirmation.paymentStatus && <div><dt>Paiement</dt><dd>{paymentLabels[confirmation.paymentStatus]}</dd></div>}
+                  {amount && <div className="booking-dossier-amount"><dt>Montant</dt><dd>{amount}</dd></div>}
+                  {snapshot?.provider && <div><dt>Fournisseur</dt><dd>{snapshot.provider}</dd></div>}
+                </dl>
+              </section>
+              {summary.length > 0 && <section className="booking-dossier-more">
+                <h3 className="booking-dossier-section-title">Détails du voyage</h3>
+                <dl>{summary.map(([key, value]) => <div key={key}><dt>{detailLabel(key)}</dt><dd>{value}</dd></div>)}</dl>
+              </section>}
+            </div>
           </>)}
         </div>
         <button className="booking-dialog-dismiss" type="button" onClick={onClose}>Fermer</button>
