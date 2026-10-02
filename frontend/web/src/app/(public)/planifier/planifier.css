@@ -401,6 +401,12 @@
   outline-offset: 2px;
 }
 
+.travel-page--planifier .planner-overview__save-error {
+  color: #b42332;
+  font-size: 13px;
+  margin: 12px 0 0;
+}
+
 .travel-page--planifier .planner-overview__status {
   border-bottom: 1px solid var(--planner-line);
   color: var(--planner-muted);

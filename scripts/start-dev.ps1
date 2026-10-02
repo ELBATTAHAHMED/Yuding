@@ -363,6 +363,33 @@ if ($gatewayOk) {
     throw "API Gateway did not become healthy. Check .dev-logs\gateway-service.log"
 }
 
+# Eureka registration can lag behind a healthy Gateway. Wait until an actual
+# routed AI request reaches the downstream service (which rejects anonymous
+# conversation access with 401) before reporting the stack as ready.
+Write-Host '  Waiting for AI route through API Gateway...' -ForegroundColor DarkGray
+$aiRouteReady = $false
+$aiRouteDeadline = (Get-Date).AddSeconds(90)
+while ((Get-Date) -lt $aiRouteDeadline) {
+    $routeStatus = 0
+    try {
+        $routeResponse = Invoke-WebRequest -Uri 'http://localhost:8888/api/ai/conversations' -Method Get -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+        $routeStatus = [int]$routeResponse.StatusCode
+    } catch {
+        if ($_.Exception.Response) {
+            $routeStatus = [int]$_.Exception.Response.StatusCode
+        }
+    }
+    if ($routeStatus -eq 401) {
+        $aiRouteReady = $true
+        break
+    }
+    Start-Sleep -Seconds 1
+}
+if (-not $aiRouteReady) {
+    throw 'AI route is not ready through API Gateway. Check .dev-logs\gateway-service.log and .dev-logs\ai-service.log'
+}
+Write-Host '  [OK] AI route is ready through API Gateway.' -ForegroundColor Green
+
 # ── 6. Start Next.js Frontend (3000) ──────────────────────────────────────────
 Write-Host "`n[6/6] Starting Web Frontend (frontend/web:3000)..." -ForegroundColor Yellow
 $webDir = Join-Path $repoRoot 'frontend\web'

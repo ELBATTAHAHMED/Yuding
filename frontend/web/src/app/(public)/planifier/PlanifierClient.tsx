@@ -53,6 +53,7 @@ export function PlanifierClient() {
   const [loading,    setLoading]    = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [savingTrip, setSavingTrip] = useState(false);
+  const [saveError,  setSaveError]  = useState<string | null>(null);
   const [error,      setError]      = useState<string | null>(null);
   const [view,       setView]       = useState<'form' | 'plan'>('form');
   const [planTab,    setPlanTab]    = useState<'itinerary' | 'transport'>('itinerary');
@@ -88,7 +89,7 @@ export function PlanifierClient() {
     const ref = searchParams.get('tripRef');
     if (ref && isAuthenticated) {
       aiService.getTripPlanByReference(ref)
-        .then(p => { setPlan(p); setView('plan'); setFreshTime(now()); })
+        .then(p => { setPlan(p); setSaveError(null); setView('plan'); setFreshTime(now()); })
         .catch(console.error);
     }
   }, [searchParams, isAuthenticated]);
@@ -106,7 +107,7 @@ export function PlanifierClient() {
     const nb = parseFloat(budget);
     if (!origin.trim() || !destination.trim() || !startDate || !endDate) { setError('Remplissez tous les champs obligatoires.'); return; }
     if (isNaN(nb) || nb <= 0) { setError('Budget invalide.'); return; }
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setSaveError(null);
     try {
       const req: TripPlanRequest = { origin: origin.trim(), destination: destination.trim(), startDate, endDate, travelers, budget: nb, budgetCurrency: currency, preferences: prefs, pace };
       const result = await aiService.createTripPlan(req);
@@ -132,11 +133,15 @@ export function PlanifierClient() {
 
   const handleToggleSave = async () => {
     if (!plan || !isAuthenticated) return;
-    setSavingTrip(true);
+    setSavingTrip(true); setSaveError(null);
     try {
       if (isSaved && savedRef) { await libraryService.unsaveTrip(savedRef.publicReference); setSavedTrips(p => p.filter(s => s.publicReference !== savedRef.publicReference)); }
       else { const s = await libraryService.saveTrip({ tripPlanReference: plan.reference }); setSavedTrips(p => [s, ...p]); }
-    } catch { /* noop */ } finally { setSavingTrip(false); }
+    } catch {
+      setSaveError(isSaved
+        ? 'Impossible de retirer ce voyage. Réessayez.'
+        : 'Impossible d’enregistrer ce voyage. Réessayez ou actualisez la page.');
+    } finally { setSavingTrip(false); }
   };
 
   const budgetColor = plan?.budgetStatus === 'WITHIN_BUDGET' ? '#10b981' : plan?.budgetStatus === 'OVER_BUDGET' ? '#ef4444' : '#f59e0b';
@@ -174,7 +179,7 @@ export function PlanifierClient() {
               </button>
             )}
             {allPlans.filter(p => p.reference !== plan?.reference).slice(0, 2).map(p => (
-              <button key={p.reference} type="button" onClick={() => { setPlan(p); setView('plan'); }}
+              <button key={p.reference} type="button" onClick={() => { setPlan(p); setSaveError(null); setView('plan'); }}
                 className="planner-trip-tab">
                 <i className="fas fa-clock-rotate-left mr-1" /> {p.destination}
               </button>
@@ -355,6 +360,8 @@ export function PlanifierClient() {
                     </button>
                   </div>
                 </div>
+
+                {saveError && <p className="planner-overview__save-error" role="alert">{saveError}</p>}
 
                 <div className="planner-overview__status">
                   <span className="planner-overview__budget-status" style={{ color: budgetColor }}>

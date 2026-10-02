@@ -92,8 +92,8 @@ public class TripPlannerService {
         }
 
         if (selectedHotel != null && selectedHotel.price() != null) {
-            BigDecimal hotelCost = convertAmount(selectedHotel.price(), selectedHotel.currency(), budgetCurrency)
-                    .multiply(BigDecimal.valueOf(numberOfNights));
+            // Candidate hotel prices already represent the full stay (totalPrice or pricePerNight * nights).
+            BigDecimal hotelCost = convertAmount(selectedHotel.price(), selectedHotel.currency(), budgetCurrency);
             pricedTotal = pricedTotal.add(hotelCost);
         } else if (hotelCandidates.isEmpty()) {
             warnings.add("Aucun hébergement disponible auprès des fournisseurs partenaires pour ces dates.");
