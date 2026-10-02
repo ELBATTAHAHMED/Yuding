@@ -65,6 +65,9 @@
 .checkout-fields input::placeholder, .checkout-fields textarea::placeholder { color: var(--checkout-muted); opacity: .68; }
 .checkout-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
 .checkout-actions p { max-width: 360px; margin: 0; color: var(--checkout-muted); font-size: 12px; line-height: 1.5; }
+.checkout-actions--booking { flex-wrap: nowrap; }
+.checkout-actions--booking p { flex: 1 1 auto; min-width: 0; }
+.checkout-actions--booking .checkout-button { flex: 0 0 auto; white-space: nowrap; }
 .checkout-button { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 45px; padding: 11px 18px; border: 1px solid #087d70; border-radius: 9px; background: #087d70; color: #fff !important; font-size: 13px; font-weight: 750; text-decoration: none; cursor: pointer; transition: background .17s ease, border-color .17s ease, transform .17s ease; }
 .checkout-button:hover { background: #066d62; border-color: #066d62; transform: translateY(-1px); }
 .checkout-button:disabled { opacity: .65; cursor: wait; transform: none; }
@@ -102,9 +105,10 @@
 .checkout-loading { display: flex; align-items: center; gap: 10px; color: var(--checkout-muted); }
 
 .checkout-grid--payment .checkout-primary { padding-right: 0; }
-/* Keep enough scroll range for the card preview to stay below the fixed 100px header while editing the last fields. */
-.checkout-grid--payment { min-height: clamp(760px, calc(1302px - 60vh), 870px); }
-.checkout-grid--payment .checkout-aside { position: sticky; top: 124px; }
+.checkout-grid--payment { min-height: 840px; }
+.checkout-grid--payment .checkout-aside { position: static; }
+.checkout-payment__aside-content.is-pinned { position: fixed; z-index: 10; top: 124px; }
+.checkout-shell:has(.checkout-grid--payment) footer { position: relative; z-index: 11; }
 .checkout-grid--payment .checkout-summary { position: static; }
 .checkout-payment__methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 30px; }
 .checkout-payment__methods button { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 13px 14px; border: 1px solid var(--checkout-line); border-radius: 9px; background: var(--checkout-surface); color: var(--checkout-ink); text-align: left; cursor: pointer; transition: border-color .17s ease, background .17s ease, box-shadow .17s ease; }
@@ -194,6 +198,7 @@
   .checkout-confirmation__hero { padding: 18px; gap: 13px; }
   .checkout-confirmation__summary-grid { column-gap: 12px; }
   .checkout-actions { align-items: stretch; }
+  .checkout-actions--booking { flex-wrap: wrap; }
   .checkout-actions .checkout-button { width: 100%; }
   .checkout-summary { padding: 19px; }
   .checkout-confirmation__actions .checkout-button { width: 100%; }

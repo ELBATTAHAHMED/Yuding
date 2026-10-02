@@ -102,10 +102,10 @@ function BookingContent() {
             <div className="checkout-fields"><label><span>Demandes particulières <small>(optionnel)</small></span><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Arrivée tardive, lit bébé, régime alimentaire..." /></label></div>
           </section>
 
-          <div className="checkout-actions">
+          <div className="checkout-actions checkout-actions--booking">
             <p>Le montant définitif sera validé par le serveur avant tout paiement.</p>
             <button type="submit" className="checkout-button" disabled={isProcessing}>
-              {isProcessing ? <><i className="fas fa-spinner fa-spin" aria-hidden="true" />{statusMessage || 'Traitement en cours...'}</> : <>{isPriced ? 'Continuer vers le paiement' : 'Valider et tarifier le dossier'}<i className="fas fa-arrow-right" aria-hidden="true" /></>}
+              {isProcessing ? <><i className="fas fa-spinner fa-spin" aria-hidden="true" />Vérification en cours…</> : <>{isPriced ? 'Continuer vers le paiement' : 'Valider et tarifier le dossier'}<i className="fas fa-arrow-right" aria-hidden="true" /></>}
             </button>
           </div>
         </form>

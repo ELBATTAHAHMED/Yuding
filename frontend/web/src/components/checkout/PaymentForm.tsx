@@ -42,6 +42,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   onPaymentSuccess,
 }) => {
   const router = useRouter();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  const asideContentRef = useRef<HTMLDivElement>(null);
 
   // Visa and Mastercard are visual demo card modes backed by MockPaymentProvider.
   // PayPal is the provider-backed Sandbox flow.
@@ -56,6 +59,45 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const [pendingOrder, setPendingOrder] = useState<PaymentOrderResponseDto | null>(null);
   const [waitingForWebhook, setWaitingForWebhook] = useState(false);
   const [webhookTimeout, setWebhookTimeout] = useState(false);
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    const aside = asideRef.current;
+    const content = asideContentRef.current;
+    if (!grid || !aside || !content) return;
+
+    // The form can be shorter than the preview, so CSS sticky alone runs out of scroll range.
+    let frame = 0;
+    const syncAside = () => {
+      const asideRect = aside.getBoundingClientRect();
+      const gridRect = grid.getBoundingClientRect();
+      aside.style.minHeight = `${content.offsetHeight}px`;
+      const pinned = window.innerWidth > 900 && asideRect.top < 124 && gridRect.bottom > 124;
+      content.classList.toggle('is-pinned', pinned);
+      content.style.left = pinned ? `${asideRect.left}px` : '';
+      content.style.width = pinned ? `${asideRect.width}px` : '';
+    };
+    const scheduleSync = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(syncAside);
+    };
+    const observer = new ResizeObserver(scheduleSync);
+    observer.observe(content);
+    window.addEventListener('scroll', scheduleSync, { passive: true });
+    window.addEventListener('resize', scheduleSync);
+    syncAside();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('scroll', scheduleSync);
+      window.removeEventListener('resize', scheduleSync);
+      aside.style.minHeight = '';
+      content.classList.remove('is-pinned');
+      content.style.left = '';
+      content.style.width = '';
+    };
+  }, []);
 
   // Stable idempotency keys per user attempt
   const createOrderIdempotencyKeyRef = useRef<string | null>(null);
@@ -230,7 +272,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   };
 
   return (
-    <div className="checkout-grid checkout-grid--payment">
+    <div ref={gridRef} className="checkout-grid checkout-grid--payment">
       <section className="checkout-primary checkout-payment">
         <div className="checkout-section__heading"><span>02</span><div><h2>Moyen de paiement</h2><p>Sélectionnez une option pour régler le tarif confirmé.</p></div></div>
 
@@ -261,10 +303,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         </form>
       </section>
 
-      <aside className="checkout-aside" aria-label="Aperçu et montant du paiement">
+      <aside ref={asideRef} className="checkout-aside" aria-label="Aperçu et montant du paiement"><div ref={asideContentRef} className="checkout-payment__aside-content">
         {isCardMode && <div className="checkout-payment__card-stage"><CardPreview isFlipped={isFlipped} brand={selectedMethod} demoCard={demoCard} onToggleFlip={() => setIsFlipped(!isFlipped)} /><p>Aperçu de la carte de démonstration</p></div>}
         <div className="checkout-summary"><p className="checkout-kicker">TARIF CONFIRMÉ</p><h2>Votre dossier</h2><p className="checkout-summary__reference">Référence {bookingReference}</p><dl className="checkout-summary__rows"><div><dt>Prestation</dt><dd>{pricing.productType || 'Voyage'}</dd></div><div><dt>Fournisseur</dt><dd>{pricing.provider || 'Intégration directe'}</dd></div>{formattedBase && <div><dt>Prix de base</dt><dd>{formattedBase}</dd></div>}{formattedTaxes && <div><dt>Taxes</dt><dd>{formattedTaxes}</dd></div>}{formattedFees && <div><dt>Frais</dt><dd>{formattedFees}</dd></div>}</dl><div className="checkout-summary__total"><span>Total à régler</span><strong>{formattedAmount}</strong></div><p className="checkout-summary__note">Montant calculé et confirmé par le serveur. Aucun détail de carte réelle n'est conservé par Yuding.</p>{pendingOrder && <p className="checkout-summary__reference">Paiement {pendingOrder.paymentReference}</p>}</div>
-      </aside>
+      </div></aside>
     </div>
   );
 };
