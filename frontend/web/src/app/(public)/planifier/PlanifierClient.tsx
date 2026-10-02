@@ -226,9 +226,12 @@ export function PlanifierClient() {
                     <input type="number" required min="100" step="100" value={budget}
                       onChange={e => { setBudget(e.target.value); setError(null); }}
                       aria-label="Budget total" />
-                    <select value={currency} onChange={e => setCurrency(e.target.value)} aria-label="Devise">
-                      <option>MAD</option><option>EUR</option><option>USD</option>
-                    </select>
+                    <span className="planner-budget__currency">
+                      <select value={currency} onChange={e => setCurrency(e.target.value)} aria-label="Devise">
+                        <option>MAD</option><option>EUR</option><option>USD</option>
+                      </select>
+                      <i className="fas fa-chevron-down" aria-hidden="true" />
+                    </span>
                   </div>
                 </div>
 
