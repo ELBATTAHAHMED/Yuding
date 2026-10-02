@@ -41,15 +41,17 @@ public final class BookingLifecycle {
                 BookingStatus.EXPIRED
         )));
 
-        // 4. PAID -> PENDING_PROVIDER_CONFIRMATION, REFUNDED
+        // A captured booking may be cancelled only by the cancellation orchestrator.
         matrix.put(BookingStatus.PAID, Collections.unmodifiableSet(EnumSet.of(
                 BookingStatus.PENDING_PROVIDER_CONFIRMATION,
+                BookingStatus.CANCELLED,
                 BookingStatus.REFUNDED
         )));
 
         // 5. PENDING_PROVIDER_CONFIRMATION -> CONFIRMED, REFUNDED
         matrix.put(BookingStatus.PENDING_PROVIDER_CONFIRMATION, Collections.unmodifiableSet(EnumSet.of(
                 BookingStatus.CONFIRMED,
+                BookingStatus.CANCELLED,
                 BookingStatus.REFUNDED
         )));
 

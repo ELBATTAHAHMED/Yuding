@@ -294,12 +294,12 @@ public class PayPalSandboxPaymentProvider implements PaymentProvider {
         if (url == null || url.isBlank()) {
             return "https://api-m.sandbox.paypal.com";
         }
-        // Strict guard against live domain
-        if (url.contains("api-m.paypal.com") && !url.contains("sandbox")) {
-            log.error("SECURITY ALERT: Attempted to use production PayPal URL! Enforcing sandbox.");
-            return "https://api-m.sandbox.paypal.com";
+        // Accept only the exact public sandbox host. A substring check can be bypassed
+        // with a different PayPal host or a lookalike domain.
+        if (!"https://api-m.sandbox.paypal.com".equals(url.strip().replaceAll("/+$", ""))) {
+            throw new IllegalStateException("PayPal sandbox URL must be https://api-m.sandbox.paypal.com");
         }
-        return url;
+        return "https://api-m.sandbox.paypal.com";
     }
 
     private String sanitizeError(String raw) {

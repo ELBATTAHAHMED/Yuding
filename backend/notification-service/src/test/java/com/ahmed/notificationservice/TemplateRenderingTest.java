@@ -119,6 +119,7 @@ public class TemplateRenderingTest {
         Map<String, Object> params = new HashMap<>();
         params.put("bookingReference", "YUD-CANC3333");
         params.put("dossierLink", "http://localhost:3000/bookings/YUD-CANC3333");
+        params.put("refundSummary", "Le remboursement sandbox est en cours.");
 
         String subject = templateRenderer.resolveSubject(NotificationEventType.BOOKING_CANCELLED, params);
         String html = templateRenderer.renderHtml("booking-cancelled", params);
@@ -126,9 +127,10 @@ public class TemplateRenderingTest {
 
         assertThat(subject).contains("YUD-CANC3333");
         assertThat(html).contains("ANNULÉ");
-        assertThat(html).contains("conditions tarifaires du fournisseur");
+        assertThat(html).contains("Le remboursement sandbox est en cours.");
 
         assertThat(text).contains("YUD-CANC3333");
+        assertThat(text).contains("Le remboursement sandbox est en cours.");
     }
 
     @Test

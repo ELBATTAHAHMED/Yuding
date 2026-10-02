@@ -2,6 +2,7 @@ package com.ahmed.reservationservice;
 
 import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
 import com.ahmed.reservationservice.domain.dto.BookingConfirmationDto;
+import com.ahmed.reservationservice.domain.dto.CancellationStatusDto;
 import com.ahmed.reservationservice.domain.exception.BookingNotFoundException;
 import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
 import com.ahmed.reservationservice.domain.exception.InvalidBookingReferenceException;
@@ -13,6 +14,7 @@ import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.model.ProductType;
 import com.ahmed.reservationservice.domain.service.BookingService;
 import com.ahmed.reservationservice.domain.service.ConfirmationProjectionService;
+import com.ahmed.reservationservice.domain.service.CancellationService;
 import com.ahmed.reservationservice.feigh.UtilisateurFeign;
 import com.ahmed.reservationservice.repositories.ReservationRepository;
 import com.ahmed.reservationservice.services.ActiviteesServices;
@@ -68,6 +70,9 @@ class BookingControllerSecurityTest {
 
     @MockBean
     private ConfirmationProjectionService confirmationProjectionService;
+
+    @MockBean
+    private CancellationService cancellationService;
 
     // Legacy mock beans to prevent application context startup failures
     @MockBean
@@ -287,16 +292,17 @@ class BookingControllerSecurityTest {
         UUID userId = UUID.randomUUID();
         UUID bookingId = UUID.randomUUID();
         String reference = "YUD-K7M4P2Q8";
-        Booking cancelled = createSampleBooking(bookingId, userId, reference, ProductType.ACTIVITY, BookingStatus.CANCELLED);
-
-        when(bookingService.cancelByReference(eq(reference), eq(userId), eq(false))).thenReturn(cancelled);
+        when(cancellationService.cancel(eq(reference), eq(null), eq(userId), eq(false)))
+                .thenReturn(new CancellationStatusDto(reference, "CANCELLED", "CANCELLED",
+                        "NOT_APPLICABLE", "NOT_APPLICABLE", null, null, null,
+                        "Annulé", Instant.now(), Instant.now(), null));
 
         mockMvc.perform(post("/bookings/" + reference + "/cancel")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))
                                 .jwt(j -> j.subject(userId.toString()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bookingReference").value(reference))
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+                .andExpect(jsonPath("$.cancellationStatus").value("CANCELLED"));
     }
 
     @Test
@@ -305,7 +311,7 @@ class BookingControllerSecurityTest {
         UUID userId = UUID.randomUUID();
         String reference = "YUD-K7M4P2Q8";
 
-        when(bookingService.cancelByReference(eq(reference), eq(userId), eq(false)))
+        when(cancellationService.cancel(eq(reference), eq(null), eq(userId), eq(false)))
                 .thenThrow(new InvalidBookingTransitionException(BookingStatus.REFUNDED, BookingStatus.CANCELLED));
 
         mockMvc.perform(post("/bookings/" + reference + "/cancel")

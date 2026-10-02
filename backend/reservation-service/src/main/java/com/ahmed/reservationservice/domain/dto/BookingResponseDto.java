@@ -31,6 +31,7 @@ public class BookingResponseDto {
     private Instant statusChangedAt;
     private Instant expiresAt;
     private OfferSnapshotResponseDto offerSnapshot;
+    private CancellationStatusDto cancellation;
 
     public static BookingResponseDto fromDomain(Booking booking) {
         return fromDomain(booking, null);

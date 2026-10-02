@@ -54,6 +54,10 @@ public class BookingNotificationDispatcher {
     }
 
     public void dispatchBookingCancelled(Booking booking) {
+        dispatchBookingCancelled(booking, "Consultez votre dossier pour les conditions de remboursement.");
+    }
+
+    public void dispatchBookingCancelled(Booking booking, String refundSummary) {
         try {
             String email = resolveRecipientEmail(booking);
             Map<String, Object> payload = new HashMap<>();
@@ -66,13 +70,39 @@ public class BookingNotificationDispatcher {
 
             Map<String, Object> params = new HashMap<>();
             params.put("bookingReference", booking.getBookingReference());
-            params.put("dossierLink", frontendBaseUrl + "/bookings");
+            params.put("refundSummary", refundSummary);
+            params.put("dossierLink", frontendBaseUrl + "/account/bookings");
             payload.put("parameters", params);
 
             sendEvent(payload, "BOOKING_CANCELLED", booking.getBookingReference());
         } catch (Exception ex) {
             log.warn("Failed to dispatch BOOKING_CANCELLED for booking [{}]: {}",
                     booking.getBookingReference(), ex.getMessage());
+        }
+    }
+
+    public void dispatchCancellationFailed(Booking booking) {
+        dispatchCancellationOutcome(booking, "CANCELLATION_FAILED");
+    }
+
+    public void dispatchRefundFailed(Booking booking) {
+        dispatchCancellationOutcome(booking, "REFUND_FAILED");
+    }
+
+    private void dispatchCancellationOutcome(Booking booking, String type) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("eventType", type);
+            payload.put("channel", "EMAIL");
+            payload.put("recipientEmail", resolveRecipientEmail(booking));
+            payload.put("recipientUserId", booking.getUserId());
+            payload.put("bookingReference", booking.getBookingReference());
+            payload.put("idempotencyKey", type + ":" + booking.getBookingReference());
+            payload.put("parameters", Map.of("bookingReference", booking.getBookingReference(),
+                    "dossierLink", frontendBaseUrl + "/account/bookings"));
+            sendEvent(payload, type, booking.getBookingReference());
+        } catch (Exception ex) {
+            log.warn("Failed to dispatch {} for booking [{}]: {}", type, booking.getBookingReference(), ex.getClass().getSimpleName());
         }
     }
 

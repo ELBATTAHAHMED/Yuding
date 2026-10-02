@@ -1,0 +1,6 @@
+YUDING - Remboursement à vérifier
+
+La réservation [(${bookingReference})] est annulée, mais le remboursement sandbox/de démonstration n'a pas abouti.
+Consultez votre dossier : [(${dossierLink})]
+
+-- Yuding V2

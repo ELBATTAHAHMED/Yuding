@@ -345,6 +345,8 @@ public class TravelSearchService {
                                 "rateId", room.getRateId() != null ? room.getRateId() : "",
                                 "boardType", room.getBoardType() != null ? room.getBoardType() : "",
                                 "cancellationSummary", room.getCancellationSummary() != null ? room.getCancellationSummary() : "",
+                                "refundable", room.getRefundable() != null ? room.getRefundable() : "UNKNOWN",
+                                "cancellationDeadline", room.getCancellationDeadline() != null ? room.getCancellationDeadline() : "",
                                 "maxOccupancy", room.getMaxOccupancy() != null ? room.getMaxOccupancy() : 0
                         ));
                         var roomConv = room.getPriceConversion();

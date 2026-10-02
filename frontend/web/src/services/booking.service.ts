@@ -9,6 +9,8 @@ import type {
   BookingRevalidationResponseDto,
   CreateDraftBookingRequest,
   OfferSnapshotResponseDto,
+  CancellationPolicyDto,
+  CancellationStatusDto,
 } from '../types/booking.types.ts';
 
 export const bookingService = {
@@ -106,6 +108,19 @@ export const bookingService = {
    */
   async getMyBookings(): Promise<BookingResponseDto[]> {
     return apiClient.get<BookingResponseDto[]>('/bookings/me', true);
+  },
+
+  async getCancellationPolicy(reference: string): Promise<CancellationPolicyDto> {
+    return apiClient.get<CancellationPolicyDto>(`/bookings/${encodeURIComponent(reference)}/cancellation-policy`, true);
+  },
+
+  async getCancellation(reference: string): Promise<CancellationStatusDto> {
+    return apiClient.get<CancellationStatusDto>(`/bookings/${encodeURIComponent(reference)}/cancellation`, true);
+  },
+
+  async cancelBooking(reference: string, reason?: string): Promise<CancellationStatusDto> {
+    return apiClient.post<CancellationStatusDto>(`/bookings/${encodeURIComponent(reference)}/cancel`,
+      { reason: reason?.trim() || null }, true);
   },
 
   /**

@@ -1,0 +1,6 @@
+YUDING - Annulation non effectuée
+
+La demande d'annulation du dossier [(${bookingReference})] n'a pas abouti. Votre réservation reste active.
+Consultez votre dossier : [(${dossierLink})]
+
+-- Yuding V2

@@ -3,10 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookingService } from '@/services/booking.service';
 import { queryKeys } from '@/lib/query-keys';
-import { BookingRequest, BookingResponse } from '@/types/booking.types';
+import { BookingRequest, BookingResponse, BookingResponseDto } from '@/types/booking.types';
 
 export function useMyBookings(options?: { enabled?: boolean }) {
-  return useQuery<any[]>({
+  return useQuery<BookingResponseDto[]>({
     queryKey: queryKeys.booking.my(),
     queryFn: () => bookingService.getMyBookings(),
     enabled: options?.enabled ?? true,

@@ -241,7 +241,7 @@ describe('V2 Authentication Service & Contracts', () => {
 
     assert.ok(headerContent.includes('fas fa-bed'), 'Hotels must use bed icon');
     assert.ok(headerContent.includes('fas fa-plane'), 'Flights must use plane icon');
-    assert.ok(headerContent.includes('fas fa-compass'), 'Activities must use compass icon');
+    assert.ok(headerContent.includes('fas fa-person-hiking'), 'Activities must use hiking icon');
     assert.ok(headerContent.includes('fas fa-taxi'), 'Transfers must use taxi icon');
     assert.ok(headerContent.includes('fas fa-train'), 'Trains must use train icon');
     assert.ok(headerContent.includes('btn-connexion'), 'Connexion action must be present');

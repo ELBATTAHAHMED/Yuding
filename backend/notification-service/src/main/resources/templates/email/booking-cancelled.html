@@ -28,7 +28,7 @@
     </div>
     <div class="content">
       <p>Bonjour <strong th:text="${recipientName != null ? recipientName : 'voyageur'}">voyageur</strong>,</p>
-      <p>Votre réservation a bien été <strong>annulée</strong>.</p>
+      <p>Votre dossier Yuding a bien été <strong>annulé en mode démo</strong>. Aucun fournisseur réel n'a été contacté.</p>
       
       <div class="meta-box">
         <div class="meta-row">
@@ -42,7 +42,7 @@
       </div>
 
       <p style="font-size: 14px; color: #64748b;">
-        Si un remboursement est applicable conformément aux conditions tarifaires du fournisseur, celui-ci sera traité séparément. Une confirmation vous sera adressée dès validation.
+        <span th:text="${refundSummary != null ? refundSummary : 'Consultez votre dossier pour le remboursement.'}">Consultez votre dossier pour le remboursement.</span>
       </p>
 
       <div class="btn-container" th:if="${dossierLink != null}">

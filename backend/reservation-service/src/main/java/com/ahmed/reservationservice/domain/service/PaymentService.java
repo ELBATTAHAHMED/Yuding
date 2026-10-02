@@ -436,49 +436,6 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Executes a provider-level refund for a captured payment.
-     * Protected by stable provider request ID idempotency.
-     */
-    @Transactional
-    public PaymentRefundResult refundPayment(
-            String bookingReference,
-            String paymentReference,
-            BigDecimal amount,
-            String currency,
-            String reason,
-            String userId,
-            List<String> roles) {
-
-        log.info("PaymentService: Executing refund for booking [{}] ref [{}] amount [{} {}] by user [{}]",
-                bookingReference, paymentReference, amount, currency, userId);
-
-        Booking booking = bookingRepository.findByBookingReference(bookingReference)
-                .orElseThrow(() -> new BookingNotFoundException(bookingReference));
-        validateOwnershipOrAdmin(booking, userId, roles);
-
-        Payment payment = paymentRepository.findByPaymentReference(paymentReference)
-                .orElseThrow(() -> new BookingNotFoundException("Payment not found for reference: " + paymentReference));
-
-        if (payment.getProviderTransactionId() == null || payment.getProviderTransactionId().isBlank()) {
-            throw new BookingConflictException("CANNOT_REFUND: Payment has no provider capture transaction ID.");
-        }
-
-        String refundRequestId = "REF-" + payment.getPaymentReference();
-        PaymentProvider provider = providerRegistry.getProvider(payment.getProviderName());
-
-        PaymentRefundCommand command = PaymentRefundCommand.builder()
-                .captureId(payment.getProviderTransactionId())
-                .paymentReference(payment.getPaymentReference())
-                .amount(amount != null ? amount : payment.getAmount())
-                .currency(currency != null ? currency : payment.getCurrency())
-                .reason(reason)
-                .providerRequestId(refundRequestId)
-                .build();
-
-        return provider.refundPayment(command);
-    }
-
     private boolean isPrivileged(List<String> roles) {
         return roles != null && (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_SUPPORT"));
     }

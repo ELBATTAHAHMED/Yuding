@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -47,6 +48,20 @@ class PayPalSandboxPaymentProviderTest {
     @DisplayName("Should return provider name 'paypal-sandbox'")
     void shouldReturnCorrectProviderName() {
         assertThat(provider.getProviderName()).isEqualTo("paypal-sandbox");
+    }
+
+    @Test
+    void rejectsProductionOrLookalikeEndpointBeforeAnyNetworkCall() {
+        for (String unsafe : new String[] {
+                "https://api-m.paypal.com",
+                "https://api-m.sandbox.paypal.com.evil.example",
+                "http://api-m.sandbox.paypal.com"
+        }) {
+            properties.getPaypal().setBaseUrl(unsafe);
+            assertThatThrownBy(() -> provider.createPaymentOrder(PaymentOrderCommand.builder().build()))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("PayPal sandbox URL");
+        }
     }
 
     @Test

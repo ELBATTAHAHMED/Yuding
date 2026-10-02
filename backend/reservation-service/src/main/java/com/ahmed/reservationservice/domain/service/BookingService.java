@@ -220,23 +220,6 @@ public class BookingService {
     }
 
     /**
-     * Cancels a booking using its public reference.
-     */
-    public Booking cancelByReference(String bookingReference, UUID requestingUserId, boolean privileged) {
-        Booking booking = getBookingByReference(bookingReference, requestingUserId, privileged);
-        Instant current = now();
-
-        log.info("Cancelling booking [{}] from current status {}", booking.getBookingReference(), booking.getStatus());
-        booking.transitionTo(BookingStatus.CANCELLED, current);
-        booking.updateExpiresAt(null, current);
-        Booking saved = saveWithOptimisticLockHandling(booking);
-        if (notificationDispatcher != null) {
-            notificationDispatcher.dispatchBookingCancelled(saved);
-        }
-        return saved;
-    }
-
-    /**
      * Retrieves all bookings owned by the authenticated user.
      */
     @Transactional
@@ -353,42 +336,6 @@ public class BookingService {
         // CRITICAL TRUTH RULE: BOOKING_CONFIRMED fires ONLY on BookingStatus.CONFIRMED.
         if (notificationDispatcher != null) {
             notificationDispatcher.dispatchBookingConfirmed(saved);
-        }
-        return saved;
-    }
-
-    /**
-     * Cancels a booking (by internal UUID).
-     */
-    public Booking cancel(UUID bookingId, UUID requestingUserId, boolean privileged) {
-        Booking booking = getBooking(bookingId, requestingUserId, privileged);
-        Instant current = now();
-
-        log.info("Cancelling booking [{}] from current status {}",
-                booking.getBookingReference(), booking.getStatus());
-        booking.transitionTo(BookingStatus.CANCELLED, current);
-        booking.updateExpiresAt(null, current);
-        Booking saved = saveWithOptimisticLockHandling(booking);
-        if (notificationDispatcher != null) {
-            notificationDispatcher.dispatchBookingCancelled(saved);
-        }
-        return saved;
-    }
-
-    /**
-     * Refunds a booking (from PAID, PENDING_PROVIDER_CONFIRMATION, or CANCELLED).
-     */
-    public Booking refund(UUID bookingId) {
-        Booking booking = findByIdOrThrow(bookingId);
-        Instant current = now();
-
-        log.info("Transitioning booking [{}] from {} to REFUNDED",
-                booking.getBookingReference(), booking.getStatus());
-        booking.transitionTo(BookingStatus.REFUNDED, current);
-        booking.updateExpiresAt(null, current);
-        Booking saved = saveWithOptimisticLockHandling(booking);
-        if (notificationDispatcher != null) {
-            notificationDispatcher.dispatchRefundCompleted(saved, null, null, "EUR");
         }
         return saved;
     }

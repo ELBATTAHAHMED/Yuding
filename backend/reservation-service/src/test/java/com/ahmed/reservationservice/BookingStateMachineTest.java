@@ -40,10 +40,12 @@ class BookingStateMachineTest {
             ),
             BookingStatus.PAID, Set.of(
                     BookingStatus.PENDING_PROVIDER_CONFIRMATION,
+                    BookingStatus.CANCELLED,
                     BookingStatus.REFUNDED
             ),
             BookingStatus.PENDING_PROVIDER_CONFIRMATION, Set.of(
                     BookingStatus.CONFIRMED,
+                    BookingStatus.CANCELLED,
                     BookingStatus.REFUNDED
             ),
             BookingStatus.CONFIRMED, Set.of(
