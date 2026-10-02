@@ -2,12 +2,35 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CheckoutSteps } from '@/components/checkout/CheckoutSteps';
 import { formatConfirmationAmount, getConfirmationPresentation } from '@/lib/confirmation-state';
+import type { ConfirmationPresentation } from '@/lib/confirmation-state';
 import { bookingService } from '@/services/booking.service';
-import type { BookingConfirmationDto } from '@/types/booking.types';
+import type { BookingConfirmationDto, BookingStatus, PaymentStatus } from '@/types/booking.types';
 
 const MAX_PENDING_RECHECKS = 10;
 const PENDING_RECHECK_DELAY_MS = 2_000;
+
+const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  DRAFT: 'Brouillon',
+  PENDING_PAYMENT: 'En attente de paiement',
+  PAID: 'Payée',
+  PAYMENT_FAILED: 'Paiement échoué',
+  PENDING_PROVIDER_CONFIRMATION: 'Confirmation fournisseur en cours',
+  CONFIRMED: 'Confirmée',
+  CANCELLED: 'Annulée',
+  REFUNDED: 'Remboursée',
+  EXPIRED: 'Expirée',
+};
+
+const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  INITIATED: 'Initié',
+  REQUIRES_ACTION: 'Action requise',
+  AWAITING_WEBHOOK: 'Vérification en cours',
+  SUCCEEDED: 'Validé',
+  FAILED: 'Échoué',
+  REFUNDED: 'Remboursé',
+};
 
 function formatServerTimestamp(value?: string | null): string | null {
   if (!value) return null;
@@ -51,10 +74,7 @@ export function BookingConfirmationDossier({ reference }: { reference: string })
   }, [reference]);
 
   useEffect(() => {
-    if (!reference) {
-      setLoading(false);
-      return;
-    }
+    if (!reference) { setLoading(false); return; }
     void loadConfirmation(false);
   }, [loadConfirmation, reference]);
 
@@ -69,52 +89,63 @@ export function BookingConfirmationDossier({ reference }: { reference: string })
     return () => window.clearTimeout(timer);
   }, [loadConfirmation, presentation?.shouldPoll, rechecks]);
 
-  const recheck = () => {
-    setRechecks(0);
-    void loadConfirmation(true);
-  };
+  const recheck = () => { setRechecks(0); void loadConfirmation(true); };
 
-  if (!reference) return <ConfirmationShell icon="fa-info-circle" tone="neutral" title="Aucun dossier sélectionné"><p>Utilisez une référence de réservation Yuding pour consulter son état serveur.</p><ConfirmationActions /></ConfirmationShell>;
-  if (loading && !confirmation) return <ConfirmationShell icon="fa-spinner fa-spin" tone="pending" title="Vérification du dossier…"><p>Lecture de l’état de paiement et de réservation auprès du serveur.</p></ConfirmationShell>;
-  if (fetchError || !confirmation || !presentation) return <ConfirmationShell icon="fa-triangle-exclamation" tone="danger" title="Statut indisponible"><p>{fetchError || 'Le statut du dossier ne peut pas être affiché de manière fiable.'}</p><button type="button" onClick={recheck} className="btn-booking">Réessayer</button></ConfirmationShell>;
+  if (!reference) return <ConfirmationFrame tone="neutral" icon="fa-circle-info" title="Aucun dossier sélectionné"><p>Ouvrez une réservation pour consulter son état.</p><ConfirmationActions /></ConfirmationFrame>;
+  if (loading && !confirmation) return <ConfirmationFrame reference={reference} tone="pending" icon="fa-spinner fa-spin" title="Vérification du dossier"><p>Lecture de l'état de paiement et de réservation auprès du serveur.</p></ConfirmationFrame>;
+  if (fetchError || !confirmation || !presentation) return <ConfirmationFrame reference={reference} tone="danger" icon="fa-triangle-exclamation" title="Statut indisponible"><p>{fetchError || 'Le statut du dossier ne peut pas être affiché de manière fiable.'}</p><button type="button" onClick={recheck} className="checkout-button">Réessayer</button></ConfirmationFrame>;
 
+  return <ConfirmationDetails confirmation={confirmation} presentation={presentation} rechecks={rechecks} refreshing={refreshing} onRecheck={recheck} />;
+}
+
+function ConfirmationDetails({ confirmation, presentation, rechecks = 0, refreshing = false, onRecheck = () => {} }: { confirmation: BookingConfirmationDto; presentation: ConfirmationPresentation; rechecks?: number; refreshing?: boolean; onRecheck?: () => void }) {
+  const reference = confirmation.bookingReference;
   const amount = formatConfirmationAmount(confirmation.authoritativeAmount, confirmation.currency);
   const provider = paymentProviderLabel(confirmation.paymentProvider);
   const verifiedAt = formatServerTimestamp(confirmation.paymentVerifiedAt);
   const isPollingTimedOut = presentation.shouldPoll && rechecks >= MAX_PENDING_RECHECKS;
-  const summaryEntries = Object.entries(confirmation.productSummary || {}).map(([key, value]) => [key, renderSummaryValue(value)] as const).filter((entry): entry is readonly [string, string] => entry[1] !== null);
+  const summaryEntries = Object.entries(confirmation.productSummary || {})
+    .map(([key, value]) => [key, renderSummaryValue(value)] as const)
+    .filter((entry): entry is readonly [string, string] => entry[1] !== null);
 
-  return <ConfirmationShell icon={presentation.icon} tone={presentation.tone} title={presentation.title}>
-    <p>{presentation.description}</p>
-    {isPollingTimedOut && <p className="mt-3 rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900 dark:border-teal-900 dark:bg-teal-950/50 dark:text-teal-100">Le paiement est toujours en cours de vérification. Vous pouvez actualiser son statut sans relancer le paiement.</p>}
-    <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left dark:border-slate-700 dark:bg-slate-900">
-      <ReceiptRow label="Référence dossier" value={confirmation.bookingReference} strong />
-      <ReceiptRow label="Statut réservation" value={confirmation.bookingStatus} />
-      {confirmation.paymentReference && <ReceiptRow label="Référence paiement" value={confirmation.paymentReference} />}
-      {confirmation.paymentStatus && <ReceiptRow label="Statut paiement" value={confirmation.paymentStatus} />}
-      {provider && <ReceiptRow label="Prestataire" value={provider} />}
-      {amount ? <ReceiptRow label="Montant réglé" value={amount} strong /> : <ReceiptRow label="Montant" value="Indisponible" />}
-      {verifiedAt && <ReceiptRow label="Vérifié le" value={verifiedAt} />}
+  return <ConfirmationFrame reference={reference} tone={presentation.tone} icon={presentation.icon} title={presentation.title}>
+    <p className="checkout-confirmation__description">{presentation.description}</p>
+    {isPollingTimedOut && <div className="checkout-notice" role="status">La vérification est encore en cours. Actualisez le statut sans relancer le paiement.</div>}
+    <div className="checkout-grid checkout-grid--confirmation">
+      <section className="checkout-primary checkout-confirmation__details">
+        <div className="checkout-section__heading"><span>03</span><div><h2>État du dossier</h2><p>Informations vérifiées auprès du serveur.</p></div></div>
+        <dl className="checkout-detail-list">
+          <ReceiptRow label="Référence dossier" value={confirmation.bookingReference} strong />
+          <ReceiptRow label="Statut réservation" value={BOOKING_STATUS_LABELS[confirmation.bookingStatus] || confirmation.bookingStatus} />
+          {confirmation.paymentReference && <ReceiptRow label="Référence paiement" value={confirmation.paymentReference} />}
+          {confirmation.paymentStatus && <ReceiptRow label="Statut paiement" value={PAYMENT_STATUS_LABELS[confirmation.paymentStatus] || confirmation.paymentStatus} />}
+          {provider && <ReceiptRow label="Prestataire" value={provider} />}
+          {verifiedAt && <ReceiptRow label="Vérifié le" value={verifiedAt} />}
+        </dl>
+        <div className="checkout-confirmation__actions">
+          {presentation.shouldPoll && <button type="button" onClick={onRecheck} className="checkout-button" disabled={refreshing}><i className={refreshing ? 'fas fa-spinner fa-spin' : 'fas fa-rotate'} aria-hidden="true" />Actualiser le statut</button>}
+          {presentation.canRetryPayment && <Link href={`/booking/${confirmation.bookingReference}/payment`} className="checkout-button">Procéder au paiement</Link>}
+          <ConfirmationActions />
+        </div>
+      </section>
+
+      <aside className="checkout-aside"><div className="checkout-summary"><p className="checkout-kicker">VOTRE VOYAGE</p><h2>Récapitulatif</h2>{summaryEntries.length > 0 && <dl className="checkout-summary__rows">{summaryEntries.map(([key, value]) => <ReceiptRow key={key} label={key} value={value} />)}</dl>}<div className="checkout-summary__total"><span>Montant</span><strong>{amount || 'Indisponible'}</strong></div>{provider && <p className="checkout-summary__note">{(provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) ? 'Mode démo' : 'Sandbox / test'} · {provider}</p>}</div></aside>
     </div>
-    {provider && <span className="mt-4 inline-flex rounded-full border border-teal-300 bg-teal-50 px-3 py-1 text-xs font-bold tracking-wide text-teal-800 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-200">{(provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) ? 'MODE DÉMO' : 'SANDBOX / TEST'} — {provider}</span>}
-    {summaryEntries.length > 0 && <div className="mt-6 text-left"><h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Prestation sélectionnée</h2><dl className="mt-2 grid gap-2 rounded-xl border border-slate-200 p-4 text-sm dark:border-slate-700">{summaryEntries.map(([key, value]) => <ReceiptRow key={key} label={key} value={value} />)}</dl></div>}
-    <div className="mt-7 flex flex-wrap justify-center gap-3">
-      {presentation.shouldPoll && <button type="button" onClick={recheck} className="btn-booking" disabled={refreshing}><i className={refreshing ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'} />Actualiser le statut</button>}
-      {presentation.canRetryPayment && <Link href={`/booking/${confirmation.bookingReference}/payment`} className="btn-booking">Procéder au paiement</Link>}
-      <ConfirmationActions />
-    </div>
-  </ConfirmationShell>;
+  </ConfirmationFrame>;
 }
 
 function ReceiptRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return <div className="flex items-baseline justify-between gap-4 border-b border-slate-200 py-2 last:border-0 dark:border-slate-700"><dt className="text-slate-500 dark:text-slate-400">{label}</dt><dd className={strong ? 'font-bold text-teal-700 dark:text-teal-300' : 'font-medium text-slate-800 dark:text-slate-100'}>{value}</dd></div>;
+  return <div><dt>{label}</dt><dd className={strong ? 'is-strong' : undefined}>{value}</dd></div>;
 }
 
 function ConfirmationActions() {
-  return <><Link href="/account/bookings" className="rounded-lg border border-teal-700 px-4 py-2 font-semibold text-teal-700 dark:border-teal-400 dark:text-teal-300">Mes réservations</Link><Link href="/" className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 dark:border-slate-600 dark:text-slate-200">Retour à l’accueil</Link></>;
+  return <><Link href="/account/bookings" className="checkout-button checkout-button--secondary">Mes réservations</Link><Link href="/" className="checkout-text-button">Retour à l'accueil</Link></>;
 }
 
-function ConfirmationShell({ icon, tone, title, children }: { icon: string; tone: 'pending' | 'success' | 'danger' | 'neutral'; title: string; children: React.ReactNode }) {
-  const iconClass = tone === 'success' ? 'text-emerald-600' : tone === 'danger' ? 'text-red-600' : tone === 'pending' ? 'text-teal-600' : 'text-slate-600';
-  return <main className="mx-auto flex min-h-[75vh] max-w-2xl items-center px-4 py-12"><section className="w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg dark:border-slate-700 dark:bg-[#151c1b]"><i className={`fas ${icon} text-5xl ${iconClass}`} aria-hidden="true" /><h1 className="mt-5 text-2xl font-extrabold text-slate-900 dark:text-slate-100">{title}</h1><div className="mt-3 leading-7 text-slate-600 dark:text-slate-300">{children}</div></section></main>;
+function ConfirmationFrame({ reference, icon, tone, title, children }: { reference?: string; icon: string; tone: 'pending' | 'success' | 'danger' | 'neutral'; title: string; children: React.ReactNode }) {
+  return <div className={`checkout-page checkout-confirmation checkout-confirmation--${tone}`}>
+    <CheckoutSteps current="confirmation" />
+    <header className="checkout-heading"><div><p className="checkout-kicker">CONFIRMATION</p><h1>{title}</h1><p>{reference ? `Dossier ${reference}` : 'Suivi de votre réservation'}</p></div><span className="checkout-heading__context"><i className={`fas ${icon}`} aria-hidden="true" /> Statut du dossier</span></header>
+    {children}
+  </div>;
 }
