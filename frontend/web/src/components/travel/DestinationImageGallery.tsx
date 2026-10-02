@@ -13,8 +13,7 @@ export interface DestinationImageGalleryProps {
 
 /**
  * Contextual destination gallery component.
- * Displays licensed stock travel photos from Pexels with full photographer attribution
- * and explicit visual provenance indicating these are destination atmosphere photos,
+ * Displays licensed stock travel photos from Pexels with visual provenance indicating destination atmosphere photos,
  * not specific hotel/activity property photos.
  */
 export const DestinationImageGallery: React.FC<DestinationImageGalleryProps> = ({
@@ -90,45 +89,6 @@ export const DestinationImageGallery: React.FC<DestinationImageGalleryProps> = (
           </span>
         </div>
 
-        {/* Pexels Attribution Badge - Bottom Left */}
-        <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 bg-black/65 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-white text-xs">
-          <div className="flex items-center gap-1.5 truncate">
-            <span>Photo par</span>
-            {currentImage.photographerUrl ? (
-              <a
-                href={currentImage.photographerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold underline hover:text-[#02E0D5] transition-colors truncate"
-              >
-                {currentImage.photographerName || 'Photographe'}
-              </a>
-            ) : (
-              <span className="font-bold">{currentImage.photographerName || 'Photographe'}</span>
-            )}
-            <span>sur</span>
-            <a
-              href="https://www.pexels.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold hover:text-[#02E0D5] transition-colors inline-flex items-center gap-1"
-            >
-              Pexels
-              <i className="fas fa-external-link-alt text-[9px]" aria-hidden="true" />
-            </a>
-          </div>
-
-          {currentImage.sourcePageUrl && (
-            <a
-              href={currentImage.sourcePageUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] text-gray-300 hover:text-white underline ml-auto hidden sm:inline"
-            >
-              Voir la photo
-            </a>
-          )}
-        </div>
       </div>
 
       {/* Thumbnail Bar (if multiple photos returned) */}

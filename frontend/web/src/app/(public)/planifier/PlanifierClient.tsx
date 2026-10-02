@@ -222,12 +222,11 @@ export function PlanifierClient() {
                   <label className="block text-[10px] font-bold text-[#02E0D5] mb-1 uppercase tracking-wider">
                     <i className="fas fa-wallet mr-1" /> Budget total
                   </label>
-                  <div className="flex">
+                  <div className="planner-budget">
                     <input type="number" required min="100" step="100" value={budget}
                       onChange={e => { setBudget(e.target.value); setError(null); }}
-                      className="flex-1 h-10 px-3 rounded-l-lg border border-r-0 border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5] transition-all" />
-                    <select value={currency} onChange={e => setCurrency(e.target.value)}
-                      className="h-10 px-2 rounded-r-lg border border-[#01796F]/40 bg-[#031c1a] text-[#02E0D5] text-xs font-bold focus:outline-none">
+                      aria-label="Budget total" />
+                    <select value={currency} onChange={e => setCurrency(e.target.value)} aria-label="Devise">
                       <option>MAD</option><option>EUR</option><option>USD</option>
                     </select>
                   </div>
@@ -306,18 +305,11 @@ export function PlanifierClient() {
 
           {/* ── No plan yet / loading ─────────────────────────────────────── */}
           {!plan && (
-            <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#01796F]/10 text-[#01796F] dark:bg-[#01796F]/20 dark:text-[#02E0D5] flex items-center justify-center text-2xl">
-                <i className={loading ? 'fas fa-circle-notch fa-spin' : 'fas fa-route'} />
-              </div>
-              <h2 className="text-lg font-bold text-slate-700 dark:text-slate-200">
-                {loading ? 'Orchestration des fournisseurs…' : 'Votre itinéraire apparaîtra ici'}
-              </h2>
+            <div className="planner-empty" aria-live="polite">
+              <p>{loading ? 'Création de votre voyage' : 'Votre prochain voyage'}</p>
+              <h2>{loading ? 'Nous préparons votre itinéraire…' : 'Votre itinéraire commence ici'}</h2>
               {!loading && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-                  Remplissez le formulaire et cliquez sur <strong>Générer</strong>.
-                  Yuding orchestre vols, hôtels, activités et transferts — tarifs réels en quelques secondes.
-                </p>
+                <span>Indiquez vos dates, votre budget et vos envies, puis lancez la recherche.</span>
               )}
             </div>
           )}
@@ -328,150 +320,118 @@ export function PlanifierClient() {
 
               {/* ── Plan overview ───────────────────────────────────────── */}
               <div className="planner-overview">
-
-                {/* Top row: title + actions */}
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    {/* Status + ref + freshness */}
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span style={{ background: `${budgetColor}18`, color: budgetColor, border: `1px solid ${budgetColor}40` }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold">
-                        <i className={plan.budgetStatus === 'WITHIN_BUDGET' ? 'fas fa-check-circle' : plan.budgetStatus === 'OVER_BUDGET' ? 'fas fa-exclamation-triangle' : 'fas fa-circle-info'} style={{ fontSize: '10px' }} />
-                        {plan.budgetStatus === 'WITHIN_BUDGET' ? 'Dans le budget' : plan.budgetStatus === 'OVER_BUDGET' ? 'Dépassement' : 'Chiffrage partiel'}
-                      </span>
-                      <code className="px-2 py-0.5 rounded bg-slate-100 dark:bg-[#0a302d] text-slate-500 dark:text-slate-400 text-[10px] border border-slate-200 dark:border-[#01796F]/30">
-                        {plan.reference}
-                      </code>
-                      {freshTime && (
-                        <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                          <i className="fas fa-clock" style={{ fontSize: '10px' }} /> {freshTime}
-                        </span>
-                      )}
+                <div className="planner-overview__head">
+                  <div className="planner-overview__intro">
+                    <p className="planner-overview__eyebrow">Votre itinéraire</p>
+                    <h2>{plan.title}</h2>
+                    <div className="planner-overview__meta">
+                      <span><i className="fas fa-location-dot" aria-hidden="true" /> {plan.origin} → {plan.destination}</span>
+                      <span><i className="fas fa-calendar-days" aria-hidden="true" /> {plan.startDate} — {plan.endDate}</span>
+                      <span><i className="fas fa-user-group" aria-hidden="true" /> {plan.travelers} voyageur(s)</span>
                     </div>
-
-                    <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug mb-1">{plan.title}</h2>
-                    <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
-                      <span><i className="fas fa-calendar-days mr-1" />{plan.startDate} — {plan.endDate}</span>
-                      <span><i className="fas fa-user-group mr-1" />{plan.travelers} voyageur(s)</span>
-                      <span><i className="fas fa-location-dot mr-1" />{plan.origin} → {plan.destination}</span>
-                    </div>
-                    {plan.summary && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">{plan.summary}</p>}
+                    {plan.summary && <p className="planner-overview__summary">{plan.summary}</p>}
                   </div>
 
-                  {/* Action buttons */}
-                  <div className="flex flex-wrap gap-2 shrink-0">
+                  <div className="planner-overview__actions">
                     {isAuthenticated && (
                       <button type="button" disabled={savingTrip} onClick={handleToggleSave}
-                        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors ${isSaved ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-[#0a302d] dark:border-[#01796F]/50 dark:text-[#02E0D5]' : 'border-slate-200 dark:border-[#01796F]/30 text-slate-600 dark:text-slate-300 hover:border-[#01796F]/50 hover:text-[#01796F]'}`}>
-                        <i className={isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'} style={{ fontSize: '11px' }} />
+                        className={isSaved ? 'is-saved' : ''}>
+                        <i className={isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'} aria-hidden="true" />
                         {isSaved ? 'Enregistré' : 'Enregistrer'}
                       </button>
                     )}
-                    <button type="button" disabled={refreshing} onClick={handleRefresh}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-[#01796F]/30 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:border-[#01796F]/50 hover:text-[#01796F] transition-colors disabled:opacity-60">
-                      <i className={`fas fa-arrows-rotate${refreshing ? ' fa-spin' : ''}`} style={{ fontSize: '11px' }} />
+                    <button type="button" disabled={refreshing} onClick={handleRefresh}>
+                      <i className={`fas fa-arrows-rotate${refreshing ? ' fa-spin' : ''}`} aria-hidden="true" />
                       {refreshing ? 'Actualisation…' : 'Actualiser tarifs'}
                     </button>
-                    <button type="button" onClick={() => setView('form')}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-[#01796F]/30 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:border-[#01796F]/50 hover:text-[#01796F] transition-colors">
-                      <i className="fas fa-pen-to-square" style={{ fontSize: '11px' }} /> Modifier
+                    <button type="button" onClick={() => setView('form')}>
+                      <i className="fas fa-pen-to-square" aria-hidden="true" /> Modifier
                     </button>
                   </div>
                 </div>
 
-                {/* Budget metrics row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5 pt-4 border-t border-slate-100 dark:border-[#01796F]/20">
+                <div className="planner-overview__status">
+                  <span className="planner-overview__budget-status" style={{ color: budgetColor }}>
+                    <i className={plan.budgetStatus === 'WITHIN_BUDGET' ? 'fas fa-check-circle' : plan.budgetStatus === 'OVER_BUDGET' ? 'fas fa-exclamation-triangle' : 'fas fa-circle-info'} aria-hidden="true" />
+                    {plan.budgetStatus === 'WITHIN_BUDGET' ? 'Dans le budget' : plan.budgetStatus === 'OVER_BUDGET' ? 'Dépassement du budget' : 'Chiffrage partiel'}
+                  </span>
+                  <span>Réf. {plan.reference}</span>
+                  {freshTime && <span>Actualisé à {freshTime}</span>}
+                  {plan.weatherSummary && <span><i className="fas fa-cloud-sun" aria-hidden="true" /> {plan.weatherSummary}</span>}
+                </div>
+
+                <div className="planner-overview__metrics">
                   {[
-                    { icon: 'fas fa-wallet',         label: 'Budget alloué',         val: fmt(plan.budget, plan.budgetCurrency) },
-                    { icon: 'fas fa-receipt',         label: 'Total chiffré',          val: fmt(plan.pricedTotal, plan.budgetCurrency) },
-                    { icon: 'fas fa-scale-balanced',  label: 'Solde restant',          val: fmt(plan.remainingBudget, plan.budgetCurrency) },
-                    { icon: 'fas fa-circle-question', label: 'Non chiffrés',           val: `${plan.unpricedItemsCount} élément(s)` },
+                    { label: 'Budget prévu', val: fmt(plan.budget, plan.budgetCurrency) },
+                    { label: 'Voyage estimé', val: fmt(plan.pricedTotal, plan.budgetCurrency) },
+                    { label: 'Reste disponible', val: fmt(plan.remainingBudget, plan.budgetCurrency) },
+                    { label: 'À chiffrer', val: `${plan.unpricedItemsCount} élément(s)` },
                   ].map(m => (
                     <div key={m.label}>
-                      <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">
-                        <i className={`${m.icon} text-[#01796F] dark:text-[#02E0D5]`} /> {m.label}
-                      </p>
-                      <p className="text-xl font-extrabold text-slate-900 dark:text-white leading-tight">{m.val}</p>
+                      <span>{m.label}</span>
+                      <strong>{m.val}</strong>
                     </div>
                   ))}
                 </div>
-
-                {/* Weather */}
-                {plan.weatherSummary && (
-                  <div className="mt-4 flex items-center gap-2 p-2.5 rounded-lg bg-sky-50 border border-sky-100 dark:bg-[#0a1e2e] dark:border-sky-900/40">
-                    <i className="fas fa-cloud-sun text-sky-500 shrink-0" />
-                    <span className="text-xs text-sky-700 dark:text-sky-300 font-medium">{plan.weatherSummary}</span>
-                  </div>
-                )}
               </div>
 
               {/* ── Sub-tabs ────────────────────────────────────────────── */}
-              <div className="flex gap-1 border-b border-slate-200 dark:border-[#01796F]/25">
+              <div className="planner-result-tabs" role="group" aria-label="Détails du voyage">
                 {[
-                  { id: 'itinerary' as const,  label: 'Jour par jour',      icon: 'fas fa-calendar-week',  count: plan.days?.length ?? 0 },
-                  { id: 'transport' as const,  label: 'Vols & Hébergement', icon: 'fas fa-plane-up',       count: null },
+                  { id: 'itinerary' as const, label: 'Programme jour par jour', count: plan.days?.length ?? 0 },
+                  { id: 'transport' as const, label: 'Transport & séjour', count: null },
                 ].map(t => (
-                  <button key={t.id} type="button" onClick={() => setPlanTab(t.id)}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-colors ${planTab === t.id ? 'border-[#01796F] text-[#01796F] dark:border-[#02E0D5] dark:text-[#02E0D5]' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
-                    <i className={`${t.icon} text-[11px]`} /> {t.label}
-                    {t.count != null && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#0a302d] text-slate-500 dark:text-slate-400 text-[9px]">{t.count}</span>}
+                  <button key={t.id} type="button" aria-pressed={planTab === t.id} onClick={() => setPlanTab(t.id)}
+                    className={planTab === t.id ? 'is-active' : ''}>
+                    {t.label}
+                    {t.count != null && <span>{t.count}</span>}
                   </button>
                 ))}
               </div>
 
               {/* ── Itinerary tab ───────────────────────────────────────── */}
               {planTab === 'itinerary' && plan.days && (
-                <div className="flex flex-col gap-4">
+                <div className="planner-days">
                   {plan.days.map(day => (
-                    <div key={day.dayNumber} className="planner-day">
-                      {/* Day header */}
+                    <article key={day.dayNumber} className="planner-day">
                       <div className="planner-day__heading">
-                        <div className="flex items-center gap-3">
-                          <div className="planner-day__number">J{day.dayNumber}</div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900 dark:text-white">{day.theme || `Jour ${day.dayNumber}`}</p>
-                            <p className="text-xs text-slate-400">{day.date}</p>
-                          </div>
-                        </div>
-                        {day.weatherForecast && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] bg-sky-50 border border-sky-100 text-sky-700 dark:bg-[#0a1e2e] dark:border-sky-900/40 dark:text-sky-300">
-                            <i className="fas fa-cloud-sun text-[10px]" /> {day.weatherForecast}
-                          </span>
-                        )}
+                        <span className="planner-day__number">Jour {day.dayNumber}</span>
+                        <h3>{day.theme || `Découvrir ${plan.destination}`}</h3>
+                        <p>{day.date}</p>
+                        {day.weatherForecast && <small><i className="fas fa-cloud-sun" aria-hidden="true" /> {day.weatherForecast}</small>}
                       </div>
 
-                      {/* Slots grid */}
                       <div className="planner-day__slots">
                         {[
-                          { slot: 'Matin',      icon: 'fas fa-sun',       cls: 'text-amber-500',  items: day.morning   },
-                          { slot: 'Après-midi', icon: 'fas fa-cloud-sun', cls: 'text-[#01796F]',  items: day.afternoon },
-                          { slot: 'Soirée',     icon: 'fas fa-moon',      cls: 'text-indigo-500', items: day.evening   },
+                          { slot: 'Matin', items: day.morning },
+                          { slot: 'Après-midi', items: day.afternoon },
+                          { slot: 'Soirée', items: day.evening },
                         ].map(s => (
                           <div key={s.slot} className="planner-day__slot">
-                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1 ${s.cls}`}>
-                              <i className={`${s.icon} text-[10px]`} /> {s.slot}
-                            </p>
-                            {s.items && s.items.length > 0 ? s.items.map((item: TripPlanItemDto, i: number) => (
-                              <div key={i} className="mb-2.5 last:mb-0">
-                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">{item.title}</p>
-                                {(item.priceInBudgetCurrency || item.price) && (
-                                  <p className="text-xs font-bold text-[#01796F] dark:text-[#02E0D5] mt-0.5">
-                                    {fmt(item.priceInBudgetCurrency ?? item.price, item.priceInBudgetCurrency ? plan.budgetCurrency : (item.currency ?? ''))}
-                                  </p>
-                                )}
-                              </div>
-                            )) : <p className="text-xs text-slate-400 italic">Temps libre</p>}
+                            <span className="planner-day__period">{s.slot}</span>
+                            <div className="planner-day__items">
+                              {s.items && s.items.length > 0 ? s.items.map((item: TripPlanItemDto, i: number) => (
+                                <div key={i} className="planner-day__item">
+                                  <span>{item.title}</span>
+                                  {(item.priceInBudgetCurrency || item.price) && (
+                                    <strong>
+                                      {fmt(item.priceInBudgetCurrency ?? item.price, item.priceInBudgetCurrency ? plan.budgetCurrency : (item.currency ?? ''))}
+                                    </strong>
+                                  )}
+                                </div>
+                              )) : <span className="planner-day__free">Temps libre</span>}
+                            </div>
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </article>
                   ))}
                 </div>
               )}
 
               {/* ── Transport tab ───────────────────────────────────────── */}
               {planTab === 'transport' && (
-                <div className="flex flex-col gap-4">
+                <div className="planner-transport">
                   {[
                     { label: 'Vol aller',         icon: 'fas fa-plane',  item: plan.flight },
                     { label: 'Vol retour',         icon: 'fas fa-plane',  item: plan.returnFlight },
@@ -479,24 +439,15 @@ export function PlanifierClient() {
                     { label: 'Transfert aéroport', icon: 'fas fa-taxi',   item: plan.transfer },
                   ].filter(r => r.item).map(row => (
                     <div key={row.label} className="planner-transport-row">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-full bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-lg shrink-0">
-                          <i className={row.icon} />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{row.label}</p>
-                          <p className="text-base font-bold text-slate-900 dark:text-white leading-snug">{row.item?.title}</p>
-                          {row.item?.provider && <p className="text-[10px] text-[#01796F] dark:text-[#02E0D5] font-mono">via {row.item.provider}</p>}
-                        </div>
+                      <i className={row.icon} aria-hidden="true" />
+                      <div className="planner-transport-row__info">
+                        <span>{row.label}</span>
+                        <strong>{row.item?.title}</strong>
+                        {row.item?.provider && <small>via {row.item.provider}</small>}
                       </div>
-                      <div className="hidden lg:block text-xs text-slate-400 font-mono truncate">
-                        {row.item?.offerReference?.substring(0, 60) ?? '—'}
-                      </div>
-                      <div className="lg:text-right">
-                        <p className="text-2xl font-extrabold text-[#01796F] dark:text-[#02E0D5]">
-                          {fmt(row.item?.priceInBudgetCurrency ?? row.item?.price, row.item?.priceInBudgetCurrency ? plan.budgetCurrency : (row.item?.currency ?? ''))}
-                        </p>
-                      </div>
+                      <strong className="planner-transport-row__price">
+                        {fmt(row.item?.priceInBudgetCurrency ?? row.item?.price, row.item?.priceInBudgetCurrency ? plan.budgetCurrency : (row.item?.currency ?? ''))}
+                      </strong>
                     </div>
                   ))}
                   {[plan.flight, plan.returnFlight, plan.hotel, plan.transfer].every(x => !x) && (
@@ -508,12 +459,10 @@ export function PlanifierClient() {
               {/* ── Sources ─────────────────────────────────────────────── */}
               {plan.sources && plan.sources.length > 0 && (
                 <div className="planner-sources">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#01796F] dark:text-[#02E0D5] mb-3 flex items-center gap-2">
-                    <i className="fas fa-book-open" /> Guides Yuding consultés
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                  <p>Guides Yuding consultés</p>
+                  <div>
                     {plan.sources.map((s, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#0a302d] border border-slate-200 dark:border-[#01796F]/25 text-xs text-slate-600 dark:text-slate-400">
+                      <span key={i}>
                         {s.title}{s.section ? ` — ${s.section}` : ''}
                       </span>
                     ))}

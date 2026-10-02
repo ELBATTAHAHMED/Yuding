@@ -100,8 +100,6 @@
 .travel-hero h1 { color: #fff; font-size: clamp(2rem, 4vw, 3.65rem); line-height: 1; margin: 0; max-width: 720px; text-align: left; }
 .travel-hero__subtitle { color: rgba(241, 255, 253, .9); font-size: clamp(.98rem, 1.4vw, 1.12rem); line-height: 1.55; margin: 1rem 0 0; max-width: 590px; }
 .travel-hero__context { color: #b9f6ed; font-size: .78rem; font-weight: 700; margin: 1rem 0 0; }
-.travel-hero__attribution { bottom: .8rem; color: rgba(240, 255, 252, .78); font-size: .68rem; position: absolute; right: max(var(--travel-gutter), calc((100% - var(--travel-content-width)) / 2)); z-index: 3; }
-.travel-hero__attribution a { color: #d9fff8; text-decoration: underline; text-underline-offset: 2px; }
 
 .travel-search-panel {
   background: transparent !important;
@@ -308,7 +306,6 @@ html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background
   .travel-hero--compact { min-height: 360px; }
   .travel-hero__content { padding: 24px 0 calc(24px + var(--travel-search-overlap)); }
   .travel-search-panel form { border-radius: 14px !important; padding: 26px !important; }
-  .travel-hero__attribution { font-size: .62rem; left: 16px; right: 16px; }
   .yuding-footer { padding-top: 2.75rem; }
   .yuding-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
   .yuding-footer__bottom { text-align: center; }
