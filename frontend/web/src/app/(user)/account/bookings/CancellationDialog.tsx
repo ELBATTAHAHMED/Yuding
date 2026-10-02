@@ -56,50 +56,59 @@ export function CancellationDialog({ reference, onClose }: { reference: string; 
     <div className="cancellation-overlay" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget && !mutation.isPending) onClose();
     }}>
-      <section className="cancellation-dialog" role="dialog" aria-modal="true" aria-labelledby="cancellation-title">
+      <div className="cancellation-dialog" role="dialog" aria-modal="true" aria-labelledby="cancellation-title">
         <header className="cancellation-dialog-head">
-          <div><span className="account-kicker">RÉSERVATION {reference}</span><h2 id="cancellation-title">Annuler la réservation</h2></div>
-          <button type="button" className="cancellation-close" onClick={onClose} disabled={mutation.isPending} aria-label="Fermer">×</button>
+          <span className="cancellation-dialog-icon" aria-hidden="true"><i className="fas fa-calendar-xmark" /></span>
+          <div className="cancellation-dialog-heading">
+            <span className="cancellation-kicker">RÉSERVATION · {reference}</span>
+            <h2 id="cancellation-title">Annuler ce voyage&nbsp;?</h2>
+            <p>Vérifiez les conditions de votre dossier avant de confirmer.</p>
+          </div>
+          <button type="button" className="cancellation-close" onClick={onClose} disabled={mutation.isPending} aria-label="Fermer"><i className="fas fa-xmark" aria-hidden="true" /></button>
         </header>
         {result ? (
           <div className="cancellation-dialog-body" role="status">
-            <p className="cancellation-result">{cancellationResultCopy(result)}</p>
+            <div className={`cancellation-result-icon${result.cancellationStatus === 'PROVIDER_FAILED' ? ' is-error' : ''}`} aria-hidden="true"><i className={result.cancellationStatus === 'PROVIDER_FAILED' ? 'fas fa-circle-exclamation' : 'fas fa-circle-check'} /></div>
+            <h3 className="cancellation-result">{cancellationResultCopy(result)}</h3>
             {result.refundAmount != null && result.refundStatus !== 'NOT_APPLICABLE' && (
-              <p>{result.refundStatus === 'REFUNDED' ? 'Montant remboursé en simulation :' : 'Montant prévu :'} <strong>{money(result.refundAmount, result.currency)}</strong></p>
+              <p className="cancellation-result-amount">{result.refundStatus === 'REFUNDED' ? 'Montant remboursé en simulation' : 'Montant prévu'} <strong>{money(result.refundAmount, result.currency)}</strong></p>
             )}
-            <button type="button" className="btn-primary-sm" onClick={onClose}>Voir mes réservations</button>
+            <button type="button" className="cancellation-done" onClick={onClose}>Voir mes réservations</button>
           </div>
         ) : (
           <>
             <div className="cancellation-dialog-body">
-              {policy.isPending && <p role="status">Vérification des conditions d’annulation…</p>}
+              {policy.isPending && <p className="cancellation-loading" role="status"><i className="fas fa-spinner fa-spin" aria-hidden="true" /> Vérification des conditions d’annulation…</p>}
               {policy.isError && <p className="cancellation-error" role="alert">Conditions indisponibles. Réessayez dans un instant.</p>}
               {policy.data && <>
-                <p className="cancellation-policy-reason">{policy.data.reason}</p>
-                <p className="cancellation-policy-note">Cette action concerne le dossier de démonstration Yuding. Aucun fournisseur réel ne sera contacté.</p>
-                {policy.data.refundType === 'FULL' && <p className="cancellation-policy-amount">Remboursement intégral : <strong>{money(policy.data.refundAmount, policy.data.currency)}</strong></p>}
+                <div className="cancellation-policy-card">
+                  <span className="cancellation-policy-label">CONDITIONS DE L’OFFRE</span>
+                  <p className="cancellation-policy-reason">{policy.data.reason}</p>
+                </div>
+                {policy.data.refundType === 'FULL' && <div className="cancellation-refund-card"><span><i className="fas fa-rotate-left" aria-hidden="true" /> Remboursement intégral</span><strong>{money(policy.data.refundAmount, policy.data.currency)}</strong></div>}
                 {policy.data.refundType === 'PARTIAL' && <>
-                  <p className="cancellation-policy-amount">Remboursement partiel : <strong>{money(policy.data.refundAmount, policy.data.currency)}</strong></p>
-                  <p>Frais d’annulation : {money(policy.data.cancellationFee, policy.data.currency)}</p>
+                  <div className="cancellation-refund-card"><span><i className="fas fa-rotate-left" aria-hidden="true" /> Remboursement partiel</span><strong>{money(policy.data.refundAmount, policy.data.currency)}</strong></div>
+                  <p className="cancellation-fee">Frais d’annulation <strong>{money(policy.data.cancellationFee, policy.data.currency)}</strong></p>
                 </>}
-                {policy.data.refundType === 'NON_REFUNDABLE' && <p className="cancellation-policy-amount">Cette réservation n’est pas remboursable.</p>}
-                {policy.data.refundType === 'UNKNOWN' && <p className="cancellation-policy-amount">Les conditions de remboursement ne peuvent pas être déterminées automatiquement.</p>}
-                {policy.data.refundType === 'NOT_APPLICABLE' && <p className="cancellation-policy-amount">Aucun paiement à rembourser.</p>}
-                {policy.data.deadline && <p>Limite indiquée : {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(policy.data.deadline))}</p>}
-                {policy.data.cancellable && <label className="cancellation-reason">Motif (facultatif)
-                  <textarea value={reason} maxLength={500} onChange={(event) => setReason(event.target.value)} rows={2} placeholder="Pourquoi annulez-vous ce voyage ?" />
+                {policy.data.refundType === 'NON_REFUNDABLE' && <p className="cancellation-policy-alert"><i className="fas fa-circle-info" aria-hidden="true" /> Cette réservation n’est pas remboursable.</p>}
+                {policy.data.refundType === 'UNKNOWN' && <p className="cancellation-policy-alert"><i className="fas fa-circle-info" aria-hidden="true" /> Les conditions de remboursement ne peuvent pas être déterminées automatiquement.</p>}
+                {policy.data.refundType === 'NOT_APPLICABLE' && <p className="cancellation-policy-alert"><i className="fas fa-circle-info" aria-hidden="true" /> Aucun paiement à rembourser.</p>}
+                {policy.data.deadline && <p className="cancellation-deadline"><i className="far fa-clock" aria-hidden="true" /> Limite indiquée : {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(policy.data.deadline))}</p>}
+                {policy.data.cancellable && <label className="cancellation-reason"><span className="cancellation-reason-label">Motif de l’annulation <em>(facultatif)</em></span>
+                  <textarea value={reason} maxLength={500} onChange={(event) => setReason(event.target.value)} rows={2} placeholder="Vous pouvez préciser votre raison ici" />
                 </label>}
+                <p className="cancellation-policy-note"><i className="fas fa-shield-halved" aria-hidden="true" /> Réservation de démonstration Yuding. Aucun fournisseur réel ne sera contacté.</p>
               </>}
               {mutation.isError && <p className="cancellation-error" role="alert">L’annulation n’a pas pu être effectuée. Vérifiez l’état du dossier puis réessayez.</p>}
             </div>
             <footer className="cancellation-dialog-actions">
-              <button type="button" className="btn-secondary-sm" onClick={onClose} disabled={mutation.isPending}>Retour</button>
-              {policy.data?.cancellable && <button type="button" className="btn-primary-sm" onClick={confirm} disabled={mutation.isPending}>
-                {mutation.isPending ? 'Annulation en cours…' : 'Confirmer l’annulation'}
+              <button type="button" className="cancellation-back" onClick={onClose} disabled={mutation.isPending}>Garder ma réservation</button>
+              {policy.data?.cancellable && <button type="button" className="cancellation-confirm" onClick={confirm} disabled={mutation.isPending}>
+                <i className={mutation.isPending ? 'fas fa-spinner fa-spin' : 'fas fa-calendar-xmark'} aria-hidden="true" /> {mutation.isPending ? 'Annulation en cours…' : 'Confirmer l’annulation'}
               </button>}
             </footer>
           </>
         )}
-      </section>
+      </div>
     </div>, document.body);
 }

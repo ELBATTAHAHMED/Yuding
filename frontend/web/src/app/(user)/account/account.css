@@ -1239,21 +1239,66 @@
 .booking-cancellation-badge { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid #cfdedb; border-radius: 5px; color: #28665d; font-size: 11px; font-weight: 700; }
 .booking-cancellation-history { margin-top: 18px; padding-top: 16px; border-top: 1px solid #dbe5e3; }
 .booking-cancellation-history h4 { margin: 0 0 10px; font-size: 14px; color: #193b35; }
-.cancellation-overlay { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 20px; background: rgba(13, 29, 27, .54); backdrop-filter: blur(5px); }
-.cancellation-dialog { width: min(100%, 560px); max-height: min(90vh, 700px); overflow-y: auto; background: #fff; color: #19322e; border: 1px solid #d8e5e2; border-radius: 12px; box-shadow: 0 22px 64px rgba(4, 30, 28, .22); }
-.cancellation-dialog-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 24px 28px 18px; border-bottom: 1px solid #dbe5e3; }
-.cancellation-dialog-head h2 { margin: 6px 0 0; font-size: 24px; line-height: 1.2; }
-.cancellation-close { border: 0; background: transparent; color: #5c7771; font-size: 26px; line-height: 1; cursor: pointer; }
-.cancellation-dialog-body { padding: 22px 28px; color: #526e68; font-size: 14px; line-height: 1.55; }
-.cancellation-dialog-body p { margin: 0 0 14px; }
-.cancellation-policy-reason { color: #274b45; }
-.cancellation-policy-note { color: #607771; font-size: 0.86rem; }
-.cancellation-policy-amount { border-top: 1px solid #dbe5e3; padding-top: 15px; color: #123e37; font-weight: 600; }
-.cancellation-policy-amount strong { color: #007d71; font-size: 20px; }
-.cancellation-reason { display: grid; gap: 8px; margin-top: 20px; font-weight: 600; color: #244b44; }
-.cancellation-reason textarea { width: 100%; resize: vertical; border: 1px solid #cddfdb; border-radius: 7px; padding: 10px 12px; color: #1d3631; background: #fff; font: inherit; }
-.cancellation-reason textarea:focus { outline: 2px solid #00a799; outline-offset: 1px; }
-.cancellation-error { color: #b12626; }
-.cancellation-result { font-weight: 600; color: #174e44; }
-.cancellation-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 28px 22px; border-top: 1px solid #dbe5e3; }
-@media (max-width: 560px) { .cancellation-dialog-head, .cancellation-dialog-body { padding-left: 18px; padding-right: 18px; } .cancellation-dialog-actions { padding: 16px 18px 20px; } }
+.booking-cancel-action { display: inline-flex; align-items: center; gap: 7px; min-height: 31px; padding: 6px 10px; border: 1px solid #e4d6d4; border-radius: 6px; background: #fff; color: #8f4441; font-size: 12px; font-weight: 650; cursor: pointer; transition: background-color .16s ease, border-color .16s ease; }
+.booking-cancel-action:hover { background: #fcf4f3; border-color: #cfaeaa; }
+.booking-cancel-action:focus-visible { outline: 2px solid #9e514d; outline-offset: 2px; }
+.cancellation-overlay { position: fixed; inset: 0; z-index: 20000; display: grid; place-items: center; padding: 18px; background: rgba(24, 34, 39, .2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+.cancellation-dialog { width: min(100%, 520px); max-height: calc(100dvh - 36px); display: flex; flex-direction: column; overflow: hidden; background: #fff; color: #1c3530; border: 1px solid #d8e4e1; border-radius: 13px; box-shadow: 0 22px 60px rgba(19, 35, 39, .19); }
+.cancellation-dialog-head { display: flex; align-items: flex-start; gap: 15px; padding: 25px 28px 21px; border-bottom: 1px solid #e4ebea; }
+.cancellation-dialog-icon { flex: 0 0 38px; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; background: #f9eded; color: #a8504a; font-size: 16px; }
+.cancellation-dialog-heading { flex: 1; min-width: 0; }
+.cancellation-kicker { display: block; margin: 1px 0 5px; color: #63807a; font-size: 10px; font-weight: 750; letter-spacing: .09em; }
+.cancellation-dialog-head h2 { margin: 0; color: #1b3430; font-size: 22px; line-height: 1.2; font-weight: 750; }
+.cancellation-dialog-head p { margin: 8px 0 0; color: #67807a; font-size: 13px; line-height: 1.45; }
+.cancellation-close { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; margin: -3px -5px 0 0; border: 0; border-radius: 6px; background: transparent; color: #68817b; font-size: 15px; cursor: pointer; }
+.cancellation-close:hover { background: #edf3f1; color: #244c44; }
+.cancellation-dialog-body { min-height: 0; overflow-y: auto; padding: 22px 28px 24px; color: #4e6a64; font-size: 13px; line-height: 1.55; }
+.cancellation-dialog-body p { margin: 0; }
+.cancellation-policy-card { padding: 0 0 18px; border-bottom: 1px solid #e4ebea; }
+.cancellation-policy-label { display: block; margin-bottom: 7px; color: #087d70; font-size: 10px; font-weight: 750; letter-spacing: .09em; }
+.cancellation-policy-reason { color: #25433d; font-size: 14px; }
+.cancellation-refund-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 17px 0 0; padding: 14px 16px; border: 1px solid #d8e8e4; border-radius: 8px; background: #f6faf9; color: #255a51; font-weight: 650; }
+.cancellation-refund-card span { display: inline-flex; align-items: center; gap: 8px; }
+.cancellation-refund-card strong { color: #007e72; font-size: 20px; white-space: nowrap; }
+.cancellation-fee { display: flex; justify-content: space-between; margin-top: 9px !important; padding: 0 4px; }
+.cancellation-policy-alert { display: flex; align-items: flex-start; gap: 9px; margin-top: 17px !important; padding: 12px 14px; border: 1px solid #e7e0d3; border-radius: 8px; background: #faf9f6; color: #665640; }
+.cancellation-policy-alert i { margin-top: 2px; }
+.cancellation-deadline { margin-top: 12px !important; color: #596f69; }
+.cancellation-deadline i { margin-right: 6px; }
+.cancellation-reason { display: grid; gap: 8px; margin-top: 21px; font-weight: 650; color: #25443e; }
+.cancellation-reason-label { color: #25443e; }
+.cancellation-reason-label em { color: #7a8e89; font-style: normal; font-weight: 450; }
+.cancellation-reason textarea { width: 100%; min-height: 66px; resize: vertical; border: 1px solid #d3e0dd; border-radius: 7px; padding: 10px 12px; color: #1d3631; background: #fff; font: inherit; font-weight: 450; }
+.cancellation-reason textarea:focus { outline: 2px solid #7dbdb2; outline-offset: 1px; }
+.cancellation-policy-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 17px !important; color: #70847f; font-size: 11px; }
+.cancellation-policy-note i { margin-top: 2px; }
+.cancellation-loading { display: flex; gap: 9px; align-items: center; }
+.cancellation-error { margin-top: 14px !important; color: #ad3d3d; }
+.cancellation-result-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 14px; border-radius: 50%; background: #e8f6f2; color: #008879; font-size: 20px; }
+.cancellation-result-icon.is-error { background: #faeeee; color: #a44642; }
+.cancellation-result { margin: 0 0 12px; color: #1d4640; font-size: 18px; line-height: 1.4; }
+.cancellation-result-amount { display: flex; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid #e5ecea; }
+.cancellation-result-amount strong { color: #007e72; white-space: nowrap; }
+.cancellation-done, .cancellation-confirm, .cancellation-back { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 39px; padding: 9px 15px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.cancellation-done, .cancellation-confirm { border: 1px solid #923e3a; background: #923e3a; color: #fff; }
+.cancellation-done { margin-top: 15px; border-color: #087d70; background: #087d70; }
+.cancellation-done:hover { background: #096e64; }
+.cancellation-confirm:hover { background: #783531; }
+.cancellation-back { border: 1px solid #cbdad6; background: #fff; color: #31524b; }
+.cancellation-back:hover { background: #f2f7f5; }
+.cancellation-dialog button:disabled { opacity: .55; cursor: wait; }
+.cancellation-dialog button:focus-visible { outline: 2px solid #087d70; outline-offset: 2px; }
+.cancellation-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 28px 20px; border-top: 1px solid #e4ebea; }
+@media (max-width: 560px) { .cancellation-dialog-head, .cancellation-dialog-body { padding-left: 18px; padding-right: 18px; } .cancellation-dialog-actions { padding: 14px 18px 18px; flex-direction: column-reverse; } .cancellation-dialog-actions button { width: 100%; } .cancellation-refund-card strong { font-size: 17px; } }
+[data-theme="dark"] .booking-cancel-action { border-color: #694b4b; background: #1d302a; color: #efa7a0; }
+[data-theme="dark"] .booking-cancel-action:hover { background: #362d2b; }
+[data-theme="dark"] .cancellation-dialog { border-color: #40554f; background: #1d302a; color: #e7f1ee; }
+[data-theme="dark"] .cancellation-dialog-head, [data-theme="dark"] .cancellation-dialog-actions, [data-theme="dark"] .cancellation-policy-card { border-color: #3b544d; }
+[data-theme="dark"] .cancellation-dialog-head h2, [data-theme="dark"] .cancellation-policy-reason, [data-theme="dark"] .cancellation-reason-label, [data-theme="dark"] .cancellation-result { color: #e7f1ee; }
+[data-theme="dark"] .cancellation-dialog-head p, [data-theme="dark"] .cancellation-dialog-body, [data-theme="dark"] .cancellation-kicker, [data-theme="dark"] .cancellation-policy-note { color: #aec4bc; }
+[data-theme="dark"] .cancellation-dialog-icon { background: #3a2a2a; color: #efa7a0; }
+[data-theme="dark"] .cancellation-refund-card { border-color: #3b6259; background: #213a33; color: #b9e3da; }
+[data-theme="dark"] .cancellation-refund-card strong, [data-theme="dark"] .cancellation-result-amount strong { color: #8ce0d2; }
+[data-theme="dark"] .cancellation-policy-alert { border-color: #655c48; background: #302f29; color: #e0d1ad; }
+[data-theme="dark"] .cancellation-reason textarea, [data-theme="dark"] .cancellation-back { border-color: #48635a; background: #213a33; color: #e7f1ee; }
+[data-theme="dark"] .cancellation-close, [data-theme="dark"] .cancellation-deadline { color: #aec4bc; }

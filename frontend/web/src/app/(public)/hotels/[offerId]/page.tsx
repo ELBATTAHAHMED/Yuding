@@ -35,7 +35,7 @@ export default function HotelDetailsPage() {
   const [occupancies, setOccupancies] = useState<RoomOccupancy[]>([{ adults: 2, childrenAges: [] }]);
   const [metadata, setMetadata] = useState<{ title: string; imageUrl?: string } | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
-  const [visibleRoomCount, setVisibleRoomCount] = useState(8);
+  const [visibleRoomCount, setVisibleRoomCount] = useState(5);
   const initialLoadKey = useRef('');
 
   const loadAvailability = async (city: string, arrival: string, departure: string,
@@ -67,7 +67,7 @@ export default function HotelDetailsPage() {
       setHotel(current);
       setMetadata({ title: current.name || current.hotelName || 'Hôtel', imageUrl: current.imageUrl });
       setSelectedRoomOfferId(current.roomOffers?.[0]?.offerId || null);
-      setVisibleRoomCount(8);
+      setVisibleRoomCount(5);
       libraryService.recordRecentView({
         resourceType: 'HOTEL', resourceReference: offerId,
         title: current.name || current.hotelName || 'Hôtel',
@@ -357,17 +357,9 @@ export default function HotelDetailsPage() {
       </div>
 
       {hotel.description && (
-        <section className="border-t border-slate-200 pt-5 text-sm leading-7 text-slate-700 dark:border-[#01796F]/30 dark:text-slate-200">
+        <div className="border-t border-slate-200 pt-5 text-sm leading-7 text-slate-700 dark:border-[#01796F]/30 dark:text-slate-200">
           <h2 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">À propos de l’établissement</h2>
           <p>{hotel.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}</p>
-        </section>
-      )}
-
-      {hotel.galleryUrls && hotel.galleryUrls.filter(url => url && url !== hotel.imageUrl).length > 0 && (
-        <div className="flex gap-2 overflow-x-auto" aria-label="Photos de l’établissement">
-          {hotel.galleryUrls.filter(url => url && url !== hotel.imageUrl).map(url => (
-            <SafeEntityImage key={url} src={url} alt={hotelDisplayName} entityType="HOTEL" className="h-28 w-40 shrink-0 rounded-lg object-cover" />
-          ))}
         </div>
       )}
 
@@ -445,8 +437,11 @@ export default function HotelDetailsPage() {
             })}
           </div>
           {hotel.roomOffers.length > visibleRoomCount && (
-            <button type="button" onClick={() => setVisibleRoomCount(count => count + 12)} className="mt-4 text-sm font-semibold text-[#01796F] hover:underline dark:text-[#02E0D5]">
-              Afficher d’autres offres ({hotel.roomOffers.length - visibleRoomCount} restantes)
+            <button type="button" onClick={() => setVisibleRoomCount(count => Math.min(count + 5, hotel.roomOffers?.length ?? count + 5))}
+              className="mt-5 inline-flex items-center gap-3 rounded-lg border border-[#b8d5cf] bg-white px-4 py-2.5 text-sm font-semibold text-[#01796F] transition-colors hover:bg-[#edf7f4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#01796F] dark:border-[#35625b] dark:bg-[#062523] dark:text-[#8ce0d2] dark:hover:bg-[#0d3934]">
+              <i className="fas fa-chevron-down text-xs" aria-hidden="true" />
+              Afficher {Math.min(5, hotel.roomOffers.length - visibleRoomCount)} autres offres
+              <span className="border-l border-[#c9ded8] pl-3 text-xs font-medium text-[#668079] dark:border-[#35625b] dark:text-[#a6c9c1]">{hotel.roomOffers.length - visibleRoomCount} restantes</span>
             </button>
           )}
         </div>
