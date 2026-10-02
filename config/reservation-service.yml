@@ -4,7 +4,7 @@
 # ====================================================================
 
 server:
-  port: 8090
+  port: 8084
   max-http-request-header-size: 16KB
 
 spring:
@@ -24,4 +24,3 @@ yuding:
   notification:
     service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
     frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
-
