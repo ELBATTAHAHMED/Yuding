@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { libraryService } from '@/services/library.service';
@@ -13,6 +13,8 @@ import type {
 } from '@/types/library.types';
 import FavoriteButton from '@/components/common/FavoriteButton';
 import { getSearchRerunUrl } from '@/lib/recent-search-rerun';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 type ActiveTab = 'favorites' | 'saved-trips' | 'history';
 type HistorySubTab = 'searches' | 'views';
@@ -173,7 +175,11 @@ export default function FavoritesClient() {
     }
   };
 
-  const filteredFavorites = favorites.filter(f => favoriteFilter === 'ALL' || f.resourceType === favoriteFilter);
+  const filteredFavorites = useMemo(() => favorites.filter(f => favoriteFilter === 'ALL' || f.resourceType === favoriteFilter), [favorites, favoriteFilter]);
+  const favoritePages = usePaginatedItems(filteredFavorites, 9);
+  const tripPages = usePaginatedItems(savedTrips, 9);
+  const searchPages = usePaginatedItems(recentSearches, 10);
+  const viewPages = usePaginatedItems(recentViews, 10);
 
   const totalHistoryCount = recentSearches.length + recentViews.length;
 
@@ -196,6 +202,7 @@ export default function FavoritesClient() {
         <button
           type="button"
           onClick={() => setTab('favorites')}
+          aria-pressed={activeTab === 'favorites'}
           className={`library-tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
         >
           <i className="fas fa-heart" aria-hidden="true" />
@@ -206,6 +213,7 @@ export default function FavoritesClient() {
         <button
           type="button"
           onClick={() => setTab('saved-trips')}
+          aria-pressed={activeTab === 'saved-trips'}
           className={`library-tab-btn ${activeTab === 'saved-trips' ? 'active' : ''}`}
         >
           <i className="fas fa-suitcase-rolling" aria-hidden="true" />
@@ -216,6 +224,7 @@ export default function FavoritesClient() {
         <button
           type="button"
           onClick={() => setTab('history')}
+          aria-pressed={activeTab === 'history'}
           className={`library-tab-btn ${activeTab === 'history' ? 'active' : ''}`}
         >
           <i className="fas fa-history" aria-hidden="true" />
@@ -337,8 +346,9 @@ export default function FavoritesClient() {
                   </Link>
                 </section>
               ) : (
+                <>
                 <div className="library-grid">
-                  {filteredFavorites.map(fav => {
+                  {favoritePages.pageItems.map(fav => {
                     const getFavoriteTypeInfo = (type: FavoriteResourceType) => {
                       switch (type) {
                         case 'HOTEL':
@@ -471,6 +481,8 @@ export default function FavoritesClient() {
                     );
                   })}
                 </div>
+                <Pagination page={favoritePages.page} pageSize={favoritePages.pageSize} totalItems={filteredFavorites.length} onPageChange={favoritePages.setPage} />
+                </>
               )}
             </section>
           )}
@@ -495,8 +507,9 @@ export default function FavoritesClient() {
                   </Link>
                 </section>
               ) : (
+                <>
                 <div className="library-grid">
-                  {savedTrips.map(trip => (
+                  {tripPages.pageItems.map(trip => (
                     <article key={trip.publicReference} className="library-card">
                       <div className="library-card-body">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
@@ -556,6 +569,8 @@ export default function FavoritesClient() {
                     </article>
                   ))}
                 </div>
+                <Pagination page={tripPages.page} pageSize={tripPages.pageSize} totalItems={savedTrips.length} onPageChange={tripPages.setPage} />
+                </>
               )}
             </section>
           )}
@@ -639,8 +654,9 @@ export default function FavoritesClient() {
                       </Link>
                     </section>
                   ) : (
+                    <>
                     <div className="library-list">
-                      {recentSearches.map(item => {
+                      {searchPages.pageItems.map(item => {
                         const searchTitle = item.origin && item.destination
                           ? `${item.origin} → ${item.destination}`
                           : item.destination || item.origin || 'Recherche de voyage';
@@ -690,6 +706,8 @@ export default function FavoritesClient() {
                         );
                       })}
                     </div>
+                    <Pagination page={searchPages.page} pageSize={searchPages.pageSize} totalItems={recentSearches.length} onPageChange={searchPages.setPage} />
+                    </>
                   )}
                 </>
               )}
@@ -717,8 +735,9 @@ export default function FavoritesClient() {
                       </Link>
                     </section>
                   ) : (
+                    <>
                     <div className="library-list">
-                      {recentViews.map(view => {
+                      {viewPages.pageItems.map(view => {
                         const itemUrl = view.resourceType === 'HOTEL'
                           ? `/hotels/${view.resourceReference}`
                           : view.resourceType === 'ACTIVITY'
@@ -772,6 +791,8 @@ export default function FavoritesClient() {
                         );
                       })}
                     </div>
+                    <Pagination page={viewPages.page} pageSize={viewPages.pageSize} totalItems={recentViews.length} onPageChange={viewPages.setPage} />
+                    </>
                   )}
                 </>
               )}

@@ -12,6 +12,8 @@ import { TrainSkeleton } from '@/components/travel/TrainSkeleton';
 import { EmptyState, ErrorState, SortBar, TravelerStepper } from '@/components/ui';
 import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -256,6 +258,7 @@ export default function TrainsPage() {
 
     return list;
   }, [trains, directOnly, selectedProduct, sortBy]);
+  const trainPages = usePaginatedItems(filteredTrains, 10);
 
   return (
     <TravelPage page="trains">
@@ -554,9 +557,10 @@ export default function TrainsPage() {
         {/* Results List */}
         {!loading && filteredTrains.length > 0 && (
           <div className="flex flex-col gap-4">
-            {filteredTrains.map((train) => (
+            {trainPages.pageItems.map((train) => (
               <TrainCard key={train.offerId} offer={train} />
             ))}
+            <Pagination page={trainPages.page} pageSize={trainPages.pageSize} totalItems={filteredTrains.length} onPageChange={trainPages.setPage} />
           </div>
         )}
 

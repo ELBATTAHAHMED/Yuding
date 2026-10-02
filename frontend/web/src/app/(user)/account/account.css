@@ -529,14 +529,16 @@
   font-size: 12px;
 }
 
-.library-tab-btn:hover,
-.library-tab-btn.active {
+.account-content button.library-tab-btn:hover,
+.account-content button.library-tab-btn:focus-visible,
+.account-content button.library-tab-btn.active {
   color: var(--account-green);
-  background: transparent;
+  background: rgba(8, 125, 112, 0.08);
 }
 
-.library-tab-btn.active {
+.account-content button.library-tab-btn.active {
   border-bottom-color: var(--account-green);
+  background: rgba(8, 125, 112, 0.11);
 }
 
 .library-tab-count {
@@ -601,12 +603,13 @@
   transition: all 0.18s ease;
 }
 
-.library-subfilter-btn:hover {
+.account-content button.library-subfilter-btn:hover,
+.account-content button.library-subfilter-btn:focus-visible {
   color: #1e293b;
   background: rgba(255, 255, 255, 0.6);
 }
 
-.library-subfilter-btn.active {
+.account-content button.library-subfilter-btn.active {
   background: #ffffff;
   color: #0f172a;
   font-weight: 600;
@@ -648,14 +651,16 @@
   color: var(--account-muted, #a9beb7);
 }
 
-[data-theme="dark"] .library-tab-btn:hover,
-[data-theme="dark"] .library-tab-btn.active {
+[data-theme="dark"] .account-content button.library-tab-btn:hover,
+[data-theme="dark"] .account-content button.library-tab-btn:focus-visible,
+[data-theme="dark"] .account-content button.library-tab-btn.active {
   color: #78d5c4;
-  background: transparent;
+  background: rgba(120, 213, 196, 0.1);
 }
 
-[data-theme="dark"] .library-tab-btn.active {
+[data-theme="dark"] .account-content button.library-tab-btn.active {
   border-bottom-color: #78d5c4;
+  background: rgba(120, 213, 196, 0.14);
 }
 
 [data-theme="dark"] .library-tab-count {
@@ -678,14 +683,15 @@
   color: #94a3b8;
 }
 
-[data-theme="dark"] .library-subfilter-btn:hover {
+[data-theme="dark"] .account-content button.library-subfilter-btn:hover,
+[data-theme="dark"] .account-content button.library-subfilter-btn:focus-visible {
   color: #f1f5f9;
   background: rgba(255, 255, 255, 0.06);
 }
 
-[data-theme="dark"] .library-subfilter-btn.active {
-  background: #172a25;
-  color: #f8fafc;
+[data-theme="dark"] .account-content button.library-subfilter-btn.active {
+  background: #ffffff;
+  color: #17322f;
   border-color: rgba(120, 213, 196, 0.15);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
@@ -696,8 +702,8 @@
 }
 
 [data-theme="dark"] .library-subfilter-btn.active .library-tab-count {
-  background: #78d5c4;
-  color: #062523;
+  background: #087d70;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .library-clear-action {

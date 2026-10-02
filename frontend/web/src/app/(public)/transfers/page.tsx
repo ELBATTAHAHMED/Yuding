@@ -23,6 +23,8 @@ import { saveSearchOffers } from '@/lib/offer-store';
 import { useSearchSession } from '@/lib/search-session';
 import { libraryService } from '@/services/library.service';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 const POPULAR_AIRPORTS: LocationSuggestion[] = [
   { code: 'RAK', title: 'Marrakech Menara', subtitle: 'Aéroport international • Maroc', badge: 'RAK' },
@@ -116,6 +118,7 @@ export default function TransfersPage() {
   const categoryCounts = useMemo(() => getTransferCategoryCounts(transfers), [transfers]);
   const filteredTransfers = useMemo(() => filterTransfers(transfers, transportType), [transfers, transportType]);
   const sortedTransfers = useMemo(() => sortTransfers(filteredTransfers, sortKey), [filteredTransfers, sortKey]);
+  const transferPages = usePaginatedItems(sortedTransfers, 10);
 
   const handleSwap = () => {
     const temp = pickup;
@@ -468,7 +471,7 @@ export default function TransfersPage() {
               />
 
               <div className="flex flex-col gap-4">
-              {sortedTransfers.map((item) => {
+              {transferPages.pageItems.map((item) => {
                 const offerKey = item.offerId || item.id || `trf-${item.price}`;
                 const isPrivate = isPrivateTransfer(item);
                 const isShuttle = isSharedNavette(item);
@@ -562,6 +565,7 @@ export default function TransfersPage() {
                   );
                 })}
               </div>
+              <Pagination page={transferPages.page} pageSize={transferPages.pageSize} totalItems={sortedTransfers.length} onPageChange={transferPages.setPage} />
             </div>
           )}
 

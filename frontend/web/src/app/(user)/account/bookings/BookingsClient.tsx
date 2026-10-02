@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { bookingService } from '@/services/booking.service';
 import type { BookingResponseDto, BookingStatus, BookingProductType } from '@/types/booking.types';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 function getStatusPresentation(status: BookingStatus): {
   label: string;
@@ -124,6 +126,7 @@ function formatBookingPrice(amount?: number | null, currency?: string | null): s
 
 export default function BookingsClient() {
   const [bookings, setBookings] = useState<BookingResponseDto[]>([]);
+  const bookingPages = usePaginatedItems(bookings, 10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -230,8 +233,9 @@ export default function BookingsClient() {
 
       {/* Bookings List */}
       {!loading && !error && bookings.length > 0 && (
-        <div className="library-list" style={{ marginTop: '20px', marginBottom: '32px' }}>
-          {bookings.map((booking) => {
+        <div style={{ marginTop: '20px', marginBottom: '32px' }}>
+        <div className="library-list">
+          {bookingPages.pageItems.map((booking) => {
             const statusInfo = getStatusPresentation(booking.status);
             const productInfo = getProductTypePresentation(booking.productType);
             const snapshot = booking.offerSnapshot;
@@ -347,6 +351,8 @@ export default function BookingsClient() {
               </div>
             );
           })}
+        </div>
+        <Pagination page={bookingPages.page} pageSize={bookingPages.pageSize} totalItems={bookings.length} onPageChange={bookingPages.setPage} />
         </div>
       )}
 
