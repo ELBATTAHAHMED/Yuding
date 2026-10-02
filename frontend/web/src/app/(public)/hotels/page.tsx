@@ -20,6 +20,8 @@ import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 import { libraryService } from '@/services/library.service';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 function inferCountryCode(destination: string, currentCode?: string): string {
   if (currentCode && currentCode !== 'MA') return currentCode;
@@ -383,6 +385,7 @@ export default function HotelsPage() {
 
   const filteredHotels = useMemo(() => filterHotels(allHotels, filterType), [allHotels, filterType]);
   const sortedHotels = useMemo(() => sortHotels(filteredHotels, sortKey), [filteredHotels, sortKey]);
+  const hotelPages = usePaginatedItems(sortedHotels, 9);
 
   const getHotelDetailHref = (hotelId: string) => {
     const params = new URLSearchParams({
@@ -824,7 +827,7 @@ export default function HotelsPage() {
               />
 
               <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {sortedHotels.map((item) => {
+                {hotelPages.pageItems.map((item) => {
                   const hotelId = item.hotelId || item.id || item.offerId;
                   const isExpanded = expandedHotelId === hotelId;
                   const roomOffers = item.roomOffers || [];
@@ -1039,6 +1042,7 @@ export default function HotelsPage() {
                   );
                 })}
               </div>
+              <Pagination page={hotelPages.page} pageSize={hotelPages.pageSize} totalItems={sortedHotels.length} onPageChange={hotelPages.setPage} />
             </div>
           )}
         </div>

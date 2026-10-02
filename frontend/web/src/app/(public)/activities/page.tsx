@@ -17,6 +17,8 @@ import type { GeoPlace, NearbyPlace } from '@/types/geo.types';
 import { geoService } from '@/services/geo.service';
 import { libraryService } from '@/services/library.service';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 function stripHtml(text?: string | null): string {
   if (!text) return '';
@@ -220,6 +222,7 @@ export default function ActivitiesPage() {
   }), [activities, category]);
 
   const sortedActivities = useMemo(() => sortActivities(filtered, sortKey), [filtered, sortKey]);
+  const activityPages = usePaginatedItems(sortedActivities, 9);
 
   return (
     <TravelPage page="activities">
@@ -447,7 +450,7 @@ export default function ActivitiesPage() {
               />
 
               <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {sortedActivities.map((act) => {
+                {activityPages.pageItems.map((act) => {
                   const isCustom = act.source === 'YUDING_CUSTOM';
                   const offerKey = act.id || act.offerId || act.title;
 
@@ -541,6 +544,7 @@ export default function ActivitiesPage() {
                   );
                 })}
               </div>
+              <Pagination page={activityPages.page} pageSize={activityPages.pageSize} totalItems={sortedActivities.length} onPageChange={activityPages.setPage} />
             </div>
           )}
         </div>

@@ -16,6 +16,8 @@ import type { FlightSortKey } from '@/lib/search-ux';
 import type { Airport, FlightOffer, FlightSearchRequest } from '@/types/travel.types';
 import { libraryService } from '@/services/library.service';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -157,6 +159,7 @@ export default function FlightsPage() {
 
   // ── Sorted flights ───────────────────────────────────────────────────────
   const sortedFlights = useMemo(() => sortFlights(flights, sortKey), [flights, sortKey]);
+  const flightPages = usePaginatedItems(sortedFlights, 10);
 
   // ── Form validation ──────────────────────────────────────────────────────
   const isFormValid = Boolean(
@@ -493,7 +496,7 @@ export default function FlightsPage() {
               />
             ) : (
               // Real flight results list
-              sortedFlights.map((flight) => (
+              flightPages.pageItems.map((flight) => (
                 <div
                   key={flight.offerId}
                   className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(230px,.95fr)] items-center gap-5 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523] dark:text-slate-100"
@@ -615,6 +618,9 @@ export default function FlightsPage() {
                   </div>
                 </div>
               ))
+            )}
+            {hasSearched && !isSearching && searchStatus !== 'ERROR' && (
+              <Pagination page={flightPages.page} pageSize={flightPages.pageSize} totalItems={sortedFlights.length} onPageChange={flightPages.setPage} />
             )}
           </div>
         </div>
