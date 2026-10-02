@@ -22,8 +22,8 @@
     Service logs are streamed into .dev-logs/<service>.log.
 
 .PARAMETER Build
-    Rebuild all backend JARs and frontend bundle before launching.
-    Defaults to $false (uses pre-built artifacts for fast startup).
+    Rebuild all backend JARs and the frontend bundle when port 3000 is free.
+    By default, rebuilds only stale backend JARs and runs Next.js in dev mode.
 
 .EXAMPLE
     .\scripts\start-dev.ps1
@@ -41,6 +41,27 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $logsDir  = Join-Path $repoRoot '.dev-logs'
 $pidsFile = Join-Path $repoRoot '.dev-pids.json'
+
+# A previous launch can leave live Java processes behind after its shell
+# exits. Restart only backend processes whose command line points into this checkout.
+# A foreign process on a Yuding port is reported below instead of being killed.
+$runningProjectProcesses = Get-CimInstance Win32_Process | Where-Object {
+    $_.Name -eq 'java.exe' -and $_.CommandLine -and
+    $_.CommandLine.Contains((Join-Path $repoRoot 'backend\')) -and
+    $_.CommandLine -match '-jar\s'
+}
+foreach ($runningProcess in $runningProjectProcesses) {
+    Write-Host "  Restarting existing Yuding process PID $($runningProcess.ProcessId)..." -ForegroundColor DarkYellow
+    Stop-Process -Id $runningProcess.ProcessId -Force -ErrorAction Stop
+}
+if ($runningProjectProcesses) { Start-Sleep -Seconds 2 }
+foreach ($servicePort in @(9091, 8761, 8081, 8085, 8082, 8084, 8090, 8072, 8888)) {
+    $listener = Get-NetTCPConnection -State Listen -LocalPort $servicePort -ErrorAction SilentlyContinue
+    if ($listener) {
+        throw "Port $servicePort is already in use by another process. Free it before starting Yuding."
+    }
+}
+if (Test-Path $pidsFile) { Remove-Item $pidsFile -Force }
 
 if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
@@ -74,6 +95,11 @@ Import-EnvironmentFile (Join-Path $repoRoot '.env')
 # Local overrides win over the shared .env file so Gmail SMTP credentials
 # in .env.local are actually passed to notification-service.
 Import-EnvironmentFile (Join-Path $repoRoot '.env.local') -Override
+
+# `next build` uses NODE_ENV=production even for the local stack. The browser
+# must use Next's same-origin /api rewrite; a root .env localhost URL is rejected
+# by the frontend's production security guard.
+[Environment]::SetEnvironmentVariable('NEXT_PUBLIC_API_BASE_URL', '/api', 'Process')
 
 Write-Host @"
 ==================================================================
@@ -184,17 +210,23 @@ if ($Build) {
         Push-Location $svcDir
         try {
             & .\mvnw.cmd package -DskipTests | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "Build failed for $svc" }
         } finally {
             Pop-Location
         }
     }
 
-    Write-Host "  Building frontend/web ..." -ForegroundColor DarkCyan
-    Push-Location (Join-Path $repoRoot 'frontend\web')
-    try {
-        & cmd.exe /c "npm run build" | Out-Null
-    } finally {
-        Pop-Location
+    if (-not (Test-PortListening 'localhost' 3000)) {
+        Write-Host "  Building frontend/web ..." -ForegroundColor DarkCyan
+        Push-Location (Join-Path $repoRoot 'frontend\web')
+        try {
+            & cmd.exe /c "npm run build" | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed' }
+        } finally {
+            Pop-Location
+        }
+    } else {
+        Write-Host '  Skipping frontend build while an existing web server uses port 3000.' -ForegroundColor DarkYellow
     }
 }
 
@@ -203,11 +235,16 @@ function Start-BackendService ([string]$serviceName, [int]$port) {
     $svcDir  = Join-Path $repoRoot "backend\$serviceName"
     $jarPath = Join-Path $svcDir "target\$serviceName-0.0.1-SNAPSHOT.jar"
 
-    if (-not (Test-Path $jarPath)) {
-        Write-Host "  JAR not found for $serviceName, compiling once..." -ForegroundColor DarkYellow
+    $latestSource = Get-ChildItem (Join-Path $svcDir 'src\main') -Recurse -File |
+        Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+    $pom = Get-Item (Join-Path $svcDir 'pom.xml')
+    $jar = Get-Item $jarPath -ErrorAction SilentlyContinue
+    if (-not $jar -or $latestSource.LastWriteTimeUtc -gt $jar.LastWriteTimeUtc -or $pom.LastWriteTimeUtc -gt $jar.LastWriteTimeUtc) {
+        Write-Host "  Building current $serviceName JAR..." -ForegroundColor DarkYellow
         Push-Location $svcDir
         try {
             & .\mvnw.cmd package -DskipTests
+            if ($LASTEXITCODE -ne 0) { throw "Build failed for $serviceName" }
         } finally {
             Pop-Location
         }
@@ -239,7 +276,7 @@ $configOk = Wait-PortListening 9091 35
 if ($configOk) {
     Write-Host "  [OK] Config Server is listening on port 9091." -ForegroundColor Green
 } else {
-    Write-Warning "Config Server did not start listening within 35s. Check .dev-logs\config-service.log"
+    throw "Config Server did not start. Check .dev-logs\config-service.log"
 }
 
 # ── 3. Start Discovery Server (Eureka:8761) ───────────────────────────────────
@@ -250,7 +287,7 @@ $eurekaOk = Wait-PortListening 8761 35
 if ($eurekaOk) {
     Write-Host "  [OK] Eureka Service Discovery is listening on port 8761." -ForegroundColor Green
 } else {
-    Write-Warning "Eureka did not start listening within 35s. Check .dev-logs\discovery-service.log"
+    throw "Eureka did not start. Check .dev-logs\discovery-service.log"
 }
 
 # ── 4. Start Core Downstream Microservices ────────────────────────────────────
@@ -297,48 +334,59 @@ Start-BackendService 'commentaire-service' 8090 | Out-Null
 # AI Service (8072)
 Start-BackendService 'ai-service' 8072 | Out-Null
 
+# A listening Config Server or Gateway does not prove that downstream services
+# started successfully. Check every service before claiming the stack is ready.
+foreach ($service in @(
+    @{ Name = 'identity-service'; Port = 8081 },
+    @{ Name = 'notification-service'; Port = 8085 },
+    @{ Name = 'travel-service'; Port = 8082 },
+    @{ Name = 'reservation-service'; Port = 8084 },
+    @{ Name = 'commentaire-service'; Port = 8090 },
+    @{ Name = 'ai-service'; Port = 8072 }
+)) {
+    $url = "http://localhost:$($service.Port)/actuator/health"
+    Write-Host "  Waiting for $($service.Name) on port $($service.Port)..." -ForegroundColor DarkGray
+    if (-not (Wait-HttpEndpoint $url 120)) {
+        throw "$($service.Name) is not healthy on port $($service.Port). Check .dev-logs\$($service.Name).log"
+    }
+    Write-Host "  [OK] $($service.Name) is healthy." -ForegroundColor Green
+}
+
 # ── 5. Start API Gateway (8888) ───────────────────────────────────────────────
 Write-Host "`n[5/6] Starting API Gateway (gateway-service:8888)..." -ForegroundColor Yellow
 Start-BackendService 'gateway-service' 8888 | Out-Null
 Write-Host "  Waiting for API Gateway on port 8888..." -ForegroundColor DarkGray
-$gatewayOk = Wait-PortListening 8888 30
+$gatewayOk = Wait-HttpEndpoint 'http://localhost:8888/actuator/health' 90
 if ($gatewayOk) {
     Write-Host "  [OK] API Gateway is active on port 8888." -ForegroundColor Green
 } else {
-    Write-Warning "API Gateway did not start listening within 30s. Check .dev-logs\gateway-service.log"
+    throw "API Gateway did not become healthy. Check .dev-logs\gateway-service.log"
 }
 
 # ── 6. Start Next.js Frontend (3000) ──────────────────────────────────────────
 Write-Host "`n[6/6] Starting Web Frontend (frontend/web:3000)..." -ForegroundColor Yellow
 $webDir = Join-Path $repoRoot 'frontend\web'
 
-# Check if build exists, otherwise build it
-$buildManifest = Join-Path $webDir '.next\build-manifest.json'
-if (-not (Test-Path $buildManifest)) {
-    Write-Host "  Production build missing in frontend/web, building..." -ForegroundColor DarkCyan
-    Push-Location $webDir
-    try {
-        & cmd.exe /c "npm run build"
-    } finally {
-        Pop-Location
+if (Test-PortListening 'localhost' 3000) {
+    Write-Host '  Reusing the existing frontend on port 3000.' -ForegroundColor DarkCyan
+} else {
+    $webLogPath = Join-Path $logsDir 'frontend-web.log'
+    if (Test-Path $webLogPath) {
+        Clear-Content $webLogPath -ErrorAction SilentlyContinue
     }
+    $webCmdArg = "/c `"npm run dev > `"$webLogPath`" 2>&1`""
+    $webProc = Start-Process -FilePath "cmd.exe" -ArgumentList $webCmdArg -WorkingDirectory $webDir -WindowStyle Hidden -PassThru
+    Register-TrackedProcess 'frontend-web' $webProc.Id 3000 $webLogPath
+    Write-Host "  [STARTED] frontend-web (PID: $($webProc.Id), Port: 3000) -> logs: .dev-logs\frontend-web.log" -ForegroundColor Green
 }
-
-$webLogPath = Join-Path $logsDir 'frontend-web.log'
-if (Test-Path $webLogPath) {
-    Clear-Content $webLogPath -ErrorAction SilentlyContinue
-}
-
-$webCmdArg = "/c `"npm run start > `"$webLogPath`" 2>&1`""
-$webProc = Start-Process -FilePath "cmd.exe" -ArgumentList $webCmdArg -WorkingDirectory $webDir -WindowStyle Hidden -PassThru
-
-Register-TrackedProcess 'frontend-web' $webProc.Id 3000 $webLogPath
-Write-Host "  [STARTED] frontend-web (PID: $($webProc.Id), Port: 3000) -> logs: .dev-logs\frontend-web.log" -ForegroundColor Green
 
 Write-Host "  Waiting for Next.js on port 3000..." -ForegroundColor DarkGray
-$webOk = Wait-PortListening 3000 25
+$webOk = Wait-HttpEndpoint 'http://localhost:3000/' 60
 if ($webOk) {
     Write-Host "  [OK] Next.js frontend is active on port 3000." -ForegroundColor Green
+}
+else {
+    throw "Next.js frontend did not become ready. Check .dev-logs\frontend-web.log"
 }
 
 # ── Summary Report ────────────────────────────────────────────────────────────

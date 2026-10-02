@@ -4,7 +4,7 @@
 # ====================================================================
 
 server:
-  port: 8072
+  port: 8090
   max-http-request-header-size: 16KB
 
 spring:

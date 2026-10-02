@@ -28,6 +28,13 @@ Write-Host @"
 
 $stoppedCount = 0
 
+function Stop-TrackedTree ([int]$processId) {
+    Get-CimInstance Win32_Process -Filter "ParentProcessId = $processId" | ForEach-Object {
+        Stop-TrackedTree $_.ProcessId
+    }
+    Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+}
+
 if (Test-Path $pidsFile) {
     try {
         $pidsData = Get-Content $pidsFile -Raw | ConvertFrom-Json
@@ -36,18 +43,13 @@ if (Test-Path $pidsFile) {
             $name      = $procInfo.Name
             $port      = $procInfo.Port
 
-            $proc = Get-Process -Id $pidToStop -ErrorAction SilentlyContinue
-            if ($proc) {
+            $proc = Get-CimInstance Win32_Process -Filter "ProcessId = $pidToStop" -ErrorAction SilentlyContinue
+            if ($proc -and $proc.CommandLine -and $proc.CommandLine.Contains($repoRoot)) {
                 Write-Host "  Stopping $name (PID: $pidToStop, Port: $port)..." -ForegroundColor DarkGray
                 
-                # Stop child processes first (e.g. cmd.exe -> node.exe)
-                try {
-                    Get-CimInstance Win32_Process -Filter "ParentProcessId = $pidToStop" | ForEach-Object {
-                        Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
-                    }
-                } catch {}
-
-                Stop-Process -Id $pidToStop -Force -ErrorAction SilentlyContinue
+                # The launcher uses cmd -> npm -> Next on Windows. Stop only
+                # descendants of its tracked wrapper, including grandchildren.
+                try { Stop-TrackedTree $pidToStop } catch {}
                 $stoppedCount++
                 Write-Host "  [STOPPED] $name (PID: $pidToStop)" -ForegroundColor Green
             } else {
@@ -63,17 +65,18 @@ if (Test-Path $pidsFile) {
     Write-Host "No active .dev-pids.json found." -ForegroundColor DarkGray
 }
 
-# Also verify standard Yuding service ports are freed (in case parent process was killed but child retained port)
-$yudingPorts = @(9091, 8761, 8081, 8082, 8084, 8090, 8072, 8888, 3000)
+# Clean up orphaned backend JARs from this checkout only. Port 3000 may be a
+# separately started Next dev server that start-dev deliberately reuses.
+$yudingPorts = @(9091, 8761, 8081, 8085, 8082, 8084, 8090, 8072, 8888)
 foreach ($p in $yudingPorts) {
     $conns = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue
     if ($conns) {
         foreach ($conn in $conns) {
             $owningPid = $conn.OwningProcess
             if ($owningPid -gt 4) {
-                $process = Get-Process -Id $owningPid -ErrorAction SilentlyContinue
-                if ($process -and ($process.ProcessName -match 'java|node')) {
-                    Write-Host "  Cleaning up process on port $p (PID: $owningPid, Name: $($process.ProcessName))..." -ForegroundColor DarkYellow
+                $process = Get-CimInstance Win32_Process -Filter "ProcessId = $owningPid" -ErrorAction SilentlyContinue
+                if ($process -and $process.Name -eq 'java.exe' -and $process.CommandLine -and $process.CommandLine.Contains((Join-Path $repoRoot 'backend\'))) {
+                    Write-Host "  Cleaning up Yuding backend on port $p (PID: $owningPid)..." -ForegroundColor DarkYellow
                     Stop-Process -Id $owningPid -Force -ErrorAction SilentlyContinue
                     $stoppedCount++
                 }

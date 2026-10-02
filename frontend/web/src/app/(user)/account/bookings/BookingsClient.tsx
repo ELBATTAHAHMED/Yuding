@@ -6,6 +6,7 @@ import { bookingService } from '@/services/booking.service';
 import type { BookingResponseDto, BookingStatus, BookingProductType } from '@/types/booking.types';
 import { Pagination } from '@/components/ui/Pagination';
 import { usePaginatedItems } from '@/hooks/usePaginatedItems';
+import { BookingDetailsDialog } from './BookingDetailsDialog';
 
 function getStatusPresentation(status: BookingStatus): {
   label: string;
@@ -129,6 +130,7 @@ export default function BookingsClient() {
   const bookingPages = usePaginatedItems(bookings, 10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openDocument, setOpenDocument] = useState<{ reference: string; view: 'receipt' | 'dossier' } | null>(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -330,22 +332,24 @@ export default function BookingsClient() {
                     )}
 
                     {isConfirmedOrPaid && (
-                      <Link
-                        href={`/booking/confirmation?reference=${booking.bookingReference}`}
+                      <button
+                        type="button"
+                        onClick={() => setOpenDocument({ reference: booking.bookingReference, view: 'receipt' })}
                         className="btn-secondary-sm"
                         style={{ fontSize: '12px', padding: '6px 12px' }}
                       >
                         <i className="fas fa-receipt" /> Reçu
-                      </Link>
+                      </button>
                     )}
 
-                    <Link
-                      href={`/bookings/${booking.bookingReference}`}
+                    <button
+                      type="button"
+                      onClick={() => setOpenDocument({ reference: booking.bookingReference, view: 'dossier' })}
                       className="btn-secondary-sm"
                       style={{ fontSize: '12px', padding: '6px 12px' }}
                     >
                       <i className="fas fa-folder-open" /> Dossier
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -366,6 +370,8 @@ export default function BookingsClient() {
           Planifier un voyage <i className="fas fa-arrow-right" aria-hidden="true" />
         </Link>
       </section>
+      {openDocument && <BookingDetailsDialog key={`${openDocument.reference}-${openDocument.view}`}
+        reference={openDocument.reference} view={openDocument.view} onClose={() => setOpenDocument(null)} />}
     </main>
   );
 }
