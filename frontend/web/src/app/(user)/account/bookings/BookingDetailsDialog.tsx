@@ -42,6 +42,13 @@ function detailLabel(key: string): string {
   return labels[key] || key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
 }
 
+function providerLabel(provider?: string | null): string | null {
+  if (!provider) return null;
+  if (/mock|demo/i.test(provider)) return 'Paiement démo';
+  if (/paypal/i.test(provider)) return 'PayPal';
+  return provider;
+}
+
 export function BookingDetailsDialog({ reference, view, onClose }: {
   reference: string;
   view: DialogView;
@@ -111,20 +118,30 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
   const summary = confirmation ? Object.entries(confirmation.productSummary || {})
     .map(([key, value]) => [key, detailValue(value)] as const)
     .filter((entry): entry is readonly [string, string] => entry[1] !== null)
-    .slice(0, 8) : [];
+    .filter(([key]) => !['title', 'name', 'hotelName', 'provider'].includes(key))
+    .slice(0, 5) : [];
   const snapshot = booking?.offerSnapshot;
+  const serviceName = detailValue(snapshot?.selectedDetails?.title)
+    || detailValue(snapshot?.selectedDetails?.hotelName)
+    || detailValue(snapshot?.selectedDetails?.name)
+    || detailValue(confirmation?.productSummary?.title)
+    || detailValue(confirmation?.productSummary?.hotelName)
+    || (confirmation ? productLabels[confirmation.productType] : '');
+  const isReceipt = view === 'receipt';
 
   return createPortal(
     <div className="booking-dialog-backdrop" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
     }}>
-      <div ref={dialogRef} className="booking-dialog" role="dialog" aria-modal="true"
+      <div ref={dialogRef} className={`booking-dialog booking-dialog--${view}`} role="dialog" aria-modal="true"
         aria-labelledby="booking-dialog-title" onKeyDown={onKeyDown}>
         <header className="booking-dialog-header">
-          <div>
-            <span className="booking-dialog-kicker">{view === 'receipt' ? 'DOCUMENT DE PAIEMENT' : 'VOTRE RÉSERVATION'}</span>
-            <h2 id="booking-dialog-title">{view === 'receipt' ? 'Reçu' : 'Dossier de voyage'}</h2>
-            <p>Référence {reference}</p>
+          <span className="booking-dialog-icon" aria-hidden="true">
+            <i className={isReceipt ? 'fas fa-receipt' : 'fas fa-suitcase-rolling'} />
+          </span>
+          <div className="booking-dialog-heading">
+            <span className="booking-dialog-kicker">{isReceipt ? 'PAIEMENT' : 'RÉSERVATION'}</span>
+            <h2 id="booking-dialog-title">{isReceipt ? 'Reçu' : 'Dossier de voyage'}</h2>
           </div>
           <button ref={closeRef} type="button" className="booking-dialog-close" onClick={onClose} aria-label="Fermer">
             <i className="fas fa-times" aria-hidden="true" />
@@ -133,28 +150,49 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
         <div className="booking-dialog-body">
           {loading && <p className="booking-dialog-message">Chargement du document…</p>}
           {error && <p className="booking-dialog-message booking-dialog-error" role="alert">{error}</p>}
-          {!loading && confirmation && presentation && <>
-            <div className="booking-dialog-status">
-              <i className={`fas ${presentation.icon}`} aria-hidden="true" />
-              <div><strong>{presentation.title}</strong><span>{presentation.description}</span></div>
+          {!loading && confirmation && presentation && (isReceipt ? <>
+            <div className="booking-receipt-total">
+              <span>Montant enregistré</span>
+              <strong>{amount || 'Montant indisponible'}</strong>
+              {confirmation.paymentStatus && <span className="booking-receipt-paid">
+                <i className={`fas ${presentation.icon}`} aria-hidden="true" />
+                {paymentLabels[confirmation.paymentStatus]}
+              </span>}
             </div>
-            <dl className="booking-dialog-details">
+            <dl className="booking-receipt-facts">
               <div><dt>Référence</dt><dd>{confirmation.bookingReference}</dd></div>
               <div><dt>Prestation</dt><dd>{productLabels[confirmation.productType]}</dd></div>
-              {formatDate(confirmation.createdAt) && <div><dt>Créée le</dt><dd>{formatDate(confirmation.createdAt)}</dd></div>}
-              {confirmation.paymentReference && <div><dt>Référence paiement</dt><dd>{confirmation.paymentReference}</dd></div>}
-              {confirmation.paymentStatus && <div><dt>Statut du paiement</dt><dd>{paymentLabels[confirmation.paymentStatus]}</dd></div>}
-              {confirmation.paymentProvider && <div><dt>Prestataire de paiement</dt><dd>{confirmation.paymentProvider}</dd></div>}
-              {amount && <div className="booking-dialog-total"><dt>Montant</dt><dd>{amount}</dd></div>}
-              {view === 'dossier' && snapshot?.provider && <div><dt>Fournisseur du voyage</dt><dd>{snapshot.provider}</dd></div>}
-              {view === 'dossier' && summary.map(([key, value]) => <div key={key}><dt>{detailLabel(key)}</dt><dd>{value}</dd></div>)}
+              {formatDate(confirmation.createdAt) && <div><dt>Date</dt><dd>{formatDate(confirmation.createdAt)}</dd></div>}
+              {confirmation.paymentReference && <div><dt>Transaction</dt><dd>{confirmation.paymentReference}</dd></div>}
+              {confirmation.paymentProvider && <div><dt>Paiement</dt><dd>{providerLabel(confirmation.paymentProvider)}</dd></div>}
             </dl>
-            {view === 'receipt' && <p className="booking-dialog-note">Document établi à partir du statut vérifié par Yuding.</p>}
-          </>}
+            <p className="booking-dialog-state" data-tone={presentation.tone}>
+              <i className={`fas ${presentation.icon}`} aria-hidden="true" />
+              <span><strong>{presentation.title}</strong>{presentation.description}</span>
+            </p>
+          </> : <>
+            <div className="booking-dossier-service">
+              <span>{productLabels[confirmation.productType]}</span>
+              <strong>{serviceName}</strong>
+              {snapshot?.provider && <small>Fournisseur : {snapshot.provider}</small>}
+            </div>
+            <p className="booking-dialog-state" data-tone={presentation.tone}>
+              <i className={`fas ${presentation.icon}`} aria-hidden="true" />
+              <span><strong>{presentation.title}</strong>{presentation.description}</span>
+            </p>
+            <dl className="booking-dossier-facts">
+              <div><dt>Référence</dt><dd>{confirmation.bookingReference}</dd></div>
+              {formatDate(confirmation.createdAt) && <div><dt>Créé le</dt><dd>{formatDate(confirmation.createdAt)}</dd></div>}
+              {confirmation.paymentStatus && <div><dt>Paiement</dt><dd>{paymentLabels[confirmation.paymentStatus]}</dd></div>}
+              {amount && <div><dt>Montant</dt><dd>{amount}</dd></div>}
+            </dl>
+            {summary.length > 0 && <div className="booking-dossier-more">
+              <h3>Détails du voyage</h3>
+              <dl>{summary.map(([key, value]) => <div key={key}><dt>{detailLabel(key)}</dt><dd>{value}</dd></div>)}</dl>
+            </div>}
+          </>)}
         </div>
-        <footer className="booking-dialog-footer">
-          <button type="button" onClick={onClose}>Fermer</button>
-        </footer>
+        <button className="booking-dialog-dismiss" type="button" onClick={onClose}>Fermer</button>
       </div>
     </div>,
     document.body,
