@@ -335,10 +335,10 @@ export default function BookingsClient() {
                     >
                       <i className="fas fa-folder-open" /> Dossier
                     </button>
-                    {showCancellationAction && <button type="button" className="btn-secondary-sm"
+                    {showCancellationAction && <button type="button" className="booking-cancel-action"
                       onClick={() => setOpenCancellation(booking.bookingReference)}
-                      style={{ fontSize: '12px', padding: '6px 12px' }}>
-                      Conditions d’annulation
+                      aria-label={`Annuler la réservation ${booking.bookingReference}`}>
+                      <i className="fas fa-calendar-xmark" aria-hidden="true" /> Annuler la réservation
                     </button>}
                   </div>
                 </div>
