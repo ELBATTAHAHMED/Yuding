@@ -16,6 +16,17 @@ export default function BookingPaymentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
+  const [bookingReturnPath, setBookingReturnPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(`yuding_booking_return_${reference}`);
+      if (saved) {
+        const destination = new URL(saved, window.location.origin);
+        if (destination.origin === window.location.origin && destination.pathname === '/booking') setBookingReturnPath(destination.pathname + destination.search);
+      }
+    } catch { /* Direct payment links still return to their dossier. */ }
+  }, [reference]);
 
   useEffect(() => {
     if (!reference) return;
@@ -43,12 +54,12 @@ export default function BookingPaymentPage() {
   }, [reference, retry]);
 
   return <ProtectedRoute><div className="checkout-page">
-    <CheckoutSteps current="payment" />
+    <CheckoutSteps current="payment" bookingHref={bookingReturnPath || `/bookings/${encodeURIComponent(reference)}`} />
     <header className="checkout-heading">
       <div><p className="checkout-kicker">PAIEMENT</p><h1>Régler votre réservation</h1><p>Choisissez votre moyen de paiement. Le montant affiché provient du serveur.</p></div>
       <span className="checkout-heading__context"><i className="fas fa-lock" aria-hidden="true" /> Dossier {reference}</span>
     </header>
-    <Link className="checkout-back" href={`/bookings/${reference}`}><i className="fas fa-arrow-left" aria-hidden="true" /> Voir le dossier</Link>
+    <Link className="checkout-back" href={bookingReturnPath || `/bookings/${encodeURIComponent(reference)}`}><i className="fas fa-arrow-left" aria-hidden="true" /> {bookingReturnPath ? 'Retour à la réservation' : 'Voir le dossier'}</Link>
 
     {isLoading && <div className="checkout-state" role="status"><i className="fas fa-spinner fa-spin" aria-hidden="true" /><div><h2>Vérification du tarif</h2><p>Nous récupérons le montant confirmé par le serveur.</p></div></div>}
     {!isLoading && error && <div className="checkout-state checkout-state--error" role="alert"><i className="fas fa-circle-exclamation" aria-hidden="true" /><div><h2>Impossible de charger le dossier</h2><p>{error}</p><button type="button" className="checkout-button" onClick={() => setRetry((count) => count + 1)}>Réessayer</button></div></div>}

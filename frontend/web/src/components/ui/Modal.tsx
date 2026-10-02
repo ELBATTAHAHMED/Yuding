@@ -1,4 +1,8 @@
-import React, { useEffect } from 'react';
+'use client';
+
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import styles from './Modal.module.css';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -7,83 +11,51 @@ export interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  dismissible?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  footer,
-  size = 'md',
-}) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, size = 'md', dismissible = true }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && dismissible) onClose();
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
-
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [dismissible, isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  const sizeClasses: Record<string, string> = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity animate-fadeIn"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
-      <div
-        className={`relative w-full ${sizeClasses[size]} bg-white dark:bg-[#1A1F2E] rounded-xl shadow-2xl overflow-hidden border border-gray-100 dark:border-white/10 transition-all`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded-md"
-              aria-label="Fermer"
-              type="button"
-            >
-              <i className="fas fa-times text-base" />
-            </button>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="px-6 py-5 max-h-[75vh] overflow-y-auto text-gray-800 dark:text-gray-200">
-          {children}
-        </div>
-
-        {/* Footer */}
-        {footer && (
-          <div className="px-6 py-4 bg-gray-50 dark:bg-black/20 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3">
-            {footer}
-          </div>
-        )}
+  return createPortal(
+    <div className={styles.backdrop} onMouseDown={(event) => { if (dismissible && event.target === event.currentTarget) onClose(); }}>
+      <div ref={dialogRef} className={`${styles.dialog} ${styles[size]}`} role="dialog" aria-modal="true" aria-label={title || 'Fenêtre de dialogue'}>
+        {title && <div className={styles.header}>
+          <h2>{title}</h2>
+          <button ref={closeRef} type="button" className={styles.close} onClick={onClose} disabled={!dismissible} aria-label="Fermer"><i className="fas fa-xmark" aria-hidden="true" /></button>
+        </div>}
+        <div className={styles.content}>{children}</div>
+        {footer && <div className={styles.footer}>{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

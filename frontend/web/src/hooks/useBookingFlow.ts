@@ -73,6 +73,10 @@ export function useBookingFlow(): UseBookingFlowReturn {
       if (pricing.canProceedToPayment) {
         setStage('redirecting');
         setStatusMessage('Redirection vers la page de règlement sécurisé...');
+        if (typeof window !== 'undefined' && window.location.pathname === '/booking') {
+          try { sessionStorage.setItem(`yuding_booking_return_${reference}`, window.location.pathname + window.location.search); }
+          catch { /* Navigation still works when session storage is unavailable. */ }
+        }
         // Strictly navigate to /booking/{reference}/payment without price parameters in URL
         router.push(`/booking/${reference}/payment`);
       } else {

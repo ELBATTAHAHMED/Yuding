@@ -40,15 +40,34 @@ function formatServerTimestamp(value?: string | null): string | null {
 
 function paymentProviderLabel(provider?: string | null): string | null {
   if (!provider) return null;
-  if (provider.toUpperCase().includes('PAYPAL')) return 'PayPal Sandbox';
-  if (provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) return 'Démo / Mock';
+  if (provider.toUpperCase().includes('PAYPAL')) return 'PayPal (test)';
+  if (provider.toUpperCase().includes('MOCK') || provider.toUpperCase().includes('DEMO')) return 'Paiement de démonstration';
   return provider;
 }
 
-function renderSummaryValue(value: unknown): string | null {
-  if (typeof value === 'string' || typeof value === 'number') return String(value);
-  if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
-  return null;
+const SUMMARY_FIELDS: Record<string, string[]> = {
+  HOTEL: ['roomSummary', 'city', 'checkIn', 'checkOut', 'address'],
+  FLIGHT: ['origin', 'destination', 'departureDate', 'departureTime', 'airlineName', 'flightNumber'],
+  ACTIVITY: ['city', 'date', 'time', 'category', 'durationHours'],
+  TRANSFER: ['pickup', 'dropoff', 'date', 'time', 'vehicleModel', 'capacity'],
+  TRAIN: ['originStation', 'destinationStation', 'departureDate', 'departureTime', 'operator', 'trainNumber'],
+};
+const SUMMARY_LABELS: Record<string, string> = {
+  roomSummary: 'Chambre', city: 'Ville', checkIn: 'Arrivée', checkOut: 'Départ', address: 'Adresse',
+  origin: 'Départ', destination: 'Destination', departureDate: 'Date', departureTime: 'Heure',
+  airlineName: 'Compagnie', flightNumber: 'Vol', date: 'Date', time: 'Heure', category: 'Catégorie',
+  durationHours: 'Durée', pickup: 'Prise en charge', dropoff: 'Arrivée', vehicleModel: 'Véhicule',
+  capacity: 'Places', originStation: 'Gare de départ', destinationStation: 'Gare d’arrivée',
+  operator: 'Transporteur', trainNumber: 'Train',
+};
+
+function renderSummaryValue(value: unknown, key: string): string | null {
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && (key === 'date' || key === 'departureDate' || key === 'checkIn' || key === 'checkOut')) {
+    const parsed = new Date(`${value}T12:00:00Z`);
+    if (!Number.isNaN(parsed.getTime())) return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(parsed);
+  }
+  return String(value).trim() || null;
 }
 
 export function BookingConfirmationDossier({ reference }: { reference: string }) {
@@ -104,9 +123,12 @@ function ConfirmationDetails({ confirmation, presentation, rechecks = 0, refresh
   const provider = paymentProviderLabel(confirmation.paymentProvider);
   const verifiedAt = formatServerTimestamp(confirmation.paymentVerifiedAt);
   const isPollingTimedOut = presentation.shouldPoll && rechecks >= MAX_PENDING_RECHECKS;
-  const summaryEntries = Object.entries(confirmation.productSummary || {})
-    .map(([key, value]) => [key, renderSummaryValue(value)] as const)
-    .filter((entry): entry is readonly [string, string] => entry[1] !== null);
+  const summary = confirmation.productSummary || {};
+  const summaryTitle = ['hotelName', 'title', 'routeName', 'trajet']
+    .map((key) => renderSummaryValue(summary[key], key)).find(Boolean);
+  const summaryEntries = (SUMMARY_FIELDS[confirmation.productType] || [])
+    .map((key) => ({ key, label: SUMMARY_LABELS[key], value: renderSummaryValue(summary[key], key) }))
+    .filter((entry): entry is { key: string; label: string; value: string } => entry.value !== null);
 
   return <ConfirmationFrame reference={reference} tone={presentation.tone} icon={presentation.icon} title="Votre dossier de voyage">
     <div className="checkout-confirmation__hero" role="status">
@@ -129,14 +151,14 @@ function ConfirmationDetails({ confirmation, presentation, rechecks = 0, refresh
             {provider && <ReceiptRow label="Moyen de paiement" value={provider} />}
           </dl>
         </section>
-        <div className="checkout-confirmation__actions">
-          {presentation.shouldPoll && <button type="button" onClick={onRecheck} className="checkout-button" disabled={refreshing}><i className={refreshing ? 'fas fa-spinner fa-spin' : 'fas fa-rotate'} aria-hidden="true" />Actualiser le statut</button>}
-          {presentation.canRetryPayment && <Link href={`/booking/${confirmation.bookingReference}/payment`} className="checkout-button">Procéder au paiement</Link>}
-          <ConfirmationActions />
-        </div>
       </div>
 
-      <aside className="checkout-aside"><div className="checkout-summary"><p className="checkout-kicker">VOTRE VOYAGE</p><h2>Récapitulatif</h2>{summaryEntries.length > 0 && <dl className="checkout-summary__rows">{summaryEntries.map(([key, value]) => <ReceiptRow key={key} label={key} value={value} />)}</dl>}<div className="checkout-summary__total"><span>Montant du dossier</span><strong>{amount || 'Indisponible'}</strong></div><p className="checkout-summary__note">Tarif et état transmis par le serveur.</p></div></aside>
+      <aside className="checkout-aside"><div className="checkout-summary checkout-confirmation__summary"><p className="checkout-kicker">VOTRE VOYAGE</p><h2>Récapitulatif</h2>{summaryTitle && <p className="checkout-confirmation__trip-title">{summaryTitle}</p>}{summaryEntries.length > 0 && <dl className="checkout-summary__rows checkout-confirmation__summary-grid">{summaryEntries.map(({ key, label, value }) => <div key={key} className={key === 'address' ? 'is-wide' : undefined}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}<div className="checkout-summary__total"><span>Montant du dossier</span><strong>{amount || 'Indisponible'}</strong></div></div></aside>
+    </div>
+    <div className="checkout-confirmation__actions">
+      {presentation.shouldPoll && <button type="button" onClick={onRecheck} className="checkout-button checkout-button--secondary" disabled={refreshing}><i className={refreshing ? 'fas fa-spinner fa-spin' : 'fas fa-rotate'} aria-hidden="true" />Actualiser le statut</button>}
+      {presentation.canRetryPayment && <Link href={`/booking/${confirmation.bookingReference}/payment`} className="checkout-button">Procéder au paiement</Link>}
+      <ConfirmationActions secondary={presentation.canRetryPayment} />
     </div>
   </ConfirmationFrame>;
 }
@@ -145,8 +167,8 @@ function ReceiptRow({ label, value, strong = false }: { label: string; value: st
   return <div><dt>{label}</dt><dd className={strong ? 'is-strong' : undefined}>{value}</dd></div>;
 }
 
-function ConfirmationActions() {
-  return <><Link href="/account/bookings" className="checkout-button checkout-button--secondary">Mes réservations</Link><Link href="/" className="checkout-text-button">Retour à l'accueil</Link></>;
+function ConfirmationActions({ secondary = false }: { secondary?: boolean }) {
+  return <><Link href="/account/bookings" className={`checkout-button${secondary ? ' checkout-button--secondary' : ''}`}><i className="fas fa-suitcase-rolling" aria-hidden="true" />Mes réservations</Link><Link href="/" className="checkout-button checkout-button--secondary"><i className="fas fa-house" aria-hidden="true" />Retour à l’accueil</Link></>;
 }
 
 function ConfirmationFrame({ reference, icon, tone, title, children }: { reference?: string; icon: string; tone: 'pending' | 'success' | 'danger' | 'neutral'; title: string; children: React.ReactNode }) {
