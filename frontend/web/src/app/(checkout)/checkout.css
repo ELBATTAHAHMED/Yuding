@@ -102,7 +102,9 @@
 .checkout-loading { display: flex; align-items: center; gap: 10px; color: var(--checkout-muted); }
 
 .checkout-grid--payment .checkout-primary { padding-right: 0; }
-.checkout-grid--payment .checkout-aside { position: sticky; top: 24px; }
+/* Keep enough scroll range for the card preview to stay below the fixed 100px header while editing the last fields. */
+.checkout-grid--payment { min-height: clamp(760px, calc(1302px - 60vh), 870px); }
+.checkout-grid--payment .checkout-aside { position: sticky; top: 124px; }
 .checkout-grid--payment .checkout-summary { position: static; }
 .checkout-payment__methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 30px; }
 .checkout-payment__methods button { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 13px 14px; border: 1px solid var(--checkout-line); border-radius: 9px; background: var(--checkout-surface); color: var(--checkout-ink); text-align: left; cursor: pointer; transition: border-color .17s ease, background .17s ease, box-shadow .17s ease; }
@@ -173,6 +175,7 @@
 
 @media (max-width: 900px) {
   .checkout-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .checkout-grid--payment { min-height: 0; }
   .checkout-summary { position: static; }
   .checkout-grid--payment .checkout-aside { position: static; }
 }
