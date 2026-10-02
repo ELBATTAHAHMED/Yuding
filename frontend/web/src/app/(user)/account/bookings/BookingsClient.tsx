@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { bookingService } from '@/services/booking.service';
-import type { BookingResponseDto, BookingStatus, BookingProductType } from '@/types/booking.types';
+import { useMyBookings } from '@/hooks/queries/useBookingQueries';
+import type { BookingStatus, BookingProductType } from '@/types/booking.types';
 import { Pagination } from '@/components/ui/Pagination';
 import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 import { BookingDetailsDialog } from './BookingDetailsDialog';
+import { CancellationDialog } from './CancellationDialog';
+import { canRequestCancellation, cancellationOutcomeLabel } from '@/lib/cancellation-state';
 
 function getStatusPresentation(status: BookingStatus): {
   label: string;
@@ -126,38 +128,14 @@ function formatBookingPrice(amount?: number | null, currency?: string | null): s
 }
 
 export default function BookingsClient() {
-  const [bookings, setBookings] = useState<BookingResponseDto[]>([]);
+  const bookingsQuery = useMyBookings();
+  const bookings = [...(bookingsQuery.data || [])].sort((a, b) =>
+    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   const bookingPages = usePaginatedItems(bookings, 10);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const loading = bookingsQuery.isPending;
+  const error = bookingsQuery.error?.message;
   const [openDocument, setOpenDocument] = useState<{ reference: string; view: 'receipt' | 'dossier' } | null>(null);
-
-  const fetchBookings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await bookingService.getMyBookings();
-      if (Array.isArray(data)) {
-        // Sort descending by createdAt (most recent first)
-        const sorted = [...data].sort((a, b) => {
-          const tA = new Date(a.createdAt || 0).getTime();
-          const tB = new Date(b.createdAt || 0).getTime();
-          return tB - tA;
-        });
-        setBookings(sorted);
-      } else {
-        setBookings([]);
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Impossible de récupérer vos réservations.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+  const [openCancellation, setOpenCancellation] = useState<string | null>(null);
 
   return (
     <main className="account-empty-page">
@@ -204,7 +182,7 @@ export default function BookingsClient() {
             <span style={{ fontSize: '14px', fontWeight: 600 }}>{error}</span>
           </div>
           <button
-            onClick={fetchBookings}
+            onClick={() => bookingsQuery.refetch()}
             className="btn-secondary-sm"
             style={{ borderColor: '#fca5a5', color: '#b91c1c' }}
           >
@@ -255,12 +233,18 @@ export default function BookingsClient() {
               details.city ||
               (details.origin && details.destination ? `${details.origin} → ${details.destination}` : null);
 
-            const displayPrice = snapshot?.providerAmount
-              ? formatBookingPrice(snapshot.providerAmount, snapshot.providerCurrency)
-              : null;
+            const displayPrice = booking.cancellation?.refundStatus === 'REFUNDED'
+              ? formatBookingPrice(booking.cancellation.refundAmount, booking.cancellation.currency)
+              : booking.status === 'CANCELLED' || booking.status === 'REFUNDED'
+                ? null
+                : snapshot?.providerAmount
+                  ? formatBookingPrice(snapshot.providerAmount, snapshot.providerCurrency)
+                  : null;
 
             const isPendingPayment = booking.status === 'DRAFT' || booking.status === 'PENDING_PAYMENT';
             const isConfirmedOrPaid = booking.status === 'CONFIRMED' || booking.status === 'PAID';
+            const showCancellationAction = canRequestCancellation(booking);
+            const cancellationLabel = cancellationOutcomeLabel(booking.cancellation);
 
             return (
               <div key={booking.bookingReference} className="library-list-item">
@@ -276,6 +260,7 @@ export default function BookingsClient() {
                         <i className={statusInfo.icon} />
                         {statusInfo.label}
                       </span>
+                      {cancellationLabel && <span className="booking-cancellation-badge">{cancellationLabel}</span>}
                     </div>
 
                     <div style={{ marginTop: '4px' }}>
@@ -350,6 +335,11 @@ export default function BookingsClient() {
                     >
                       <i className="fas fa-folder-open" /> Dossier
                     </button>
+                    {showCancellationAction && <button type="button" className="btn-secondary-sm"
+                      onClick={() => setOpenCancellation(booking.bookingReference)}
+                      style={{ fontSize: '12px', padding: '6px 12px' }}>
+                      Conditions d’annulation
+                    </button>}
                   </div>
                 </div>
               </div>
@@ -372,6 +362,8 @@ export default function BookingsClient() {
       </section>
       {openDocument && <BookingDetailsDialog key={`${openDocument.reference}-${openDocument.view}`}
         reference={openDocument.reference} view={openDocument.view} onClose={() => setOpenDocument(null)} />}
+      {openCancellation && <CancellationDialog key={openCancellation} reference={openCancellation}
+        onClose={() => setOpenCancellation(null)} />}
     </main>
   );
 }

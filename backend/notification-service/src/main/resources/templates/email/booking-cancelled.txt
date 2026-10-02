@@ -2,9 +2,9 @@ YUDING - Annulation de votre réservation
 
 Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
 
-Votre réservation [(${bookingReference})] a été annulée.
+Votre dossier de réservation Yuding [(${bookingReference})] a été annulé en mode démo. Aucun fournisseur réel n'a été contacté.
 
-Si un remboursement est applicable conformément aux conditions du fournisseur, il sera traité de manière indépendante.
+[(${refundSummary != null ? refundSummary : 'Consultez votre dossier pour le remboursement.'})]
 
 Vous pouvez consulter votre dossier ici :
 [(${dossierLink})]

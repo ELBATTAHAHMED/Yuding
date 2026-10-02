@@ -2,6 +2,7 @@ package com.ahmed.reservationservice.domain.payment.provider;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.UUID;
 
@@ -11,6 +12,9 @@ import java.util.UUID;
 @Component("mockPaymentProvider")
 @Slf4j
 public class MockPaymentProvider implements PaymentProvider {
+
+    @Value("${yuding.payment.mock-refund-failure:false}")
+    private boolean simulatedRefundFailure;
 
     public static final String PROVIDER_NAME = "mock";
 
@@ -51,11 +55,14 @@ public class MockPaymentProvider implements PaymentProvider {
         log.info("MockPayment: Refunding mock capture [{}] ref [{}] amount [{} {}] reqId [{}]",
                 command.getCaptureId(), command.getPaymentReference(), command.getAmount(), command.getCurrency(), command.getProviderRequestId());
 
-        if (command.getCaptureId() != null && command.getCaptureId().contains("FAIL")) {
+        if (simulatedRefundFailure || (command.getCaptureId() != null && command.getCaptureId().contains("FAIL"))) {
             return PaymentRefundResult.failure("Mock refund simulated failure");
         }
 
-        String mockRefundId = "MOCK-REFUND-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        // The same request ID always resolves to the same simulated refund reference.
+        String mockRefundId = "MOCK-REFUND-" + java.util.UUID.nameUUIDFromBytes(
+                command.getProviderRequestId().getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                .toString().substring(0, 8).toUpperCase();
         return PaymentRefundResult.success(mockRefundId, "COMPLETED");
     }
 }

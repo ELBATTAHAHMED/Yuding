@@ -23,6 +23,8 @@ export const queryKeys = {
     all: ['booking'] as const,
     my: () => [...queryKeys.booking.all, 'my'] as const,
     detail: (reference: string) => [...queryKeys.booking.all, 'detail', reference] as const,
+    cancellationPolicy: (reference: string) => [...queryKeys.booking.all, 'cancellation-policy', reference] as const,
+    cancellation: (reference: string) => [...queryKeys.booking.all, 'cancellation', reference] as const,
   },
   travel: {
     all: ['travel'] as const,

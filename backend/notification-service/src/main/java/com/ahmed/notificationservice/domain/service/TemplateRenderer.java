@@ -31,6 +31,8 @@ public class TemplateRenderer {
             case REFUND_COMPLETED -> bookingRef.isBlank()
                     ? "Remboursement de votre réservation Yuding"
                     : "Remboursement effectué pour votre réservation " + bookingRef;
+            case CANCELLATION_FAILED -> "Annulation non effectuée pour votre réservation " + bookingRef;
+            case REFUND_FAILED -> "Remboursement à vérifier pour votre réservation " + bookingRef;
         };
     }
 

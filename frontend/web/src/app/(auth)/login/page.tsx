@@ -261,7 +261,7 @@ function LoginFormContent() {
             <div className="login-form">
               <div className="title">{showForgotPassword ? 'Réinitialisation' : 'Login'}</div>
               {showForgotPassword ? (
-                <form id="forgot-form" onSubmit={handleForgotPassword}>
+                <form id="forgot-form" method="post" onSubmit={handleForgotPassword}>
                   <div className="input-boxes">
                     {forgotMessage && (
                       <div className="auth-alert auth-alert-success" role="alert">
@@ -305,7 +305,7 @@ function LoginFormContent() {
                   </div>
                 </form>
               ) : (
-                <form id="login-form" onSubmit={handleLogin}>
+                <form id="login-form" method="post" onSubmit={handleLogin}>
                   <div className="input-boxes">
                     {errorMessage && !isFlipped && (
                       <div className="auth-alert auth-alert-error" role="alert">
@@ -388,7 +388,7 @@ function LoginFormContent() {
             {/* =========== SIGNUP FORM =========== */}
             <div className="signup-form">
               <div className="title">Signup</div>
-              <form id="signup-form" onSubmit={handleSignup}>
+              <form id="signup-form" method="post" onSubmit={handleSignup}>
                 <div className="input-boxes">
                   {errorMessage && isFlipped && (
                     <div className="auth-alert auth-alert-error" role="alert">

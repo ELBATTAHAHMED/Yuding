@@ -135,6 +135,8 @@ public class NotificationService {
             case BOOKING_CONFIRMED -> "booking-confirmed";
             case BOOKING_CANCELLED -> "booking-cancelled";
             case REFUND_COMPLETED -> "refund-completed";
+            case CANCELLATION_FAILED -> "cancellation-failed";
+            case REFUND_FAILED -> "refund-failed";
         };
     }
 

@@ -28,7 +28,7 @@
     <div class="content">
       <span class="badge">&#8635; REMBOURSEMENT EFFECTUÉ</span>
       <p>Bonjour <strong th:text="${recipientName != null ? recipientName : 'voyageur'}">voyageur</strong>,</p>
-      <p>Le remboursement associé à votre réservation a été <strong>validé et traité avec succès</strong> sur votre moyen de paiement d'origine.</p>
+      <p>Le remboursement sandbox/de démonstration associé à votre réservation a été <strong>traité avec succès</strong>. Aucun paiement réel n'a été effectué.</p>
       
       <div class="meta-box">
         <div class="meta-row" th:if="${bookingReference != null}">
@@ -46,7 +46,7 @@
       </div>
 
       <p style="font-size: 13px; color: #64748b;">
-        Le délai effectif d'apparition des fonds sur votre compte bancaire dépend des délais de traitement habituels de votre établissement bancaire ou prestataire (généralement 2 à 5 jours ouvrés).
+        Cette opération concerne uniquement le mode démo/sandbox Yuding.
       </p>
     </div>
     <div class="footer">

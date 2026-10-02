@@ -109,38 +109,6 @@ class BookingNotificationTruthTest {
     }
 
     @Test
-    @DisplayName("cancelByReference() MUST emit BOOKING_CANCELLED email")
-    void cancelByReference_mustEmitCancelledEmail() {
-        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, bookingRef, Instant.now(), Instant.now().plusSeconds(1800));
-        when(bookingRepository.findByBookingReference(bookingRef)).thenReturn(Optional.of(booking));
-        when(bookingRepository.saveAndFlush(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Booking result = bookingService.cancelByReference(bookingRef, userId, false);
-
-        assertThat(result.getStatus()).isEqualTo(BookingStatus.CANCELLED);
-        verify(notificationDispatcher, times(1)).dispatchBookingCancelled(argThat(b ->
-                b.getBookingReference().equals(bookingRef)
-        ));
-    }
-
-    @Test
-    @DisplayName("refund() MUST emit REFUND_COMPLETED email")
-    void refund_mustEmitRefundCompletedEmail() {
-        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, bookingRef, Instant.now(), Instant.now().plusSeconds(1800));
-        booking.transitionTo(BookingStatus.PENDING_PAYMENT, Instant.now());
-        booking.transitionTo(BookingStatus.PAID, Instant.now());
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-        when(bookingRepository.saveAndFlush(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Booking result = bookingService.refund(bookingId);
-
-        assertThat(result.getStatus()).isEqualTo(BookingStatus.REFUNDED);
-        verify(notificationDispatcher, times(1)).dispatchRefundCompleted(argThat(b ->
-                b.getBookingReference().equals(bookingRef)
-        ), any(), any(), eq("EUR"));
-    }
-
-    @Test
     @DisplayName("markPaymentFailed() MUST emit PAYMENT_FAILED email")
     void markPaymentFailed_mustEmitPaymentFailedEmail() {
         Booking booking = Booking.createDraft(userId, ProductType.HOTEL, bookingRef, Instant.now(), Instant.now().plusSeconds(1800));

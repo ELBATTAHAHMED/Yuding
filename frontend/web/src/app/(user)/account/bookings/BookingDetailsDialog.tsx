@@ -195,6 +195,19 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
                 </dl>
               </section>
             </div>
+            {booking?.cancellation && <section className="booking-cancellation-history">
+              <h4>Annulation et remboursement</h4>
+              <dl className="booking-document-list">
+                <div><dt>Demandée le</dt><dd>{formatDate(booking.cancellation.requestedAt)}</dd></div>
+                <div><dt>Annulation</dt><dd>{booking.cancellation.cancellationStatus === 'CANCELLED' ? 'Annulée en mode démo'
+                  : booking.cancellation.cancellationStatus === 'PROVIDER_FAILED' ? 'Échec de l’annulation' : 'En cours'}</dd></div>
+                <div><dt>Remboursement</dt><dd>{booking.cancellation.refundStatus === 'REFUNDED' ? 'Effectué en mode démo'
+                  : booking.cancellation.refundStatus === 'REFUND_FAILED' ? 'Échec'
+                  : booking.cancellation.refundStatus === 'NOT_APPLICABLE' ? 'Non applicable' : 'En cours'}</dd></div>
+                {booking.cancellation.refundAmount != null && booking.cancellation.refundAmount > 0 &&
+                  <div><dt>{booking.cancellation.refundStatus === 'REFUNDED' ? 'Montant remboursé en simulation' : 'Montant prévu'}</dt><dd>{formatConfirmationAmount(booking.cancellation.refundAmount, booking.cancellation.currency)}</dd></div>}
+              </dl>
+            </section>}
           </>)}
         </div>
         <footer className="booking-dialog-footer">

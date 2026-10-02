@@ -5,6 +5,9 @@ import com.ahmed.reservationservice.domain.dto.AttachOfferSnapshotRequest;
 import com.ahmed.reservationservice.domain.dto.BookingResponseDto;
 import com.ahmed.reservationservice.domain.dto.BookingConfirmationDto;
 import com.ahmed.reservationservice.domain.dto.CreateDraftBookingRequest;
+import com.ahmed.reservationservice.domain.dto.CancelBookingRequest;
+import com.ahmed.reservationservice.domain.dto.CancellationPolicyDto;
+import com.ahmed.reservationservice.domain.dto.CancellationStatusDto;
 import com.ahmed.reservationservice.domain.dto.OfferSnapshotResponseDto;
 import com.ahmed.reservationservice.domain.idempotency.IdempotencyOperation;
 import com.ahmed.reservationservice.domain.idempotency.IdempotencyService;
@@ -12,6 +15,7 @@ import com.ahmed.reservationservice.domain.model.Booking;
 import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.service.BookingService;
 import com.ahmed.reservationservice.domain.service.ConfirmationProjectionService;
+import com.ahmed.reservationservice.domain.service.CancellationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +44,7 @@ public class BookingController {
     private final BookingService bookingService;
     private final ConfirmationProjectionService confirmationProjectionService;
     private final IdempotencyService idempotencyService;
+    private final CancellationService cancellationService;
 
     /**
      * Creates a new DRAFT booking for the currently authenticated user.
@@ -110,7 +115,9 @@ public class BookingController {
         Booking booking = bookingService.getBookingByReference(reference, userId, privileged);
         Optional<OfferSnapshot> snapshot = bookingService.getSnapshotByBookingReference(reference, userId, privileged);
 
-        return ResponseEntity.ok(BookingResponseDto.fromDomain(booking, snapshot.orElse(null)));
+        BookingResponseDto response = BookingResponseDto.fromDomain(booking, snapshot.orElse(null));
+        response.setCancellation(cancellationService.statusForBooking(booking).orElse(null));
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -152,7 +159,9 @@ public class BookingController {
         List<BookingResponseDto> response = bookingService.getUserBookings(userId).stream()
                 .map(booking -> {
                     Optional<OfferSnapshot> snap = bookingService.getSnapshotByBookingReference(booking.getBookingReference(), userId, false);
-                    return BookingResponseDto.fromDomain(booking, snap.orElse(null));
+                    BookingResponseDto item = BookingResponseDto.fromDomain(booking, snap.orElse(null));
+                    item.setCancellation(cancellationService.statusForBooking(booking).orElse(null));
+                    return item;
                 })
                 .toList();
         return ResponseEntity.ok(response);
@@ -166,20 +175,34 @@ public class BookingController {
         return getMyBookings(jwt);
     }
 
-    /**
-     * Cancels an existing booking using its public reference (YUD-XXXXXXXX).
-     */
+    @GetMapping("/{reference}/cancellation-policy")
+    public ResponseEntity<CancellationPolicyDto> cancellationPolicy(
+            @PathVariable String reference, @AuthenticationPrincipal Jwt jwt) {
+        UUID userId = resolveUserUuid(jwt);
+        boolean privileged = SecurityUtils.hasRole("ADMIN") || SecurityUtils.hasRole("SUPPORT");
+        return ResponseEntity.ok(cancellationService.policy(reference, userId, privileged));
+    }
+
+    @GetMapping("/{reference}/cancellation")
+    public ResponseEntity<CancellationStatusDto> cancellationStatus(
+            @PathVariable String reference, @AuthenticationPrincipal Jwt jwt) {
+        UUID userId = resolveUserUuid(jwt);
+        boolean privileged = SecurityUtils.hasRole("ADMIN") || SecurityUtils.hasRole("SUPPORT");
+        return cancellationService.status(reference, userId, privileged)
+                .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/{reference}/cancel")
-    public ResponseEntity<BookingResponseDto> cancelBooking(
+    public ResponseEntity<CancellationStatusDto> cancelBooking(
             @PathVariable String reference,
+            @RequestBody(required = false) @Valid CancelBookingRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID userId = resolveUserUuid(jwt);
         boolean privileged = SecurityUtils.hasRole("ADMIN") || SecurityUtils.hasRole("SUPPORT");
 
-        Booking booking = bookingService.cancelByReference(reference, userId, privileged);
-        Optional<OfferSnapshot> snapshot = bookingService.getSnapshotByBookingReference(reference, userId, privileged);
-        return ResponseEntity.ok(BookingResponseDto.fromDomain(booking, snapshot.orElse(null)));
+        return ResponseEntity.ok(cancellationService.cancel(reference,
+                request == null ? null : request.reason(), userId, privileged));
     }
 
     private UUID resolveUserUuid(Jwt jwt) {

@@ -87,6 +87,36 @@ export interface BookingResponseDto {
   statusChangedAt?: string;
   expiresAt?: string;
   offerSnapshot?: OfferSnapshotResponseDto | null;
+  cancellation?: CancellationStatusDto | null;
+}
+
+export interface CancellationPolicyDto {
+  bookingReference: string;
+  bookingStatus: BookingStatus;
+  cancellable: boolean;
+  refundable: boolean;
+  refundType: 'FULL' | 'PARTIAL' | 'NON_REFUNDABLE' | 'NOT_APPLICABLE' | 'UNKNOWN';
+  refundAmount: number | null;
+  cancellationFee: number | null;
+  currency: string | null;
+  policySource: string;
+  reason: string;
+  deadline: string | null;
+}
+
+export interface CancellationStatusDto {
+  bookingReference: string;
+  bookingStatus: BookingStatus;
+  cancellationStatus: 'PROCESSING' | 'CANCELLED' | 'PROVIDER_FAILED';
+  refundStatus: 'NOT_APPLICABLE' | 'PENDING' | 'PROCESSING' | 'REFUNDED' | 'REFUND_FAILED';
+  policyType: string;
+  refundAmount: number | null;
+  cancellationFee: number | null;
+  currency: string | null;
+  message: string;
+  requestedAt: string;
+  processedAt: string | null;
+  refundedAt: string | null;
 }
 
 export interface BookingRevalidationResponseDto {
