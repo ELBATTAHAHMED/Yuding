@@ -218,8 +218,12 @@ function Start-BackendService ([string]$serviceName, [int]$port) {
         Clear-Content $logPath -ErrorAction SilentlyContinue
     }
 
+    # The shared development profile is for downstream services. Config Server
+    # must use its native repository even when SPRING_PROFILES_ACTIVE=dev is set.
+    $profileArg = if ($serviceName -eq 'config-service') { '-Dspring.profiles.active=native ' } else { '' }
+
     # Launch java process via cmd /c with stdout and stderr captured into single log file
-    $cmdArg = "/c `"java -jar `"$jarPath`" > `"$logPath`" 2>&1`""
+    $cmdArg = "/c `"java $profileArg-jar `"$jarPath`" > `"$logPath`" 2>&1`""
     $proc = Start-Process -FilePath "cmd.exe" -ArgumentList $cmdArg -WorkingDirectory $svcDir -WindowStyle Hidden -PassThru
 
     Register-TrackedProcess $serviceName $proc.Id $port $logPath

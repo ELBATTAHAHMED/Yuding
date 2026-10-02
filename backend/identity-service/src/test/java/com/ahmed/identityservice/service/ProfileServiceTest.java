@@ -88,4 +88,20 @@ class ProfileServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("5 Mo");
     }
+
+    @Test
+    void uploadedPhotoKeyIsSavedOnTheUserAndReturnedToTheClient() throws Exception {
+        UUID id = UUID.randomUUID();
+        User user = User.builder().id(id).email("a@example.com").firstName("A").lastName("B").build();
+        MockMultipartFile photo = new MockMultipartFile("file", "avatar.png", "image/png", new byte[] {1});
+        when(users.findById(id)).thenReturn(Optional.of(user));
+        when(imageStorage.store(photo)).thenReturn("new-photo.png");
+        when(users.save(user)).thenReturn(user);
+
+        UserProfileResponse response = service.uploadPhoto(id, photo);
+
+        assertThat(response.hasProfilePhoto()).isTrue();
+        assertThat(user.getProfileImageKey()).isEqualTo("new-photo.png");
+        verify(users).save(user);
+    }
 }
