@@ -17,7 +17,7 @@ public class TripPlanClient {
     private final RestClient restClient;
 
     public TripPlanClient(
-            @Value("${yuding.services.ai-url:http://localhost:7777}") String aiUrl,
+            @Value("${yuding.services.ai-url:http://localhost:8072}") String aiUrl,
             RestClient.Builder restClientBuilder
     ) {
         this.restClient = restClientBuilder

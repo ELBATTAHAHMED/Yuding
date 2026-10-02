@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -202,6 +203,8 @@ class AiChatServiceTest {
         AiChatCommand command = captor.getValue();
         assertThat(command.getSystemInstruction()).contains("Yuding");
         assertThat(command.getSystemInstruction()).contains("GROUNDING");
+        assertThat(command.getSystemInstruction()).contains("Africa/Casablanca");
+        assertThat(command.getSystemInstruction()).contains(LocalDate.now(java.time.ZoneId.of("Africa/Casablanca")).plusDays(1).toString());
         assertThat(command.getUserMessage()).isEqualTo("Combien coûte le vol vers Tokyo ?");
     }
 
@@ -242,7 +245,7 @@ class AiChatServiceTest {
                 .thenReturn(round1Result)
                 .thenReturn(round2Result);
 
-        when(toolExecutor.execute(eq(flightCall), any(), any()))
+        when(toolExecutor.execute(any(AiToolCall.class), any(), any()))
                 .thenReturn(AiToolResult.success("call-f1", "searchFlights", Map.of("totalFound", 1)));
 
         AiChatResponse response = aiChatService.processChat(request);
@@ -252,8 +255,22 @@ class AiChatServiceTest {
         assertThat(response.getToolsUsed()).containsExactly("searchFlights");
         assertThat(response.getContent()).contains("Air France AF1234");
 
-        verify(toolExecutor, times(1)).execute(eq(flightCall), any(), any());
+        ArgumentCaptor<AiToolCall> toolCall = ArgumentCaptor.forClass(AiToolCall.class);
+        verify(toolExecutor, times(1)).execute(toolCall.capture(), any(), any());
+        assertThat(toolCall.getValue().getArguments().get("departureDate"))
+                .isEqualTo(LocalDate.now(java.time.ZoneId.of("Africa/Casablanca")).plusDays(1).toString());
         verify(geminiProvider, times(2)).chat(any(AiChatCommand.class));
+    }
+
+    @Test
+    void relativeFlightDateDoesNotOverrideAnExplicitDate() {
+        LocalDate today = LocalDate.of(2026, 10, 2);
+        AiToolCall call = new AiToolCall("call-date", "searchFlights", Map.of("departureDate", "2026-10-12"));
+
+        assertThat(AiChatService.resolveRelativeFlightDate(call, "Vols demain", today)
+                .getArguments().get("departureDate")).isEqualTo("2026-10-03");
+        assertThat(AiChatService.resolveRelativeFlightDate(call, "Vols le 2026-10-12", today))
+                .isSameAs(call);
     }
 
     @Test

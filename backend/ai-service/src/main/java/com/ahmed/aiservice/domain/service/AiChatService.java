@@ -28,13 +28,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class AiChatService {
+
+    private static final ZoneId TRAVEL_TIME_ZONE = ZoneId.of("Africa/Casablanca");
+    private static final Pattern TOMORROW_PATTERN = Pattern.compile("(?iu)\\b(demain|tomorrow)\\b");
+    private static final Pattern ABSOLUTE_DATE_PATTERN = Pattern.compile("\\b\\d{4}-\\d{2}-\\d{2}\\b");
 
     public static final String SYSTEM_INSTRUCTION = """
             Vous êtes l'assistant de voyage officiel de Yuding (Yuding Assistant).
@@ -162,6 +169,8 @@ public class AiChatService {
 
         UUID conversationId = request.getConversationId();
         String userMessage = request.getMessage().trim();
+        LocalDate today = LocalDate.now(TRAVEL_TIME_ZONE);
+        String datedSystemInstruction = systemInstructionFor(today);
 
         // 1. Resolve User and Conversation Persistence
         UUID userUuid = resolveUserUuid(executionContext);
@@ -292,7 +301,7 @@ public class AiChatService {
 
             AiChatCommand command = AiChatCommand.builder()
                     .conversationId(conversationId)
-                    .systemInstruction(SYSTEM_INSTRUCTION)
+                    .systemInstruction(datedSystemInstruction)
                     .userMessage(userMessage)
                     .messages(new ArrayList<>(messages))
                     .tools(availableTools)
@@ -342,9 +351,10 @@ public class AiChatService {
             // Execute each tool call
             List<AiToolResult> toolResults = new ArrayList<>();
             for (AiToolCall call : allowedCalls) {
+                AiToolCall effectiveCall = resolveRelativeFlightDate(call, userMessage, today);
                 long toolStart = System.currentTimeMillis();
                 Instant startedAt = Instant.now();
-                AiToolResult toolResult = toolExecutor.execute(call, executionContext, requestCache);
+                AiToolResult toolResult = toolExecutor.execute(effectiveCall, executionContext, requestCache);
                 Instant completedAt = Instant.now();
                 long toolDuration = System.currentTimeMillis() - toolStart;
 
@@ -362,7 +372,7 @@ public class AiChatService {
 
         // If loop finished due to round limit but no text returned yet, request final text without tools
         if (finalContent.isBlank() && !messages.isEmpty()) {
-            String finalInstruction = SYSTEM_INSTRUCTION + "\n\nSYNTHÈSE FINALE OBLIGATOIRE : Rédigez maintenant directement votre réponse finale en texte clair et bienveillant pour l'utilisateur, à partir des données exactes reçues ci-dessus. N'appelez plus aucun outil.";
+            String finalInstruction = datedSystemInstruction + "\n\nSYNTHÈSE FINALE OBLIGATOIRE : Rédigez maintenant directement votre réponse finale en texte clair et bienveillant pour l'utilisateur, à partir des données exactes reçues ci-dessus. N'appelez plus aucun outil.";
             AiChatCommand finalCommand = AiChatCommand.builder()
                     .conversationId(conversationId)
                     .systemInstruction(finalInstruction)
@@ -499,6 +509,34 @@ public class AiChatService {
                 .toolsUsed(new ArrayList<>(uniqueToolsUsed))
                 .sources(extractedSources)
                 .build();
+    }
+
+    static String systemInstructionFor(LocalDate today) {
+        return SYSTEM_INSTRUCTION + "\n\nDATE DE RÉFÉRENCE (Africa/Casablanca) : aujourd'hui = "
+                + today + ", demain = " + today.plusDays(1)
+                + ". Convertissez toute date relative en YYYY-MM-DD à partir de cette référence avant d'appeler un outil."
+                + " Ne réutilisez pas une date d'une conversation antérieure pour une nouvelle recherche.";
+    }
+
+    static AiToolCall resolveRelativeFlightDate(AiToolCall call, String userMessage, LocalDate today) {
+        if (!"searchFlights".equals(call.getName())
+                || !TOMORROW_PATTERN.matcher(userMessage).find()
+                || ABSOLUTE_DATE_PATTERN.matcher(userMessage).find()) {
+            return call;
+        }
+
+        LocalDate tomorrow = today.plusDays(1);
+        Map<String, Object> args = new LinkedHashMap<>(call.getArguments());
+        args.put("departureDate", tomorrow.toString());
+        Object returnDate = args.get("returnDate");
+        if (returnDate instanceof String date) {
+            try {
+                if (LocalDate.parse(date).isBefore(tomorrow)) args.remove("returnDate");
+            } catch (java.time.format.DateTimeParseException ignored) {
+                args.remove("returnDate");
+            }
+        }
+        return new AiToolCall(call.getId(), call.getName(), args, call.getThoughtSignature());
     }
 
     private UUID resolveUserUuid(AiToolExecutionContext executionContext) {

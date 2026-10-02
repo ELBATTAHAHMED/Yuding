@@ -24,3 +24,7 @@ jwt:
   access-token-expiration-minutes: 15
   public-key-location: ${JWT_PUBLIC_KEY_LOCATION:classpath:certs/public.pem}
   private-key-location: ${JWT_PRIVATE_KEY_LOCATION:classpath:certs/private.pem}
+
+yuding:
+  services:
+    ai-url: ${AI_SERVICE_URL:http://localhost:8072}
