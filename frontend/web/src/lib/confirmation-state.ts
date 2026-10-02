@@ -19,7 +19,7 @@ const PRESENTATIONS: Record<ConfirmationState, ConfirmationPresentation> = {
   },
   PAYMENT_VERIFICATION_PENDING: {
     title: 'Confirmation du paiement en cours…',
-    description: 'Le paiement sandbox est en attente de vérification sécurisée par le webhook.',
+    description: 'Le paiement est en cours de vérification. Vous pouvez consulter son état ici.',
     tone: 'pending', icon: 'fa-spinner fa-spin', canRetryPayment: false, shouldPoll: true,
   },
   PAYMENT_FAILED: {
@@ -28,18 +28,18 @@ const PRESENTATIONS: Record<ConfirmationState, ConfirmationPresentation> = {
     tone: 'danger', icon: 'fa-circle-xmark', canRetryPayment: true, shouldPoll: false,
   },
   PAYMENT_VERIFIED_AWAITING_PROVIDER_CONFIRMATION: {
-    title: 'Paiement sandbox validé',
-    description: 'Le paiement a été vérifié. La réservation fournisseur n’est pas encore confirmée.',
+    title: 'Paiement validé',
+    description: 'Le paiement est validé. Nous attendons encore la confirmation du fournisseur.',
     tone: 'success', icon: 'fa-circle-check', canRetryPayment: false, shouldPoll: false,
   },
   PENDING_PROVIDER_CONFIRMATION: {
     title: 'Confirmation auprès du fournisseur en cours',
-    description: 'Le paiement est vérifié, mais la confirmation fournisseur n’est pas encore disponible.',
+    description: 'Le paiement est validé. La confirmation du fournisseur est en cours.',
     tone: 'pending', icon: 'fa-clock', canRetryPayment: false, shouldPoll: false,
   },
   CONFIRMED: {
     title: 'Réservation confirmée',
-    description: 'La confirmation fournisseur a été enregistrée par le backend.',
+    description: 'Le fournisseur a confirmé votre réservation. Vous pouvez retrouver ce voyage dans vos réservations.',
     tone: 'success', icon: 'fa-circle-check', canRetryPayment: false, shouldPoll: false,
   },
   CANCELLED: {
@@ -49,7 +49,7 @@ const PRESENTATIONS: Record<ConfirmationState, ConfirmationPresentation> = {
   },
   REFUNDED: {
     title: 'Paiement remboursé',
-    description: 'Le remboursement est reflété dans l’état backend de cette réservation.',
+    description: 'Le paiement de cette réservation a été remboursé.',
     tone: 'neutral', icon: 'fa-rotate-left', canRetryPayment: false, shouldPoll: false,
   },
   EXPIRED: {
@@ -72,7 +72,7 @@ export function getConfirmationPresentation(confirmation: BookingConfirmationDto
       return {
         ...base,
         title: 'Paiement démo validé',
-        description: 'Le paiement de démonstration a été validé. La réservation fournisseur n’est pas encore confirmée.',
+        description: 'Le paiement de démonstration est validé. Nous attendons encore la confirmation du fournisseur.',
       };
     }
   }

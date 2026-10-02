@@ -9,6 +9,7 @@ import { getBookingDossierPath } from '@/lib/confirmation-state';
 import { BookingPricingResponseDto } from '@/types/booking.types';
 import { PaymentOrderResponseDto } from '@/types/payment.types';
 import { CardPreview } from './CardPreview';
+import { PaymentBrandMark } from './PaymentBrandMark';
 
 interface PaymentFormProps {
   bookingReference: string;
@@ -44,7 +45,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
   // Visa and Mastercard are visual demo card modes backed by MockPaymentProvider.
   // PayPal is the provider-backed Sandbox flow.
-  const [selectedMethod, setSelectedMethod] = useState<'visa' | 'mastercard' | 'paypal'>('paypal');
+  const [selectedMethod, setSelectedMethod] = useState<'visa' | 'mastercard' | 'paypal'>('visa');
   const [isFlipped, setIsFlipped] = useState(false);
   const [demoCard, setDemoCard] = useState<DemoCardState>(EMPTY_DEMO_CARD_STATE);
   const [rememberMethod, setRememberMethod] = useState(false);
@@ -234,9 +235,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         <div className="checkout-section__heading"><span>02</span><div><h2>Moyen de paiement</h2><p>Sélectionnez une option pour régler le tarif confirmé.</p></div></div>
 
         <div className="checkout-payment__methods" role="group" aria-label="Moyen de paiement">
-          <button type="button" className={selectedMethod === 'paypal' ? 'is-selected' : ''} aria-pressed={selectedMethod === 'paypal'} onClick={() => selectPaymentMethod('paypal')}><i className="fab fa-paypal" aria-hidden="true" /><span>PayPal</span><small>Sandbox</small></button>
-          <button type="button" className={selectedMethod === 'visa' ? 'is-selected' : ''} aria-pressed={selectedMethod === 'visa'} onClick={() => selectPaymentMethod('visa')}><i className="fab fa-cc-visa" aria-hidden="true" /><span>Visa</span><small>Démo</small></button>
-          <button type="button" className={selectedMethod === 'mastercard' ? 'is-selected' : ''} aria-pressed={selectedMethod === 'mastercard'} onClick={() => selectPaymentMethod('mastercard')}><i className="fab fa-cc-mastercard" aria-hidden="true" /><span>Mastercard</span><small>Démo</small></button>
+          <button type="button" className={`checkout-payment__method checkout-payment__method--visa${selectedMethod === 'visa' ? ' is-selected' : ''}`} aria-pressed={selectedMethod === 'visa'} onClick={() => selectPaymentMethod('visa')}><PaymentBrandMark brand="visa" /><span>Visa</span><small>Démo</small></button>
+          <button type="button" className={`checkout-payment__method checkout-payment__method--mastercard${selectedMethod === 'mastercard' ? ' is-selected' : ''}`} aria-pressed={selectedMethod === 'mastercard'} onClick={() => selectPaymentMethod('mastercard')}><PaymentBrandMark brand="mastercard" /><span>Mastercard</span><small>Démo</small></button>
+          <button type="button" className={`checkout-payment__method checkout-payment__method--paypal${selectedMethod === 'paypal' ? ' is-selected' : ''}`} aria-pressed={selectedMethod === 'paypal'} onClick={() => selectPaymentMethod('paypal')}><PaymentBrandMark brand="paypal" /><span>PayPal</span><small>Sandbox</small></button>
         </div>
 
         {error && <div className="checkout-notice checkout-notice--error" role="alert"><i className="fas fa-circle-exclamation" aria-hidden="true" />{error}</div>}
@@ -250,10 +251,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             </div>
             <div className="checkout-fields checkout-fields--two">
               <label>Date d'expiration<input value={demoCard.expiry} onChange={(event) => setDemoCard((current) => ({ ...current, expiry: formatDemoExpiry(event.target.value) }))} placeholder="MM/AA" inputMode="numeric" autoComplete="off" data-demo-card-field="expiry" /></label>
-              <label>CVC / CVV<input value={demoCard.cvc} onChange={(event) => setDemoCard((current) => ({ ...current, cvc: event.target.value.replace(/\D/g, '').slice(0, 4) }))} onFocus={() => setIsFlipped(true)} onBlur={() => setIsFlipped(false)} placeholder="•••" inputMode="numeric" autoComplete="off" data-demo-card-field="cvc" /></label>
+              <label>CVC / CVV<input value={demoCard.cvc} onChange={(event) => setDemoCard((current) => ({ ...current, cvc: event.target.value.replace(/\D/g, '').slice(0, 3) }))} onFocus={() => setIsFlipped(true)} onBlur={() => setIsFlipped(false)} placeholder="•••" inputMode="numeric" maxLength={3} autoComplete="off" data-demo-card-field="cvc" /></label>
             </div>
             <label className="checkout-check"><input type="checkbox" checked={rememberMethod} onChange={(event) => setRememberMethod(event.target.checked)} />Mémoriser ce mode de paiement</label>
-            <details className="checkout-card-details"><summary>Aperçu démo de la carte</summary><div><CardPreview isFlipped={isFlipped} brand={selectedMethod === 'mastercard' ? 'mastercard' : 'visa'} demoCard={demoCard} onToggleFlip={() => setIsFlipped(!isFlipped)} /></div></details>
             <p className="checkout-payment__privacy"><i className="fas fa-shield-halved" aria-hidden="true" /> Zéro Stockage PAN / CVC. Les valeurs de démonstration restent uniquement dans cette page.</p>
           </> : <div className="checkout-payment__intro checkout-payment__intro--paypal"><i className="fab fa-paypal" aria-hidden="true" /><div><p className="checkout-kicker">PAYPAL SANDBOX</p><h3>Règlement via PayPal</h3><p>Vous pourrez approuver le montant confirmé de <strong>{formattedAmount}</strong> dans l'environnement de test.</p></div></div>}
 
@@ -261,7 +261,11 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         </form>
       </section>
 
-      <aside className="checkout-aside" aria-label="Montant du paiement"><div className="checkout-summary"><p className="checkout-kicker">TARIF CONFIRMÉ</p><h2>Votre dossier</h2><p className="checkout-summary__reference">Référence {bookingReference}</p><dl className="checkout-summary__rows"><div><dt>Prestation</dt><dd>{pricing.productType || 'Voyage'}</dd></div><div><dt>Fournisseur</dt><dd>{pricing.provider || 'Intégration directe'}</dd></div>{formattedBase && <div><dt>Prix de base</dt><dd>{formattedBase}</dd></div>}{formattedTaxes && <div><dt>Taxes</dt><dd>{formattedTaxes}</dd></div>}{formattedFees && <div><dt>Frais</dt><dd>{formattedFees}</dd></div>}</dl><div className="checkout-summary__total"><span>Total à régler</span><strong>{formattedAmount}</strong></div><p className="checkout-summary__note">Montant calculé et confirmé par le serveur. Aucun détail de carte réelle n'est conservé par Yuding.</p>{pendingOrder && <p className="checkout-summary__reference">Paiement {pendingOrder.paymentReference}</p>}</div></aside>
+      <aside className="checkout-aside" aria-label="Aperçu et montant du paiement">
+        {isCardMode ? <div className="checkout-payment__card-stage"><CardPreview isFlipped={isFlipped} brand={selectedMethod} demoCard={demoCard} onToggleFlip={() => setIsFlipped(!isFlipped)} /><p>Carte de démonstration · Cliquez pour la retourner</p></div>
+          : <div className="checkout-payment__paypal-stage"><PaymentBrandMark brand="paypal" /><strong>PayPal</strong><span>Paiement dans l'environnement Sandbox</span></div>}
+        <div className="checkout-summary"><p className="checkout-kicker">TARIF CONFIRMÉ</p><h2>Votre dossier</h2><p className="checkout-summary__reference">Référence {bookingReference}</p><dl className="checkout-summary__rows"><div><dt>Prestation</dt><dd>{pricing.productType || 'Voyage'}</dd></div><div><dt>Fournisseur</dt><dd>{pricing.provider || 'Intégration directe'}</dd></div>{formattedBase && <div><dt>Prix de base</dt><dd>{formattedBase}</dd></div>}{formattedTaxes && <div><dt>Taxes</dt><dd>{formattedTaxes}</dd></div>}{formattedFees && <div><dt>Frais</dt><dd>{formattedFees}</dd></div>}</dl><div className="checkout-summary__total"><span>Total à régler</span><strong>{formattedAmount}</strong></div><p className="checkout-summary__note">Montant calculé et confirmé par le serveur. Aucun détail de carte réelle n'est conservé par Yuding.</p>{pendingOrder && <p className="checkout-summary__reference">Paiement {pendingOrder.paymentReference}</p>}</div>
+      </aside>
     </div>
   );
 };

@@ -250,7 +250,7 @@ describe('Booking Flow Integration & Lifecycle Tests (Phases 33–38)', () => {
     assert.equal(capturedCalls[0].url.includes('?'), false);
     assert.equal(capturedCalls[0].method, 'GET');
     assert.equal(result.authoritativeAmount, 249.9);
-    assert.equal(presentation.title, 'Paiement sandbox validé');
+    assert.equal(presentation.title, 'Paiement validé');
     assert.notEqual(presentation.title, 'Réservation confirmée');
   });
 
