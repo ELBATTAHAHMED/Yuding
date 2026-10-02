@@ -119,7 +119,7 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
     .map(([key, value]) => [key, detailValue(value)] as const)
     .filter((entry): entry is readonly [string, string] => entry[1] !== null)
     .filter(([key]) => !['title', 'name', 'hotelName', 'provider'].includes(key))
-    .slice(0, 5) : [];
+    .slice(0, 4) : [];
   const snapshot = booking?.offerSnapshot;
   const serviceName = detailValue(snapshot?.selectedDetails?.title)
     || detailValue(snapshot?.selectedDetails?.hotelName)
@@ -147,8 +147,10 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
             <i className="fas fa-times" aria-hidden="true" />
           </button>
         </header>
-        <div className="booking-dialog-body">
-          {loading && <p className="booking-dialog-message">Chargement du document…</p>}
+        <div className={`booking-dialog-body${loading ? ' is-loading' : ''}`}>
+          {loading && <p className="booking-dialog-message" role="status">
+            <i className="fas fa-circle-notch fa-spin" aria-hidden="true" /> Chargement du document…
+          </p>}
           {error && <p className="booking-dialog-message booking-dialog-error" role="alert">{error}</p>}
           {!loading && confirmation && presentation && (isReceipt ? <>
             <div className="booking-receipt-total">
@@ -174,20 +176,21 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
             <div className="booking-dossier-service">
               <span>{productLabels[confirmation.productType]}</span>
               <strong>{serviceName}</strong>
-              {snapshot?.provider && <small>Fournisseur : {snapshot.provider}</small>}
             </div>
-            <p className="booking-dialog-state" data-tone={presentation.tone}>
+            <div className="booking-dossier-status" data-tone={presentation.tone}>
               <i className={`fas ${presentation.icon}`} aria-hidden="true" />
-              <span><strong>{presentation.title}</strong>{presentation.description}</span>
-            </p>
+              <div><strong>{presentation.title}</strong><p>{presentation.description}</p></div>
+            </div>
+            <h3 className="booking-dossier-section-title">Informations du dossier</h3>
             <dl className="booking-dossier-facts">
               <div><dt>Référence</dt><dd>{confirmation.bookingReference}</dd></div>
               {formatDate(confirmation.createdAt) && <div><dt>Créé le</dt><dd>{formatDate(confirmation.createdAt)}</dd></div>}
               {confirmation.paymentStatus && <div><dt>Paiement</dt><dd>{paymentLabels[confirmation.paymentStatus]}</dd></div>}
-              {amount && <div><dt>Montant</dt><dd>{amount}</dd></div>}
+              {amount && <div className="booking-dossier-amount"><dt>Montant</dt><dd>{amount}</dd></div>}
+              {snapshot?.provider && <div><dt>Fournisseur</dt><dd>{snapshot.provider}</dd></div>}
             </dl>
             {summary.length > 0 && <div className="booking-dossier-more">
-              <h3>Détails du voyage</h3>
+              <h3 className="booking-dossier-section-title">Détails du voyage</h3>
               <dl>{summary.map(([key, value]) => <div key={key}><dt>{detailLabel(key)}</dt><dd>{value}</dd></div>)}</dl>
             </div>}
           </>)}
