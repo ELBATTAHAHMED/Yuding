@@ -33,7 +33,7 @@ export function TravelHero({
 }: TravelHeroProps) {
   const selectedDestination = destination?.trim();
   const imageQuery = selectedDestination || defaultImageQuery;
-  const { data, isLoading } = useDestinationImages({
+  const { data } = useDestinationImages({
     city: imageQuery,
     country: selectedDestination ? country : undefined,
     // Fetch a small, cached candidate set only for deliberate product defaults.
@@ -58,17 +58,6 @@ export function TravelHero({
         <h1>{title}</h1>
         <p className="travel-hero__subtitle">{subtitle}</p>
         <p className="travel-hero__context">{destination ? `Explorer ${destination}` : 'Planifiez un voyage qui vous ressemble'}</p>
-      </div>
-      <div className="travel-hero__attribution" aria-live="polite">
-        {image ? (
-          <>
-            Photo par{' '}
-            {image.photographerUrl ? <a href={image.photographerUrl} target="_blank" rel="noopener noreferrer">{image.photographerName || 'photographe'}</a> : image.photographerName || 'photographe'}{' '}
-            sur <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
-          </>
-        ) : (
-          <span>{isLoading ? 'Chargement de l’ambiance destination…' : 'Ambiance de voyage Yuding'}</span>
-        )}
       </div>
     </section>
   );
