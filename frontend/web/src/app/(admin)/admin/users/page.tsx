@@ -232,7 +232,8 @@ export default function AdminUsersPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 100,
+            zIndex: 20000,
+            backdropFilter: 'blur(5px)',
             padding: '1rem',
           }}
         >

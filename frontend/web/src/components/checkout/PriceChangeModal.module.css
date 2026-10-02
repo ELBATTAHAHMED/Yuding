@@ -1,0 +1,24 @@
+.intro { margin: 0 0 21px; font-size: 14px; line-height: 1.6; }
+.prices { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 17px; padding: 17px 19px; border: 1px solid #e2ebe7; border-radius: 10px; background: #f7faf9; }
+.prices > div { display: grid; gap: 5px; min-width: 0; }
+.prices span { color: #667e77; font-size: 12px; }
+.prices strong { color: #19342f; font-size: clamp(16px, 2vw, 21px); line-height: 1.2; overflow-wrap: anywhere; }
+.prices .previous { color: #667e77; text-decoration: line-through; text-decoration-thickness: 1px; }
+.prices .current { color: #087d70; }
+.prices > i { color: #849b93; font-size: 12px; }
+.change { margin: 15px 0 0; font-size: 13px; font-weight: 700; }
+.increase { color: #b54b42; }
+.decrease { color: #087d70; }
+.cancel, .accept { min-height: 41px; padding: 10px 17px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background-color 170ms, border-color 170ms; }
+.cancel { border: 1px solid #cfded8; background: transparent; color: #36564d; }
+.cancel:hover { background: #f1f7f4; }
+.accept { border: 1px solid #087d70; background: #087d70; color: #fff; }
+.accept:hover { background: #066c61; }
+.cancel:disabled, .accept:disabled { opacity: .6; cursor: wait; }
+:global(.dark) .prices, :global([data-theme="dark"]) .prices { border-color: #3b544d; background: #233a32; }
+:global(.dark) .prices span, :global([data-theme="dark"]) .prices span, :global(.dark) .prices .previous, :global([data-theme="dark"]) .prices .previous { color: #aec4bc; }
+:global(.dark) .prices .current, :global([data-theme="dark"]) .prices .current, :global(.dark) .decrease, :global([data-theme="dark"]) .decrease { color: #7bd8c5; }
+:global(.dark) .increase, :global([data-theme="dark"]) .increase { color: #f0a59c; }
+:global(.dark) .cancel, :global([data-theme="dark"]) .cancel { border-color: #4d7468; color: #e7f1ee; }
+:global(.dark) .cancel:hover, :global([data-theme="dark"]) .cancel:hover { background: #28443a; }
+@media (max-width: 420px) { .prices { gap: 10px; padding: 15px 12px; } .prices strong { font-size: 15px; } }

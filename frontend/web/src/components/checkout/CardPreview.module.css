@@ -1,0 +1,36 @@
+.preview { width: min(100%, 390px); margin-inline: auto; aspect-ratio: 1.62; perspective: 1100px; cursor: pointer; user-select: none; }
+.preview:focus-visible { outline: 2px solid #087d70; outline-offset: 6px; border-radius: 16px; }
+.inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 650ms cubic-bezier(.2, .72, .2, 1); }
+.flipped { transform: rotateY(180deg); }
+.front, .back { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,.22); border-radius: 16px; color: #fff; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 16px 33px -15px rgba(21, 35, 55, .4); }
+.front { justify-content: space-between; padding: clamp(19px, 5%, 27px); isolation: isolate; }
+.front::before { content: ''; position: absolute; z-index: -1; inset: 0; background: radial-gradient(circle at 85% 10%, rgba(255,255,255,.19), transparent 43%), linear-gradient(145deg, transparent 35%, rgba(255,255,255,.07) 70%, transparent 90%); }
+.visa .front { background: linear-gradient(130deg, #112961 0%, #163a95 52%, #244ba8 100%); }
+.mastercard .front { background: radial-gradient(circle at 95% 90%, rgba(214, 83, 48, .5), transparent 48%), linear-gradient(135deg, #242936 0%, #2f3038 55%, #47343b 100%); }
+.top, .bottom { display: flex; align-items: flex-start; justify-content: space-between; gap: 13px; }
+.cardTech { display: flex; align-items: center; gap: 12px; }
+.chip { width: 39px; height: 30px; }
+.contactless { width: 16px; height: 19px; color: rgba(255,255,255,.83); }
+.issuer { display: grid; gap: 3px; text-align: right; font-size: 16px; font-weight: 800; letter-spacing: .12em; line-height: 1; }
+.issuer span { font-size: 8px; font-weight: 650; letter-spacing: .17em; opacity: .8; }
+.number { display: flex; justify-content: space-between; gap: 4px; color: #fff; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: clamp(16px, 2vw, 22px); font-weight: 650; letter-spacing: .055em; white-space: nowrap; }
+.bottom { align-items: end; }
+.holder { flex: 1 1 auto; min-width: 0; }
+.expiry { flex: 0 0 auto; }
+.holder, .expiry { display: grid; gap: 5px; }
+.holder > span, .expiry > span { color: rgba(255,255,255,.73); font-size: 9px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; }
+.holder strong, .expiry strong { overflow: hidden; font-size: clamp(10px, 1.1vw, 13px); font-weight: 700; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.scheme { flex: 0 0 50px; display: flex; align-items: end; justify-content: flex-end; }
+.scheme :global(.checkout-brand-mark--visa), .backBrand :global(.checkout-brand-mark--visa) { width: 50px; height: 22px; }
+.scheme :global(.checkout-brand-mark--visa) path:first-child, .backBrand :global(.checkout-brand-mark--visa) path:first-child { fill: #fff; }
+.scheme :global(.checkout-brand-mark--mastercard), .backBrand :global(.checkout-brand-mark--mastercard) { width: 43px; height: 29px; }
+.back { transform: rotateY(180deg); padding: 24px 0 18px; background: linear-gradient(135deg, #142954, #21457e); }
+.mastercard .back { background: linear-gradient(135deg, #222733, #49333a); }
+.stripe { height: 43px; background: #141c23; }
+.signature { display: flex; align-items: center; min-height: 37px; margin: 21px 22px 0; border-radius: 4px; background: #eaf0f0; color: #344940; }
+.signature span { flex: 1 1 auto; min-width: 0; overflow: hidden; padding: 0 12px; font-size: 12px; font-style: italic; text-overflow: ellipsis; white-space: nowrap; }
+.signature strong { align-self: stretch; display: grid; place-items: center; width: 54px; border-left: 1px solid #cedbd6; font-size: 17px; letter-spacing: .15em; }
+.back p { margin: 10px 22px 0; color: rgba(255,255,255,.8); font-size: 10px; }
+.backBrand { display: flex; justify-content: flex-end; margin: auto 22px 0; }
+@media (max-width: 420px) { .preview { aspect-ratio: 1.54; } .front { padding: 18px; } .number { font-size: 15px; letter-spacing: 0; } .holder > span, .expiry > span { font-size: 8px; } .scheme { flex-basis: 43px; } .scheme :global(.checkout-brand-mark--visa) { width: 43px; } .scheme :global(.checkout-brand-mark--mastercard) { width: 38px; } }
+@media (prefers-reduced-motion: reduce) { .inner { transition: none; } }
