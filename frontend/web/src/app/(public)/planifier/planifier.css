@@ -2,12 +2,12 @@
 .travel-page--planifier {
   --planner-line: var(--travel-line);
   --planner-muted: var(--travel-text-muted);
-  --travel-search-overlap: clamp(180px, 15vw, 210px);
+  --travel-search-overlap: clamp(175px, 14.3vw, 190px);
 }
 
 .travel-page--planifier .travel-hero,
 .travel-page--planifier .travel-hero--compact {
-  min-height: clamp(470px, 32vw, 500px);
+  min-height: clamp(470px, 33vw, 520px);
 }
 
 .travel-page--planifier .travel-hero__content {
@@ -167,6 +167,25 @@
   right: 0;
 }
 
+.travel-page--planifier .planner-pace {
+  position: relative;
+}
+
+.travel-page--planifier .planner-pace select {
+  appearance: none;
+  padding-right: 42px !important;
+}
+
+.travel-page--planifier .planner-pace i {
+  color: var(--travel-primary);
+  font-size: 10px;
+  pointer-events: none;
+  position: absolute;
+  right: 17px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .travel-page--planifier .planner-form .travel-stepper--field {
   box-shadow: none;
   grid-template-columns: 38px minmax(0, 1fr) 38px;
@@ -248,7 +267,10 @@
 
 .travel-page--planifier .planner-empty {
   border-top: 1px solid var(--planner-line);
-  padding: 30px 0 42px;
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 0 20px;
 }
 
 .travel-page--planifier .planner-empty p {
@@ -265,11 +287,13 @@
   font-size: clamp(22px, 2.4vw, 30px);
   font-weight: 730;
   margin: 0 0 5px;
+  text-align: left;
 }
 
 .travel-page--planifier .planner-empty span {
   color: var(--planner-muted);
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .travel-page--planifier .planner-results__flow {

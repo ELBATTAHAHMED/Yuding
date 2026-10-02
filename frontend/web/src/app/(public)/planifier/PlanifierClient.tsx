@@ -256,10 +256,13 @@ export function PlanifierClient() {
                   <label className="block text-[10px] font-bold text-[#02E0D5] mb-1 uppercase tracking-wider">
                     <i className="fas fa-gauge-simple mr-1" /> Rythme
                   </label>
-                  <select value={pace} onChange={e => setPace(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5]">
-                    {PACES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                  </select>
+                  <div className="planner-pace">
+                    <select value={pace} onChange={e => setPace(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-[#01796F]/40 bg-[#021817] text-white text-xs focus:outline-none focus:ring-2 focus:ring-[#02E0D5]">
+                      {PACES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                    </select>
+                    <i className="fas fa-chevron-down" aria-hidden="true" />
+                  </div>
                 </div>
 
                 {/* Button */}
