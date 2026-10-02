@@ -10,6 +10,7 @@ import { TravelPage } from '@/components/travel/TravelPage';
 import { TravelHero } from '@/components/travel/TravelHero';
 import type { TripPlanDto, TripPlanItemDto, TripPlanRequest } from '@/types/ai.types';
 import type { SavedTripItem } from '@/types/library.types';
+import './planifier.css';
 
 // ─── Preferences ─────────────────────────────────────────────────────────────
 const PREFS = [
@@ -155,37 +156,36 @@ export function PlanifierClient() {
         compact={view === 'plan'}
       />
 
-      {/* ══ DARK SEARCH PANEL ══════════════════════════════════════════════ */}
-      <section className="travel-search-panel bg-[#001b1a] text-white py-6 px-4 border-b border-[#01796F]/20">
+      {/* ══ SEARCH PANEL ═══════════════════════════════════════════════════ */}
+      <section className="travel-search-panel planner-search-panel">
         <div className="max-w-6xl mx-auto">
 
           {/* Tab bar */}
-          <div className="flex items-center gap-1 mb-5 border-b border-[#01796F]/25">
+          <div className="planner-trip-tabs">
             <button type="button" onClick={() => setView('form')}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 pb-2 transition-colors ${view === 'form' ? 'border-[#02E0D5] text-[#02E0D5]' : 'border-transparent text-[#b2dfdb] hover:text-white'}`}>
+              className={`planner-trip-tab ${view === 'form' ? 'is-active' : ''}`}>
               <i className="fas fa-sliders mr-1.5" /> Nouveau voyage
             </button>
             {plan && (
               <button type="button" onClick={() => setView('plan')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 pb-2 transition-colors ${view === 'plan' ? 'border-[#02E0D5] text-[#02E0D5]' : 'border-transparent text-[#b2dfdb] hover:text-white'}`}>
+                className={`planner-trip-tab ${view === 'plan' ? 'is-active' : ''}`}>
                 <i className="fas fa-calendar-week mr-1.5" /> Itinéraire
-                <span className="ml-1.5 px-1.5 py-0.5 rounded bg-[#01796F] text-white text-[10px]">{plan.destination}</span>
+                <span className="planner-trip-tab__destination">{plan.destination}</span>
               </button>
             )}
             {allPlans.filter(p => p.reference !== plan?.reference).slice(0, 2).map(p => (
               <button key={p.reference} type="button" onClick={() => { setPlan(p); setView('plan'); }}
-                className="px-3 py-2 text-xs font-semibold uppercase tracking-wider border-b-2 border-transparent text-[#b2dfdb] hover:text-white pb-2 transition-colors">
+                className="planner-trip-tab">
                 <i className="fas fa-clock-rotate-left mr-1" /> {p.destination}
               </button>
             ))}
           </div>
 
           {/* ── FORM ─────────────────────────────────────────────────────── */}
-          {view === 'form' && (
-            <form onSubmit={handleGenerate} className="bg-[#062523] p-4 md:p-5 rounded-xl border border-[#01796F]/30 shadow-lg space-y-4">
+          <form onSubmit={handleGenerate} className="planner-form">
 
               {/* Row 1 — 4 columns: Origin | Destination | Aller | Retour */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="planner-form__primary">
                 {[
                   { label: 'Départ',       icon: 'fas fa-plane-departure', value: origin,      set: setOrigin,    placeholder: 'Ex : Casablanca' },
                   { label: 'Destination',  icon: 'fas fa-plane-arrival',   value: destination, set: setDest,      placeholder: 'Ex : Paris' },
@@ -216,7 +216,7 @@ export function PlanifierClient() {
               </div>
 
               {/* Row 2 — Budget | Voyageurs | Rythme | Générer */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.6fr_0.8fr_0.8fr_auto] gap-3 items-end">
+              <div className="planner-form__secondary">
                 {/* Budget */}
                 <div>
                   <label className="block text-[10px] font-bold text-[#02E0D5] mb-1 uppercase tracking-wider">
@@ -238,12 +238,14 @@ export function PlanifierClient() {
                   <label className="block text-[10px] font-bold text-[#02E0D5] mb-1 uppercase tracking-wider">
                     <i className="fas fa-users mr-1" /> Voyageurs
                   </label>
-                  <div className="flex h-10 rounded-lg border border-[#01796F]/40 overflow-hidden">
+                  <div className="travel-stepper travel-stepper--field" role="group" aria-label="Nombre de voyageurs">
                     <button type="button" onClick={() => setTravelers(Math.max(1, travelers - 1))}
-                      className="w-9 flex items-center justify-center bg-[#021817] text-[#02E0D5] font-bold text-base hover:bg-[#0a302d] transition-colors">−</button>
-                    <span className="flex-1 flex items-center justify-center bg-[#021817] text-white text-xs font-semibold border-x border-[#01796F]/40">{travelers}</span>
+                      disabled={travelers <= 1} aria-label="Retirer un voyageur"
+                      className="travel-stepper__button">−</button>
+                    <span className="travel-stepper__value" aria-live="polite">{travelers}</span>
                     <button type="button" onClick={() => setTravelers(Math.min(9, travelers + 1))}
-                      className="w-9 flex items-center justify-center bg-[#021817] text-[#02E0D5] font-bold text-base hover:bg-[#0a302d] transition-colors">+</button>
+                      disabled={travelers >= 9} aria-label="Ajouter un voyageur"
+                      className="travel-stepper__button">+</button>
                   </div>
                 </div>
 
@@ -267,14 +269,15 @@ export function PlanifierClient() {
               </div>
 
               {/* Row 3 — Preferences */}
-              <div className="border-t border-[#01796F]/20 pt-3">
-                <p className="text-[10px] font-bold text-[#b2dfdb] uppercase tracking-wider mb-2">Centres d'intérêt</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="planner-interests">
+                <p className="planner-interests__label">Centres d'intérêt</p>
+                <div className="planner-interests__options">
                   {PREFS.map(p => {
                     const on = prefs.includes(p.id);
                     return (
                       <button key={p.id} type="button" onClick={() => togglePref(p.id)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${on ? 'bg-[#01796F] border-[#01796F] text-white' : 'bg-[#031c1a] border-[#01796F]/40 text-[#b2dfdb] hover:border-[#02E0D5]/60 hover:text-white'}`}>
+                        aria-pressed={on}
+                        className={`planner-interest ${on ? 'is-selected' : ''}`}>
                         <i className={`${p.icon} text-[10px]`} /> {p.label}
                       </button>
                     );
@@ -289,17 +292,16 @@ export function PlanifierClient() {
                 </div>
               )}
               {!isAuthenticated && (
-                <p className="text-xs text-[#b2dfdb]">
-                  <Link href="/login" className="text-[#02E0D5] font-bold underline">Connectez-vous</Link> pour générer et sauvegarder vos plans de voyage.
+                <p className="planner-form__auth-note">
+                  <Link href="/login">Connectez-vous</Link> pour générer et sauvegarder vos plans de voyage.
                 </p>
               )}
             </form>
-          )}
         </div>
       </section>
 
       {/* ══ RESULTS SECTION ════════════════════════════════════════════════ */}
-      <section className="travel-results-section py-8 px-4 bg-slate-50 dark:bg-[#021817]">
+      <section className="travel-results-section planner-results">
         <div className="max-w-6xl mx-auto">
 
           {/* ── No plan yet / loading ─────────────────────────────────────── */}
@@ -322,10 +324,10 @@ export function PlanifierClient() {
 
           {/* ── Plan ──────────────────────────────────────────────────────── */}
           {plan && view === 'plan' && (
-            <div className="flex flex-col gap-5">
+            <div className="planner-results__flow">
 
-              {/* ── Plan header card ────────────────────────────────────── */}
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 dark:border-[#01796F]/30 dark:bg-[#062523]">
+              {/* ── Plan overview ───────────────────────────────────────── */}
+              <div className="planner-overview">
 
                 {/* Top row: title + actions */}
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -421,11 +423,11 @@ export function PlanifierClient() {
               {planTab === 'itinerary' && plan.days && (
                 <div className="flex flex-col gap-4">
                   {plan.days.map(day => (
-                    <div key={day.dayNumber} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-[#01796F]/30 dark:bg-[#062523]">
+                    <div key={day.dayNumber} className="planner-day">
                       {/* Day header */}
-                      <div className="flex items-center justify-between gap-3 px-5 py-3 bg-slate-50 border-b border-slate-100 dark:bg-[#0a302d] dark:border-[#01796F]/20 flex-wrap">
+                      <div className="planner-day__heading">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-[#01796F] text-white flex items-center justify-center font-extrabold text-sm shrink-0">J{day.dayNumber}</div>
+                          <div className="planner-day__number">J{day.dayNumber}</div>
                           <div>
                             <p className="text-sm font-bold text-slate-900 dark:text-white">{day.theme || `Jour ${day.dayNumber}`}</p>
                             <p className="text-xs text-slate-400">{day.date}</p>
@@ -439,13 +441,13 @@ export function PlanifierClient() {
                       </div>
 
                       {/* Slots grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-[#01796F]/20">
+                      <div className="planner-day__slots">
                         {[
                           { slot: 'Matin',      icon: 'fas fa-sun',       cls: 'text-amber-500',  items: day.morning   },
                           { slot: 'Après-midi', icon: 'fas fa-cloud-sun', cls: 'text-[#01796F]',  items: day.afternoon },
                           { slot: 'Soirée',     icon: 'fas fa-moon',      cls: 'text-indigo-500', items: day.evening   },
                         ].map(s => (
-                          <div key={s.slot} className="p-4">
+                          <div key={s.slot} className="planner-day__slot">
                             <p className={`text-[10px] font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1 ${s.cls}`}>
                               <i className={`${s.icon} text-[10px]`} /> {s.slot}
                             </p>
@@ -476,7 +478,7 @@ export function PlanifierClient() {
                     { label: 'Hébergement',        icon: 'fas fa-hotel',  item: plan.hotel },
                     { label: 'Transfert aéroport', icon: 'fas fa-taxi',   item: plan.transfer },
                   ].filter(r => r.item).map(row => (
-                    <div key={row.label} className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(180px,.8fr)] items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-[#01796F]/40 hover:shadow-md transition-all dark:border-[#01796F]/30 dark:bg-[#062523]">
+                    <div key={row.label} className="planner-transport-row">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-full bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-lg shrink-0">
                           <i className={row.icon} />
@@ -505,7 +507,7 @@ export function PlanifierClient() {
 
               {/* ── Sources ─────────────────────────────────────────────── */}
               {plan.sources && plan.sources.length > 0 && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#01796F]/30 dark:bg-[#062523]">
+                <div className="planner-sources">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#01796F] dark:text-[#02E0D5] mb-3 flex items-center gap-2">
                     <i className="fas fa-book-open" /> Guides Yuding consultés
                   </p>

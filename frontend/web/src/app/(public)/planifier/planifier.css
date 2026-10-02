@@ -1,0 +1,287 @@
+/* The planner follows the public travel search layout without styling sibling pages. */
+.travel-page--planifier {
+  --planner-line: var(--travel-line);
+  --planner-muted: var(--travel-text-muted);
+}
+
+.travel-page--planifier .travel-hero,
+.travel-page--planifier .travel-hero--compact {
+  min-height: clamp(320px, 27vw, 390px);
+}
+
+.travel-page--planifier .planner-search-panel {
+  --travel-search-overlap: 42px;
+}
+
+.travel-page--planifier .travel-hero__attribution {
+  bottom: 52px;
+  left: var(--travel-gutter);
+  right: auto;
+}
+
+.travel-page--planifier .planner-trip-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0 0 10px;
+}
+
+.travel-page--planifier .planner-trip-tab {
+  align-items: center;
+  background: var(--travel-surface);
+  border: 1px solid var(--planner-line);
+  border-radius: 8px;
+  color: var(--planner-muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 650;
+  gap: 3px;
+  min-height: 36px;
+  padding: 0 12px;
+  transition: border-color .16s ease, color .16s ease, background-color .16s ease;
+}
+
+.travel-page--planifier .planner-trip-tab:hover,
+.travel-page--planifier .planner-trip-tab:focus-visible {
+  border-color: var(--travel-primary);
+  color: var(--travel-primary);
+}
+
+.travel-page--planifier .planner-trip-tab:focus-visible,
+.travel-page--planifier .planner-interest:focus-visible,
+.travel-page--planifier .travel-stepper__button:focus-visible {
+  outline: 2px solid var(--travel-primary);
+  outline-offset: 2px;
+}
+
+.travel-page--planifier .planner-trip-tab.is-active {
+  background: var(--travel-primary);
+  border-color: var(--travel-primary);
+  color: #fff;
+}
+
+.travel-page--planifier .planner-trip-tab__destination {
+  font-weight: 500;
+  margin-left: 3px;
+  opacity: .8;
+  text-transform: none;
+}
+
+.travel-page--planifier .planner-form {
+  padding: 22px 26px 20px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 14px 32px rgba(15, 42, 39, .13) !important;
+}
+
+.travel-page--planifier .planner-form__primary,
+.travel-page--planifier .planner-form__secondary {
+  display: grid;
+  gap: 14px;
+}
+
+.travel-page--planifier .planner-form__primary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.travel-page--planifier .planner-form__secondary {
+  align-items: end;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  margin-top: 14px;
+}
+
+.travel-page--planifier .planner-form label {
+  display: block;
+  font-size: 11px !important;
+  margin-bottom: 6px;
+  text-transform: none;
+}
+
+.travel-page--planifier .planner-form input,
+.travel-page--planifier .planner-form select,
+.travel-page--planifier .planner-form .travel-stepper--field {
+  height: 50px !important;
+  min-height: 50px !important;
+  font-size: 14px;
+}
+
+.travel-page--planifier .planner-form input,
+.travel-page--planifier .planner-form select {
+  border-radius: 8px;
+}
+
+.travel-page--planifier .planner-form .travel-stepper--field {
+  box-shadow: none;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  padding: 5px 7px !important;
+}
+
+.travel-page--planifier .planner-form .travel-stepper__button {
+  height: 36px !important;
+  width: 36px !important;
+}
+
+.travel-page--planifier .planner-form button[type="submit"] {
+  height: 50px;
+  min-height: 50px;
+  box-shadow: none;
+}
+
+.travel-page--planifier .planner-interests {
+  align-items: center;
+  border-top: 1px solid var(--planner-line);
+  display: flex;
+  gap: 18px;
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+.travel-page--planifier .planner-interests__label {
+  color: var(--planner-muted);
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.travel-page--planifier .planner-interests__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.travel-page--planifier .planner-interest {
+  align-items: center;
+  background: var(--travel-surface);
+  border: 1px solid var(--planner-line);
+  border-radius: 7px;
+  color: var(--travel-text);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 7px;
+  min-height: 33px;
+  padding: 5px 10px;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+
+.travel-page--planifier .planner-interest:hover,
+.travel-page--planifier .planner-interest.is-selected {
+  background: color-mix(in srgb, var(--travel-primary) 10%, var(--travel-surface));
+  border-color: color-mix(in srgb, var(--travel-primary) 45%, var(--planner-line));
+  color: var(--travel-primary);
+}
+
+.travel-page--planifier .planner-form__auth-note {
+  color: var(--planner-muted);
+  font-size: 12px;
+  margin: 14px 0 0;
+}
+
+.travel-page--planifier .planner-form__auth-note a {
+  color: var(--travel-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.travel-page--planifier .planner-results {
+  padding-top: 30px !important;
+}
+
+.travel-page--planifier .planner-results__flow {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.travel-page--planifier .planner-overview {
+  border-bottom: 1px solid var(--planner-line);
+  padding: 4px 0 22px;
+}
+
+.travel-page--planifier .planner-day {
+  border-bottom: 1px solid var(--planner-line);
+  padding: 0 0 20px;
+}
+
+.travel-page--planifier .planner-day__heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 0 0 16px;
+}
+
+.travel-page--planifier .planner-day__number {
+  align-items: center;
+  border: 1px solid var(--travel-primary);
+  border-radius: 50%;
+  color: var(--travel-primary);
+  display: flex;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+.travel-page--planifier .planner-day__slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.travel-page--planifier .planner-day__slot {
+  border-left: 1px solid var(--planner-line);
+  padding: 0 22px;
+}
+
+.travel-page--planifier .planner-day__slot:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.travel-page--planifier .planner-transport-row {
+  align-items: center;
+  border-bottom: 1px solid var(--planner-line);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  padding: 18px 0;
+  transition: background-color .16s ease;
+}
+
+.travel-page--planifier .planner-transport-row:hover {
+  background: color-mix(in srgb, var(--travel-primary) 4%, transparent);
+}
+
+.travel-page--planifier .planner-sources {
+  border-top: 1px solid var(--planner-line);
+  padding-top: 18px;
+}
+
+@media (max-width: 1000px) {
+  .travel-page--planifier .planner-form__primary,
+  .travel-page--planifier .planner-form__secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .travel-page--planifier .planner-form button[type="submit"] { width: 100%; }
+  .travel-page--planifier .planner-interests { align-items: flex-start; flex-direction: column; gap: 10px; }
+}
+
+@media (max-width: 620px) {
+  .travel-page--planifier .travel-hero,
+  .travel-page--planifier .travel-hero--compact { min-height: 340px; }
+  .travel-page--planifier .planner-search-panel { --travel-search-overlap: 30px; }
+  .travel-page--planifier .planner-trip-tabs { justify-content: flex-start; }
+  .travel-page--planifier .travel-hero__attribution { bottom: 38px; }
+  .travel-page--planifier .planner-trip-tab { font-size: 11px; }
+  .travel-page--planifier .planner-form { padding: 18px !important; }
+  .travel-page--planifier .planner-form__primary,
+  .travel-page--planifier .planner-form__secondary { grid-template-columns: 1fr; }
+  .travel-page--planifier .planner-day__slots { grid-template-columns: 1fr; }
+  .travel-page--planifier .planner-day__slot,
+  .travel-page--planifier .planner-day__slot:first-child { border-left: 0; border-top: 1px solid var(--planner-line); padding: 14px 0; }
+  .travel-page--planifier .planner-transport-row { grid-template-columns: 1fr auto; }
+  .travel-page--planifier .planner-transport-row > :nth-child(2) { display: none; }
+}
