@@ -1,7 +1,7 @@
 import { apiClient } from '../lib/api-client.ts';
 
-export type ReviewTarget = 'ACCOMMODATION' | 'ACTIVITY' | 'PLATFORM' | 'EXPERIENCE';
-export type BookableReviewTarget = Extract<ReviewTarget, 'ACCOMMODATION' | 'ACTIVITY'>;
+export type ReviewTarget = 'ACCOMMODATION' | 'ACTIVITY' | 'FLIGHT' | 'TRANSFER' | 'TRAIN' | 'PLATFORM' | 'EXPERIENCE';
+export type BookableReviewTarget = Exclude<ReviewTarget, 'PLATFORM' | 'EXPERIENCE'>;
 export interface ReviewEligibility {
   bookingReference: string;
   eligible: boolean;
@@ -16,7 +16,12 @@ export interface MyReview {
   rating: number;
   content: string;
   status: 'APPROVED' | 'PENDING_MODERATION' | 'REJECTED' | 'DELETED';
+  entityType: ReviewTarget;
+  provider: string;
+  entityReference: string;
   entityName: string;
+  bookingReference?: string | null;
+  createdAt: string;
   updatedAt: string;
 }
 export interface PublicReview {
@@ -33,11 +38,10 @@ export interface PublicReviews {
 export interface FeaturedReview extends PublicReview {
   entityName: string;
   entityType: ReviewTarget;
+  verifiedBooking: boolean;
 }
 export interface PendingReview extends MyReview {
-  entityType: BookableReviewTarget;
-  provider: string;
-  entityReference: string;
+  entityType: ReviewTarget;
 }
 
 export const reviewService = {
@@ -46,6 +50,13 @@ export const reviewService = {
     const result = await apiClient.get<{ review?: MyReview | null }>(`/apic/reviews/booking/${encodeURIComponent(reference)}/mine`, true);
     return result.review ?? null;
   },
+  allMine: () => apiClient.get<MyReview[]>('/apic/reviews/mine', true),
+  platformMine: async () => {
+    const result = await apiClient.get<{ review?: MyReview | null }>('/apic/reviews/platform/mine', true);
+    return result.review ?? null;
+  },
+  createPlatform: (rating: number, content: string, publicDisplayName?: string) =>
+    apiClient.post<MyReview>('/apic/reviews/platform', { rating, content, publicDisplayName }, true),
   create: (reference: string, rating: number, content: string, publicDisplayName?: string) =>
     apiClient.post<MyReview>(`/apic/reviews/booking/${encodeURIComponent(reference)}`, { rating, content, publicDisplayName }, true),
   edit: (id: string, rating: number, content: string) =>

@@ -4,6 +4,7 @@
 @import '../styles/home-redesign.css';
 @import '../styles/home-option1.css';
 @import '../styles/home-experience.css';
+@import '../styles/home-focus.css';
 
 @tailwind base;
 @tailwind components;

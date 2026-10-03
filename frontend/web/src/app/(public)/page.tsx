@@ -10,12 +10,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GeoPlaceSelector } from '@/components/travel';
 import type { GeoPlace } from '@/types/geo.types';
 import { HomeReviews } from '@/components/travel/HomeReviews';
+import { HomeDestinations } from '@/components/travel/HomeDestinations';
+import { HomeFinalCta } from '@/components/travel/HomeFinalCta';
 import { AirportSelector } from '@/components/travel/AirportSelector';
 import { StationSelector } from '@/components/travel/StationSelector';
 import { TransferLocationSelector } from '@/components/travel/TransferLocationSelector';
 import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
 import { travelService } from '@/services/travel.service';
-import { imageService } from '@/services/image.service';
 import type { Airport, TrainStation } from '@/types/travel.types';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -30,12 +31,6 @@ const modes: { id: TravelMode; label: string; icon: string; href: string; action
   { id: 'trains', label: 'Trains', icon: 'fa-train', href: '/trains', action: 'Chercher un train', description: 'Voyagez d’une gare à l’autre.' },
 ];
 
-const places = [
-  { name: 'Dakhla', city: 'Dakhla', country: 'Maroc', countryQuery: 'Morocco', label: 'L’océan rencontre le désert.', image: '/image/Dakhla.jpg', alt: 'Paysage côtier de Dakhla', href: '/hotels?destination=Dakhla&countryCode=MA', kind: 'HORIZON ATLANTIQUE' },
-  { name: 'Lisbonne', city: 'Lisbon', country: 'Portugal', countryQuery: 'Portugal', label: 'Une ville à vivre dehors.', image: 'https://images.pexels.com/photos/26824153/pexels-photo-26824153.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940', alt: 'Vue éditoriale de Lisbonne', href: '/hotels?destination=Lisbon&countryCode=PT', kind: 'ESCALE EUROPÉENNE' },
-  { name: 'Séoul', city: 'Seoul', country: 'Corée du Sud', countryQuery: 'South Korea', label: 'Tradition et mouvement, au même rythme.', image: '/image/Seoul.jpg', alt: 'Paysage urbain de Séoul', href: '/hotels?destination=Seoul&countryCode=KR', kind: 'ÉNERGIE URBAINE' },
-];
-
 const dateString = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 export default function HomePage() {
@@ -45,10 +40,6 @@ export default function HomePage() {
   const [place, setPlace] = useState<GeoPlace | null>(null);
   const [departure, setDeparture] = useState('');
   const [travelers, setTravelers] = useState('2');
-  const [destination, setDestination] = useState(0);
-  const [storyPaused, setStoryPaused] = useState(false);
-  const [editorialImages, setEditorialImages] = useState<Record<string, { url: string; attribution: string; attributionUrl?: string }>>({});
-  const [panelOpen, setPanelOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: airports = [] } = useAirportsQuery();
   const [stations, setStations] = useState<TrainStation[]>([]);
@@ -74,71 +65,33 @@ export default function HomePage() {
     return () => { active = false; };
   }, [mode]);
 
-  useEffect(() => {
-    let active = true;
-    Promise.allSettled(places.map((item) => imageService.getDestinationImages({ city: item.city, country: item.countryQuery, limit: 1 })))
-      .then((results) => {
-        if (!active) return;
-        const images: Record<string, { url: string; attribution: string; attributionUrl?: string }> = {};
-        results.forEach((result, index) => {
-          const photo = result.status === 'fulfilled' ? result.value.images[0] : undefined;
-          if (photo?.url && photo.sourceType === 'STOCK_DESTINATION') {
-            images[places[index].name] = { url: photo.url, attribution: photo.attributionText || `Photo : ${photo.photographerName || 'Pexels'}`, attributionUrl: photo.attributionUrl };
-          }
-        });
-        setEditorialImages(images);
-      });
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    if (storyPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = window.setInterval(() => {
-      const scene = document.querySelector('.home-v3__destinations');
-      const bounds = scene?.getBoundingClientRect();
-      if (document.visibilityState === 'visible' && bounds && bounds.top < window.innerHeight && bounds.bottom > 0) {
-        setDestination((current) => (current + 1) % places.length);
-      }
-    }, 7000);
-    return () => window.clearInterval(timer);
-  }, [storyPaused]);
 
   // Keep the floating assistant away from touch controls on narrow screens.
   useEffect(() => {
-    const targets = ['.home-v3__search', '.home-v3__destination-stage', '.home-v3__reviews', '.yuding-footer']
+    const targets = ['.home-v3__search', '.home-v3__destinations', '.home-v3__reviews', '.home-v3__end', '.yuding-footer']
       .map((selector) => document.querySelector(selector)).filter((element): element is Element => Boolean(element));
     const visible = new Set<Element>();
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target));
       document.body.classList.toggle('home-controls-visible', visible.size > 0);
+      document.body.classList.toggle('home-footer-visible', Array.from(visible).some(element => element.matches('.yuding-footer')));
     }, { threshold: 0 });
     targets.forEach((target) => observer.observe(target));
-    return () => { observer.disconnect(); document.body.classList.remove('home-controls-visible'); };
+    return () => { observer.disconnect(); document.body.classList.remove('home-controls-visible', 'home-footer-visible'); };
   }, []);
-
-  // transitions.dev panel reveal: an interruptible handoff when changing search verticals.
-  useEffect(() => {
-    setPanelOpen(false);
-    const frame = requestAnimationFrame(() => setPanelOpen(true));
-    return () => cancelAnimationFrame(frame);
-  }, [mode]);
 
   useGSAP(() => {
     const mm = gsap.matchMedia();
     mm.add('(prefers-reduced-motion: no-preference)', () => {
       gsap.from('.home-v3__hero-word', { y: 52, duration: 1, ease: 'power3.out', stagger: 0.12, delay: 0.1 });
       gsap.from('.home-v3__hero-deck, .home-v3__hero-index', { y: 18, duration: 0.8, ease: 'power2.out', stagger: 0.1, delay: 0.55 });
-      gsap.to('.home-v3__hero-media img', {
-        yPercent: 10, ease: 'none',
-        scrollTrigger: { trigger: '.home-v3__hero', start: 'top top', end: 'bottom top', scrub: 0.7 },
-      });
       gsap.from('.home-v3__planner-photo img', {
         scale: 1.12, duration: 1.5, ease: 'power2.out',
         scrollTrigger: { trigger: '.home-v3__planner', start: 'top 75%', once: true },
       });
-      gsap.from('.home-v3__story-scene', {
-        clipPath: 'inset(0 0 18% 0)', duration: 1.1, ease: 'power2.out',
-        scrollTrigger: { trigger: '.home-v3__destinations', start: 'top 72%', once: true },
+      gsap.from('.home-journey__stage', {
+        y: 24, opacity: 0, duration: .85, ease: 'power2.out',
+        scrollTrigger: { trigger: '.home-v3__destinations', start: 'top 78%', once: true },
       });
       gsap.from('.home-v3__end-content h2', {
         y: 42, duration: 1.05, ease: 'power3.out',
@@ -154,15 +107,7 @@ export default function HomePage() {
     return () => mm.revert();
   }, { scope: rootRef });
 
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-    mm.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.from('.home-v3__story-copy > *', { y: 18, duration: .6, stagger: .07, ease: 'power2.out' });
-    });
-    return () => mm.revert();
-  }, { scope: rootRef, dependencies: [destination], revertOnUpdate: true });
-
-  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const checkIn = String(form.get('checkIn') || form.get('date') || '');
@@ -218,8 +163,12 @@ export default function HomePage() {
   return (
     <div className="home-v3" ref={rootRef}>
       <section className="home-v3__hero" aria-labelledby="home-title">
-        <div className="home-v3__hero-media" aria-hidden="true"><Image src="/image/yuding-hero-atlas.png" alt="" fill priority sizes="100vw" /></div>
-        <div className="home-v3__hero-shade" aria-hidden="true" />
+        <div className="home-v3__hero-media" aria-hidden="true">
+          <Image className="home-v3__hero-image--light" src="/image/yuding-hero-atlas.png" alt="" fill priority sizes="100vw" />
+          <Image className="home-v3__hero-image--dark" src="/image/home-hero-atlas-night.webp" alt="" fill loading="eager" sizes="100vw" />
+        </div>
+        <div className="home-v3__hero-shade home-v3__hero-shade--light" aria-hidden="true" />
+        <div className="home-v3__hero-shade home-v3__hero-shade--dark" aria-hidden="true" />
         <div className="home-v3__hero-body home-v3__frame">
           <div className="home-v3__hero-index"><span>YUDING <b>·</b> VOYAGES À VOTRE RYTHME</span><span>01 / L&apos;ENVIE</span></div>
           <div className="home-v3__hero-copy">
@@ -238,7 +187,7 @@ export default function HomePage() {
             {modes.map((item, index) => <button key={item.id} type="button" className="home-v3__mode" aria-pressed={mode === item.id} onClick={() => { setMode(item.id); setDeparture(''); setError(null); }}><span className="home-v3__mode-num">0{index + 1}</span><i className={`fas ${item.icon}`} aria-hidden="true" /><span>{item.label}</span></button>)}
           </div>
           <span className="home-v3__mode-hint" aria-hidden="true">5 services · faites glisser pour explorer <i className="fas fa-arrow-right" /></span>
-          <div key={mode} className="home-v3__search-panel t-panel-slide" data-open={panelOpen}>
+          <div key={mode} className="home-v3__search-panel t-panel-slide">
             <form onSubmit={submitSearch}>
               <p className="home-v3__search-prompt">{activeMode.description}</p>
               <div className={`home-v3__fields home-v3__fields--${mode}`}>
@@ -265,22 +214,11 @@ export default function HomePage() {
         <div className="home-v3__planner-main"><span className="home-v3__chapter">02 / L&apos;IDÉE DEVIENT UN ITINÉRAIRE</span><div className="home-v3__reveal"><h2 id="planner-title">Vous avez une envie.<br /><em>On trace la route.</em></h2><p>Quelques mots suffisent pour commencer. Le Smart Trip Planner transforme vos envies en un parcours que vous pouvez explorer et ajuster.</p><Link className="home-v3__planner-cta" href="/planifier">Imaginer mon voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><div className="home-v3__planner-trace" aria-hidden="true"><span>IMAGINER</span><span>COMPOSER</span><span>PARTIR</span></div></div>
       </section>
 
-      <section className="home-v3__destinations" aria-labelledby="destinations-title" onMouseEnter={() => setStoryPaused(true)} onMouseLeave={() => setStoryPaused(false)} onFocusCapture={() => setStoryPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setStoryPaused(false); }}>
-        <div className="home-v3__frame home-v3__story-heading"><span className="home-v3__chapter">03 / CARNET D&apos;HORIZONS</span><h2 id="destinations-title">Laissez le paysage<br /><em>changer le programme.</em></h2><p>Une côte, une capitale, une autre cadence. Choisissez l&apos;escale qui vous appelle.</p></div>
-        <div className="home-v3__story-scene">
-          {places.map((item, index) => <div key={item.name} className={`home-v3__story-image${destination === index ? ' is-active' : ''}`} aria-hidden={destination !== index}><Image src={editorialImages[item.name]?.url || item.image} alt={destination === index ? item.alt : ''} fill sizes="100vw" /></div>)}
-          <div className="home-v3__story-scrim" aria-hidden="true" />
-          <div className="home-v3__frame home-v3__story-inner">
-            <div className="home-v3__story-copy" key={places[destination].name} aria-live="polite"><span>{places[destination].kind} · {places[destination].country}</span><strong>0{destination + 1} <small>/ 0{places.length}</small></strong><h3>{places[destination].name}</h3><p>{places[destination].label}</p><Link href={places[destination].href}>Explorer cette escale <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div>
-            <div className="home-v3__story-controls" role="group" aria-label="Choisir une destination">{places.map((item, index) => <button key={item.name} type="button" aria-pressed={destination === index} onClick={() => { setDestination(index); setStoryPaused(true); }}><span>0{index + 1}</span><strong>{item.name}</strong><small>{item.country}</small></button>)}</div>
-          </div>
-        </div>
-        <div className="home-v3__frame home-v3__story-foot"><span>Images éditoriales d&apos;inspiration · tarifs et disponibilités vérifiés dans les résultats.</span>{editorialImages[places[destination].name] && <a href={editorialImages[places[destination].name].attributionUrl || 'https://www.pexels.com'} target="_blank" rel="noopener noreferrer">{editorialImages[places[destination].name].attribution}</a>}</div>
-      </section>
+      <HomeDestinations />
 
       <HomeReviews />
 
-      <section className="home-v3__end" aria-labelledby="end-title"><div className="home-v3__end-photo"><Image src="/image/home1.jpg" alt="Village au-dessus de la mer au crépuscule" fill sizes="100vw" /></div><div className="home-v3__end-shade" /><div className="home-v3__frame home-v3__end-content home-v3__reveal"><span className="home-v3__chapter">LE MONDE N&apos;ATTEND PAS</span><h2 id="end-title">Et si c&apos;était <em>maintenant ?</em></h2><div><p>Une destination en tête, ou seulement l&apos;envie de partir ?</p><a href="#home-search">Lancer une recherche <i className="fas fa-arrow-up" aria-hidden="true" /></a></div></div></section>
+      <HomeFinalCta />
     </div>
   );
 }

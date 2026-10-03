@@ -16,6 +16,7 @@ import {
   type ConditionItem,
 } from '@/components/travel/details';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { ExperiencedReviewCTA } from '@/components/travel/ExperiencedReviewCTA';
 
 export default function FlightDetailsPage() {
   const params = useParams();
@@ -236,6 +237,8 @@ export default function FlightDetailsPage() {
         title="Détails de l'itinéraire de vol"
         segments={timelineSegments}
       />
+
+      <ExperiencedReviewCTA type="FLIGHT" provider={flight.provider || ''} reference={flight.offerId} />
 
       {/* Conditions & Inclusions */}
       <ConditionList

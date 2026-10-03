@@ -16,6 +16,7 @@ import {
   type ConditionItem,
 } from '@/components/travel/details';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { ExperiencedReviewCTA } from '@/components/travel/ExperiencedReviewCTA';
 
 export default function TrainDetailsPage() {
   const params = useParams();
@@ -228,6 +229,8 @@ export default function TrainDetailsPage() {
         title="Détails du parcours ferroviaire"
         segments={timelineSegments}
       />
+
+      <ExperiencedReviewCTA type="TRAIN" provider={isTransitous ? 'TRANSITOUS' : 'ONCF GTFS'} reference={train.offerId || offerId} />
 
       {/* Conditions & Source Transparency */}
       <ConditionList

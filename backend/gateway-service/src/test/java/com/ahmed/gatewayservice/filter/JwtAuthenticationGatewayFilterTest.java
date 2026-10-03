@@ -76,4 +76,29 @@ class JwtAuthenticationGatewayFilterTest {
         assertThat(chainInvoked.get()).isFalse();
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
+
+    @Test
+    void reviewWritesAndMineRequireAuthenticationAtGateway() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/apic/reviews/mine").build());
+        AtomicReference<Boolean> chainInvoked = new AtomicReference<>(false);
+        filter.filter(exchange, ex -> {
+            chainInvoked.set(true);
+            return Mono.empty();
+        }).block();
+        assertThat(chainInvoked.get()).isFalse();
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void publicReviewsRemainReadableWithoutAuthentication() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/apic/reviews/public/featured").build());
+        AtomicReference<Boolean> chainInvoked = new AtomicReference<>(false);
+        filter.filter(exchange, ex -> {
+            chainInvoked.set(true);
+            return Mono.empty();
+        }).block();
+        assertThat(chainInvoked.get()).isTrue();
+    }
 }

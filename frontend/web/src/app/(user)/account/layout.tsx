@@ -11,6 +11,7 @@ import './account.css';
 const navItems = [
   { label: 'Profil & Sécurité', href: '/account/profile', icon: 'fa-user-shield' },
   { label: 'Mes Réservations', href: '/account/bookings', icon: 'fa-suitcase-rolling' },
+  { label: 'Mes Avis', href: '/account/reviews', icon: 'fa-star' },
   { label: 'Mes Favoris', href: '/account/favorites', icon: 'fa-heart' },
 ];
 

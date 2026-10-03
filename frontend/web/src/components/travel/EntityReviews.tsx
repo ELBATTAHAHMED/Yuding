@@ -2,12 +2,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { reviewService, type BookableReviewTarget } from '@/services/review.service';
+import { ExperiencedReviewCTA } from './ExperiencedReviewCTA';
 
 export function EntityReviews({ type, provider, reference }: { type: BookableReviewTarget; provider: string; reference: string }) {
   const query = useQuery({ queryKey: ['reviews', 'public', type, provider, reference],
     queryFn: () => reviewService.public(type, provider, reference), enabled: Boolean(provider && reference) });
   const isEmpty = query.data?.reviewCount === 0;
   return <section className={`entity-reviews${isEmpty ? ' entity-reviews--empty' : ''}`} aria-labelledby="entity-reviews-title">
+    <ExperiencedReviewCTA type={type} provider={provider} reference={reference} />
     <div className="entity-reviews-head"><div><p className="review-kicker">AVIS YUDING</p><h2 id="entity-reviews-title">Avis des voyageurs</h2></div>
       {query.data && query.data.reviewCount > 0 && <strong><i className="fas fa-star" aria-hidden="true" /> {query.data.averageRating?.toFixed(1)} / 5
         <span> · {query.data.reviewCount} avis vérifié{query.data.reviewCount > 1 ? 's' : ''}</span></strong>}</div>

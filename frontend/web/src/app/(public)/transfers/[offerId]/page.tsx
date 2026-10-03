@@ -21,6 +21,7 @@ import {
   type ConditionItem,
 } from '@/components/travel/details';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { ExperiencedReviewCTA } from '@/components/travel/ExperiencedReviewCTA';
 
 export default function TransferDetailsPage() {
   const params = useParams();
@@ -198,6 +199,8 @@ export default function TransferDetailsPage() {
         title="Détails du trajet de transfert"
         segments={timelineSegments}
       />
+
+      <ExperiencedReviewCTA type="TRANSFER" provider={transfer.provider || 'HBX'} reference={transfer.offerId || transfer.id || offerId} />
 
       {/* Conditions & Information */}
       <ConditionList

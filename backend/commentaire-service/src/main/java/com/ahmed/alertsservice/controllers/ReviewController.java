@@ -29,6 +29,21 @@ public class ReviewController {
     @GetMapping("/public/featured")
     public List<FeaturedReview> featuredReviews() { return reviews.featuredReviews(); }
 
+    @GetMapping("/mine")
+    public List<Review> mineAll(@AuthenticationPrincipal Jwt jwt) {
+        return reviews.mineAll(UUID.fromString(jwt.getSubject()));
+    }
+
+    @GetMapping("/platform/mine")
+    public MineResponse platformMine(@AuthenticationPrincipal Jwt jwt) {
+        return new MineResponse(reviews.platformMine(UUID.fromString(jwt.getSubject())));
+    }
+
+    @PostMapping("/platform")
+    public ResponseEntity<Review> createPlatform(@RequestBody ReviewInput input, @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(reviews.createPlatform(input, jwt));
+    }
+
     @GetMapping("/booking/{reference}/eligibility")
     public Eligibility eligibility(@PathVariable String reference, @AuthenticationPrincipal Jwt jwt) {
         return reviews.eligibility(reference, jwt);

@@ -37,6 +37,7 @@ export function Footer() {
             <ul>
               <li><Link href="/planifier">Smart Trip Planner</Link></li>
               <li><Link href="/account/bookings">Mes réservations</Link></li>
+              <li><Link href="/account/reviews">Mes avis</Link></li>
               <li><Link href="/account">Mon compte</Link></li>
             </ul>
           </div>
@@ -48,7 +49,11 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="yuding-footer__bottom">
+        {isHome ? <div className="yuding-footer__bottom yuding-footer__bottom--home">
+          <span className="yuding-footer__end-mark">Y<span aria-hidden="true">·</span></span>
+          <span>© {new Date().getFullYear()} Yuding. Tous droits réservés.</span>
+          <span>Le voyage continue.</span>
+        </div> : <div className="yuding-footer__bottom">
           <div className="yuding-footer__signature">
             <span aria-hidden="true" />
             <div>
@@ -57,7 +62,7 @@ export function Footer() {
             </div>
             <span aria-hidden="true" />
           </div>
-        </div>
+        </div>}
       </div>
     </footer>
   );
