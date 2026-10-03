@@ -112,10 +112,10 @@
 /* rdlg placeholder - will be replaced */
 
 /* -------------------------------------------------------------
-   rdlg — Redesigned Review Dialog  (replaces .review-modal-*)
+   rdlg ï¿½ Redesigned Review Dialog  (replaces .review-modal-*)
    ------------------------------------------------------------ */
 
-.rdlg-backdrop{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;padding:16px;background:rgba(10,24,22,.48);backdrop-filter:blur(6px)}
+.rdlg-backdrop{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;padding:16px;background:rgba(15,23,42,.45);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
 .rdlg-modal{width:min(100%,540px);max-height:min(90dvh,680px);display:flex;flex-direction:column;background:#fafbfb;border:1px solid #dde8e4;border-radius:18px;box-shadow:0 28px 80px rgba(5,20,18,.22),0 4px 12px rgba(5,20,18,.10);color:#1b3330;overflow:hidden}
 .rdlg-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:20px 24px 15px;border-bottom:1px solid #e4edea;flex-shrink:0}
 .rdlg-kicker{display:block;font-size:10.5px;font-weight:800;letter-spacing:.13em;color:#0a8074;margin-bottom:5px}
@@ -145,7 +145,7 @@
 @keyframes rdlg-reveal{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.rdlg-optional{animation:none}.rdlg-star{transition:none}}
 .rdlg-helper{margin:0 0 13px;color:#58716a;font-size:12.5px;line-height:1.55}
-.rdlg-textarea-label{display:block;font-size:13px;font-weight:600;color:#2e4b44;margin-bottom:6px}
+.rdlg-textarea-label{display:block;font-size:13px;font-weight:600;color:#2e4b44;margin-bottom:6px;text-decoration:none !important;border:none !important;transform:none !important}.rdlg-textarea-label:hover{color:#2e4b44 !important;transform:none !important}.rdlg-textarea-label::after,.rdlg-textarea-label:hover::after{content:none !important;display:none !important}
 .rdlg-textarea-label span{font-weight:400;color:#7a9089}
 .rdlg-textarea{width:100%;resize:vertical;min-height:84px;max-height:220px;border:1px solid #c8dcd6;border-radius:9px;padding:10px 13px;font:inherit;font-size:13.5px;color:#1b3330;background:#fff;outline:none;box-sizing:border-box;transition:border-color .14s,box-shadow .14s}
 .rdlg-textarea:focus{border-color:#0a8074;box-shadow:0 0 0 3px rgba(10,128,116,.12)}

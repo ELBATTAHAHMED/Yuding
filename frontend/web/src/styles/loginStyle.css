@@ -665,7 +665,8 @@ body.auth-body {
     text-shadow: none !important;
 }
 .auth-switch-link,
-label {
+.container label[for="flip"],
+.forms label {
     background: none;
     border: none;
     padding: 0;
@@ -680,12 +681,14 @@ label {
     text-decoration: none;
 }
 .auth-switch-link:hover,
-label:hover {
+.container label[for="flip"]:hover,
+.forms label:hover {
     color: var(--secondary-color);
     transform: translateY(-1px);
 }
 .auth-switch-link::after,
-label::after {
+.container label[for="flip"]::after,
+.forms label::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -696,7 +699,8 @@ label::after {
     transition: width 0.3s ease;
 }
 .auth-switch-link:hover::after,
-label:hover::after {
+.container label[for="flip"]:hover::after,
+.forms label:hover::after {
     width: 100%;
 }
 .login-text,
