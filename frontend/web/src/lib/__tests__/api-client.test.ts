@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiClient, ApiError } from '../api-client.ts';
+import { ApiClient, ApiError, SESSION_EXPIRED_EVENT } from '../api-client.ts';
 
 // Helper to create a mock Response
 function createMockResponse(body: any, init: { status?: number; statusText?: string; headers?: Record<string, string> } = {}): Response {
@@ -224,6 +224,49 @@ describe('ApiClient Unit Tests', () => {
     assert.ok(res3.path.includes('req3'));
   });
 
+  it('serializes refresh-cookie rotation across separate tabs', async () => {
+    const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+    let lockQueue = Promise.resolve();
+    let activeRotations = 0;
+    let maxActiveRotations = 0;
+    let cookieVersion = 0;
+    let refreshCalls = 0;
+
+    const locks = {
+      request: (_name: string, _options: unknown, callback: () => Promise<string | null>) => {
+        const result = lockQueue.then(async () => {
+          activeRotations++;
+          maxActiveRotations = Math.max(maxActiveRotations, activeRotations);
+          try { return await callback(); } finally { activeRotations--; }
+        });
+        lockQueue = result.then(() => undefined, () => undefined);
+        return result;
+      },
+    };
+
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { locks } });
+    try {
+      globalThis.fetch = async () => {
+        const presentedVersion = cookieVersion;
+        refreshCalls++;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        if (presentedVersion !== cookieVersion) return createMockResponse({}, { status: 401 });
+        cookieVersion++;
+        return createMockResponse({ accessToken: `access-${cookieVersion}` });
+      };
+
+      const otherTab = new ApiClient('http://localhost:8888');
+      const [first, second] = await Promise.all([client.refreshToken(), otherTab.refreshToken()]);
+      assert.equal(first, 'access-1');
+      assert.equal(second, 'access-2');
+      assert.equal(refreshCalls, 2);
+      assert.equal(maxActiveRotations, 1, 'No two tabs may reuse the same rotating cookie');
+    } finally {
+      if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
+      else Reflect.deleteProperty(globalThis, 'navigator');
+    }
+  });
+
   it('10. Failed refresh clears token and throws clean 401 ApiError', async () => {
     client.setAccessToken('expired-token');
 
@@ -243,6 +286,23 @@ describe('ApiClient Unit Tests', () => {
       assert.equal(err.status, 401);
       assert.equal(err.isAuthError, true);
       assert.equal(client.getAccessToken(), null, 'Token should be cleared on failed refresh');
+    }
+  });
+
+  it('notifies the UI when the refresh session is revoked', async () => {
+    const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    const events: string[] = [];
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { dispatchEvent: (event: Event) => { events.push(event.type); return true; } },
+    });
+    try {
+      globalThis.fetch = async () => createMockResponse({}, { status: 401 });
+      assert.equal(await client.refreshToken(), null);
+      assert.deepEqual(events, [SESSION_EXPIRED_EVENT]);
+    } finally {
+      if (windowDescriptor) Object.defineProperty(globalThis, 'window', windowDescriptor);
+      else Reflect.deleteProperty(globalThis, 'window');
     }
   });
 

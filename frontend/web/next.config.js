@@ -32,6 +32,11 @@ if (typeof mod._resolveFilename === 'function') {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Keep common routes compiled while moving between travel sections in next dev.
+  onDemandEntries: {
+    maxInactiveAge: 5 * 60 * 1000,
+    pagesBufferLength: 12,
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

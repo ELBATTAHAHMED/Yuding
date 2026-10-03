@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
 
@@ -48,9 +49,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           <p style={{ marginBottom: '1.5rem', color: '#666' }}>
             Votre compte n&apos;a pas les autorisations requises ({allowedRoles.join(', ')}) pour accéder à cette ressource.
           </p>
-          <button
-            onClick={() => router.push('/')}
+          <Link
+            href="/"
             style={{
+              display: 'inline-block',
               padding: '0.75rem 1.5rem',
               backgroundColor: '#00796b',
               color: '#fff',
@@ -61,7 +63,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             }}
           >
             Retourner à l&apos;accueil
-          </button>
+          </Link>
         </div>
       );
     }
