@@ -66,7 +66,8 @@ export default function TrainsPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('rerun') !== '1' || loadingStations) return;
     const findStation = (id: string, name: string) => stations.find(station =>
-      (id && station.id === id) || (name && station.name.toLocaleLowerCase() === name.toLocaleLowerCase()));
+      (id && station.id === id) || (name && station.name.toLocaleLowerCase() === name.toLocaleLowerCase()))
+      ?? (id && name ? { id, name, city: name, country: '' } : undefined);
     const from = findStation(params.get('originId') || '', params.get('origin') || '');
     const to = findStation(params.get('destinationId') || '', params.get('destination') || '');
     const nextDate = params.get('date') || '';

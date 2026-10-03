@@ -53,7 +53,7 @@ export const Header: React.FC = () => {
           <Link href="/" className="logo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={isHome || isDark ? '/image/logo1.png' : '/image/logodark.png'}
+              src={isDark || (isHome && !homeScrolled && !menuOpen) ? '/image/logo1.png' : '/image/logodark.png'}
               alt="Yuding"
               id="headerLogo"
             />
@@ -101,7 +101,7 @@ export const Header: React.FC = () => {
               type="button"
               className="yuding-menu-toggle"
               aria-expanded={menuOpen}
-              aria-label="Ouvrir la navigation"
+              aria-label={menuOpen ? 'Fermer la navigation' : 'Ouvrir la navigation'}
               onClick={() => setMenuOpen((open) => !open)}
               style={{
                 background: 'none',
