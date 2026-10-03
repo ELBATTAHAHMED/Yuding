@@ -10,6 +10,7 @@ import { SafeEntityImage } from '@/components/travel/SafeEntityImage';
 import { PriceDisplay } from '@/components/travel/PriceDisplay';
 import { libraryService } from '@/services/library.service';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { EntityReviews } from '@/components/travel/EntityReviews';
 import {
   OfferDetailsShell,
   OfferDetailsHeader,
@@ -233,7 +234,7 @@ export default function HotelDetailsPage() {
         {metadata?.imageUrl && <div className="mt-6 h-52 overflow-hidden rounded-xl"><SafeEntityImage src={metadata.imageUrl} alt={metadata.title} entityType="HOTEL" className="h-full w-full object-cover" /></div>}
         <h1 className="mt-6 text-2xl font-bold">{metadata?.title || 'Hébergement'}</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Cette offre n’est plus disponible. Actualisez les offres pour connaître les tarifs et disponibilités actuels.</p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="text-sm font-medium sm:col-span-2">Destination
             <input value={destination} onChange={event => setDestination(event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-[#062523] dark:text-white" />
           </label>
@@ -249,6 +250,7 @@ export default function HotelDetailsPage() {
         </div>
         {refreshError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{refreshError}</p>}
         <button type="button" onClick={() => void loadAvailability(destination, checkIn, checkOut, occupancies, countryCode, guestNationality)} className="mt-5 rounded-lg bg-[#01796F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#005f57]">Actualiser les offres</button>
+        <div className="mt-8"><EntityReviews type="ACCOMMODATION" provider="NUITEE" reference={offerId} /></div>
       </main>
     );
   }
@@ -452,6 +454,7 @@ export default function HotelDetailsPage() {
         title="Conditions de séjour & Politiques de l'établissement"
         items={conditions}
       />
+      <EntityReviews type="ACCOMMODATION" provider={hotel.provider || 'NUITEE'} reference={hotel.hotelId || offerId} />
     </OfferDetailsShell>
   );
 }
