@@ -16,6 +16,8 @@
  * - Conservative, idempotency-aware retry policy (GET/HEAD transient retries; safe backoff)
  */
 
+export const SESSION_EXPIRED_EVENT = 'yuding:session-expired';
+
 export interface ApiErrorDetails {
   message: string;
   status: number;
@@ -122,7 +124,7 @@ export class ApiClient {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = (async () => {
+    const rotate = async (): Promise<string | null> => {
       try {
         const res = await fetch(`${this.baseUrl}/auth/refresh`, {
           method: 'POST',
@@ -135,6 +137,9 @@ export class ApiClient {
 
         if (!res.ok) {
           this.setAccessToken(null);
+          if ((res.status === 401 || res.status === 403) && typeof window !== 'undefined') {
+            window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+          }
           return null;
         }
 
@@ -145,10 +150,19 @@ export class ApiClient {
       } catch {
         this.setAccessToken(null);
         return null;
-      } finally {
-        this.refreshPromise = null;
       }
-    })();
+    };
+
+    // The refresh cookie is shared by same-origin tabs. A second tab must not
+    // submit it while the first tab is rotating it, or reuse detection will
+    // revoke the session. Keep the existing per-tab single-flight promise too.
+    const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+    const coordinatedRefresh = async (): Promise<string | null> => locks
+      ? locks.request<Promise<string | null>>('yuding-refresh-token', { mode: 'exclusive' }, rotate)
+      : rotate();
+    this.refreshPromise = coordinatedRefresh().finally(() => {
+      this.refreshPromise = null;
+    });
 
     return this.refreshPromise;
   }

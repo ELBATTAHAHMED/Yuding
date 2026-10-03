@@ -36,6 +36,24 @@ html.dark {
   --shell-success: #9bd7bf;
 }
 
+.yuding-route-loading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 45vh;
+  padding: 48px clamp(24px, 4vw, 72px);
+  background: var(--shell-page);
+  color: var(--shell-muted);
+  font-size: .85rem;
+}
+.yuding-route-loading__line {
+  flex: 0 0 22px;
+  height: 3px;
+  margin-top: .6em;
+  background: var(--shell-accent);
+  border-radius: 2px;
+}
+
 /* Existing page systems consume one semantic palette without changing their structure. */
 :root:root, body[data-theme] {
   --travel-bg: var(--shell-page);

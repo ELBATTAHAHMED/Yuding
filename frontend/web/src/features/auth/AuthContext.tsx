@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { authService } from '@/services/auth.service';
+import { SESSION_EXPIRED_EVENT } from '@/lib/api-client';
 import { LoginRequest, RegisterRequest, UserProfile } from '@/types/auth.types';
 
 interface AuthContextType {
@@ -26,6 +27,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const clearExpiredSession = () => {
+      setUser(null);
+      setAccessToken(null);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, clearExpiredSession);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, clearExpiredSession);
+  }, []);
 
   const reloadProfile = async () => {
     try {

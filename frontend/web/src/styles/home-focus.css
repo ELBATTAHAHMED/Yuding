@@ -190,7 +190,7 @@ body:has(.home-v3) .yuding-footer--home { padding:32px clamp(20px,4vw,72px) 30px
 .home-journey__chapter a { align-self:flex-start; display:inline-flex; align-items:center; gap:20px; min-height:48px; margin-top:30px; border-bottom:1px solid #087d70; color:#087d70; font-size:.84rem; font-weight:700; }
 .home-journey__chapter a i { transition:transform .2s ease; }
 .home-journey__chapter a:hover i { transform:translate(3px,-3px); }
-.home-journey__mobile-photo { display:none; }
+.home-journey__mobile-photo { display:none; position:relative; }
 .dark .home-v3__destinations.home-journey { background:#1d2529 !important; }
 .dark .home-journey__heading h2,.dark .home-journey__chapter h3 { color:#f0f0ea; }
 .dark .home-journey__heading h2 em,.dark .home-journey__eyebrow { color:#add8c5; }
