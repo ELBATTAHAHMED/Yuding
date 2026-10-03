@@ -9,27 +9,24 @@ export interface NavItem {
   href: string;
   label: string;
   icon: string;
-  category: 'OPÉRATIONS' | 'CONTENU & OFFRES' | 'INFRASTRUCTURE & IA' | 'GOUVERNANCE';
+  category: 'OPÉRATIONS & COMMERCE' | 'CONTENU & MODÉRATION' | 'SYSTÈME & OBSERVABILITÉ' | 'GOUVERNANCE & SÉCURITÉ';
   badgeCount?: number;
 }
 
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  { href: '/admin', label: 'Vue d\'ensemble', icon: 'fas fa-chart-line', category: 'OPÉRATIONS' },
-  { href: '/admin/bookings', label: 'Réservations', icon: 'fas fa-ticket-alt', category: 'OPÉRATIONS' },
-  { href: '/admin/payments', label: 'Paiements & Ledger', icon: 'fas fa-credit-card', category: 'OPÉRATIONS' },
-  { href: '/admin/refunds', label: 'Remboursements', icon: 'fas fa-undo-alt', category: 'OPÉRATIONS' },
+  { href: '/admin', label: 'Vue d\'ensemble', icon: 'fas fa-chart-line', category: 'OPÉRATIONS & COMMERCE' },
+  { href: '/admin/bookings', label: 'Réservations & Voyages', icon: 'fas fa-ticket-alt', category: 'OPÉRATIONS & COMMERCE' },
+  { href: '/admin/payments', label: 'Paiements & Ledger', icon: 'fas fa-credit-card', category: 'OPÉRATIONS & COMMERCE' },
+  { href: '/admin/refunds', label: 'Remboursements', icon: 'fas fa-undo-alt', category: 'OPÉRATIONS & COMMERCE' },
   
-  { href: '/admin/reviews', label: 'Modération Avis', icon: 'fas fa-star', category: 'CONTENU & OFFRES' },
-  { href: '/admin/destinations', label: 'Destinations Maroc', icon: 'fas fa-map-marked-alt', category: 'CONTENU & OFFRES' },
-  { href: '/admin/custom-offers', label: 'Offres Capturées', icon: 'fas fa-tags', category: 'CONTENU & OFFRES' },
+  { href: '/admin/reviews', label: 'Modération Avis', icon: 'fas fa-star', category: 'CONTENU & MODÉRATION' },
+  { href: '/admin/destinations', label: 'Destinations Maroc', icon: 'fas fa-map-marked-alt', category: 'CONTENU & MODÉRATION' },
   
-  { href: '/admin/providers', label: 'Santé Fournisseurs', icon: 'fas fa-server', category: 'INFRASTRUCTURE & IA' },
-  { href: '/admin/api-usage', label: 'Routage API Gateway', icon: 'fas fa-network-wired', category: 'INFRASTRUCTURE & IA' },
-  { href: '/admin/ai-usage', label: 'Télémétrie IA & RAG', icon: 'fas fa-robot', category: 'INFRASTRUCTURE & IA' },
+  { href: '/admin/providers', label: 'Santé & Télémétrie', icon: 'fas fa-server', category: 'SYSTÈME & OBSERVABILITÉ' },
   
-  { href: '/admin/users', label: 'Utilisateurs & RBAC', icon: 'fas fa-users-cog', category: 'GOUVERNANCE' },
-  { href: '/admin/audit', label: 'Journal d\'Audit', icon: 'fas fa-shield-alt', category: 'GOUVERNANCE' },
-  { href: '/admin/settings', label: 'Paramètres & Flags', icon: 'fas fa-sliders-h', category: 'GOUVERNANCE' },
+  { href: '/admin/users', label: 'Utilisateurs & RBAC', icon: 'fas fa-users-cog', category: 'GOUVERNANCE & SÉCURITÉ' },
+  { href: '/admin/audit', label: 'Journal d\'Audit', icon: 'fas fa-shield-alt', category: 'GOUVERNANCE & SÉCURITÉ' },
+  { href: '/admin/settings', label: 'Politiques & Paramètres', icon: 'fas fa-sliders-h', category: 'GOUVERNANCE & SÉCURITÉ' },
 ];
 
 interface AdminSidebarProps {
@@ -42,10 +39,10 @@ export function AdminSidebar({ collapsed, onToggleCollapse }: AdminSidebarProps)
   const { user, logout } = useAuth();
 
   const categories: Array<NavItem['category']> = [
-    'OPÉRATIONS',
-    'CONTENU & OFFRES',
-    'INFRASTRUCTURE & IA',
-    'GOUVERNANCE',
+    'OPÉRATIONS & COMMERCE',
+    'CONTENU & MODÉRATION',
+    'SYSTÈME & OBSERVABILITÉ',
+    'GOUVERNANCE & SÉCURITÉ',
   ];
 
   const userInitials = user?.firstName

@@ -99,6 +99,30 @@ export const adminService = {
     }
   },
 
+  async retryRefund(cancellationId: string): Promise<AdminCancellation> {
+    return apiClient.post<AdminCancellation>(
+      `/apir/admin/cancellations/${cancellationId}/retry-refund`,
+      {},
+      true
+    );
+  },
+
+  async suspendUser(userId: string, reason?: string): Promise<AdminUserSummary> {
+    return apiClient.put<AdminUserSummary>(
+      `/admin/users/${userId}/status`,
+      { status: 'SUSPENDED', reason },
+      true
+    );
+  },
+
+  async reactivateUser(userId: string): Promise<AdminUserSummary> {
+    return apiClient.put<AdminUserSummary>(
+      `/admin/users/${userId}/status`,
+      { status: 'ACTIVE' },
+      true
+    );
+  },
+
   async getAuditLogs(limit: number = 50): Promise<AdminAuditAction[]> {
     try {
       return await apiClient.get<AdminAuditAction[]>(`/admin/users/audit-logs?limit=${limit}`, true);

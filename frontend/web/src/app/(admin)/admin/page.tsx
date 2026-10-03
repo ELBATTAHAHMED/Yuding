@@ -11,7 +11,9 @@ import {
 import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
 import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminAttentionBanner } from '@/components/admin/AdminAttentionBanner';
 import { AdminBooking, AdminPayment } from '@/types/admin.types';
+import { parseTravelContext } from '@/lib/admin-travel';
 
 export default function AdminOverviewPage() {
   const { data: stats, isLoading: loadingStats, refetch: refetchStats } = useAdminStats();
@@ -32,27 +34,70 @@ export default function AdminOverviewPage() {
   const bookingColumns = [
     {
       key: 'bookingReference',
-      header: 'RÉFÉRENCE',
-      render: (b: AdminBooking) => (
-        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
-          {b.bookingReference}
-        </span>
-      ),
+      header: 'DOSSIER & VOYAGE',
+      render: (b: AdminBooking) => {
+        const travel = parseTravelContext(b);
+        return (
+          <div className="flex items-center gap-2.5 py-1">
+            {travel.imageUrl ? (
+              <img
+                src={travel.imageUrl}
+                alt={travel.title}
+                className="w-9 h-9 rounded-md object-cover flex-shrink-0 border"
+                style={{ borderColor: 'var(--admin-border)' }}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div
+                className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 border text-xs"
+                style={{
+                  backgroundColor: 'var(--admin-surface-muted)',
+                  borderColor: 'var(--admin-border)',
+                  color: travel.badgeColor,
+                }}
+              >
+                <i
+                  className={
+                    b.productType === 'FLIGHT'
+                      ? 'fas fa-plane'
+                      : b.productType === 'HOTEL'
+                      ? 'fas fa-hotel'
+                      : b.productType === 'ACTIVITY'
+                      ? 'fas fa-hiking'
+                      : b.productType === 'TRANSFER'
+                      ? 'fas fa-car-side'
+                      : 'fas fa-train'
+                  }
+                />
+              </div>
+            )}
+            <div className="min-w-0">
+              <span className="admin-mono-tabular font-extrabold text-xs block" style={{ color: 'var(--admin-accent)' }}>
+                {b.bookingReference}
+              </span>
+              <span className="font-bold text-xs truncate block max-w-[200px]" style={{ color: 'var(--admin-text-primary)' }}>
+                {travel.title}
+              </span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: 'productType',
-      header: 'VERTICALE',
+      header: 'CALENDRIER',
       render: (b: AdminBooking) => {
-        const iconMap: Record<string, string> = {
-          FLIGHT: 'fas fa-plane',
-          HOTEL: 'fas fa-hotel',
-          ACTIVITY: 'fas fa-hiking',
-          TRANSFER: 'fas fa-car-side',
-        };
+        const travel = parseTravelContext(b);
         return (
-          <div className="flex items-center gap-1.5 text-xs font-semibold">
-            <i className={`${iconMap[b.productType] || 'fas fa-ticket-alt'} text-xs`} style={{ color: 'var(--admin-text-muted)' }} />
-            <span>{b.productType}</span>
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+              {travel.dates}
+            </span>
+            <span className="text-[0.625rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
+              {travel.badge}
+            </span>
           </div>
         );
       },
@@ -72,7 +117,7 @@ export default function AdminOverviewPage() {
       align: 'right' as const,
       render: (b: AdminBooking) => (
         <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
-          {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'EUR'}` : '—'}
+          {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
         </span>
       ),
     },
@@ -92,7 +137,14 @@ export default function AdminOverviewPage() {
       key: 'providerName',
       header: 'PASSERELLE',
       render: (p: AdminPayment) => (
-        <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--admin-surface-muted)', color: 'var(--admin-text-secondary)' }}>
+        <span
+          className="text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            color: 'var(--admin-text-secondary)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           {p.providerName}
         </span>
       ),
@@ -124,10 +176,10 @@ export default function AdminOverviewPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-            Console des Opérations
+            Console des Opérations Yuding
           </h1>
           <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
-            Supervision consolidée en temps réel des transactions, réservations et de l&apos;infrastructure Yuding
+            Supervision autoritaire en direct : flux transactionnels, dossiers voyage et santé de l&apos;architecture
           </p>
         </div>
 
@@ -161,16 +213,19 @@ export default function AdminOverviewPage() {
               color: 'var(--admin-accent)',
             }}
           >
-            <i className="fas fa-sync text-xs" />
+            <i className="fas fa-sync text-xs mr-1" />
             <span>Actualiser</span>
           </button>
         </div>
       </div>
 
+      {/* Immediate Attention & Triage Queue */}
+      <AdminAttentionBanner />
+
       {/* Primary KPI Ribbon */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard
-          label="Réservations Totales"
+          label="Dossiers Réservations"
           value={stats?.totalReservations ?? 0}
           subtext="Schéma booking.bookings"
           icon="fas fa-ticket-alt"
@@ -189,8 +244,8 @@ export default function AdminOverviewPage() {
           label="Volume Transactionnel"
           value={
             stats?.totalRevenue
-              ? `${stats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
-              : '0.00 €'
+              ? `${stats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`
+              : '0.00 MAD'
           }
           subtext="Paiements capturés avec succès"
           icon="fas fa-coins"
@@ -202,7 +257,7 @@ export default function AdminOverviewPage() {
           value={`${stats?.totalRefunds ?? 0} / ${stats?.totalCancellations ?? 0}`}
           subtext={
             stats?.totalRefundedAmount
-              ? `${stats.totalRefundedAmount.toFixed(2)} € exécutés`
+              ? `${stats.totalRefundedAmount.toFixed(2)} MAD exécutés`
               : 'Flux Phase 51 vérifié'
           }
           icon="fas fa-undo-alt"
@@ -264,7 +319,7 @@ export default function AdminOverviewPage() {
                 Distribution par Verticale Produit
               </span>
               <span className="text-xs font-bold" style={{ color: 'var(--admin-accent)' }}>
-                4 Verticales Actives
+                5 Verticales Actives
               </span>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
@@ -298,7 +353,7 @@ export default function AdminOverviewPage() {
             <div className="flex items-center gap-2">
               <i className="fas fa-ticket-alt text-xs" style={{ color: 'var(--admin-accent)' }} />
               <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
-                Dernières Réservations
+                Derniers Dossiers Voyage
               </h2>
             </div>
             <Link
@@ -326,7 +381,7 @@ export default function AdminOverviewPage() {
             <div className="flex items-center gap-2">
               <i className="fas fa-credit-card text-xs" style={{ color: '#38BDF8' }} />
               <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
-                Transactions Récentes
+                Flux Financiers Récents
               </h2>
             </div>
             <Link
@@ -369,7 +424,7 @@ export default function AdminOverviewPage() {
             className="text-xs font-bold no-underline hover:underline"
             style={{ color: 'var(--admin-accent)' }}
           >
-            Détails des Fournisseurs →
+            Observabilité &amp; Fournisseurs →
           </Link>
         </div>
 
