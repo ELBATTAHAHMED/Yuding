@@ -117,4 +117,35 @@ public class AuditService {
             return new SecurityEventResponse(id, eventType, maskedIp, deviceLabel, reason, risk, createdAt);
         }, userId, safeLimit);
     }
+
+    /**
+     * Retrieve global administrative actions audit log.
+     */
+    public List<com.ahmed.identityservice.dto.AdminActionResponse> getAdminActions(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        String sql = """
+                SELECT id, admin_user_id, action_type, target_service, target_entity_type, target_entity_id, reason, metadata_json, created_at
+                FROM audit.admin_actions
+                ORDER BY created_at DESC
+                LIMIT ?
+                """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Long id = rs.getLong("id");
+            UUID adminUserId = (UUID) rs.getObject("admin_user_id");
+            String actionType = rs.getString("action_type");
+            String targetService = rs.getString("target_service");
+            String targetEntityType = rs.getString("target_entity_type");
+            String targetEntityId = rs.getString("target_entity_id");
+            String reason = rs.getString("reason");
+            String metadataJson = rs.getString("metadata_json");
+            Timestamp ts = rs.getTimestamp("created_at");
+            Instant createdAt = ts != null ? ts.toInstant() : Instant.now();
+
+            return new com.ahmed.identityservice.dto.AdminActionResponse(
+                    id, adminUserId, actionType, targetService, targetEntityType, targetEntityId, reason, metadataJson, createdAt
+            );
+        }, safeLimit);
+    }
 }
+
