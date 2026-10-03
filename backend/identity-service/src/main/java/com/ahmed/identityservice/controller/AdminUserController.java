@@ -72,4 +72,12 @@ public class AdminUserController {
         UUID adminId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(adminUserService.deleteUser(adminId, id));
     }
+
+    @GetMapping("/audit-logs")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+    public ResponseEntity<List<com.ahmed.identityservice.dto.AdminActionResponse>> getAuditLogs(
+            @RequestParam(defaultValue = "50") int limit) {
+        return ResponseEntity.ok(adminUserService.getAuditLogs(limit));
+    }
 }
+

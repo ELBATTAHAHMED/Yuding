@@ -145,4 +145,9 @@ public class AdminUserService {
 
         return new MessageResponse("User deleted successfully");
     }
+
+    @Transactional(readOnly = true)
+    public List<com.ahmed.identityservice.dto.AdminActionResponse> getAuditLogs(int limit) {
+        return auditService.getAdminActions(limit);
+    }
 }
