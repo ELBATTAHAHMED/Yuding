@@ -170,7 +170,7 @@ const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
         <div className="home-v3__hero-shade home-v3__hero-shade--light" aria-hidden="true" />
         <div className="home-v3__hero-shade home-v3__hero-shade--dark" aria-hidden="true" />
         <div className="home-v3__hero-body home-v3__frame">
-          <div className="home-v3__hero-index"><span>YUDING <b>·</b> VOYAGES À VOTRE RYTHME</span><span>01 / L&apos;ENVIE</span></div>
+          <div className="home-v3__hero-index"><span>YUDING <b>·</b> VOYAGES À VOTRE RYTHME</span></div>
           <div className="home-v3__hero-copy">
             <h1 id="home-title"><span className="home-v3__hero-word">Partez.</span><span className="home-v3__hero-word">Le monde <em>vous attend.</em></span></h1>
             <p className="home-v3__hero-deck">Un séjour à imaginer, une ville à traverser, des moments à vivre. Votre prochain voyage prend forme ici.</p>

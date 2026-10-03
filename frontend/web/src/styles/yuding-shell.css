@@ -123,24 +123,31 @@ html .checkout-shell.checkout-shell {
   content:none !important; display:none !important;
 }
 .header.yuding-header.home-header .nav-item,
-.header.yuding-header.subpage-header .nav-item { border-radius:10px !important; transition:background-color .2s ease,color .2s ease !important; }
-.header.yuding-header.home-header .nav-item:is(:hover,:focus-visible,.active) { background:rgba(255,255,255,.13) !important; color:#fff !important; }
+.header.yuding-header.subpage-header .nav-item { border-radius:0 !important; background:transparent !important; transition:color .2s ease !important; }
+.header.yuding-header .nav-item > span { position:relative; display:inline-block; }
+.header.yuding-header .nav-item > span::after {
+  content:''; position:absolute; left:0; right:0; bottom:-5px; height:2px;
+  border-radius:2px; background:currentColor; transform:scaleX(0); transform-origin:left center;
+  transition:transform .22s cubic-bezier(.22,1,.36,1);
+}
+.header.yuding-header .nav-item:is(:hover,:focus-visible,.active) > span::after { transform:scaleX(1); }
+.header.yuding-header.home-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#a8e8ca !important; }
 .dark .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .nav-item:is(:hover,:focus-visible,.active),
-.dark .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:rgba(155,215,191,.11) !important; color:#c4ead8 !important; }
+.dark .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#9bd7bf !important; }
 html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .nav-item:is(:hover,:focus-visible,.active),
-html:not(.dark) .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:rgba(8,125,112,.08) !important; color:#087d70 !important; }
+html:not(.dark) .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#087d70 !important; }
 html:not(.dark) .header.yuding-header.home-header.home-header--scrolled .nav-item.active { color:#087d70 !important; }
 .header.yuding-header.subpage-header .header-btns { justify-self:end; }
 .header.yuding-header.subpage-header .header-btns,
-.header-account-actions { display: flex; align-items: center; gap: 9px !important; }
+.header-account-actions { display: flex; align-items: center; gap: 8px !important; }
 .header.yuding-header.subpage-header .btn-connexion {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 42px; padding: 0 15px !important;
+  min-height: 38px !important; padding: 0 10px !important;
   border: 1px solid #abc5bb !important;
-  border-radius: 11px !important;
+  border-radius: 7px !important;
   background: #fff !important;
   color: #153f39 !important;
-  font-size: .8rem !important;
+  font-size: .75rem !important;
   font-weight:700;
   box-shadow: none !important;
   transition:background-color .22s ease,border-color .22s ease,transform .22s ease !important;
