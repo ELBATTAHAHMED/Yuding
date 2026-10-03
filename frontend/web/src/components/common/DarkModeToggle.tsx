@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-export const DarkModeToggle: React.FC = () => {
+export const DarkModeToggle: React.FC<{ onThemeChange?: (dark: boolean) => void }> = ({ onThemeChange }) => {
   const [isDark, setIsDark] = useState<boolean>(false);
 
   useEffect(() => {
@@ -16,12 +16,13 @@ export const DarkModeToggle: React.FC = () => {
 
   const applyTheme = (dark: boolean) => {
     const html = document.documentElement;
+    const theme = dark ? 'dark' : 'light';
+    html.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
     if (dark) {
       html.classList.add('dark');
-      html.setAttribute('data-theme', 'dark');
     } else {
       html.classList.remove('dark');
-      html.removeAttribute('data-theme');
     }
   };
 
@@ -30,6 +31,7 @@ export const DarkModeToggle: React.FC = () => {
     setIsDark(nextDark);
     applyTheme(nextDark);
     localStorage.setItem('theme', nextDark ? 'dark' : 'light');
+    onThemeChange?.(nextDark);
   };
 
   return (

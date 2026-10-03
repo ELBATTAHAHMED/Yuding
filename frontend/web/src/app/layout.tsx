@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import '@/styles/reviews.css';
+import '@/styles/yuding-shell.css';
+import '@/styles/home-stories-refresh.css';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AiChatWidget } from '@/components/ai/AiChatWidget';
