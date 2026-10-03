@@ -3,6 +3,7 @@
 @import '../styles/loginStyle.css';
 @import '../styles/home-redesign.css';
 @import '../styles/home-option1.css';
+@import '../styles/home-experience.css';
 
 @tailwind base;
 @tailwind components;

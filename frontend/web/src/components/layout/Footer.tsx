@@ -42,7 +42,7 @@ export function Footer() {
           <div className="yuding-footer__discover">
             <h4>Votre voyage commence ici</h4>
             <p>Choisissez une destination et trouvez le séjour, le trajet et les expériences qui vous ressemblent.</p>
-            <Link href="/#home-search" className="yuding-footer__cta">Planifier mon voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+            <Link href="/planifier" className="yuding-footer__cta">Planifier mon voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
           </div>
         </div>
 
