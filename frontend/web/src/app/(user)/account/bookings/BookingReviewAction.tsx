@@ -16,8 +16,9 @@ export function BookingReviewAction({ reference }: { reference: string }) {
   if (eligibility.isError || mine.isError) return <span className="review-unavailable">Avis momentanément indisponibles</span>;
   if (!eligibility.data?.eligible && !review) return null;
   return <>
-    <button type="button" className="btn-secondary-sm" onClick={() => setOpen(true)}>
-      <i className="fas fa-star" aria-hidden="true" /> {review ? 'Mon avis' : 'Laisser un avis'}
+    <button type="button" className="booking-review-action" onClick={() => setOpen(true)}
+      aria-label={review ? `Voir mon avis pour la réservation ${reference}` : `Laisser un avis pour la réservation ${reference}`}>
+      <i className="fas fa-star" aria-hidden="true" /> {review ? 'Mon avis' : 'Avis'}
     </button>
     {open && <ReviewDialog reference={reference} entityName={eligibility.data?.entityName || 'votre voyage'}
       review={review || null} onClose={() => setOpen(false)} onChanged={() => {
