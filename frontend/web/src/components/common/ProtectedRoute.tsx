@@ -27,9 +27,27 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (isLoading) {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#00796b', marginBottom: '1rem' }}></i>
-          <p>Chargement de votre session sécurisée...</p>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#00D4AA', marginBottom: '1rem' }}></i>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '1.25rem' }}>Chargement de votre session sécurisée...</p>
+          <Link
+            href={`/login?redirect=${encodeURIComponent(pathname)}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#00D4AA',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+              border: '1px solid rgba(0, 212, 170, 0.3)',
+            }}
+          >
+            Se connecter à l&apos;administration →
+          </Link>
         </div>
       </div>
     );

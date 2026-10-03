@@ -126,6 +126,8 @@ export class ApiClient {
 
     const rotate = async (): Promise<string | null> => {
       try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), 4000) : null;
         const res = await fetch(`${this.baseUrl}/auth/refresh`, {
           method: 'POST',
           headers: {
@@ -133,6 +135,9 @@ export class ApiClient {
             Accept: 'application/json',
           },
           credentials: 'include',
+          signal: controller ? controller.signal : undefined,
+        }).finally(() => {
+          if (timer) clearTimeout(timer);
         });
 
         if (!res.ok) {
