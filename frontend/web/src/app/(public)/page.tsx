@@ -3,112 +3,163 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GeoPlaceSelector } from '@/components/travel';
 import type { GeoPlace } from '@/types/geo.types';
-import { imageService } from '@/services/image.service';
-import type { ImageAsset } from '@/types/image.types';
 
-type TravelMode = { id: 'hotels' | 'flights' | 'activities' | 'transfers' | 'trains'; label: string; icon: string; href: string; action: string };
-const modes: TravelMode[] = [
-  { id: 'hotels', label: 'Hébergements', icon: 'fa-bed', href: '/hotels', action: 'Voir les séjours' },
-  { id: 'flights', label: 'Vols', icon: 'fa-plane-departure', href: '/flights', action: 'Trouver un vol' },
-  { id: 'activities', label: 'Activités', icon: 'fa-person-hiking', href: '/activities', action: 'Trouver une activité' },
-  { id: 'transfers', label: 'Transferts', icon: 'fa-car-side', href: '/transfers', action: 'Organiser un transfert' },
-  { id: 'trains', label: 'Trains', icon: 'fa-train', href: '/trains', action: 'Chercher un train' },
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+type TravelMode = 'hotels' | 'flights' | 'activities' | 'transfers' | 'trains';
+
+const modes: { id: TravelMode; label: string; icon: string; href: string; action: string; description: string }[] = [
+  { id: 'hotels', label: 'Hébergements', icon: 'fa-bed', href: '/hotels', action: 'Trouver un séjour', description: 'Des lieux où se sentir ailleurs, à votre rythme.' },
+  { id: 'flights', label: 'Vols', icon: 'fa-plane', href: '/flights', action: 'Rechercher un vol', description: 'Choisissez un départ, une arrivée et les dates qui vous vont.' },
+  { id: 'activities', label: 'Activités', icon: 'fa-person-hiking', href: '/activities', action: 'Explorer les activités', description: 'Les expériences qui donnent du relief au voyage.' },
+  { id: 'transfers', label: 'Transferts', icon: 'fa-car-side', href: '/transfers', action: 'Organiser un transfert', description: 'Reliez les étapes de votre itinéraire.' },
+  { id: 'trains', label: 'Trains', icon: 'fa-train', href: '/trains', action: 'Chercher un train', description: 'Voyagez d’une gare à l’autre.' },
 ];
-const intents = [
-  { title: 'Se reposer', subtitle: 'Riads de charme et paysages apaisants.', image: '/image/marrakech.jpg', href: '/hotels?destination=Marrakech&countryCode=MA', icon: 'fa-spa', action: 'Voir nos séjours bien-être' },
-  { title: 'Explorer', subtitle: 'Villes impériales, villages berbères et grands espaces.', image: '/image/chefchaoun.jpeg', href: '/activities?destination=Chefchaouen&countryCode=MA', icon: 'fa-landmark', action: 'Voir nos circuits découverte' },
-  { title: 'Bouger', subtitle: 'Randonnées, vagues et activités de plein air.', image: '/image/Dakhla.jpg', href: '/activities?destination=Dakhla&countryCode=MA', icon: 'fa-person-hiking', action: 'Voir nos aventures actives' },
-  { title: 'Se retrouver', subtitle: 'Voyages en famille ou entre amis.', image: '/image/ami.jpg', href: '/hotels?destination=Essaouira&countryCode=MA', icon: 'fa-users', action: 'Voir nos voyages à plusieurs' },
+
+const places = [
+  { name: 'Dakhla', country: 'Maroc', label: 'Entre les dunes et l’océan', image: '/image/Dakhla.jpg', alt: 'Lagune et dunes à Dakhla', href: '/hotels?destination=Dakhla&countryCode=MA' },
+  { name: 'Séoul', country: 'Corée du Sud', label: 'Une ville à plusieurs vitesses', image: '/image/Seoul.jpg', alt: 'Palais et paysage urbain de Séoul', href: '/hotels?destination=Seoul&countryCode=KR' },
+  { name: 'Chefchaouen', country: 'Maroc', label: 'Se perdre dans le bleu', image: '/image/chefchaoun.jpeg', alt: 'Ruelle bleue de Chefchaouen', href: '/activities?destination=Chefchaouen&countryCode=MA' },
 ];
-const itineraryStops = [
-  { city: 'Marrakech', nights: '2 nuits', image: '/image/marrakech.jpg', href: '/hotels?destination=Marrakech&countryCode=MA' },
-  { city: 'Vallée de l’Ourika', nights: '2 nuits', image: '/image/g7.jpg', href: '/activities?destination=Ourika&countryCode=MA' },
-  { city: 'Essaouira', nights: '3 nuits', image: '/image/galerie9.jpeg', href: '/hotels?destination=Essaouira&countryCode=MA' },
-];
-const practical = [
-  { title: 'Météo', text: 'Quand partir selon les régions ?', icon: 'fa-sun', href: '/activities', action: 'Voir nos conseils météo' },
-  { title: 'Transferts', text: 'Rejoindre et se déplacer facilement.', icon: 'fa-plane', href: '/transfers', action: 'Découvrir les options' },
-  { title: 'Budget', text: 'Astuces et repères de prix.', icon: 'fa-coins', href: '/hotels', action: 'Voir notre guide budget' },
-  { title: 'Activités', text: 'Nos incontournables par région.', icon: 'fa-map', href: '/activities', action: 'Explorer les activités' },
-];
-const stories = [
-  { eyebrow: 'Rencontres', title: 'Sur la route des kasbahs oubliées', text: 'À la rencontre de ceux qui font vivre un Maroc authentique, entre traditions et modernité.', image: '/image/g4.jpg', href: '/activities' },
-  { eyebrow: 'Gastronomie', title: 'Les saveurs d’un Maroc généreux', text: 'Des marchés aux tables d’hôtes, un voyage au cœur des traditions culinaires.', image: '/image/activitee.jpg', href: '/activities' },
-  { eyebrow: 'Lieux secrets', title: 'Ces villages qui méritent le détour', text: 'Nos pépites loin des sentiers battus, pour un Maroc plus intime.', image: '/image/chefchaoun.jpeg', href: '/hotels?destination=Chefchaouen&countryCode=MA' },
-];
-const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+
+const dateString = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 export default function HomePage() {
   const router = useRouter();
-  const [mode, setMode] = useState<TravelMode['id']>('hotels');
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<TravelMode>('hotels');
   const [place, setPlace] = useState<GeoPlace | null>(null);
   const [departure, setDeparture] = useState('');
-  const [returnDate, setReturnDate] = useState('');
   const [travelers, setTravelers] = useState('2');
+  const [destination, setDestination] = useState(0);
+  const [panelOpen, setPanelOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [destinationImage, setDestinationImage] = useState<ImageAsset | null>(null);
-  const [destinationImageLoading, setDestinationImageLoading] = useState(false);
-  const today = useMemo(() => formatDate(new Date()), []);
+  const today = useMemo(() => dateString(new Date()), []);
   const minReturn = useMemo(() => {
     if (!departure) return today;
-    const next = new Date(departure + 'T12:00:00');
+    const next = new Date(`${departure}T12:00:00`);
     next.setDate(next.getDate() + 1);
-    return formatDate(next);
+    return dateString(next);
   }, [departure, today]);
   const activeMode = modes.find((item) => item.id === mode) || modes[0];
+  const directSearch = mode === 'hotels' || mode === 'activities';
 
+  // transitions.dev panel reveal: an interruptible handoff when changing search verticals.
   useEffect(() => {
-    let active = true;
-    if (!place) { setDestinationImage(null); return () => { active = false; }; }
-    setDestinationImageLoading(true);
-    imageService.getDestinationImages({ city: place.city || place.name, country: place.country, countryCode: place.countryCode, limit: 1 })
-      .then((response) => { if (active) setDestinationImage(response.images?.[0] || null); })
-      .catch(() => { if (active) setDestinationImage(null); })
-      .finally(() => { if (active) setDestinationImageLoading(false); });
-    return () => { active = false; };
-  }, [place]);
+    setPanelOpen(false);
+    const frame = requestAnimationFrame(() => setPanelOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, [mode]);
+
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.from('.home-v3__hero-word', { y: 52, duration: 1, ease: 'power3.out', stagger: 0.12, delay: 0.1 });
+      gsap.from('.home-v3__hero-deck, .home-v3__hero-index', { y: 18, duration: 0.8, ease: 'power2.out', stagger: 0.1, delay: 0.55 });
+      gsap.to('.home-v3__hero-media img', {
+        yPercent: 10, ease: 'none',
+        scrollTrigger: { trigger: '.home-v3__hero', start: 'top top', end: 'bottom top', scrub: 0.7 },
+      });
+      gsap.from('.home-v3__planner-photo img', {
+        scale: 1.12, duration: 1.5, ease: 'power2.out',
+        scrollTrigger: { trigger: '.home-v3__planner', start: 'top 75%', once: true },
+      });
+      gsap.utils.toArray<HTMLElement>('.home-v3__reveal').forEach((element) => {
+        gsap.from(element, {
+          y: 34, duration: 0.8, ease: 'power2.out',
+          scrollTrigger: { trigger: element, start: 'top 88%', once: true },
+        });
+      });
+    });
+    return () => mm.revert();
+  }, { scope: rootRef });
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!place) { setError('Choisissez une destination pour commencer.'); return; }
-    if (departure && returnDate && returnDate <= departure) { setError('La date de retour doit suivre la date de départ.'); return; }
-    const params = new URLSearchParams({ destination: place.city || place.name, countryCode: place.countryCode || '', adults: travelers });
+    const form = new FormData(event.currentTarget);
+    const checkIn = String(form.get('checkIn') || '');
+    const checkOut = String(form.get('checkOut') || '');
+    if (!place) { setError('Sélectionnez une ville dans les suggestions.'); return; }
+    if (mode === 'hotels' && checkIn && checkOut && checkOut <= checkIn) {
+      setError('La date de départ doit suivre la date d’arrivée.');
+      return;
+    }
+    const params = new URLSearchParams({ destination: place.city || place.name });
+    if (place.countryCode) params.set('countryCode', place.countryCode);
     if (place.country) params.set('country', place.country);
-    if (departure) params.set('checkIn', departure);
-    if (returnDate) params.set('checkOut', returnDate);
-    router.push(activeMode.href + '?' + params.toString());
+    if (mode === 'hotels') {
+      params.set('adults', travelers);
+      if (checkIn) params.set('checkIn', checkIn);
+      if (checkOut) params.set('checkOut', checkOut);
+    } else {
+      params.set('travelers', travelers);
+      if (checkIn) params.set('date', checkIn);
+    }
+    router.push(`${activeMode.href}?${params.toString()}`);
   };
 
   return (
-    <div className="home-option1">
-      <section className="home-option1__hero" aria-labelledby="home-option1-title">
-        <Image src="/image/yuding-hero-atlas.png" alt="Paysage du sud marocain" fill priority className="home-option1__hero-image" sizes="100vw" />
-        <div className="home-option1__hero-overlay" aria-hidden="true" />
-        <div className="home-option1__route-note" aria-hidden="true"><span>Plus qu’un voyage,<br />une connexion.</span><i className="fas fa-location-dot" /></div>
-        <div className="home-option1__frame home-option1__hero-content"><p className="home-option1__eyebrow">Maroc, grandeur nature <span /></p><h1 id="home-option1-title">Un voyage pensé<br /><em>autour de vous.</em></h1><p className="home-option1__hero-copy">Des villes impériales aux dunes infinies, vivez le Maroc autrement avec Yuding.</p></div>
-        <div className="home-option1__search home-option1__frame" id="home-search">
-          <div className="home-option1__search-tabs" role="tablist" aria-label="Type de voyage">{modes.map((item) => <button key={item.id} type="button" role="tab" aria-selected={mode === item.id} className={mode === item.id ? 'is-active' : ''} onClick={() => { setMode(item.id); setError(null); }}><i className={'fas ' + item.icon} aria-hidden="true" /><span>{item.label}</span></button>)}</div>
-          <form className="home-option1__search-form" onSubmit={submitSearch}>
-            <div className="home-option1__search-field home-option1__search-field--destination"><GeoPlaceSelector id="home-destination" label="Destination" placeholder="Où voulez-vous aller ?" type="city" selectedPlace={place} onSelect={(next) => { setPlace(next); setError(null); }} error={error && !place ? error : null} required /></div>
-            <label className="home-option1__search-field"><span><i className="fas fa-calendar-day" aria-hidden="true" /> Dates</span><input type="date" min={today} value={departure} onChange={(event) => { setDeparture(event.target.value); setError(null); }} /><small>{returnDate ? 'au ' + returnDate : 'Du — au'}</small></label>
-            <label className="home-option1__search-field"><span><i className="fas fa-user-group" aria-hidden="true" /> Voyageurs</span><select value={travelers} onChange={(event) => setTravelers(event.target.value)}><option value="1">1 voyageur</option><option value="2">2 voyageurs</option><option value="3">3 voyageurs</option><option value="4">4 voyageurs</option><option value="5">5 voyageurs</option><option value="6">6 voyageurs</option></select></label>
-            <button className="home-option1__search-submit" type="submit"><span>Rechercher</span><i className="fas fa-arrow-right" aria-hidden="true" /></button>
-          </form>
-          {error && place && <p className="home-option1__search-error" role="alert">{error}</p>}
+    <div className="home-v3" ref={rootRef}>
+      <section className="home-v3__hero" aria-labelledby="home-title">
+        <div className="home-v3__hero-media" aria-hidden="true"><Image src="/image/yuding-hero-atlas.png" alt="" fill priority sizes="100vw" /></div>
+        <div className="home-v3__hero-shade" aria-hidden="true" />
+        <div className="home-v3__hero-body home-v3__frame">
+          <div className="home-v3__hero-index"><span>YUDING <b>·</b> VOYAGES À VOTRE RYTHME</span><span>01 / L&apos;ENVIE</span></div>
+          <div className="home-v3__hero-copy">
+            <h1 id="home-title"><span className="home-v3__hero-word">Partez.</span><span className="home-v3__hero-word">Le monde <em>vous attend.</em></span></h1>
+            <p className="home-v3__hero-deck">Un séjour à imaginer, une ville à traverser, des moments à vivre. Votre prochain voyage prend forme ici.</p>
+            <a className="home-v3__hero-scroll" href="#home-search"><span>Commencer le voyage</span><i className="fas fa-arrow-down" aria-hidden="true" /></a>
+          </div>
+          <div className="home-v3__hero-bottom"><span>ATLAS, MAROC</span><span>SCROLLEZ POUR EXPLORER <i className="fas fa-arrow-down" aria-hidden="true" /></span></div>
         </div>
       </section>
-      {place && (destinationImage || destinationImageLoading) && <section className="home-option1__selected" aria-live="polite"><div className="home-option1__frame home-option1__selected-inner"><div><p className="home-option1__label">Votre piste</p><h2>{place.city || place.name}</h2><p>{place.country || 'Destination sélectionnée'}</p></div>{destinationImageLoading ? <span>Recherche d’une ambiance…</span> : destinationImage ? <div className="home-option1__selected-image"><img src={destinationImage.url} alt={destinationImage.altText || 'Ambiance de ' + (place.city || place.name)} /></div> : null}</div></section>}
-      <main className="home-option1__main">
-        <section className="home-option1__section home-option1__intents" aria-labelledby="intents-title"><div className="home-option1__frame"><div className="home-option1__section-head"><div><p className="home-option1__label">Vos envies de voyage</p><h2 id="intents-title">Une envie, plusieurs façons de partir</h2></div><Link href="/activities">Voir toutes les expériences <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><p className="home-option1__section-lede">Que vous rêviez de calme, d’aventure ou de rencontres, chaque voyage au Maroc a sa propre histoire.</p><div className="home-option1__intent-grid">{intents.map((item) => <Link href={item.href} key={item.title} className="home-option1__intent"><div className="home-option1__intent-image"><Image src={item.image} alt={item.title} fill sizes="(max-width: 760px) 90vw, 25vw" /></div><div className="home-option1__intent-meta"><span><i className={'fas ' + item.icon} aria-hidden="true" /></span><h3>{item.title}</h3><p>{item.subtitle}</p><b>{item.action} <i className="fas fa-arrow-right" aria-hidden="true" /></b></div></Link>)}</div></div></section>
-        <section className="home-option1__section home-option1__compose" aria-labelledby="compose-title"><div className="home-option1__frame"><div className="home-option1__section-head"><div><p className="home-option1__label">Votre itinéraire sur mesure</p><h2 id="compose-title">Assemblez votre escapade</h2></div><Link href="/hotels">Créer mon itinéraire <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><p className="home-option1__section-lede">Choisissez vos étapes, nous vous aidons à créer un voyage à votre image.</p><div className="home-option1__compose-grid"><div className="home-option1__compose-steps"><div><span><i className="fas fa-bed" /></span><strong>Où dormir</strong><small>Riads, hôtels de charme ou écolodges</small></div><div><span><i className="fas fa-car-side" /></span><strong>Comment bouger</strong><small>Transferts privés, location ou circuits accompagnés</small></div><div><span><i className="fas fa-camera" /></span><strong>Que vivre</strong><small>Activités, visites et expériences locales</small></div></div><div className="home-option1__itinerary"><p>Exemple d’itinéraire</p><div className="home-option1__itinerary-stops">{itineraryStops.map((stop, index) => <React.Fragment key={stop.city}><Link href={stop.href}><div className="home-option1__itinerary-image"><Image src={stop.image} alt={stop.city} fill sizes="180px" /></div><strong>{stop.city}</strong><small><i className="fas fa-location-dot" /> {stop.nights}</small></Link>{index < itineraryStops.length - 1 && <i className="fas fa-arrow-right home-option1__itinerary-arrow" aria-hidden="true" />}</React.Fragment>)}</div></div></div></div></section>
-        <section className="home-option1__section home-option1__practical" aria-labelledby="practical-title"><div className="home-option1__frame"><div className="home-option1__section-head"><div><p className="home-option1__label">Conseils pratiques</p><h2 id="practical-title">Les détails qui changent tout</h2></div><Link href="/activities">Voir tous nos conseils <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><p className="home-option1__section-lede">Des informations fiables pour voyager l’esprit léger.</p><div className="home-option1__practical-grid">{practical.map((item) => <Link href={item.href} className="home-option1__practical-item" key={item.title}><span><i className={'fas ' + item.icon} aria-hidden="true" /></span><div><h3>{item.title}</h3><p>{item.text}</p><b>{item.action} <i className="fas fa-arrow-right" aria-hidden="true" /></b></div></Link>)}</div></div></section>
-        <section className="home-option1__section home-option1__stories" aria-labelledby="stories-title"><div className="home-option1__frame"><div className="home-option1__section-head"><div><p className="home-option1__label">Inspiration</p><h2 id="stories-title">Le Maroc, autrement</h2></div><Link href="/activities">Voir tous nos articles <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><p className="home-option1__section-lede">Des rencontres, des lieux et des histoires qui donnent un autre regard sur le voyage.</p><div className="home-option1__stories-grid"><Link href={stories[0].href} className="home-option1__story home-option1__story--featured"><div className="home-option1__story-image"><Image src={stories[0].image} alt={stories[0].title} fill sizes="(max-width: 760px) 90vw, 55vw" /></div><div><small>{stories[0].eyebrow}</small><h3>{stories[0].title}</h3><p>{stories[0].text}</p><b>Lire l’article <i className="fas fa-arrow-right" /></b></div></Link><div className="home-option1__story-list">{stories.slice(1).map((story) => <Link href={story.href} className="home-option1__story-row" key={story.title}><div className="home-option1__story-thumb"><Image src={story.image} alt={story.title} fill sizes="160px" /></div><div><small>{story.eyebrow}</small><h3>{story.title}</h3><p>{story.text}</p><b>Lire l’article <i className="fas fa-arrow-right" /></b></div></Link>)}</div></div></div></section>
-        <section className="home-option1__section home-option1__quotes" aria-labelledby="quotes-title"><div className="home-option1__frame"><div className="home-option1__section-head"><div><p className="home-option1__label">Ils ont voyagé avec Yuding</p><h2 id="quotes-title">Des voyageurs, de vraies idées</h2></div><Link href="/account/bookings">Voir tous les avis <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><div className="home-option1__quote-grid"><blockquote><p>“Un voyage parfaitement organisé, des paysages sublimes et des rencontres inoubliables. Yuding a su créer un itinéraire qui nous ressemble vraiment.”</p><footer>Camille L. <span>Vallée de l’Ourika</span> <b>★★★★★</b></footer></blockquote><blockquote><p>“Du début à la fin, une expérience fluide et authentique. Les hébergements étaient magnifiques et les conseils sur place nous ont permis de voyager sans stress.”</p><footer>Thomas B. <span>Essaouira</span> <b>★★★★★</b></footer></blockquote></div></div></section>
-      </main>
-      <section className="home-option1__cta"><div className="home-option1__cta-image" /><div className="home-option1__frame home-option1__cta-inner"><div><p className="home-option1__label">Un nouveau horizon vous attend</p><h2>Prêt pour la suite ?</h2><p>Explorez le Maroc avec Yuding et créez un voyage qui vous ressemble.</p></div><Link href="#home-search">Rechercher un voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div></section>
+
+      <section className="home-v3__search" id="home-search" aria-labelledby="search-title">
+        <div className="home-v3__frame">
+          <div className="home-v3__search-top"><div><span className="home-v3__kicker">VOTRE POINT DE DÉPART</span><h2 id="search-title">On commence où ?</h2></div><p>Choisissez la première étape. Yuding vous accompagne pour la suite.</p></div>
+          <div className="home-v3__mode-list" role="group" aria-label="Choisir un service de voyage">
+            {modes.map((item, index) => <button key={item.id} type="button" className="home-v3__mode" aria-pressed={mode === item.id} onClick={() => { setMode(item.id); setDeparture(''); setError(null); }}><span className="home-v3__mode-num">0{index + 1}</span><i className={`fas ${item.icon}`} aria-hidden="true" /><span>{item.label}</span></button>)}
+          </div>
+          <div key={mode} className="home-v3__search-panel t-panel-slide" data-open={panelOpen}>
+            {directSearch ? <form onSubmit={submitSearch}>
+              <div className={`home-v3__fields ${mode === 'activities' ? 'home-v3__fields--activities' : ''}`}>
+                <div className="home-v3__geo"><GeoPlaceSelector id="home-destination" label="Destination" placeholder="Ville ou destination" type="city" selectedPlace={place} onSelect={(next) => { setPlace(next); setError(null); }} error={error && !place ? error : null} required /></div>
+                <label><span>{mode === 'hotels' ? 'Arrivée' : 'Date'}</span><input type="date" name="checkIn" min={today} required={mode === 'hotels'} onInput={(event) => { setDeparture(event.currentTarget.value); setError(null); }} /></label>
+                {mode === 'hotels' && <label><span>Départ</span><input type="date" name="checkOut" min={minReturn} required onInput={() => setError(null)} /></label>}
+                <label><span>Voyageurs</span><select value={travelers} onChange={(event) => setTravelers(event.target.value)}>{[1, 2, 3, 4, 5, 6].map((count) => <option key={count} value={count}>{count} {count === 1 ? 'voyageur' : 'voyageurs'}</option>)}</select></label>
+                <button className="home-v3__submit" type="submit"><span>{activeMode.action}</span><i className="fas fa-arrow-right" aria-hidden="true" /></button>
+              </div>
+              {error && place && <p className="home-v3__error" role="alert">{error}</p>}
+            </form> : <div className="home-v3__specialized"><p>{activeMode.description}</p><Link href={activeMode.href}>{activeMode.action}<i className="fas fa-arrow-right" aria-hidden="true" /></Link></div>}
+          </div>
+          <p className="home-v3__search-foot">Les disponibilités et tarifs sont vérifiés lors de la recherche.</p>
+        </div>
+      </section>
+
+      <section className="home-v3__planner" aria-labelledby="planner-title">
+        <div className="home-v3__planner-side"><div className="home-v3__planner-photo"><Image src="/image/galerie2.jpg" alt="Voyageuse sur le quai d’une gare" fill sizes="(max-width: 900px) 100vw, 52vw" /></div><span className="home-v3__planner-aside">L&apos;ART DE COMPOSER SON VOYAGE</span></div>
+        <div className="home-v3__planner-main"><span className="home-v3__chapter">02 / L&apos;IDÉE DEVIENT UN ITINÉRAIRE</span><div className="home-v3__reveal"><h2 id="planner-title">Vous avez une envie.<br /><em>On trace la route.</em></h2><p>Quelques mots suffisent pour commencer. Le Smart Trip Planner transforme vos envies en un parcours que vous pouvez explorer et ajuster.</p><Link className="home-v3__planner-cta" href="/planifier">Imaginer mon voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><div className="home-v3__planner-trace" aria-hidden="true"><span>IMAGINER</span><span>COMPOSER</span><span>PARTIR</span></div></div>
+      </section>
+
+      <section className="home-v3__destinations" aria-labelledby="destinations-title">
+        <div className="home-v3__frame home-v3__destination-heading home-v3__reveal"><span className="home-v3__chapter">03 / AILLEURS VOUS APPELLE</span><h2 id="destinations-title">Une autre lumière.<br /><em>Une autre histoire.</em></h2><p>Trois fenêtres pour laisser l&apos;envie choisir la direction.</p></div>
+        <div className="home-v3__destination-stage">
+          <div className="home-v3__destination-photo" key={places[destination].image}><Image src={places[destination].image} alt={places[destination].alt} fill sizes="100vw" /></div>
+          <div className="home-v3__destination-overlay" />
+          <div className="home-v3__destination-content home-v3__frame"><div className="home-v3__destination-current"><span>0{destination + 1} / 03 &nbsp;—&nbsp; {places[destination].country.toUpperCase()}</span><h3>{places[destination].name}</h3><p>{places[destination].label}</p><Link href={places[destination].href}>Explorer cette destination <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><div className="home-v3__destination-choices" role="group" aria-label="Choisir une destination">{places.map((item, index) => <button key={item.name} type="button" aria-pressed={destination === index} onClick={() => setDestination(index)}><span>0{index + 1}</span><strong>{item.name}</strong><i className="fas fa-arrow-right" aria-hidden="true" /></button>)}</div></div>
+        </div>
+        <p className="home-v3__destination-note home-v3__frame">Images d&apos;inspiration. Explorez les offres pour connaître les disponibilités et tarifs actuels.</p>
+      </section>
+
+      <section className="home-v3__routes" aria-labelledby="routes-title"><div className="home-v3__frame home-v3__routes-grid"><div className="home-v3__routes-intro home-v3__reveal"><span className="home-v3__chapter">04 / TOUTE LA ROUTE</span><h2 id="routes-title">Le voyage,<br /><em>sans rupture.</em></h2><p>Un seul endroit pour avancer, de la première réservation aux découvertes sur place.</p></div><div className="home-v3__route-links">{modes.map((item, index) => <Link key={item.id} href={item.href}><span className="home-v3__route-index">0{index + 1}</span><span>{item.label}</span><i className="fas fa-arrow-up-right-from-square" aria-hidden="true" /></Link>)}</div></div></section>
+
+      <section className="home-v3__end" aria-labelledby="end-title"><div className="home-v3__end-photo"><Image src="/image/home1.jpg" alt="Village au-dessus de la mer au crépuscule" fill sizes="100vw" /></div><div className="home-v3__end-shade" /><div className="home-v3__frame home-v3__end-content home-v3__reveal"><span className="home-v3__chapter">LE MONDE N&apos;ATTEND PAS</span><h2 id="end-title">Et si c&apos;était <em>maintenant ?</em></h2><div><p>Une destination en tête, ou seulement l&apos;envie de partir ?</p><a href="#home-search">Lancer une recherche <i className="fas fa-arrow-up" aria-hidden="true" /></a></div></div></section>
     </div>
   );
 }

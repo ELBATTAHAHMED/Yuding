@@ -13,6 +13,15 @@ export const Header: React.FC = () => {
   const isHome = pathname === '/';
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
+  const [homeScrolled, setHomeScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isHome) return;
+    const update = () => setHomeScrolled(window.scrollY > 56);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, [isHome]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -38,13 +47,13 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className={`header yuding-header ${isHome ? 'home-header' : 'subpage-header'}`}>
+    <header className={`header yuding-header ${isHome ? `home-header${homeScrolled ? ' home-header--scrolled' : ''}${menuOpen ? ' home-header--menu-open' : ''}` : 'subpage-header'}`}>
       <div className="header-top">
         <div className="container1 header-inner">
           <Link href="/" className="logo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={isDark ? '/image/logo1.png' : '/image/logodark.png'}
+              src={isHome || isDark ? '/image/logo1.png' : '/image/logodark.png'}
               alt="Yuding"
               id="headerLogo"
             />
