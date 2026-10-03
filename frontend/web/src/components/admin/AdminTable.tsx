@@ -22,6 +22,7 @@ interface AdminTableProps<T> {
   onRowClick?: (item: T) => void;
   className?: string;
   maxHeight?: string;
+  footer?: React.ReactNode;
 }
 
 export function AdminTable<T>({
@@ -35,6 +36,7 @@ export function AdminTable<T>({
   onRowClick,
   className = '',
   maxHeight,
+  footer,
 }: AdminTableProps<T>) {
   return (
     <div
@@ -136,6 +138,7 @@ export function AdminTable<T>({
           </tbody>
         </table>
       </div>
+      {footer && <div className="border-t border-inherit">{footer}</div>}
     </div>
   );
 }

@@ -114,3 +114,40 @@ export function useUnlockUserMutation() {
     },
   });
 }
+
+export function useSuspendUserMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation<AdminUserSummary, Error, { userId: string; reason?: string }>({
+    mutationFn: ({ userId, reason }) => adminService.suspendUser(userId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'audit-logs'] });
+    },
+  });
+}
+
+export function useReactivateUserMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation<AdminUserSummary, Error, string>({
+    mutationFn: (userId: string) => adminService.reactivateUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'audit-logs'] });
+    },
+  });
+}
+
+export function useRetryRefundMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation<AdminCancellation, Error, string>({
+    mutationFn: (cancellationId: string) => adminService.retryRefund(cancellationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'cancellations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'audit-logs'] });
+    },
+  });
+}

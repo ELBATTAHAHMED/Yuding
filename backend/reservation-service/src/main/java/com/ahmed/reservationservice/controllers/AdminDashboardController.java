@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -127,6 +128,7 @@ public class AdminDashboardController {
                     .updatedAt(b.getUpdatedAt())
                     .statusChangedAt(b.getStatusChangedAt())
                     .expiresAt(b.getExpiresAt())
+                    .selectedDetails(snap != null ? snap.getSelectedDetails() : null)
                     .build();
         }).collect(Collectors.toList());
 
@@ -224,5 +226,41 @@ public class AdminDashboardController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
+    }
+
+    @PostMapping("/cancellations/{id}/retry-refund")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> retryRefund(@PathVariable UUID id) {
+        CancellationRequest request = cancellationRequestRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Demande d'annulation introuvable"));
+
+        if (!"REFUND_FAILED".equalsIgnoreCase(request.getRefundStatus())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Seuls les remboursements en statut REFUND_FAILED peuvent être relancés."
+            ));
+        }
+
+        Booking booking = bookingRepository.findById(request.getBookingId())
+                .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
+
+        RefundRecord refund = refundRecordRepository.findByBookingId(booking.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Enregistrement de remboursement introuvable"));
+
+        refund.setStatus("SUCCEEDED");
+        refund.setProviderRefundId("MOCK-REFUND-RETRY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        refund.setUpdatedAt(Instant.now());
+        refundRecordRepository.save(refund);
+
+        request.setRefundStatus("REFUNDED");
+        request.setRefundedAt(Instant.now());
+        cancellationRequestRepository.save(request);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Remboursement sandbox relancé et validé avec succès.",
+                "refundReference", refund.getRefundReference(),
+                "refundStatus", "REFUNDED"
+        ));
     }
 }

@@ -41,6 +41,7 @@ export interface AdminBooking {
   updatedAt: string;
   statusChangedAt: string;
   expiresAt?: string | null;
+  selectedDetails?: Record<string, any> | null;
 }
 
 export interface AdminPayment {
