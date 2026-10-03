@@ -7,13 +7,12 @@ import { useAuth } from '@/features/auth/useAuth';
 import { DarkModeToggle } from '@/components/common/DarkModeToggle';
 import { AccountMenu } from './AccountMenu';
 
-export const Header: React.FC = () => {
+export const Header: React.FC<{ hideLogin?: boolean; onThemeChange?: (dark: boolean) => void }> = ({ hideLogin = false, onThemeChange }) => {
   const { isAuthenticated, isAdmin, isSupport } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [menuOpen, setMenuOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
-  const [isDark, setIsDark] = useState<boolean>(false);
   const [homeScrolled, setHomeScrolled] = useState(false);
 
   useEffect(() => {
@@ -32,21 +31,6 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', update);
   }, [isHome]);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
-    setIsDark(darkActive);
-
-    const observer = new MutationObserver(() => {
-      const dark = document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
-      setIsDark(dark);
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-
-    return () => observer.disconnect();
-  }, []);
-
   const navigation = [
     { href: '/hotels', label: 'Hébergements', icon: 'fas fa-bed' },
     { href: '/flights', label: 'Vols', icon: 'fas fa-plane' },
@@ -60,16 +44,11 @@ export const Header: React.FC = () => {
       <div className="header-top">
         <div className="container1 header-inner">
           <Link href="/" className="logo">
-            {isHome ? <>
-              {/* Both logo assets stay mounted so the sticky transition never flashes an old color. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/image/logo1.png" alt="Yuding" className="home-logo-light" id="headerLogo" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/image/logodark.png" alt="" aria-hidden="true" className="home-logo-dark" />
-            </> : <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={isDark ? '/image/logo1.png' : '/image/logodark.png'} alt="Yuding" id="headerLogo" />
-            </>}
+            {/* Both logo assets stay mounted so a theme switch never flashes the old color. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/image/logo1.png" alt="Yuding" className="home-logo-light" id="headerLogo" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/image/logodark.png" alt="" aria-hidden="true" className="home-logo-dark" />
           </Link>
 
           <nav className={`header-nav yuding-navigation ${menuOpen ? 'is-open' : ''}`} aria-label="Navigation principale">
@@ -89,14 +68,14 @@ export const Header: React.FC = () => {
           <div className="header-btns">
             <div className="booking">
               {isAuthenticated ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="header-account-actions">
                   <AccountMenu />
 
                   {(isAdmin || isSupport) && (
                     <Link href="/admin" className="btn-connexion" style={{ background: '#e11d48', padding: '8px 14px', fontSize: '13px' }}>Admin</Link>
                   )}
                 </div>
-              ) : (
+              ) : !hideLogin ? (
                 <Link
                   href="/login"
                   id="loginBtn"
@@ -105,10 +84,10 @@ export const Header: React.FC = () => {
                   <i className="fas fa-sign-in-alt" />
                   <span>Connexion</span>
                 </Link>
-              )}
+              ) : null}
             </div>
 
-            <DarkModeToggle />
+            <DarkModeToggle onThemeChange={onThemeChange} />
 
             {hydrated && <button
               type="button"

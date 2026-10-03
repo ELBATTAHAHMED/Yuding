@@ -1,7 +1,4 @@
-'use client';
-
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 const exploreLinks = [
   { href: '/hotels', label: 'Hébergements' },
@@ -12,9 +9,8 @@ const exploreLinks = [
 ];
 
 export function Footer() {
-  const isHome = usePathname() === '/';
   return (
-    <footer className={`yuding-footer${isHome ? ' yuding-footer--home' : ''}`}>
+    <footer className="yuding-footer yuding-footer--home">
       <div className="yuding-footer__inner">
         <div className="yuding-footer__grid">
           <div className="yuding-footer__brand">
@@ -49,20 +45,11 @@ export function Footer() {
           </div>
         </div>
 
-        {isHome ? <div className="yuding-footer__bottom yuding-footer__bottom--home">
+        <div className="yuding-footer__bottom yuding-footer__bottom--home">
           <span className="yuding-footer__end-mark">Y<span aria-hidden="true">·</span></span>
           <span>© {new Date().getFullYear()} Yuding. Tous droits réservés.</span>
           <span>Le voyage continue.</span>
-        </div> : <div className="yuding-footer__bottom">
-          <div className="yuding-footer__signature">
-            <span aria-hidden="true" />
-            <div>
-              <i className="fas fa-mountain" aria-hidden="true" />
-              <strong>© {new Date().getFullYear()} Yuding. Tous droits réservés.</strong>
-            </div>
-            <span aria-hidden="true" />
-          </div>
-        </div>}
+        </div>
       </div>
     </footer>
   );

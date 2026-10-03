@@ -1,6 +1,5 @@
 import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import './checkout.css';
 
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
@@ -8,7 +7,6 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
     <div className="checkout-shell">
       <Header />
       <main className="checkout-shell__main">{children}</main>
-      <Footer />
     </div>
   );
 }

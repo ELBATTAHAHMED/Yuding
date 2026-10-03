@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
 import { authService } from '@/services/auth.service';
+import { Header } from '@/components/layout/Header';
 
 function LoginFormContent() {
   const router = useRouter();
@@ -38,7 +39,7 @@ function LoginFormContent() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupPasswordConfirm, setSignupPasswordConfirm] = useState('');
 
-  // Initialize and listen to Dark Mode
+  // The shared header owns theme changes; this state only selects the form artwork.
   useEffect(() => {
     document.body.classList.add('auth-body');
     const savedTheme = localStorage.getItem('theme');
@@ -46,33 +47,11 @@ function LoginFormContent() {
     const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
 
     setIsDark(darkActive);
-    applyTheme(darkActive);
 
     return () => {
       document.body.classList.remove('auth-body');
     };
   }, []);
-
-  const applyTheme = (dark: boolean) => {
-    const html = document.documentElement;
-    const body = document.body;
-    if (dark) {
-      html.classList.add('dark');
-      html.setAttribute('data-theme', 'dark');
-      body.setAttribute('data-theme', 'dark');
-    } else {
-      html.classList.remove('dark');
-      html.removeAttribute('data-theme');
-      body.setAttribute('data-theme', 'light');
-    }
-  };
-
-  const toggleDarkMode = () => {
-    const nextDark = !isDark;
-    setIsDark(nextDark);
-    applyTheme(nextDark);
-    localStorage.setItem('theme', nextDark ? 'dark' : 'light');
-  };
 
   // Safe redirect URL calculation
   const getSafeRedirectUrl = () => {
@@ -158,46 +137,7 @@ function LoginFormContent() {
 
   return (
     <>
-      {/* ==================== EXACT LEGACY HEADER ==================== */}
-      <header className="header auth-header">
-        <div className="header-top">
-          <div className="container1 header-inner">
-            <Link href="/" className="logo">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={isDark ? '/image/logo1.png' : '/image/logodark.png'}
-                alt="Yuding Logo"
-                id="headerLogo"
-              />
-            </Link>
-
-            <nav className="header-nav">
-              <Link href="/" className="nav-item">
-                <i className="fas fa-home"></i> Accueil
-              </Link>
-              <Link href="/hotels" className="nav-item">
-                <i className="fas fa-bed"></i> Hébergements
-              </Link>
-              <Link href="/#gallery" className="nav-item">
-                <i className="fas fa-images"></i> Galerie
-              </Link>
-            </nav>
-
-            {/* Bouton Dark Mode */}
-            <div className="header-btns">
-              <button
-                id="darkModeToggle"
-                className={`dark-mode-toggle ${isDark ? 'active' : ''}`}
-                title="Basculer le mode sombre"
-                onClick={toggleDarkMode}
-                type="button"
-              >
-                <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`} id="darkModeIcon"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header hideLogin onThemeChange={setIsDark} />
 
       {/* ==================== VIDEO BACKGROUND ==================== */}
       <section className="home" id="home">
