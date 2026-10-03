@@ -48,10 +48,10 @@ const DEFAULT_CONFIGS: Record<TravelVertical, {
     errorDesc: 'La consultation des liaisons aériennes en temps réel a rencontré une indisponibilité temporaire. Veuillez réessayer.',
   },
   ACTIVITY: {
-    initialIcon: 'fa-ticket-alt',
+    initialIcon: 'fa-person-hiking',
     initialTitle: 'Explorez vos activités et visites',
     initialDesc: 'Renseignez votre destination ci-dessus pour découvrir les visites guidées, excursions et expériences en direct.',
-    emptyIcon: 'fa-ticket-alt',
+    emptyIcon: 'fa-person-hiking',
     emptyTitle: 'Aucune activité trouvée',
     emptyDesc: 'Aucune offre d’activité disponible pour cette destination et cette date. Essayez une autre ville ou date.',
     errorTitle: 'Catalogue d’activités momentanément inaccessible',
