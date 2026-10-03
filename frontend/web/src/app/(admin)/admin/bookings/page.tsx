@@ -1,21 +1,31 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useAdminBookings } from '@/hooks/queries/useAdminQueries';
 import { AdminBooking } from '@/types/admin.types';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
+import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
+import { AdminDrawer } from '@/components/admin/AdminDrawer';
 
 export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [productFilter, setProductFilter] = useState('ALL');
   const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: bookings = [], isLoading, refetch } = useAdminBookings({
+  const { data: bookings = [], isLoading, refetch, isRefetching } = useAdminBookings({
     limit: 100,
     status: statusFilter,
     productType: productFilter,
   });
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
 
   const filteredBookings = bookings.filter((b) => {
     if (!searchTerm.trim()) return true;
@@ -27,337 +37,329 @@ export default function AdminBookingsPage() {
     );
   });
 
+  const columns = [
+    {
+      key: 'bookingReference',
+      header: 'RÉFÉRENCE',
+      render: (b: AdminBooking) => (
+        <div className="flex items-center gap-1.5">
+          <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
+            {b.bookingReference}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopy(b.bookingReference, b.id);
+            }}
+            className="opacity-40 hover:opacity-100 transition-opacity p-0.5"
+            title="Copier la référence"
+          >
+            <i className={`fas ${copiedId === b.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[0.65rem]`} />
+          </button>
+        </div>
+      ),
+    },
+    {
+      key: 'productType',
+      header: 'VERTICALE',
+      render: (b: AdminBooking) => {
+        const iconMap: Record<string, string> = {
+          FLIGHT: 'fas fa-plane',
+          HOTEL: 'fas fa-hotel',
+          ACTIVITY: 'fas fa-hiking',
+          TRANSFER: 'fas fa-car-side',
+        };
+        return (
+          <div className="flex items-center gap-1.5 text-xs font-semibold">
+            <i className={`${iconMap[b.productType] || 'fas fa-ticket-alt'} text-xs`} style={{ color: 'var(--admin-text-muted)' }} />
+            <span>{b.productType}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'userId',
+      header: 'CLIENT (UUID)',
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-secondary)' }}>
+          {b.userId.substring(0, 8)}...
+        </span>
+      ),
+    },
+    {
+      key: 'provider',
+      header: 'FOURNISSEUR',
+      render: (b: AdminBooking) => (
+        <span
+          className="text-xs px-2 py-0.5 rounded font-medium"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          {b.provider || 'DIRECT'}
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'MONTANT',
+      align: 'right' as const,
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'EUR'}` : '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'DATE CRÉATION',
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {new Date(b.createdAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT',
+      render: (b: AdminBooking) => (
+        <AdminBadge variant={getStatusBadgeVariant(b.status)} size="sm">
+          {b.status}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'ACTIONS',
+      align: 'right' as const,
+      render: (b: AdminBooking) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedBooking(b);
+          }}
+          className="admin-btn text-[0.7rem] py-1 px-2.5 rounded"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            border: '1px solid var(--admin-border)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          <i className="fas fa-eye text-[0.65rem]" />
+          <span>Inspecter</span>
+        </button>
+      ),
+    },
+  ];
+
+  const filterSelects = [
+    {
+      key: 'status',
+      label: 'Statut',
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { label: 'Tous les statuts', value: 'ALL' },
+        { label: 'CONFIRMED', value: 'CONFIRMED' },
+        { label: 'PENDING_PAYMENT', value: 'PENDING_PAYMENT' },
+        { label: 'CANCELLED', value: 'CANCELLED' },
+        { label: 'EXPIRED', value: 'EXPIRED' },
+      ],
+    },
+    {
+      key: 'productType',
+      label: 'Verticale',
+      value: productFilter,
+      onChange: setProductFilter,
+      options: [
+        { label: 'Toutes les verticales', value: 'ALL' },
+        { label: 'Vols (FLIGHT)', value: 'FLIGHT' },
+        { label: 'Hôtels (HOTEL)', value: 'HOTEL' },
+        { label: 'Activités (ACTIVITY)', value: 'ACTIVITY' },
+        { label: 'Transferts (TRANSFER)', value: 'TRANSFER' },
+      ],
+    },
+  ];
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('ALL');
+    setProductFilter('ALL');
+  };
+
+  const hasActiveFilters = Boolean(searchTerm || statusFilter !== 'ALL' || productFilter !== 'ALL');
+
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Page Title */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
-            Gestion des Réservations V2
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+            Gestion des Réservations
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            Traçabilité exhaustive du cycle de vie des réservations (schéma booking.bookings)
+          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+            Cycle de vie autoritaire des réservations hébergées dans le schéma booking.bookings
           </p>
         </div>
-
-        <button
-          onClick={() => refetch()}
-          style={{
-            padding: '0.6rem 1.25rem',
-            background: 'rgba(0, 212, 170, 0.1)',
-            border: '1px solid #00D4AA',
-            color: '#00D4AA',
-            borderRadius: '8px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}
-        >
-          <i className="fas fa-sync" />
-          Actualiser
-        </button>
       </div>
 
-      {/* Filter Toolbar */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Filtrer par réf YUD-XXXX, UUID client, fournisseur..."
+        filters={filterSelects}
+        onRefresh={() => refetch()}
+        isRefreshing={isLoading || isRefetching}
+        totalCount={bookings.length}
+        filteredCount={filteredBookings.length}
+        onResetFilters={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
+
+      {/* Main Bookings Table */}
+      <AdminTable
+        columns={columns}
+        data={filteredBookings}
+        keyExtractor={(b) => b.id}
+        isLoading={isLoading}
+        onRowClick={(b) => setSelectedBooking(b)}
+        emptyMessage="Aucune réservation trouvée"
+        emptySubtext="Modifiez vos critères de recherche ou réinitialisez les filtres."
+      />
+
+      {/* Slide-over Inspection Drawer */}
+      <AdminDrawer
+        isOpen={Boolean(selectedBooking)}
+        onClose={() => setSelectedBooking(null)}
+        title={selectedBooking ? selectedBooking.bookingReference : ''}
+        subtitle="Détail complet de la réservation"
+        badge={
+          selectedBooking && (
+            <AdminBadge variant={getStatusBadgeVariant(selectedBooking.status)} size="sm">
+              {selectedBooking.status}
+            </AdminBadge>
+          )
+        }
+        rawJson={selectedBooking}
       >
-        <div style={{ position: 'relative', flex: '1', minWidth: '260px' }}>
-          <input
-            type="text"
-            placeholder="Rechercher par référence YUD-XXXX, UUID utilisateur..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.65rem 1rem 0.65rem 2.5rem',
-              background: 'var(--bg-secondary, #111827)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
-              color: '#fff',
-              fontSize: '0.9rem',
-              outline: 'none',
-            }}
-          />
-          <i
-            className="fas fa-search"
-            style={{
-              position: 'absolute',
-              left: '0.85rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#90a4ae',
-              fontSize: '0.85rem',
-            }}
-          />
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{
-            padding: '0.65rem 1rem',
-            background: 'var(--bg-secondary, #111827)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '0.9rem',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="ALL">Tous les statuts</option>
-          <option value="DRAFT">DRAFT</option>
-          <option value="PENDING_PAYMENT">PENDING_PAYMENT</option>
-          <option value="PAID">PAID</option>
-          <option value="EXPIRED">EXPIRED</option>
-          <option value="CANCELLED">CANCELLED</option>
-          <option value="REFUNDED">REFUNDED</option>
-        </select>
-
-        <select
-          value={productFilter}
-          onChange={(e) => setProductFilter(e.target.value)}
-          style={{
-            padding: '0.65rem 1rem',
-            background: 'var(--bg-secondary, #111827)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '0.9rem',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="ALL">Tous les types de produit</option>
-          <option value="HOTEL">HÔTELS</option>
-          <option value="FLIGHT">VOLS</option>
-          <option value="ACTIVITY">ACTIVITÉS</option>
-          <option value="TRANSFER">TRANSFERS</option>
-          <option value="TRAIN">TRAINS</option>
-        </select>
-      </div>
-
-      {/* Bookings Table */}
-      <div
-        style={{
-          background: 'var(--bg-secondary, #111827)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.2)', color: '#94a3b8', textAlign: 'left' }}>
-                <th style={{ padding: '0.85rem 1rem' }}>RÉFÉRENCE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>CLIENT (USER ID)</th>
-                <th style={{ padding: '0.85rem 1rem' }}>TYPE PRODUIT</th>
-                <th style={{ padding: '0.85rem 1rem' }}>FOURNISSEUR</th>
-                <th style={{ padding: '0.85rem 1rem' }}>MONTANT</th>
-                <th style={{ padding: '0.85rem 1rem' }}>STATUT</th>
-                <th style={{ padding: '0.85rem 1rem' }}>CRÉATION</th>
-                <th style={{ padding: '0.85rem 1rem' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr><td colSpan={8} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>Chargement des réservations...</td></tr>
-              ) : filteredBookings.length === 0 ? (
-                <tr>
-                  <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                    <i className="fas fa-ticket-alt" style={{ fontSize: '2rem', marginBottom: '0.75rem', display: 'block', color: '#475569' }} />
-                    Aucune réservation ne correspond à vos filtres.
-                  </td>
-                </tr>
-              ) : (
-                filteredBookings.map((b) => (
-                  <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                    <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#00D4AA' }}>
-                      {b.bookingReference}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {b.userId.slice(0, 8)}...
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 600 }}>
-                      {b.productType}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1' }}>
-                      <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {b.provider || '—'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 700 }}>
-                      {b.amount ? `${b.amount.toFixed(2)} ${b.currency}` : '—'}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span
-                        style={{
-                          padding: '0.25rem 0.6rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          background:
-                            b.status === 'PAID' ? 'rgba(16, 185, 129, 0.15)' :
-                            b.status === 'PENDING_PAYMENT' ? 'rgba(245, 158, 11, 0.15)' :
-                            b.status === 'CANCELLED' ? 'rgba(239, 68, 68, 0.15)' :
-                            b.status === 'REFUNDED' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                          color:
-                            b.status === 'PAID' ? '#34d399' :
-                            b.status === 'PENDING_PAYMENT' ? '#fbbf24' :
-                            b.status === 'CANCELLED' ? '#f87171' :
-                            b.status === 'REFUNDED' ? '#38bdf8' : '#94a3b8',
-                        }}
-                      >
-                        {b.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
-                      {new Date(b.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <button
-                        onClick={() => setSelectedBooking(b)}
-                        style={{
-                          padding: '0.35rem 0.75rem',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '6px',
-                          color: '#00D4AA',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Inspecter
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Booking Detail Modal Drawer */}
-      {selectedBooking && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '1.5rem',
-          }}
-          onClick={() => setSelectedBooking(null)}
-        >
-          <div
-            style={{
-              background: '#111827',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '14px',
-              padding: '2rem',
-              maxWidth: '650px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: '#00D4AA', fontWeight: 700, letterSpacing: '0.08em' }}>DOSSIER RÉSERVATION</span>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f8fafc', margin: '0.2rem 0 0 0' }}>
-                  {selectedBooking.bookingReference}
-                </h2>
+        {selectedBooking && (
+          <div className="space-y-6">
+            {/* Financial & General Specs */}
+            <div
+              className="p-4 rounded-lg border space-y-3"
+              style={{
+                backgroundColor: 'var(--admin-surface-muted)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
+                Informations Clés
               </div>
-              <button
-                onClick={() => setSelectedBooking(null)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>UUID Interne</div>
-                <div style={{ fontSize: '0.8rem', color: '#cbd5e1', fontFamily: 'monospace', wordBreak: 'break-all' }}>{selectedBooking.id}</div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Identifiant Voyageur (User ID)</div>
-                <div style={{ fontSize: '0.8rem', color: '#cbd5e1', fontFamily: 'monospace', wordBreak: 'break-all' }}>{selectedBooking.userId}</div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Type &amp; Fournisseur</div>
-                <div style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700 }}>
-                  {selectedBooking.productType} ({selectedBooking.provider || 'N/A'})
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Verticale
+                  </span>
+                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    {selectedBooking.productType}
+                  </span>
                 </div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Montant Autoritaire</div>
-                <div style={{ fontSize: '0.85rem', color: '#00D4AA', fontWeight: 800 }}>
-                  {selectedBooking.amount ? `${selectedBooking.amount.toFixed(2)} ${selectedBooking.currency}` : 'Non tarifé'}
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Fournisseur Source
+                  </span>
+                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    {selectedBooking.provider || 'Direct'}
+                  </span>
                 </div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Statut Actuel</div>
-                <div style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700 }}>{selectedBooking.status}</div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Dernière Mutation d&apos;État</div>
-                <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
-                  {new Date(selectedBooking.statusChangedAt).toLocaleString('fr-FR')}
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Montant Enregistré
+                  </span>
+                  <span className="font-extrabold admin-mono-tabular" style={{ color: 'var(--admin-accent)' }}>
+                    {selectedBooking.amount != null
+                      ? `${Number(selectedBooking.amount).toFixed(2)} ${selectedBooking.currency || 'EUR'}`
+                      : 'Non spécifié'}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Identifiant Client (UUID)
+                  </span>
+                  <span className="admin-mono-tabular truncate block" style={{ color: 'var(--admin-text-secondary)' }}>
+                    {selectedBooking.userId}
+                  </span>
                 </div>
               </div>
             </div>
 
+            {/* Lifecycle Timeline */}
+            <div className="space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
+                Chronologie d&apos;Événements
+              </div>
+              <div className="space-y-2 border-l-2 ml-2 pl-4" style={{ borderColor: 'var(--admin-accent-border)' }}>
+                <div className="text-xs">
+                  <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    Création de la réservation
+                  </div>
+                  <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    {new Date(selectedBooking.createdAt).toLocaleString('fr-FR')}
+                  </div>
+                </div>
+
+                <div className="text-xs mt-3">
+                  <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    Dernière modification de statut
+                  </div>
+                  <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    {new Date(selectedBooking.statusChangedAt || selectedBooking.updatedAt).toLocaleString('fr-FR')}
+                  </div>
+                </div>
+
+                {selectedBooking.expiresAt && (
+                  <div className="text-xs mt-3">
+                    <div className="font-bold" style={{ color: '#F59E0B' }}>
+                      Date d&apos;expiration du blocage
+                    </div>
+                    <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                      {new Date(selectedBooking.expiresAt).toLocaleString('fr-FR')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* External Reference */}
             {selectedBooking.providerOfferId && (
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Provider Offer ID</div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                  {selectedBooking.providerOfferId}
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button
-                onClick={() => setSelectedBooking(null)}
+              <div
+                className="p-3 rounded-lg border text-xs"
                 style={{
-                  padding: '0.6rem 1.25rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  borderRadius: '6px',
-                  color: '#fff',
-                  fontWeight: 600,
-                  cursor: 'pointer',
+                  backgroundColor: 'var(--admin-surface-muted)',
+                  borderColor: 'var(--admin-border)',
                 }}
               >
-                Fermer
-              </button>
-            </div>
+                <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                  ID Offre Partenaire (Provider Snapshot)
+                </span>
+                <span className="admin-mono-tabular font-medium break-all" style={{ color: 'var(--admin-text-primary)' }}>
+                  {selectedBooking.providerOfferId}
+                </span>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </AdminDrawer>
     </div>
   );
 }

@@ -2,402 +2,403 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useAdminStats, useAdminBookings, useAdminPayments, useProviderHealth } from '@/hooks/queries/useAdminQueries';
+import {
+  useAdminStats,
+  useAdminBookings,
+  useAdminPayments,
+  useProviderHealth,
+} from '@/hooks/queries/useAdminQueries';
+import { AdminStatCard } from '@/components/admin/AdminStatCard';
+import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminBooking, AdminPayment } from '@/types/admin.types';
 
 export default function AdminOverviewPage() {
-  const { data: stats, isLoading: loadingStats } = useAdminStats();
-  const { data: recentBookings = [], isLoading: loadingBookings } = useAdminBookings({ limit: 5 });
-  const { data: recentPayments = [], isLoading: loadingPayments } = useAdminPayments({ limit: 5 });
-  const { data: providerHealth = [] } = useProviderHealth();
+  const { data: stats, isLoading: loadingStats, refetch: refetchStats } = useAdminStats();
+  const { data: recentBookings = [], isLoading: loadingBookings, refetch: refetchBookings } = useAdminBookings({ limit: 6 });
+  const { data: recentPayments = [], isLoading: loadingPayments, refetch: refetchPayments } = useAdminPayments({ limit: 6 });
+  const { data: providerHealth = [], isLoading: loadingHealth, refetch: refetchHealth } = useProviderHealth();
 
   const upProviders = providerHealth.filter((p) => p.status === 'UP').length;
   const totalProviders = providerHealth.length;
 
+  const handleRefreshAll = () => {
+    refetchStats();
+    refetchBookings();
+    refetchPayments();
+    refetchHealth();
+  };
+
+  const bookingColumns = [
+    {
+      key: 'bookingReference',
+      header: 'RÉFÉRENCE',
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
+          {b.bookingReference}
+        </span>
+      ),
+    },
+    {
+      key: 'productType',
+      header: 'VERTICALE',
+      render: (b: AdminBooking) => {
+        const iconMap: Record<string, string> = {
+          FLIGHT: 'fas fa-plane',
+          HOTEL: 'fas fa-hotel',
+          ACTIVITY: 'fas fa-hiking',
+          TRANSFER: 'fas fa-car-side',
+        };
+        return (
+          <div className="flex items-center gap-1.5 text-xs font-semibold">
+            <i className={`${iconMap[b.productType] || 'fas fa-ticket-alt'} text-xs`} style={{ color: 'var(--admin-text-muted)' }} />
+            <span>{b.productType}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'status',
+      header: 'STATUT',
+      render: (b: AdminBooking) => (
+        <AdminBadge variant={getStatusBadgeVariant(b.status)} size="sm">
+          {b.status}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'MONTANT',
+      align: 'right' as const,
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'EUR'}` : '—'}
+        </span>
+      ),
+    },
+  ];
+
+  const paymentColumns = [
+    {
+      key: 'paymentReference',
+      header: 'RÉFÉRENCE',
+      render: (p: AdminPayment) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: '#38BDF8' }}>
+          {p.paymentReference}
+        </span>
+      ),
+    },
+    {
+      key: 'providerName',
+      header: 'PASSERELLE',
+      render: (p: AdminPayment) => (
+        <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--admin-surface-muted)', color: 'var(--admin-text-secondary)' }}>
+          {p.providerName}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT',
+      render: (p: AdminPayment) => (
+        <AdminBadge variant={getStatusBadgeVariant(p.status)} size="sm">
+          {p.status}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'MONTANT',
+      align: 'right' as const,
+      render: (p: AdminPayment) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {Number(p.amount).toFixed(2)} {p.currency}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Title bar */}
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Title & Top Action Strip */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em', margin: 0 }}>
-            Console des Opérations Yuding
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+            Console des Opérations
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            Métriques d&apos;activité consolidées en temps réel sur les domaines Booking, Payment, Travel &amp; AI
+          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+            Supervision consolidée en temps réel des transactions, réservations et de l&apos;infrastructure Yuding
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="flex items-center gap-3">
           <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold"
             style={{
-              padding: '0.45rem 0.9rem',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontSize: '0.85rem',
-              color: '#34d399',
-              fontWeight: 600,
+              backgroundColor: 'var(--admin-surface)',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text-secondary)',
             }}
           >
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-            <span>Systèmes opérationnels ({upProviders}/{totalProviders})</span>
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: upProviders === totalProviders ? '#10B981' : '#F59E0B',
+              }}
+            />
+            <span>
+              {loadingHealth ? 'Vérification...' : `${upProviders}/${totalProviders} Systèmes UP`}
+            </span>
           </div>
+
+          <button
+            type="button"
+            onClick={handleRefreshAll}
+            className="admin-btn text-xs py-2 px-3.5"
+            style={{
+              backgroundColor: 'var(--admin-accent-subtle)',
+              border: '1px solid var(--admin-accent-border)',
+              color: 'var(--admin-accent)',
+            }}
+          >
+            <i className="fas fa-sync text-xs" />
+            <span>Actualiser</span>
+          </button>
         </div>
       </div>
 
-      {/* Primary KPI Metrics */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1.25rem',
-          marginBottom: '2rem',
-        }}
-      >
-        {/* Bookings */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.4rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600 }}>
-            <span>RÉSERVATIONS TOTALES</span>
-            <i className="fas fa-ticket-alt" style={{ color: '#00D4AA' }} />
-          </div>
-          <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.5rem' }}>
-            {loadingStats ? '...' : (stats?.totalReservations ?? 0)}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.4rem' }}>
-            Vols, hôtels, activités &amp; transferts
-          </div>
-        </div>
-
-        {/* Total Payments */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.4rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600 }}>
-            <span>TRANSACTIONS PAIEMENTS</span>
-            <i className="fas fa-credit-card" style={{ color: '#38bdf8' }} />
-          </div>
-          <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.5rem' }}>
-            {loadingStats ? '...' : (stats?.totalPayments ?? 0)}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.4rem' }}>
-            Passerelle PayPal &amp; transactions sécurisées
-          </div>
-        </div>
-
-        {/* Revenue */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.4rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600 }}>
-            <span>VOLUME TRANSACTIONNEL</span>
-            <i className="fas fa-coins" style={{ color: '#fbbf24' }} />
-          </div>
-          <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.5rem' }}>
-            {loadingStats ? '...' : `${(stats?.totalRevenue ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#34d399', marginTop: '0.4rem' }}>
-            Paiements validés &amp; capturés
-          </div>
-        </div>
-
-        {/* Refunds & Cancellations */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.4rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600 }}>
-            <span>REMBOURSEMENTS &amp; ANNULATIONS</span>
-            <i className="fas fa-undo-alt" style={{ color: '#f87171' }} />
-          </div>
-          <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.5rem' }}>
-            {loadingStats ? '...' : `${stats?.totalRefunds ?? 0} / ${stats?.totalCancellations ?? 0}`}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.4rem' }}>
-            {loadingStats ? '...' : `${(stats?.totalRefundedAmount ?? 0).toFixed(2)} € remboursés`}
-          </div>
-        </div>
+      {/* Primary KPI Ribbon */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AdminStatCard
+          label="Réservations Totales"
+          value={stats?.totalReservations ?? 0}
+          subtext="Schéma booking.bookings"
+          icon="fas fa-ticket-alt"
+          variant="accent"
+          isLoading={loadingStats}
+        />
+        <AdminStatCard
+          label="Transactions Enregistrées"
+          value={stats?.totalPayments ?? 0}
+          subtext="Passerelles PayPal & Sandbox"
+          icon="fas fa-credit-card"
+          variant="info"
+          isLoading={loadingStats}
+        />
+        <AdminStatCard
+          label="Volume Transactionnel"
+          value={
+            stats?.totalRevenue
+              ? `${stats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+              : '0.00 €'
+          }
+          subtext="Paiements capturés avec succès"
+          icon="fas fa-coins"
+          variant="accent"
+          isLoading={loadingStats}
+        />
+        <AdminStatCard
+          label="Remboursements & Annulations"
+          value={`${stats?.totalRefunds ?? 0} / ${stats?.totalCancellations ?? 0}`}
+          subtext={
+            stats?.totalRefundedAmount
+              ? `${stats.totalRefundedAmount.toFixed(2)} € exécutés`
+              : 'Flux Phase 51 vérifié'
+          }
+          icon="fas fa-undo-alt"
+          variant="warning"
+          isLoading={loadingStats}
+        />
       </div>
 
-      {/* Breakdowns section */}
-      {stats && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '1.25rem',
-            marginBottom: '2rem',
-          }}
-        >
-          {/* Vertical product breakdown */}
+      {/* Breakdown Strip (Distribution by Status & Vertical) */}
+      {stats && (stats.bookingsByStatus || stats.bookingsByProduct) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Status Breakdown */}
           <div
+            className="admin-card p-4 space-y-3"
             style={{
-              background: 'var(--bg-secondary, #111827)',
-              padding: '1.25rem',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'var(--admin-surface)',
+              borderColor: 'var(--admin-border)',
             }}
           >
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', margin: '0 0 1rem 0' }}>
-              Répartition par Type de Produit
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {stats.bookingsByProduct &&
-                Object.entries(stats.bookingsByProduct).map(([type, count]) => {
-                  const percent = Math.round((count / (stats.totalReservations || 1)) * 100);
-                  return (
-                    <div key={type}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.25rem' }}>
-                        <span>{type}</span>
-                        <span style={{ fontWeight: 700 }}>{count} ({percent}%)</span>
-                      </div>
-                      <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${percent}%`, height: '100%', background: '#00D4AA', borderRadius: '3px' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
+                Répartition des Réservations par Statut
+              </span>
+              <span className="text-xs admin-mono-tabular font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                Total: {stats.totalReservations}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {Object.entries(stats.bookingsByStatus || {}).map(([statusKey, count]) => (
+                <div
+                  key={statusKey}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs"
+                  style={{
+                    backgroundColor: 'var(--admin-surface-muted)',
+                    borderColor: 'var(--admin-border)',
+                  }}
+                >
+                  <span className="font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+                    {statusKey}
+                  </span>
+                  <span className="admin-mono-tabular font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[0.6875rem]">
+                    {count}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Booking lifecycle status breakdown */}
+          {/* Product Breakdown */}
           <div
+            className="admin-card p-4 space-y-3"
             style={{
-              background: 'var(--bg-secondary, #111827)',
-              padding: '1.25rem',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'var(--admin-surface)',
+              borderColor: 'var(--admin-border)',
             }}
           >
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', margin: '0 0 1rem 0' }}>
-              Statut du Cycle de Vie des Réservations
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {stats.bookingsByStatus &&
-                Object.entries(stats.bookingsByStatus).map(([st, count]) => {
-                  const percent = Math.round((count / (stats.totalReservations || 1)) * 100);
-                  const color =
-                    st === 'PAID' ? '#10b981' :
-                    st === 'PENDING_PAYMENT' ? '#f59e0b' :
-                    st === 'EXPIRED' ? '#64748b' :
-                    st === 'CANCELLED' ? '#ef4444' : '#38bdf8';
-                  return (
-                    <div key={st}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.25rem' }}>
-                        <span>{st}</span>
-                        <span style={{ fontWeight: 700 }}>{count} ({percent}%)</span>
-                      </div>
-                      <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${percent}%`, height: '100%', background: color, borderRadius: '3px' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
+                Distribution par Verticale Produit
+              </span>
+              <span className="text-xs font-bold" style={{ color: 'var(--admin-accent)' }}>
+                4 Verticales Actives
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {Object.entries(stats.bookingsByProduct || {}).map(([prodKey, count]) => (
+                <div
+                  key={prodKey}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs"
+                  style={{
+                    backgroundColor: 'var(--admin-surface-muted)',
+                    borderColor: 'var(--admin-border)',
+                  }}
+                >
+                  <span className="font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+                    {prodKey}
+                  </span>
+                  <span className="admin-mono-tabular font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[0.6875rem]">
+                    {count}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Operational Activity Tables */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: '1.5rem' }}>
+      {/* Dual Activity Tables (Recent Bookings & Recent Payments) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Bookings */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-                Dernières Réservations V2
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <i className="fas fa-ticket-alt text-xs" style={{ color: 'var(--admin-accent)' }} />
+              <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                Dernières Réservations
               </h2>
-              <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>Directement depuis le schéma booking.bookings</p>
             </div>
             <Link
               href="/admin/bookings"
-              style={{
-                fontSize: '0.8rem',
-                color: '#00D4AA',
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
+              className="text-xs font-bold no-underline hover:underline flex items-center gap-1"
+              style={{ color: 'var(--admin-accent)' }}
             >
-              Voir tout ({stats?.totalReservations ?? 0}) →
+              <span>Voir tout</span>
+              <i className="fas fa-arrow-right text-[0.65rem]" />
             </Link>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.07)', color: '#94a3b8', textAlign: 'left' }}>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>RÉFÉRENCE</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>TYPE</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>MONTANT</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>STATUT</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>DATE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingBookings ? (
-                  <tr><td colSpan={5} style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>Chargement des réservations...</td></tr>
-                ) : recentBookings.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>Aucune réservation enregistrée.</td></tr>
-                ) : (
-                  recentBookings.map((b) => (
-                    <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '0.65rem 0.5rem', fontWeight: 700, color: '#f8fafc', fontFamily: 'monospace' }}>
-                        {b.bookingReference}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: '#cbd5e1' }}>
-                        {b.productType}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: '#f8fafc', fontWeight: 600 }}>
-                        {b.amount ? `${b.amount.toFixed(2)} ${b.currency}` : '—'}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem' }}>
-                        <span
-                          style={{
-                            padding: '0.2rem 0.55rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background:
-                              b.status === 'PAID' ? 'rgba(16, 185, 129, 0.15)' :
-                              b.status === 'PENDING_PAYMENT' ? 'rgba(245, 158, 11, 0.15)' :
-                              b.status === 'CANCELLED' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                            color:
-                              b.status === 'PAID' ? '#34d399' :
-                              b.status === 'PENDING_PAYMENT' ? '#fbbf24' :
-                              b.status === 'CANCELLED' ? '#f87171' : '#94a3b8',
-                          }}
-                        >
-                          {b.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: '#64748b', fontSize: '0.75rem' }}>
-                        {new Date(b.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable
+            columns={bookingColumns}
+            data={recentBookings}
+            keyExtractor={(b) => b.id}
+            isLoading={loadingBookings}
+            emptyMessage="Aucune réservation récente"
+          />
         </div>
 
         {/* Recent Payments */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-                Grand Livre des Paiements
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <i className="fas fa-credit-card text-xs" style={{ color: '#38BDF8' }} />
+              <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                Transactions Récentes
               </h2>
-              <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>Directement depuis le schéma payment.payments</p>
             </div>
             <Link
               href="/admin/payments"
-              style={{
-                fontSize: '0.8rem',
-                color: '#00D4AA',
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
+              className="text-xs font-bold no-underline hover:underline flex items-center gap-1"
+              style={{ color: '#38BDF8' }}
             >
-              Voir tout ({stats?.totalPayments ?? 0}) →
+              <span>Grand Livre</span>
+              <i className="fas fa-arrow-right text-[0.65rem]" />
             </Link>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.07)', color: '#94a3b8', textAlign: 'left' }}>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>RÉFÉRENCE</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>FOURNISSEUR</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>MONTANT</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>STATUT</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>DATE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingPayments ? (
-                  <tr><td colSpan={5} style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>Chargement des paiements...</td></tr>
-                ) : recentPayments.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>Aucun paiement enregistré.</td></tr>
-                ) : (
-                  recentPayments.map((p) => (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '0.65rem 0.5rem', fontWeight: 700, color: '#f8fafc', fontFamily: 'monospace' }}>
-                        {p.paymentReference}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: '#cbd5e1' }}>
-                        <span style={{ padding: '0.15rem 0.45rem', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', fontSize: '0.75rem' }}>
-                          {p.providerName}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: '#f8fafc', fontWeight: 700 }}>
-                        {p.amount.toFixed(2)} {p.currency}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem' }}>
-                        <span
-                          style={{
-                            padding: '0.2rem 0.55rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background:
-                              p.status === 'SUCCEEDED' ? 'rgba(16, 185, 129, 0.15)' :
-                              p.status === 'REFUNDED' ? 'rgba(56, 189, 248, 0.15)' :
-                              p.status === 'FAILED' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                            color:
-                              p.status === 'SUCCEEDED' ? '#34d399' :
-                              p.status === 'REFUNDED' ? '#38bdf8' :
-                              p.status === 'FAILED' ? '#f87171' : '#fbbf24',
-                          }}
-                        >
-                          {p.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: '#64748b', fontSize: '0.75rem' }}>
-                        {new Date(p.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <AdminTable
+            columns={paymentColumns}
+            data={recentPayments}
+            keyExtractor={(p) => p.id}
+            isLoading={loadingPayments}
+            emptyMessage="Aucune transaction récente"
+          />
+        </div>
+      </div>
+
+      {/* Infrastructure Topology Card */}
+      <div
+        className="admin-card p-5"
+        style={{
+          backgroundColor: 'var(--admin-surface)',
+          borderColor: 'var(--admin-border)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <i className="fas fa-server text-xs" style={{ color: 'var(--admin-accent)' }} />
+            <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+              Topologie de l&apos;Écosystème Yuding V2
+            </h2>
           </div>
+          <Link
+            href="/admin/providers"
+            className="text-xs font-bold no-underline hover:underline"
+            style={{ color: 'var(--admin-accent)' }}
+          >
+            Détails des Fournisseurs →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {providerHealth.slice(0, 6).map((prov) => (
+            <div
+              key={prov.name}
+              className="p-3 rounded-lg border flex flex-col justify-between"
+              style={{
+                backgroundColor: 'var(--admin-surface-muted)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[0.6875rem] font-bold truncate" style={{ color: 'var(--admin-text-primary)' }}>
+                  {prov.name}
+                </span>
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    backgroundColor: prov.status === 'UP' ? '#10B981' : '#F59E0B',
+                  }}
+                />
+              </div>
+              <div className="mt-2 text-[0.65rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
+                {prov.port ? `Port :${prov.port}` : 'API Externe'}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

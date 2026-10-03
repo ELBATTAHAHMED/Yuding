@@ -1,135 +1,226 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAdminBookings } from '@/hooks/queries/useAdminQueries';
+import { AdminBooking } from '@/types/admin.types';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
+import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
+import { AdminDrawer } from '@/components/admin/AdminDrawer';
 
 export default function AdminCustomOffersPage() {
-  const { data: bookings = [], isLoading } = useAdminBookings({ limit: 100 });
+  const { data: bookings = [], isLoading, refetch, isRefetching } = useAdminBookings({ limit: 100 });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOffer, setSelectedOffer] = useState<AdminBooking | null>(null);
 
-  // Filter bookings with offer snapshots
+  // Filter bookings that contain provider offer snapshots
   const offersWithSnapshots = bookings.filter((b) => b.amount != null && b.provider != null);
 
+  const filtered = offersWithSnapshots.filter((b) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      b.bookingReference.toLowerCase().includes(term) ||
+      (b.provider && b.provider.toLowerCase().includes(term)) ||
+      (b.providerOfferId && b.providerOfferId.toLowerCase().includes(term)) ||
+      b.productType.toLowerCase().includes(term)
+    );
+  });
+
+  const columns = [
+    {
+      key: 'bookingReference',
+      header: 'RÉFÉRENCE RÉSERVATION',
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
+          {b.bookingReference}
+        </span>
+      ),
+    },
+    {
+      key: 'productType',
+      header: 'VERTICALE',
+      render: (b: AdminBooking) => (
+        <AdminBadge variant="info" size="sm" dot={false}>
+          {b.productType}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'provider',
+      header: 'FOURNISSEUR SOURCE',
+      render: (b: AdminBooking) => (
+        <span
+          className="text-xs px-2 py-0.5 rounded font-mono font-medium"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          {b.provider}
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'PRIX CAPTURÉ',
+      align: 'right' as const,
+      render: (b: AdminBooking) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {Number(b.amount).toFixed(2)} {b.currency || 'EUR'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT',
+      render: (b: AdminBooking) => (
+        <AdminBadge variant={getStatusBadgeVariant(b.status)} size="sm">
+          {b.status}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'ACTIONS',
+      align: 'right' as const,
+      render: (b: AdminBooking) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedOffer(b);
+          }}
+          className="admin-btn text-[0.7rem] py-1 px-2.5 rounded"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            border: '1px solid var(--admin-border)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          <i className="fas fa-eye text-[0.65rem]" />
+          <span>Snapshot</span>
+        </button>
+      ),
+    },
+  ];
+
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Title */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
             Offres Capturées &amp; Snapshots Partenaires
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
+          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
             Instantanés immuables des sélections utilisateurs et offres tarifaires (booking.offer_snapshots)
           </p>
         </div>
 
         <Link
           href="/admin/bookings"
+          className="admin-btn text-xs py-2 px-3.5 no-underline"
           style={{
-            padding: '0.6rem 1.25rem',
-            background: 'rgba(0, 212, 170, 0.1)',
-            border: '1px solid #00D4AA',
-            color: '#00D4AA',
-            borderRadius: '8px',
-            fontWeight: 700,
-            textDecoration: 'none',
-            fontSize: '0.85rem',
+            backgroundColor: 'var(--admin-surface-muted)',
+            border: '1px solid var(--admin-border)',
+            color: 'var(--admin-text-secondary)',
           }}
         >
-          Voir Réservations Associées →
+          <span>Voir Réservations Associées</span>
+          <i className="fas fa-arrow-right text-[0.65rem]" />
         </Link>
       </div>
 
-      {/* Snapshot Inventory Table */}
-      <div
-        style={{
-          background: 'var(--bg-secondary, #111827)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          overflow: 'hidden',
-        }}
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher par référence, fournisseur ou verticale..."
+        onRefresh={() => refetch()}
+        isRefreshing={isLoading || isRefetching}
+        totalCount={offersWithSnapshots.length}
+        filteredCount={filtered.length}
+        onResetFilters={() => setSearchTerm('')}
+        hasActiveFilters={Boolean(searchTerm)}
+      />
+
+      {/* Table */}
+      <AdminTable
+        columns={columns}
+        data={filtered}
+        keyExtractor={(b) => b.id}
+        isLoading={isLoading}
+        onRowClick={(b) => setSelectedOffer(b)}
+        emptyMessage="Aucun snapshot d'offre disponible"
+      />
+
+      {/* Snapshot Drawer */}
+      <AdminDrawer
+        isOpen={Boolean(selectedOffer)}
+        onClose={() => setSelectedOffer(null)}
+        title={selectedOffer?.bookingReference || 'Snapshot Offre'}
+        subtitle="Contenu capturé de l'offre partenaire"
+        badge={
+          selectedOffer && (
+            <AdminBadge variant={getStatusBadgeVariant(selectedOffer.status)} size="sm">
+              {selectedOffer.status}
+            </AdminBadge>
+          )
+        }
+        rawJson={selectedOffer}
       >
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.2)', color: '#94a3b8', textAlign: 'left' }}>
-                <th style={{ padding: '0.85rem 1rem' }}>RÉFÉRENCE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>VERTICALE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>FOURNISSEUR SOURCE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>PRIX AFFICHÉ</th>
-                <th style={{ padding: '0.85rem 1rem' }}>STATUT RÉSERVATION</th>
-                <th style={{ padding: '0.85rem 1rem' }}>EXPIRATION OFFRE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>DATE CAPTURE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr><td colSpan={7} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>Chargement des snapshots...</td></tr>
-              ) : offersWithSnapshots.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                    Aucun instantané d&apos;offre trouvé.
-                  </td>
-                </tr>
-              ) : (
-                offersWithSnapshots.map((b) => (
-                  <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                    <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#00D4AA' }}>
-                      {b.bookingReference}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 600 }}>
-                      {b.productType}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span
-                        style={{
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          background:
-                            b.provider === 'NUITEE' ? 'rgba(56, 189, 248, 0.15)' :
-                            b.provider === 'SCRAPPA' ? 'rgba(168, 85, 247, 0.15)' :
-                            b.provider === 'HBX' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.08)',
-                          color:
-                            b.provider === 'NUITEE' ? '#38bdf8' :
-                            b.provider === 'SCRAPPA' ? '#c084fc' :
-                            b.provider === 'HBX' ? '#fbbf24' : '#cbd5e1',
-                        }}
-                      >
-                        {b.provider}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 800 }}>
-                      {b.amount?.toFixed(2)} {b.currency}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span
-                        style={{
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          background: b.status === 'PAID' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                          color: b.status === 'PAID' ? '#34d399' : '#94a3b8',
-                        }}
-                      >
-                        {b.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
-                      {b.expiresAt ? new Date(b.expiresAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
-                      {new Date(b.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        {selectedOffer && (
+          <div className="space-y-4 text-xs">
+            <div
+              className="p-4 rounded-lg border space-y-3"
+              style={{
+                backgroundColor: 'var(--admin-surface-muted)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              <div className="font-bold uppercase tracking-wider text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                Détail de l&apos;Offre Capturée
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Fournisseur Source
+                  </span>
+                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    {selectedOffer.provider}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Verticale Produit
+                  </span>
+                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    {selectedOffer.productType}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Prix Enregistré
+                  </span>
+                  <span className="font-extrabold admin-mono-tabular" style={{ color: 'var(--admin-accent)' }}>
+                    {Number(selectedOffer.amount).toFixed(2)} {selectedOffer.currency || 'EUR'}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Identifiant Offre Provider
+                  </span>
+                  <span className="font-mono text-[0.6875rem] truncate block" style={{ color: 'var(--admin-text-secondary)' }}>
+                    {selectedOffer.providerOfferId || 'Non fourni'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </AdminDrawer>
     </div>
   );
 }

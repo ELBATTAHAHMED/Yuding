@@ -8,26 +8,46 @@ import {
   useUnlockUserMutation,
   useUpdateUserRolesMutation,
 } from '@/hooks/queries/useAdminQueries';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
+import { AdminBadge } from '@/components/admin/AdminBadge';
+
+const AVAILABLE_ROLES = [
+  { role: 'ROLE_USER', label: 'Client / Utilisateur', desc: 'Accès standard aux réservations' },
+  { role: 'ROLE_ADMIN', label: 'Super Administrateur', desc: 'Contrôle complet de la plateforme' },
+  { role: 'ROLE_SUPPORT', label: 'Support Opérationnel', desc: 'Gestion des réclamations & remboursements' },
+  { role: 'ROLE_CONTENT_MANAGER', label: 'Gestionnaire de Contenu', desc: 'Modération des avis & destinations' },
+];
 
 export default function AdminUsersPage() {
   const { isAdmin } = useAuth();
-  const { data: users = [], isLoading: loading, refetch: loadUsers } = useAdminUsers();
+  const { data: users = [], isLoading, refetch, isRefetching } = useAdminUsers();
   const unlockUserMutation = useUnlockUserMutation();
   const updateUserRolesMutation = useUpdateUserRolesMutation();
 
-  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
-
-  // Selected user for role editing
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUserSummary | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  const filteredUsers = users.filter((u) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      u.email.toLowerCase().includes(term) ||
+      u.firstName.toLowerCase().includes(term) ||
+      u.lastName.toLowerCase().includes(term) ||
+      u.id.toLowerCase().includes(term)
+    );
+  });
 
   const handleUnlock = async (userId: string) => {
     try {
       const res = await unlockUserMutation.mutateAsync(userId);
-      setActionFeedback(res.message || 'Compte déverrouillé avec succès.');
-      setTimeout(() => setActionFeedback(null), 3000);
+      setFeedback(res.message || 'Compte déverrouillé avec succès.');
+      setTimeout(() => setFeedback(null), 3000);
     } catch (err: any) {
-      setActionFeedback(err.message || 'Erreur lors du déverrouillage.');
+      setFeedback(err.message || 'Erreur lors du déverrouillage.');
     }
   };
 
@@ -50,265 +70,278 @@ export default function AdminUsersPage() {
     if (!selectedUser) return;
     try {
       await updateUserRolesMutation.mutateAsync({ userId: selectedUser.id, roles: selectedRoles });
-      setActionFeedback(`Rôles mis à jour pour ${selectedUser.email}`);
+      setFeedback(`Rôles mis à jour pour ${selectedUser.email}`);
       setSelectedUser(null);
-      setTimeout(() => setActionFeedback(null), 3000);
+      setTimeout(() => setFeedback(null), 3000);
     } catch (err: any) {
-      setActionFeedback(err.message || 'Erreur lors de la mise à jour des rôles.');
+      setFeedback(err.message || 'Erreur lors de la mise à jour des rôles.');
     }
   };
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff' }}>
-            Gestion des Utilisateurs
-          </h1>
-          <p style={{ color: '#b0bec5', fontSize: '0.95rem' }}>
-            Consultez les profils enregistrés, attribuez les privilèges RBAC et déverrouillez les comptes
-          </p>
+  const columns = [
+    {
+      key: 'name',
+      header: 'UTILISATEUR',
+      render: (u: AdminUserSummary) => (
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
+              color: '#0B0F19',
+            }}
+          >
+            {u.firstName ? u.firstName[0].toUpperCase() : 'U'}
+          </div>
+          <div className="min-w-0">
+            <div className="font-bold text-xs truncate" style={{ color: 'var(--admin-text-primary)' }}>
+              {u.firstName} {u.lastName}
+            </div>
+            <div className="text-[0.6875rem] truncate" style={{ color: 'var(--admin-text-muted)' }}>
+              {u.email}
+            </div>
+          </div>
         </div>
-
-        <button
-          onClick={() => loadUsers()}
-          style={{
-            padding: '0.6rem 1.25rem',
-            background: 'rgba(0, 212, 170, 0.1)',
-            border: '1px solid #00D4AA',
-            color: '#00D4AA',
-            borderRadius: '6px',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
+      ),
+    },
+    {
+      key: 'roles',
+      header: 'PRIVILÈGES RBAC',
+      render: (u: AdminUserSummary) => (
+        <div className="flex flex-wrap gap-1">
+          {u.roles.map((r) => (
+            <AdminBadge
+              key={r}
+              variant={r === 'ROLE_ADMIN' ? 'accent' : r === 'ROLE_SUPPORT' ? 'info' : 'neutral'}
+              size="sm"
+              dot={false}
+            >
+              {r.replace('ROLE_', '')}
+            </AdminBadge>
+          ))}
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT DU COMPTE',
+      render: (u: AdminUserSummary) => (
+        <AdminBadge
+          variant={u.status === 'ACTIVE' ? 'success' : 'danger'}
+          size="sm"
         >
-          <i className="fas fa-sync" style={{ marginRight: '0.4rem' }}></i>
-          Actualiser
-        </button>
+          {u.status}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'failedLoginAttempts',
+      header: 'ÉCHECS LOGIN',
+      align: 'center' as const,
+      render: (u: AdminUserSummary) => (
+        <span
+          className={`admin-mono-tabular font-bold text-xs ${
+            u.failedLoginAttempts > 0 ? 'text-red-500 font-extrabold' : ''
+          }`}
+          style={{ color: u.failedLoginAttempts > 0 ? '#EF4444' : 'var(--admin-text-muted)' }}
+        >
+          {u.failedLoginAttempts}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'INSCRIPTION',
+      render: (u: AdminUserSummary) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {new Date(u.createdAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'ACTIONS',
+      align: 'right' as const,
+      render: (u: AdminUserSummary) => (
+        <div className="flex items-center justify-end gap-1.5">
+          {u.failedLoginAttempts > 0 && (
+            <button
+              type="button"
+              onClick={() => handleUnlock(u.id)}
+              disabled={unlockUserMutation.isPending}
+              className="admin-btn text-[0.6875rem] py-1 px-2 rounded"
+              style={{
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.25)',
+                color: '#F59E0B',
+              }}
+              title="Déverrouiller le compte"
+            >
+              <i className="fas fa-unlock text-[0.65rem]" />
+              <span>Déverrouiller</span>
+            </button>
+          )}
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => handleOpenRoleModal(u)}
+              className="admin-btn text-[0.6875rem] py-1 px-2 rounded"
+              style={{
+                backgroundColor: 'var(--admin-surface-muted)',
+                border: '1px solid var(--admin-border)',
+                color: 'var(--admin-text-secondary)',
+              }}
+            >
+              <i className="fas fa-user-shield text-[0.65rem]" />
+              <span>Rôles</span>
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Page Title */}
+      <div>
+        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+          Gouvernance des Utilisateurs &amp; RBAC
+        </h1>
+        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+          Gestion des autorisations d&apos;accès, privilèges administrateurs et déverrouillage de sécurité
+        </p>
       </div>
 
-      {actionFeedback && (
-        <div style={{ padding: '1rem', background: 'rgba(0, 212, 170, 0.15)', border: '1px solid #00D4AA', color: '#00D4AA', borderRadius: '8px', marginBottom: '1.5rem' }}>
-          <i className="fas fa-info-circle" style={{ marginRight: '0.5rem' }}></i>
-          {actionFeedback}
+      {feedback && (
+        <div
+          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2"
+          style={{
+            backgroundColor: 'var(--admin-accent-subtle)',
+            borderColor: 'var(--admin-accent-border)',
+            color: 'var(--admin-accent)',
+          }}
+        >
+          <i className="fas fa-check-circle" />
+          <span>{feedback}</span>
         </div>
       )}
 
-      {/* Users Table */}
-      <div
-        style={{
-          background: 'var(--bg-secondary, #1A1F2E)',
-          borderRadius: '12px',
-          padding: '1.75rem',
-          border: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#b0bec5' }}>
-            <i className="fas fa-spinner fa-spin fa-2x"></i>
-            <p style={{ marginTop: '1rem' }}>Chargement des utilisateurs...</p>
-          </div>
-        ) : users.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', color: '#b0bec5' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#90a4ae' }}>
-                  <th style={{ padding: '0.85rem' }}>Utilisateur</th>
-                  <th style={{ padding: '0.85rem' }}>Email</th>
-                  <th style={{ padding: '0.85rem' }}>Rôles</th>
-                  <th style={{ padding: '0.85rem' }}>Statut</th>
-                  <th style={{ padding: '0.85rem' }}>Vérifié</th>
-                  <th style={{ padding: '0.85rem' }}>Échecs</th>
-                  <th style={{ padding: '0.85rem', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '0.85rem', color: '#fff', fontWeight: 600 }}>
-                      {u.firstName} {u.lastName}
-                    </td>
-                    <td style={{ padding: '0.85rem', color: '#e0e0e0' }}>{u.email}</td>
-                    <td style={{ padding: '0.85rem' }}>
-                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                        {u.roles?.map((r) => (
-                          <span
-                            key={r}
-                            style={{
-                              padding: '0.15rem 0.5rem',
-                              borderRadius: '4px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              background: r === 'ROLE_ADMIN' ? 'rgba(239, 83, 80, 0.2)' : 'rgba(0, 212, 170, 0.15)',
-                              color: r === 'ROLE_ADMIN' ? '#ef5350' : '#00D4AA',
-                            }}
-                          >
-                            {r.replace('ROLE_', '')}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.85rem' }}>
-                      <span
-                        style={{
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          background: u.status === 'LOCKED' ? '#ffebee' : '#e8f5e9',
-                          color: u.status === 'LOCKED' ? '#c62828' : '#2e7d32',
-                        }}
-                      >
-                        {u.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem' }}>
-                      {u.isEmailVerified ? (
-                        <i className="fas fa-check-circle" style={{ color: '#4caf50' }}></i>
-                      ) : (
-                        <i className="fas fa-times-circle" style={{ color: '#ff9800' }}></i>
-                      )}
-                    </td>
-                    <td style={{ padding: '0.85rem' }}>{u.failedLoginAttempts}</td>
-                    <td style={{ padding: '0.85rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        {u.status === 'LOCKED' && (
-                          <button
-                            onClick={() => handleUnlock(u.id)}
-                            style={{
-                              padding: '0.35rem 0.75rem',
-                              background: '#388e3c',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              fontWeight: 600,
-                            }}
-                          >
-                            Déverrouiller
-                          </button>
-                        )}
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher par nom, email ou UUID utilisateur..."
+        onRefresh={() => refetch()}
+        isRefreshing={isLoading || isRefetching}
+        totalCount={users.length}
+        filteredCount={filteredUsers.length}
+        onResetFilters={() => setSearchTerm('')}
+        hasActiveFilters={Boolean(searchTerm)}
+      />
 
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleOpenRoleModal(u)}
-                            style={{
-                              padding: '0.35rem 0.75rem',
-                              background: 'rgba(255,255,255,0.08)',
-                              color: '#fff',
-                              border: '1px solid rgba(255,255,255,0.2)',
-                              borderRadius: '4px',
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              fontWeight: 600,
-                            }}
-                          >
-                            Rôles
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p style={{ color: '#888', textAlign: 'center', padding: '2rem' }}>Aucun utilisateur trouvé.</p>
-        )}
-      </div>
+      {/* Main Table */}
+      <AdminTable
+        columns={columns}
+        data={filteredUsers}
+        keyExtractor={(u) => u.id}
+        isLoading={isLoading}
+        emptyMessage="Aucun utilisateur trouvé"
+      />
 
-      {/* Role Edit Modal */}
+      {/* Role Management Modal */}
       {selectedUser && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 20000,
-            backdropFilter: 'blur(5px)',
-            padding: '1rem',
-          }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setSelectedUser(null)}
+          />
+          <div
+            className="relative z-10 w-full max-w-md p-6 rounded-xl border shadow-2xl space-y-4"
             style={{
-              background: 'var(--bg-secondary, #1A1F2E)',
-              padding: '2rem',
-              borderRadius: '12px',
-              maxWidth: '450px',
-              width: '100%',
-              border: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: 'var(--admin-surface)',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text-primary)',
             }}
           >
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff', marginBottom: '0.5rem' }}>
-              Modifier les Rôles RBAC
-            </h2>
-            <p style={{ color: '#90a4ae', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              Pour l&apos;utilisateur : <strong>{selectedUser.email}</strong>
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.75rem' }}>
-              {['ROLE_USER', 'ROLE_ADMIN', 'ROLE_SUPPORT', 'ROLE_CONTENT_MANAGER'].map((role) => (
-                <label
-                  key={role}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem',
-                    background: 'rgba(255,255,255,0.04)',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    color: '#fff',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedRoles.includes(role)}
-                    onChange={() => handleToggleRole(role)}
-                    style={{ width: '18px', height: '18px', accentColor: '#00D4AA' }}
-                  />
-                  <span style={{ fontWeight: 600 }}>{role}</span>
-                </label>
-              ))}
+            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--admin-border)' }}>
+              <div>
+                <h3 className="text-base font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                  Modifier les Privilèges RBAC
+                </h3>
+                <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--admin-text-muted)' }}>
+                  {selectedUser.email}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedUser(null)}
+                className="w-7 h-7 rounded flex items-center justify-center opacity-60 hover:opacity-100"
+              >
+                <i className="fas fa-times text-sm" />
+              </button>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+            <div className="space-y-2.5">
+              {AVAILABLE_ROLES.map(({ role, label, desc }) => {
+                const isSelected = selectedRoles.includes(role);
+                return (
+                  <label
+                    key={role}
+                    onClick={() => handleToggleRole(role)}
+                    className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors select-none"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--admin-accent-subtle)' : 'var(--admin-surface-muted)',
+                      borderColor: isSelected ? 'var(--admin-accent-border)' : 'var(--admin-border)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="mt-0.5 accent-emerald-500"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                        {label}
+                      </div>
+                      <div className="text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                        {desc}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--admin-border)' }}>
               <button
+                type="button"
                 onClick={() => setSelectedUser(null)}
+                className="admin-btn text-xs py-2 px-3 rounded"
                 style={{
-                  padding: '0.65rem 1.25rem',
-                  background: 'none',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: '#b0bec5',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
+                  backgroundColor: 'transparent',
+                  color: 'var(--admin-text-muted)',
                 }}
               >
                 Annuler
               </button>
-
               <button
+                type="button"
                 onClick={handleSaveRoles}
                 disabled={updateUserRolesMutation.isPending}
+                className="admin-btn text-xs py-2 px-4 rounded font-bold"
                 style={{
-                  padding: '0.65rem 1.5rem',
-                  background: '#00D4AA',
-                  border: 'none',
-                  color: '#0A0E1A',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
+                  backgroundColor: 'var(--admin-accent)',
+                  color: '#0B0F19',
                 }}
               >
-                {updateUserRolesMutation.isPending ? <i className="fas fa-spinner fa-spin"></i> : 'Enregistrer'}
+                {updateUserRolesMutation.isPending ? 'Enregistrement...' : 'Enregistrer les rôles'}
               </button>
             </div>
           </div>

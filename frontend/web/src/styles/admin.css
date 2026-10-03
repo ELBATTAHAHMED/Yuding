@@ -1,0 +1,213 @@
+/* ==========================================================================
+   YUDING V2 — OPERATIONS CONSOLE (ADMIN) DESIGN SYSTEM
+   Professional, high-density, low-latency design tokens for Light & Dark modes
+   ========================================================================== */
+
+:root {
+  --admin-bg: #F8FAFC;
+  --admin-bg-subtle: #F1F5F9;
+  --admin-surface: #FFFFFF;
+  --admin-surface-muted: #F8FAFC;
+  --admin-surface-hover: #F1F5F9;
+  --admin-surface-active: #E2E8F0;
+  
+  --admin-border: #E2E8F0;
+  --admin-border-subtle: #EDF2F7;
+  --admin-border-strong: #CBD5E1;
+  
+  --admin-text-primary: #0F172A;
+  --admin-text-secondary: #475569;
+  --admin-text-muted: #94A3B8;
+  --admin-text-inverse: #FFFFFF;
+  
+  --admin-accent: #059669;
+  --admin-accent-hover: #047857;
+  --admin-accent-subtle: rgba(5, 150, 105, 0.08);
+  --admin-accent-border: rgba(5, 150, 105, 0.25);
+  --admin-accent-glow: rgba(5, 150, 105, 0.15);
+  
+  --admin-brand: #01796F;
+  --admin-brand-cyan: #02E0D5;
+  
+  --admin-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --admin-card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --admin-dropdown-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  
+  --admin-code-bg: #F1F5F9;
+  --admin-code-text: #0F172A;
+  
+  --admin-badge-success-bg: rgba(16, 185, 129, 0.1);
+  --admin-badge-success-text: #065F46;
+  --admin-badge-success-border: rgba(16, 185, 129, 0.25);
+  
+  --admin-badge-warning-bg: rgba(245, 158, 11, 0.1);
+  --admin-badge-warning-text: #92400E;
+  --admin-badge-warning-border: rgba(245, 158, 11, 0.25);
+  
+  --admin-badge-danger-bg: rgba(239, 68, 68, 0.1);
+  --admin-badge-danger-text: #991B1B;
+  --admin-badge-danger-border: rgba(239, 68, 68, 0.25);
+  
+  --admin-badge-info-bg: rgba(14, 165, 233, 0.1);
+  --admin-badge-info-text: #075985;
+  --admin-badge-info-border: rgba(14, 165, 233, 0.25);
+}
+
+.dark,
+[data-theme="dark"] {
+  --admin-bg: #0B0F19;
+  --admin-bg-subtle: #080C14;
+  --admin-surface: #111827;
+  --admin-surface-muted: #141E33;
+  --admin-surface-hover: #1A243B;
+  --admin-surface-active: #23304E;
+  
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-border-subtle: rgba(255, 255, 255, 0.04);
+  --admin-border-strong: rgba(255, 255, 255, 0.16);
+  
+  --admin-text-primary: #F8FAFC;
+  --admin-text-secondary: #94A3B8;
+  --admin-text-muted: #64748B;
+  --admin-text-inverse: #0B0F19;
+  
+  --admin-accent: #00D4AA;
+  --admin-accent-hover: #02E0D5;
+  --admin-accent-subtle: rgba(0, 212, 170, 0.12);
+  --admin-accent-border: rgba(0, 212, 170, 0.25);
+  --admin-accent-glow: rgba(0, 212, 170, 0.25);
+  
+  --admin-brand: #00D4AA;
+  --admin-brand-cyan: #02E0D5;
+  
+  --admin-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --admin-card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --admin-dropdown-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+  
+  --admin-code-bg: #0A0E18;
+  --admin-code-text: #38BDF8;
+  
+  --admin-badge-success-bg: rgba(16, 185, 129, 0.15);
+  --admin-badge-success-text: #34D399;
+  --admin-badge-success-border: rgba(16, 185, 129, 0.3);
+  
+  --admin-badge-warning-bg: rgba(245, 158, 11, 0.15);
+  --admin-badge-warning-text: #FBBF24;
+  --admin-badge-warning-border: rgba(245, 158, 11, 0.3);
+  
+  --admin-badge-danger-bg: rgba(239, 68, 68, 0.15);
+  --admin-badge-danger-text: #F87171;
+  --admin-badge-danger-border: rgba(239, 68, 68, 0.3);
+  
+  --admin-badge-info-bg: rgba(56, 189, 248, 0.15);
+  --admin-badge-info-text: #38BDF8;
+  --admin-badge-info-border: rgba(56, 189, 248, 0.3);
+}
+
+/* Base admin layout style */
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--admin-bg);
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for tables & sidebars */
+.admin-custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.admin-custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--admin-border-strong);
+  border-radius: 4px;
+}
+.admin-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-text-muted);
+}
+
+/* Monospace tabular values */
+.admin-mono-tabular {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Smooth micro-interactions */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.admin-btn:active {
+  transform: scale(0.97);
+}
+
+.admin-card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  box-shadow: var(--admin-card-shadow);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Table styling for dense operations */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.admin-table th {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--admin-text-muted);
+  background: var(--admin-surface-muted);
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+  text-align: left;
+}
+.admin-table td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--admin-border-subtle);
+  color: var(--admin-text-primary);
+  vertical-align: middle;
+}
+.admin-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+.admin-table tbody tr:hover {
+  background-color: var(--admin-surface-hover);
+}
+
+/* Slide-over Drawer Animation */
+@keyframes adminSlideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.admin-drawer-open {
+  animation: adminSlideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

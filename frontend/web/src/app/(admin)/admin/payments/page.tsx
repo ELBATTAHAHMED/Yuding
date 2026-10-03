@@ -3,16 +3,27 @@
 import React, { useState } from 'react';
 import { useAdminPayments } from '@/hooks/queries/useAdminQueries';
 import { AdminPayment } from '@/types/admin.types';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
+import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
+import { AdminDrawer } from '@/components/admin/AdminDrawer';
 
 export default function AdminPaymentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedPayment, setSelectedPayment] = useState<AdminPayment | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: payments = [], isLoading, refetch } = useAdminPayments({
+  const { data: payments = [], isLoading, refetch, isRefetching } = useAdminPayments({
     limit: 100,
     status: statusFilter,
   });
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
 
   const filteredPayments = payments.filter((p) => {
     if (!searchTerm.trim()) return true;
@@ -25,324 +36,282 @@ export default function AdminPaymentsPage() {
     );
   });
 
+  const columns = [
+    {
+      key: 'paymentReference',
+      header: 'RÉFÉRENCE',
+      render: (p: AdminPayment) => (
+        <div className="flex items-center gap-1.5">
+          <span className="admin-mono-tabular font-bold text-xs" style={{ color: '#38BDF8' }}>
+            {p.paymentReference}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopy(p.paymentReference, p.id);
+            }}
+            className="opacity-40 hover:opacity-100 transition-opacity p-0.5"
+            title="Copier la référence"
+          >
+            <i className={`fas ${copiedId === p.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[0.65rem]`} />
+          </button>
+        </div>
+      ),
+    },
+    {
+      key: 'bookingId',
+      header: 'RÉSERVATION ASSOCIÉE',
+      render: (p: AdminPayment) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-secondary)' }}>
+          {p.bookingId.substring(0, 8)}...
+        </span>
+      ),
+    },
+    {
+      key: 'providerName',
+      header: 'PASSERELLE',
+      render: (p: AdminPayment) => (
+        <span
+          className="text-xs px-2 py-0.5 rounded font-medium"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          {p.providerName}
+        </span>
+      ),
+    },
+    {
+      key: 'providerTransactionId',
+      header: 'ID TRANSACTION FOURNISSEUR',
+      render: (p: AdminPayment) => (
+        <span className="admin-mono-tabular text-xs truncate max-w-[150px] inline-block" style={{ color: 'var(--admin-text-muted)' }}>
+          {p.providerTransactionId || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'MONTANT',
+      align: 'right' as const,
+      render: (p: AdminPayment) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {Number(p.amount).toFixed(2)} {p.currency}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'DATE TRANSACT.',
+      render: (p: AdminPayment) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {new Date(p.createdAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT',
+      render: (p: AdminPayment) => (
+        <AdminBadge variant={getStatusBadgeVariant(p.status)} size="sm">
+          {p.status}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'ACTIONS',
+      align: 'right' as const,
+      render: (p: AdminPayment) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedPayment(p);
+          }}
+          className="admin-btn text-[0.7rem] py-1 px-2.5 rounded"
+          style={{
+            backgroundColor: 'var(--admin-surface-muted)',
+            border: '1px solid var(--admin-border)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          <i className="fas fa-eye text-[0.65rem]" />
+          <span>Inspecter</span>
+        </button>
+      ),
+    },
+  ];
+
+  const filterSelects = [
+    {
+      key: 'status',
+      label: 'Statut',
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { label: 'Tous les statuts', value: 'ALL' },
+        { label: 'COMPLETED / PAID', value: 'COMPLETED' },
+        { label: 'PENDING', value: 'PENDING' },
+        { label: 'FAILED', value: 'FAILED' },
+      ],
+    },
+  ];
+
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Page Title */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
-            Grand Livre des Paiements &amp; Transactions
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+            Grand Livre des Paiements
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            Enregistrements immuables du schéma payment.payments et passerelles financières
+          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+            Transactions immuables, captures de passerelles et horodatages financiers (payment.payments)
           </p>
         </div>
-
-        <button
-          onClick={() => refetch()}
-          style={{
-            padding: '0.6rem 1.25rem',
-            background: 'rgba(0, 212, 170, 0.1)',
-            border: '1px solid #00D4AA',
-            color: '#00D4AA',
-            borderRadius: '8px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}
-        >
-          <i className="fas fa-sync" />
-          Actualiser
-        </button>
       </div>
 
-      {/* Filter Toolbar */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher PAY-XXXX, ID transaction, UUID réservation..."
+        filters={filterSelects}
+        onRefresh={() => refetch()}
+        isRefreshing={isLoading || isRefetching}
+        totalCount={payments.length}
+        filteredCount={filteredPayments.length}
+        onResetFilters={() => {
+          setSearchTerm('');
+          setStatusFilter('ALL');
         }}
+        hasActiveFilters={Boolean(searchTerm || statusFilter !== 'ALL')}
+      />
+
+      {/* Main Table */}
+      <AdminTable
+        columns={columns}
+        data={filteredPayments}
+        keyExtractor={(p) => p.id}
+        isLoading={isLoading}
+        onRowClick={(p) => setSelectedPayment(p)}
+        emptyMessage="Aucun paiement trouvé"
+        emptySubtext="Aucune transaction ne correspond aux filtres appliqués."
+      />
+
+      {/* Inspection Drawer */}
+      <AdminDrawer
+        isOpen={Boolean(selectedPayment)}
+        onClose={() => setSelectedPayment(null)}
+        title={selectedPayment ? selectedPayment.paymentReference : ''}
+        subtitle="Détail de la transaction financière"
+        badge={
+          selectedPayment && (
+            <AdminBadge variant={getStatusBadgeVariant(selectedPayment.status)} size="sm">
+              {selectedPayment.status}
+            </AdminBadge>
+          )
+        }
+        rawJson={selectedPayment}
       >
-        <div style={{ position: 'relative', flex: '1', minWidth: '260px' }}>
-          <input
-            type="text"
-            placeholder="Rechercher par référence PAY-XXXX, ID transaction, UUID réservation..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.65rem 1rem 0.65rem 2.5rem',
-              background: 'var(--bg-secondary, #111827)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
-              color: '#fff',
-              fontSize: '0.9rem',
-              outline: 'none',
-            }}
-          />
-          <i
-            className="fas fa-search"
-            style={{
-              position: 'absolute',
-              left: '0.85rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#90a4ae',
-              fontSize: '0.85rem',
-            }}
-          />
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{
-            padding: '0.65rem 1rem',
-            background: 'var(--bg-secondary, #111827)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '0.9rem',
-            outline: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="ALL">Tous les statuts de paiement</option>
-          <option value="SUCCEEDED">SUCCEEDED (Validé)</option>
-          <option value="REQUIRES_ACTION">REQUIRES_ACTION</option>
-          <option value="FAILED">FAILED (Échoué)</option>
-          <option value="REFUNDED">REFUNDED (Remboursé)</option>
-        </select>
-      </div>
-
-      {/* Payments Table */}
-      <div
-        style={{
-          background: 'var(--bg-secondary, #111827)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.2)', color: '#94a3b8', textAlign: 'left' }}>
-                <th style={{ padding: '0.85rem 1rem' }}>RÉFÉRENCE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>RÉSERVATION ID</th>
-                <th style={{ padding: '0.85rem 1rem' }}>PASSERELLE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>MÉTHODE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>MONTANT</th>
-                <th style={{ padding: '0.85rem 1rem' }}>STATUT</th>
-                <th style={{ padding: '0.85rem 1rem' }}>TRANSACTION ID</th>
-                <th style={{ padding: '0.85rem 1rem' }}>DATE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr><td colSpan={9} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>Chargement du grand livre...</td></tr>
-              ) : filteredPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                    <i className="fas fa-credit-card" style={{ fontSize: '2rem', marginBottom: '0.75rem', display: 'block', color: '#475569' }} />
-                    Aucune transaction trouvée pour ces critères.
-                  </td>
-                </tr>
-              ) : (
-                filteredPayments.map((p) => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                    <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#38bdf8' }}>
-                      {p.paymentReference}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {p.bookingId.slice(0, 8)}...
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#f8fafc' }}>
-                      <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', fontSize: '0.75rem', fontWeight: 700 }}>
-                        {p.providerName}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1', fontSize: '0.8rem' }}>
-                      {p.paymentMethodType || 'Standard'}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 800 }}>
-                      {p.amount.toFixed(2)} {p.currency}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span
-                        style={{
-                          padding: '0.25rem 0.6rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          background:
-                            p.status === 'SUCCEEDED' ? 'rgba(16, 185, 129, 0.15)' :
-                            p.status === 'REFUNDED' ? 'rgba(56, 189, 248, 0.15)' :
-                            p.status === 'FAILED' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                          color:
-                            p.status === 'SUCCEEDED' ? '#34d399' :
-                            p.status === 'REFUNDED' ? '#38bdf8' :
-                            p.status === 'FAILED' ? '#f87171' : '#fbbf24',
-                        }}
-                      >
-                        {p.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {p.providerTransactionId || '—'}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
-                      {new Date(p.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <button
-                        onClick={() => setSelectedPayment(p)}
-                        style={{
-                          padding: '0.35rem 0.75rem',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '6px',
-                          color: '#38bdf8',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Détails
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Payment Detail Modal */}
-      {selectedPayment && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '1.5rem',
-          }}
-          onClick={() => setSelectedPayment(null)}
-        >
-          <div
-            style={{
-              background: '#111827',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '14px',
-              padding: '2rem',
-              maxWidth: '620px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 700, letterSpacing: '0.08em' }}>TRANSACTION PAIEMENT</span>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f8fafc', margin: '0.2rem 0 0 0' }}>
-                  {selectedPayment.paymentReference}
-                </h2>
+        {selectedPayment && (
+          <div className="space-y-6">
+            {/* Financial Details */}
+            <div
+              className="p-4 rounded-lg border space-y-3"
+              style={{
+                backgroundColor: 'var(--admin-surface-muted)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
+                Données Transactionnelles
               </div>
-              <button
-                onClick={() => setSelectedPayment(null)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Montant Capturé
+                  </span>
+                  <span className="text-base font-extrabold admin-mono-tabular" style={{ color: '#38BDF8' }}>
+                    {Number(selectedPayment.amount).toFixed(2)} {selectedPayment.currency}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Passerelle Utilisée
+                  </span>
+                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                    {selectedPayment.providerName}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Type de Moyen
+                  </span>
+                  <span className="font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+                    {selectedPayment.paymentMethodType || 'Standard'}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    ID Transaction Fournisseur
+                  </span>
+                  <span className="admin-mono-tabular font-medium break-all" style={{ color: 'var(--admin-text-primary)' }}>
+                    {selectedPayment.providerTransactionId || 'Non fourni'}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>UUID Paiement</div>
-                <div style={{ fontSize: '0.8rem', color: '#cbd5e1', fontFamily: 'monospace', wordBreak: 'break-all' }}>{selectedPayment.id}</div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>UUID Réservation liée</div>
-                <div style={{ fontSize: '0.8rem', color: '#cbd5e1', fontFamily: 'monospace', wordBreak: 'break-all' }}>{selectedPayment.bookingId}</div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Passerelle &amp; Méthode</div>
-                <div style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700 }}>
-                  {selectedPayment.providerName} ({selectedPayment.paymentMethodType || 'Standard'})
+            {/* Error Message if failed */}
+            {selectedPayment.errorMessage && (
+              <div
+                className="p-4 rounded-lg border text-xs"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  borderColor: 'rgba(239, 68, 68, 0.25)',
+                  color: '#F87171',
+                }}
+              >
+                <div className="font-bold flex items-center gap-1.5 mb-1">
+                  <i className="fas fa-exclamation-triangle" />
+                  <span>Raison de l&apos;échec :</span>
                 </div>
+                <div className="admin-mono-tabular">{selectedPayment.errorMessage}</div>
               </div>
+            )}
 
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Montant &amp; Devise</div>
-                <div style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 800 }}>
-                  {selectedPayment.amount.toFixed(2)} {selectedPayment.currency}
+            {/* Timestamps */}
+            <div className="space-y-2 border-l-2 ml-2 pl-4" style={{ borderColor: 'var(--admin-accent-border)' }}>
+              <div className="text-xs">
+                <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                  Initiation du paiement
                 </div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Statut Transaction</div>
-                <div style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700 }}>{selectedPayment.status}</div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Date Traitement</div>
-                <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
                   {new Date(selectedPayment.createdAt).toLocaleString('fr-FR')}
                 </div>
               </div>
-            </div>
-
-            {selectedPayment.providerTransactionId && (
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>ID de Transaction Fournisseur (Capture / Gateway)</div>
-                <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontFamily: 'monospace', wordBreak: 'break-all', fontWeight: 700 }}>
-                  {selectedPayment.providerTransactionId}
+              <div className="text-xs mt-3">
+                <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                  Dernière mise à jour
+                </div>
+                <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                  {new Date(selectedPayment.updatedAt).toLocaleString('fr-FR')}
                 </div>
               </div>
-            )}
-
-            {selectedPayment.errorMessage && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', padding: '0.85rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 700 }}>Message d&apos;Erreur Passerelle</div>
-                <div style={{ fontSize: '0.8rem', color: '#fca5a5', marginTop: '0.2rem' }}>
-                  {selectedPayment.errorMessage}
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button
-                onClick={() => setSelectedPayment(null)}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  borderRadius: '6px',
-                  color: '#fff',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Fermer
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AdminDrawer>
     </div>
   );
 }

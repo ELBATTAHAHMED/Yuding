@@ -1,43 +1,212 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reviewService } from '@/services/review.service';
 import { useAuth } from '@/features/auth/useAuth';
+import { AdminBadge } from '@/components/admin/AdminBadge';
 
 export default function AdminReviewsPage() {
   const { user } = useAuth();
-  const allowed = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_SUPPORT');
+  const allowed = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_SUPPORT') || user?.roles?.includes('ROLE_CONTENT_MANAGER');
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
-  const reviews = useQuery({ queryKey: ['reviews', 'moderation'], queryFn: reviewService.pending, enabled: Boolean(allowed) });
-  const decision = useMutation({ mutationFn: ({ id, status }: { id: string; status: 'APPROVED' | 'REJECTED' }) =>
-    reviewService.moderate(id, status), onSuccess: () => { setError(''); queryClient.invalidateQueries({ queryKey: ['reviews'] }); },
-    onError: cause => setError(cause instanceof Error ? cause.message : 'La décision n’a pas pu être enregistrée.') });
-  if (!allowed) return <p style={{ color: '#fff' }}>Accès réservé à la modération.</p>;
-  return <main style={{ color: '#fff', maxWidth: '960px' }}>
-    <p style={{ color: '#00D4AA', fontSize: '12px', letterSpacing: '.12em', fontWeight: 700 }}>CONTENU COMMUNAUTAIRE</p>
-    <h1 style={{ fontSize: '1.8rem', margin: '8px 0' }}>Avis à modérer</h1>
-    <p style={{ color: '#b0bec5', marginBottom: '30px' }}>Les avis contenant un lien restent invisibles jusqu’à votre décision.</p>
-    {reviews.isPending && <p>Chargement des avis…</p>}
-    {reviews.isError && <p role="alert">Impossible de charger les avis à modérer.</p>}
-    {error && <p role="alert" style={{ color: '#fda4af' }}>{error}</p>}
-    {reviews.data?.length === 0 && <p style={{ color: '#b0bec5' }}>Aucun avis en attente.</p>}
-    <div style={{ display: 'grid', gap: '14px' }}>
-      {reviews.data?.map(review => <article key={review.id} style={{ border: '1px solid rgba(255,255,255,.13)',
-        borderRadius: '10px', padding: '20px', background: '#1A1F2E' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '8px' }}>
-          <strong>{review.entityName || review.entityReference}</strong><span style={{ color: '#e9b458' }}>{'★'.repeat(review.rating)}</span>
+
+  const { data: reviews = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['reviews', 'moderation'],
+    queryFn: reviewService.pending,
+    enabled: Boolean(allowed),
+  });
+
+  const decision = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'APPROVED' | 'REJECTED' }) =>
+      reviewService.moderate(id, status),
+    onSuccess: () => {
+      setError('');
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+    onError: (cause) =>
+      setError(cause instanceof Error ? cause.message : 'La décision n’a pas pu être enregistrée.'),
+  });
+
+  if (!allowed) {
+    return (
+      <div className="p-8 text-center text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+        Accès restreint : privilèges de modération requis.
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Title */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+            Modération des Avis Communautaires
+          </h1>
+          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+            Les avis avec liens ou nécessitant une vérification éditoriale restent invisibles au public jusqu’à décision
+          </p>
         </div>
-        <p style={{ color: '#b0bec5', fontSize: '12px', margin: '8px 0 14px' }}>{review.entityType} · {review.provider}</p>
-        <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', lineHeight: 1.6 }}>{review.content}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '18px' }}>
-          <button type="button" disabled={decision.isPending} onClick={() => decision.mutate({ id: review.id, status: 'APPROVED' })}
-            style={{ background: '#087d70', color: '#fff', border: 0, borderRadius: '6px', padding: '9px 16px', cursor: 'pointer' }}>Approuver</button>
-          <button type="button" disabled={decision.isPending} onClick={() => decision.mutate({ id: review.id, status: 'REJECTED' })}
-            style={{ background: 'transparent', color: '#fda4af', border: '1px solid #97565b', borderRadius: '6px', padding: '9px 16px', cursor: 'pointer' }}>Rejeter</button>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="admin-btn text-xs py-2 px-3.5"
+          style={{
+            backgroundColor: 'var(--admin-accent-subtle)',
+            border: '1px solid var(--admin-accent-border)',
+            color: 'var(--admin-accent)',
+          }}
+        >
+          <i className="fas fa-sync text-xs" />
+          <span>Actualiser ({reviews.length})</span>
+        </button>
+      </div>
+
+      {error && (
+        <div
+          role="alert"
+          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2"
+          style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderColor: 'rgba(239, 68, 68, 0.25)',
+            color: '#F87171',
+          }}
+        >
+          <i className="fas fa-exclamation-circle" />
+          <span>{error}</span>
         </div>
-      </article>)}
+      )}
+
+      {/* Review Queue */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="admin-card p-6 h-36 animate-pulse" />
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="admin-card p-8 text-center" style={{ color: '#F87171' }}>
+          <i className="fas fa-exclamation-triangle text-2xl mb-2" />
+          <div className="font-bold text-sm">Impossible de charger la file de modération</div>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div
+          className="admin-card p-12 text-center flex flex-col items-center justify-center gap-2"
+          style={{
+            backgroundColor: 'var(--admin-surface)',
+            borderColor: 'var(--admin-border)',
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1"
+            style={{
+              backgroundColor: 'var(--admin-accent-subtle)',
+              color: 'var(--admin-accent)',
+            }}
+          >
+            <i className="fas fa-check-double" />
+          </div>
+          <div className="font-bold text-sm" style={{ color: 'var(--admin-text-primary)' }}>
+            File de modération à jour
+          </div>
+          <div className="text-xs max-w-sm" style={{ color: 'var(--admin-text-muted)' }}>
+            Aucun avis en attente de validation. Les nouveaux avis soumis apparaîtront automatiquement ici.
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <article
+              key={review.id}
+              className="admin-card p-5 space-y-4 transition-all duration-150"
+              style={{
+                backgroundColor: 'var(--admin-surface)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              {/* Header: Target entity & stars */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3" style={{ borderColor: 'var(--admin-border)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm" style={{ color: 'var(--admin-text-primary)' }}>
+                    {review.entityName || review.entityReference}
+                  </span>
+                  <AdminBadge variant="info" size="sm" dot={false}>
+                    {review.entityType}
+                  </AdminBadge>
+                  {review.provider && (
+                    <span className="text-[0.6875rem] px-2 py-0.5 rounded font-mono bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      {review.provider}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 text-amber-400 text-sm">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <i
+                      key={i}
+                      className={`fas fa-star ${i < review.rating ? 'opacity-100' : 'opacity-20'}`}
+                    />
+                  ))}
+                  <span className="text-xs font-bold text-slate-400 ml-1">({review.rating}/5)</span>
+                </div>
+              </div>
+
+              {/* Review Content */}
+              <p
+                className="text-xs leading-relaxed whitespace-pre-wrap rounded-lg p-3 border"
+                style={{
+                  backgroundColor: 'var(--admin-surface-muted)',
+                  borderColor: 'var(--admin-border)',
+                  color: 'var(--admin-text-primary)',
+                }}
+              >
+                &ldquo;{review.content}&rdquo;
+              </p>
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[0.6875rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
+                  ID : {review.id}
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={decision.isPending}
+                    onClick={() => decision.mutate({ id: review.id, status: 'REJECTED' })}
+                    className="admin-btn text-xs py-1.5 px-3 rounded"
+                    style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      color: '#F87171',
+                    }}
+                  >
+                    <i className="fas fa-times text-xs" />
+                    <span>Rejeter</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={decision.isPending}
+                    onClick={() => decision.mutate({ id: review.id, status: 'APPROVED' })}
+                    className="admin-btn text-xs py-1.5 px-3.5 rounded font-bold"
+                    style={{
+                      backgroundColor: 'var(--admin-accent)',
+                      color: '#0B0F19',
+                    }}
+                  >
+                    <i className="fas fa-check text-xs" />
+                    <span>Approuver &amp; Publier</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
-  </main>;
+  );
 }
