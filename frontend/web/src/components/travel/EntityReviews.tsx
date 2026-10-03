@@ -1,9 +1,9 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { reviewService, type ReviewTarget } from '@/services/review.service';
+import { reviewService, type BookableReviewTarget } from '@/services/review.service';
 
-export function EntityReviews({ type, provider, reference }: { type: ReviewTarget; provider: string; reference: string }) {
+export function EntityReviews({ type, provider, reference }: { type: BookableReviewTarget; provider: string; reference: string }) {
   const query = useQuery({ queryKey: ['reviews', 'public', type, provider, reference],
     queryFn: () => reviewService.public(type, provider, reference), enabled: Boolean(provider && reference) });
   const isEmpty = query.data?.reviewCount === 0;

@@ -26,6 +26,9 @@ public class ReviewController {
         return reviews.publicReviews(type, provider, reference);
     }
 
+    @GetMapping("/public/featured")
+    public List<FeaturedReview> featuredReviews() { return reviews.featuredReviews(); }
+
     @GetMapping("/booking/{reference}/eligibility")
     public Eligibility eligibility(@PathVariable String reference, @AuthenticationPrincipal Jwt jwt) {
         return reviews.eligibility(reference, jwt);

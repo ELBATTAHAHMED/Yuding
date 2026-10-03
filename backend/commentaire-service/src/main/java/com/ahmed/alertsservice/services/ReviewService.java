@@ -28,7 +28,11 @@ public class ReviewService {
                          OffsetDateTime createdAt, OffsetDateTime updatedAt) { }
     public record PublicReview(int rating, String content, String displayName, OffsetDateTime createdAt) { }
     public record PublicReviews(Double averageRating, long reviewCount, List<PublicReview> reviews) { }
-    public record ReviewInput(int rating, String content) { }
+    public record FeaturedReview(int rating, String content, String displayName, String entityName,
+                                 String entityType, OffsetDateTime createdAt) { }
+    public record ReviewInput(int rating, String content, String publicDisplayName) {
+        public ReviewInput(int rating, String content) { this(rating, content, null); }
+    }
 
     private final JdbcTemplate jdbc;
     private final ReviewRateLimiter limiter;
@@ -75,16 +79,17 @@ public class ReviewService {
         Eligibility target = eligibility(reference, jwt);
         if (!target.eligible()) throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce voyage n'est pas encore éligible à un avis.");
         Validated value = ReviewContentPolicy.validate(input);
+        String publicName = publicDisplayName(input.publicDisplayName());
         preventRepeatedContent(userId, value.content(), null);
         String title = target.entityName() == null ? null
                 : target.entityName().substring(0, Math.min(150, target.entityName().length()));
         try {
             UUID id = jdbc.queryForObject("""
                     insert into engagement.reviews
-                    (user_id, booking_id, item_type, provider, item_reference, rating, content, title, is_verified_purchase, status)
-                    values (?, ?, ?, ?, ?, ?, ?, ?, true, ?) returning id
+                    (user_id, booking_id, item_type, provider, item_reference, rating, content, title, is_verified_purchase, status, public_display_name)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, true, ?, ?) returning id
                     """, UUID.class, userId, target.bookingId(), target.entityType(), target.provider(),
-                    target.entityReference(), value.rating(), value.content(), title, value.status());
+                    target.entityReference(), value.rating(), value.content(), title, value.status(), publicName);
             return owned(id, userId);
         } catch (DuplicateKeyException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Un avis existe déjà pour ce dossier.");
@@ -98,11 +103,12 @@ public class ReviewService {
         Review existing = owned(id, userId);
         if ("DELETED".equals(existing.status())) throw new ResponseStatusException(HttpStatus.CONFLICT, "Avis supprimé.");
         Validated value = ReviewContentPolicy.validate(input);
+        String publicName = publicDisplayName(input.publicDisplayName());
         preventRepeatedContent(userId, value.content(), id);
         int updated = jdbc.update("""
-                update engagement.reviews set rating = ?, content = ?, status = ?, updated_at = now()
+                update engagement.reviews set rating = ?, content = ?, status = ?, public_display_name = coalesce(?, public_display_name), updated_at = now()
                 where id = ? and user_id = ? and status <> 'DELETED'
-                """, value.rating(), value.content(), value.status(), id, userId);
+                """, value.rating(), value.content(), value.status(), publicName, id, userId);
         if (updated == 0) throw new ResponseStatusException(HttpStatus.CONFLICT, "Avis supprimé.");
         return owned(id, userId);
     }
@@ -118,16 +124,38 @@ public class ReviewService {
         if (!List.of("ACCOMMODATION", "ACTIVITY").contains(type))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type non pris en charge.");
         List<PublicReview> reviews = jdbc.query("""
-                select rating, content, created_at from engagement.reviews
+                select rating, content, coalesce(nullif(public_display_name, ''), 'Voyageur vérifié'), created_at from engagement.reviews
                 where item_type = ? and provider = ? and item_reference = ? and status = 'APPROVED'
                 order by created_at desc limit 50
-                """, (rs, row) -> new PublicReview(rs.getInt(1), rs.getString(2), "Voyageur vérifié",
-                        rs.getObject(3, OffsetDateTime.class)), type, provider, reference);
+                """, (rs, row) -> new PublicReview(rs.getInt(1), rs.getString(2), rs.getString(3),
+                        rs.getObject(4, OffsetDateTime.class)), type, provider, reference);
         var summary = jdbc.queryForMap("""
                 select count(*) as count, avg(rating)::float8 as average from engagement.reviews
                 where item_type = ? and provider = ? and item_reference = ? and status = 'APPROVED'
                 """, type, provider, reference);
         return new PublicReviews((Double) summary.get("average"), ((Number) summary.get("count")).longValue(), reviews);
+    }
+
+    /** A bounded, public editorial feed. Only moderated, verified stays/activities appear. */
+    public List<FeaturedReview> featuredReviews() {
+        return jdbc.query("""
+                select rating, content, coalesce(nullif(public_display_name, ''), 'Voyageur vérifié'),
+                       coalesce(nullif(title, ''), 'Voyage Yuding'), item_type, created_at
+                from engagement.reviews
+                where status = 'APPROVED' and is_verified_purchase = true
+                  and item_type in ('ACCOMMODATION', 'ACTIVITY')
+                order by created_at desc, id desc limit 12
+                """, (rs, row) -> new FeaturedReview(rs.getInt(1), rs.getString(2),
+                rs.getString(3), rs.getString(4), rs.getString(5),
+                rs.getObject(6, OffsetDateTime.class)));
+    }
+
+    private String publicDisplayName(String input) {
+        if (input == null || input.isBlank()) return null;
+        String name = input.strip().replaceAll("\\s+", " ");
+        if (name.length() > 48 || !name.matches("[\\p{L}][\\p{L} .'-]*"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nom public invalide.");
+        return name;
     }
 
     @Transactional
