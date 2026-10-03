@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useMyBookings } from '@/hooks/queries/useBookingQueries';
 import type { BookingStatus, BookingProductType } from '@/types/booking.types';
@@ -8,6 +8,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 import { BookingDetailsDialog } from './BookingDetailsDialog';
 import { CancellationDialog } from './CancellationDialog';
+import { BookingReviewAction } from './BookingReviewAction';
 import { canRequestCancellation, cancellationOutcomeLabel } from '@/lib/cancellation-state';
 
 function getStatusPresentation(status: BookingStatus): {
@@ -129,8 +130,8 @@ function formatBookingPrice(amount?: number | null, currency?: string | null): s
 
 export default function BookingsClient() {
   const bookingsQuery = useMyBookings();
-  const bookings = [...(bookingsQuery.data || [])].sort((a, b) =>
-    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  const bookings = useMemo(() => [...(bookingsQuery.data || [])].sort((a, b) =>
+    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()), [bookingsQuery.data]);
   const bookingPages = usePaginatedItems(bookings, 10);
   const loading = bookingsQuery.isPending;
   const error = bookingsQuery.error?.message;
@@ -247,7 +248,7 @@ export default function BookingsClient() {
             const cancellationLabel = cancellationOutcomeLabel(booking.cancellation);
 
             return (
-              <div key={booking.bookingReference} className="library-list-item">
+              <div key={booking.bookingReference} className="library-list-item booking-review-list-item">
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', flexGrow: 1, minWidth: 0 }}>
                   <div className="booking-type-icon" title={productInfo.label}>
                     <i className={productInfo.icon} />
@@ -335,6 +336,10 @@ export default function BookingsClient() {
                     >
                       <i className="fas fa-folder-open" /> Dossier
                     </button>
+
+                    {(booking.productType === 'HOTEL' || booking.productType === 'ACTIVITY') &&
+                      <BookingReviewAction reference={booking.bookingReference} />}
+
                     {showCancellationAction && <button type="button" className="booking-cancel-action"
                       onClick={() => setOpenCancellation(booking.bookingReference)}
                       aria-label={`Annuler la réservation ${booking.bookingReference}`}>

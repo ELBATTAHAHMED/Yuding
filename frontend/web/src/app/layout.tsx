@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '@/styles/reviews.css';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AiChatWidget } from '@/components/ai/AiChatWidget';

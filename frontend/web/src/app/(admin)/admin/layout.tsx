@@ -137,6 +137,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {!collapsed && <span>Paiements</span>}
               </Link>
 
+              {(user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_SUPPORT')) && <Link
+                href="/admin/reviews"
+                className={`sidebar-link ${pathname === '/admin/reviews' ? 'active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+                  borderRadius: '8px', color: pathname === '/admin/reviews' ? '#00D4AA' : '#b0bec5',
+                  background: pathname === '/admin/reviews' ? 'rgba(0, 212, 170, 0.1)' : 'transparent',
+                  fontWeight: 600, fontSize: '0.95rem', textDecoration: 'none' }}>
+                <i className="fas fa-star" style={{ width: '20px', textAlign: 'center' }} aria-hidden="true" />
+                {!collapsed && <span>Modération des avis</span>}
+              </Link>}
+
               <Link
                 href="/hotels"
                 style={{

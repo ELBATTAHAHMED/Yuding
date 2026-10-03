@@ -9,6 +9,7 @@ import com.ahmed.reservationservice.domain.dto.CancelBookingRequest;
 import com.ahmed.reservationservice.domain.dto.CancellationPolicyDto;
 import com.ahmed.reservationservice.domain.dto.CancellationStatusDto;
 import com.ahmed.reservationservice.domain.dto.OfferSnapshotResponseDto;
+import com.ahmed.reservationservice.domain.dto.ReviewEligibilityDto;
 import com.ahmed.reservationservice.domain.idempotency.IdempotencyOperation;
 import com.ahmed.reservationservice.domain.idempotency.IdempotencyService;
 import com.ahmed.reservationservice.domain.model.Booking;
@@ -16,6 +17,7 @@ import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.service.BookingService;
 import com.ahmed.reservationservice.domain.service.ConfirmationProjectionService;
 import com.ahmed.reservationservice.domain.service.CancellationService;
+import com.ahmed.reservationservice.domain.service.ReviewEligibilityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,13 @@ public class BookingController {
     private final ConfirmationProjectionService confirmationProjectionService;
     private final IdempotencyService idempotencyService;
     private final CancellationService cancellationService;
+    private final ReviewEligibilityService reviewEligibilityService;
+
+    @GetMapping("/{reference}/review-eligibility")
+    public ResponseEntity<ReviewEligibilityDto> reviewEligibility(
+            @PathVariable String reference, @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(reviewEligibilityService.evaluate(reference, resolveUserUuid(jwt)));
+    }
 
     /**
      * Creates a new DRAFT booking for the currently authenticated user.

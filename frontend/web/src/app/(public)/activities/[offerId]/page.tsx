@@ -8,6 +8,7 @@ import { travelService } from '@/services/travel.service';
 import { SafeEntityImage } from '@/components/travel/SafeEntityImage';
 import { libraryService } from '@/services/library.service';
 import FavoriteButton from '@/components/common/FavoriteButton';
+import { EntityReviews } from '@/components/travel/EntityReviews';
 import {
   OfferDetailsShell,
   OfferDetailsHeader,
@@ -140,6 +141,7 @@ export default function ActivityDetailsPage() {
         </label>
         {refreshError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{refreshError}</p>}
         <button type="button" onClick={() => void refreshActivity(destination)} className="mt-4 rounded-lg bg-[#01796F] px-4 py-2 text-sm font-semibold text-white">Actualiser l’activité</button>
+        <div className="mt-8"><EntityReviews type="ACTIVITY" provider="HBX" reference={offerId} /></div>
       </main>
     );
   }
@@ -259,6 +261,7 @@ export default function ActivityDetailsPage() {
         title="Détails pratiques & Conditions"
         items={conditions}
       />
+      <EntityReviews type="ACTIVITY" provider={activity.provider || 'HBX'} reference={activity.offerId || activity.id || offerId} />
     </OfferDetailsShell>
   );
 }

@@ -63,6 +63,7 @@ public class SecurityConfig {
 
                         // Public reading of comments
                         .requestMatchers(HttpMethod.GET, "/apic/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/apic/reviews/public/**").permitAll()
 
                         // Creating or deleting comments requires authentication
                         .requestMatchers(HttpMethod.POST, "/apic/comments/**").authenticated()
