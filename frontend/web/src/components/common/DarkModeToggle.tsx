@@ -37,8 +37,8 @@ export const DarkModeToggle: React.FC = () => {
       onClick={toggleTheme}
       id="darkModeToggle"
       className={`dark-mode-toggle ${isDark ? 'active' : ''}`}
-      title="Basculer le mode sombre"
-      aria-label="Basculer le mode sombre"
+      title={isDark ? 'Basculer le mode clair' : 'Basculer le mode sombre'}
+      aria-label={isDark ? 'Basculer le mode clair' : 'Basculer le mode sombre'}
       type="button"
     >
       <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`} id="darkModeIcon"></i>

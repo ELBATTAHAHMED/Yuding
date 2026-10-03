@@ -51,12 +51,16 @@ export const Header: React.FC = () => {
       <div className="header-top">
         <div className="container1 header-inner">
           <Link href="/" className="logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={isDark || (isHome && !homeScrolled && !menuOpen) ? '/image/logo1.png' : '/image/logodark.png'}
-              alt="Yuding"
-              id="headerLogo"
-            />
+            {isHome ? <>
+              {/* Both logo assets stay mounted so the sticky transition never flashes an old color. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/image/logo1.png" alt="Yuding" className="home-logo-light" id="headerLogo" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/image/logodark.png" alt="" aria-hidden="true" className="home-logo-dark" />
+            </> : <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={isDark ? '/image/logo1.png' : '/image/logodark.png'} alt="Yuding" id="headerLogo" />
+            </>}
           </Link>
 
           <nav className={`header-nav yuding-navigation ${menuOpen ? 'is-open' : ''}`} aria-label="Navigation principale">

@@ -15,6 +15,7 @@ import { StationSelector } from '@/components/travel/StationSelector';
 import { TransferLocationSelector } from '@/components/travel/TransferLocationSelector';
 import { useAirportsQuery } from '@/hooks/queries/useTravelQueries';
 import { travelService } from '@/services/travel.service';
+import { imageService } from '@/services/image.service';
 import type { Airport, TrainStation } from '@/types/travel.types';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -30,9 +31,9 @@ const modes: { id: TravelMode; label: string; icon: string; href: string; action
 ];
 
 const places = [
-  { name: 'Dakhla', country: 'Maroc', label: 'Entre les dunes et l’océan', image: '/image/Dakhla.jpg', alt: 'Lagune et dunes à Dakhla', href: '/hotels?destination=Dakhla&countryCode=MA' },
-  { name: 'Séoul', country: 'Corée du Sud', label: 'Une ville à plusieurs vitesses', image: '/image/Seoul.jpg', alt: 'Palais et paysage urbain de Séoul', href: '/hotels?destination=Seoul&countryCode=KR' },
-  { name: 'Chefchaouen', country: 'Maroc', label: 'Se perdre dans le bleu', image: '/image/chefchaoun.jpeg', alt: 'Ruelle bleue de Chefchaouen', href: '/activities?destination=Chefchaouen&countryCode=MA' },
+  { name: 'Dakhla', city: 'Dakhla', country: 'Maroc', countryQuery: 'Morocco', label: 'L’océan rencontre le désert.', image: '/image/Dakhla.jpg', alt: 'Paysage côtier de Dakhla', href: '/hotels?destination=Dakhla&countryCode=MA', kind: 'HORIZON ATLANTIQUE' },
+  { name: 'Lisbonne', city: 'Lisbon', country: 'Portugal', countryQuery: 'Portugal', label: 'Une ville à vivre dehors.', image: 'https://images.pexels.com/photos/26824153/pexels-photo-26824153.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940', alt: 'Vue éditoriale de Lisbonne', href: '/hotels?destination=Lisbon&countryCode=PT', kind: 'ESCALE EUROPÉENNE' },
+  { name: 'Séoul', city: 'Seoul', country: 'Corée du Sud', countryQuery: 'South Korea', label: 'Tradition et mouvement, au même rythme.', image: '/image/Seoul.jpg', alt: 'Paysage urbain de Séoul', href: '/hotels?destination=Seoul&countryCode=KR', kind: 'ÉNERGIE URBAINE' },
 ];
 
 const dateString = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -45,6 +46,8 @@ export default function HomePage() {
   const [departure, setDeparture] = useState('');
   const [travelers, setTravelers] = useState('2');
   const [destination, setDestination] = useState(0);
+  const [storyPaused, setStoryPaused] = useState(false);
+  const [editorialImages, setEditorialImages] = useState<Record<string, { url: string; attribution: string; attributionUrl?: string }>>({});
   const [panelOpen, setPanelOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: airports = [] } = useAirportsQuery();
@@ -70,6 +73,35 @@ export default function HomePage() {
     travelService.getTrainStations().then((items) => { if (active) setStations(items); }).catch(() => {});
     return () => { active = false; };
   }, [mode]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled(places.map((item) => imageService.getDestinationImages({ city: item.city, country: item.countryQuery, limit: 1 })))
+      .then((results) => {
+        if (!active) return;
+        const images: Record<string, { url: string; attribution: string; attributionUrl?: string }> = {};
+        results.forEach((result, index) => {
+          const photo = result.status === 'fulfilled' ? result.value.images[0] : undefined;
+          if (photo?.url && photo.sourceType === 'STOCK_DESTINATION') {
+            images[places[index].name] = { url: photo.url, attribution: photo.attributionText || `Photo : ${photo.photographerName || 'Pexels'}`, attributionUrl: photo.attributionUrl };
+          }
+        });
+        setEditorialImages(images);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (storyPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => {
+      const scene = document.querySelector('.home-v3__destinations');
+      const bounds = scene?.getBoundingClientRect();
+      if (document.visibilityState === 'visible' && bounds && bounds.top < window.innerHeight && bounds.bottom > 0) {
+        setDestination((current) => (current + 1) % places.length);
+      }
+    }, 7000);
+    return () => window.clearInterval(timer);
+  }, [storyPaused]);
 
   // Keep the floating assistant away from touch controls on narrow screens.
   useEffect(() => {
@@ -104,6 +136,14 @@ export default function HomePage() {
         scale: 1.12, duration: 1.5, ease: 'power2.out',
         scrollTrigger: { trigger: '.home-v3__planner', start: 'top 75%', once: true },
       });
+      gsap.from('.home-v3__story-scene', {
+        clipPath: 'inset(0 0 18% 0)', duration: 1.1, ease: 'power2.out',
+        scrollTrigger: { trigger: '.home-v3__destinations', start: 'top 72%', once: true },
+      });
+      gsap.from('.home-v3__end-content h2', {
+        y: 42, duration: 1.05, ease: 'power3.out',
+        scrollTrigger: { trigger: '.home-v3__end', start: 'top 78%', once: true },
+      });
       gsap.utils.toArray<HTMLElement>('.home-v3__reveal').forEach((element) => {
         gsap.from(element, {
           y: 34, duration: 0.8, ease: 'power2.out',
@@ -117,7 +157,7 @@ export default function HomePage() {
   useGSAP(() => {
     const mm = gsap.matchMedia();
     mm.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.from('.home-v3__destination-current > *', { y: 16, opacity: 0, duration: .45, stagger: .055, ease: 'power2.out' });
+      gsap.from('.home-v3__story-copy > *', { y: 18, duration: .6, stagger: .07, ease: 'power2.out' });
     });
     return () => mm.revert();
   }, { scope: rootRef, dependencies: [destination], revertOnUpdate: true });
@@ -225,17 +265,17 @@ export default function HomePage() {
         <div className="home-v3__planner-main"><span className="home-v3__chapter">02 / L&apos;IDÉE DEVIENT UN ITINÉRAIRE</span><div className="home-v3__reveal"><h2 id="planner-title">Vous avez une envie.<br /><em>On trace la route.</em></h2><p>Quelques mots suffisent pour commencer. Le Smart Trip Planner transforme vos envies en un parcours que vous pouvez explorer et ajuster.</p><Link className="home-v3__planner-cta" href="/planifier">Imaginer mon voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><div className="home-v3__planner-trace" aria-hidden="true"><span>IMAGINER</span><span>COMPOSER</span><span>PARTIR</span></div></div>
       </section>
 
-      <section className="home-v3__destinations" aria-labelledby="destinations-title">
-        <div className="home-v3__frame home-v3__destination-intro home-v3__reveal"><span className="home-v3__chapter">03 / AILLEURS VOUS APPELLE</span><p>Trois horizons. À vous de choisir le premier.</p></div>
-        <div className="home-v3__destination-stage">
-          {places.map((item, index) => <div key={item.name} className={`home-v3__destination-photo${destination === index ? ' is-active' : ''}`} aria-hidden={destination !== index}><Image src={item.image} alt={destination === index ? item.alt : ''} fill sizes="100vw" /></div>)}
-          <div className="home-v3__destination-overlay" />
-          <div className="home-v3__destination-content home-v3__frame">
-            <div className="home-v3__destination-story"><h2 id="destinations-title">Une autre lumière.<br /><em>Une autre histoire.</em></h2><div className="home-v3__destination-current" key={places[destination].name}><span>0{destination + 1} / 03 &nbsp;·&nbsp; {places[destination].country.toUpperCase()}</span><h3>{places[destination].name}</h3><p>{places[destination].label}</p><Link href={places[destination].href}>Explorer {places[destination].name} <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div></div>
-            <div className="home-v3__destination-choices" role="group" aria-label="Choisir une destination">{places.map((item, index) => <button key={item.name} type="button" aria-pressed={destination === index} onClick={() => setDestination(index)}><span className="home-v3__destination-thumb"><Image src={item.image} alt="" fill sizes="90px" /></span><span className="home-v3__destination-choice-copy"><small>0{index + 1} / {item.country}</small><strong>{item.name}</strong></span><i className="fas fa-arrow-right" aria-hidden="true" /></button>)}</div>
+      <section className="home-v3__destinations" aria-labelledby="destinations-title" onMouseEnter={() => setStoryPaused(true)} onMouseLeave={() => setStoryPaused(false)} onFocusCapture={() => setStoryPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setStoryPaused(false); }}>
+        <div className="home-v3__frame home-v3__story-heading"><span className="home-v3__chapter">03 / CARNET D&apos;HORIZONS</span><h2 id="destinations-title">Laissez le paysage<br /><em>changer le programme.</em></h2><p>Une côte, une capitale, une autre cadence. Choisissez l&apos;escale qui vous appelle.</p></div>
+        <div className="home-v3__story-scene">
+          {places.map((item, index) => <div key={item.name} className={`home-v3__story-image${destination === index ? ' is-active' : ''}`} aria-hidden={destination !== index}><Image src={editorialImages[item.name]?.url || item.image} alt={destination === index ? item.alt : ''} fill sizes="100vw" /></div>)}
+          <div className="home-v3__story-scrim" aria-hidden="true" />
+          <div className="home-v3__frame home-v3__story-inner">
+            <div className="home-v3__story-copy" key={places[destination].name} aria-live="polite"><span>{places[destination].kind} · {places[destination].country}</span><strong>0{destination + 1} <small>/ 0{places.length}</small></strong><h3>{places[destination].name}</h3><p>{places[destination].label}</p><Link href={places[destination].href}>Explorer cette escale <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div>
+            <div className="home-v3__story-controls" role="group" aria-label="Choisir une destination">{places.map((item, index) => <button key={item.name} type="button" aria-pressed={destination === index} onClick={() => { setDestination(index); setStoryPaused(true); }}><span>0{index + 1}</span><strong>{item.name}</strong><small>{item.country}</small></button>)}</div>
           </div>
         </div>
-        <p className="home-v3__destination-note home-v3__frame">Images d&apos;inspiration. Explorez les offres pour connaître les disponibilités et tarifs actuels.</p>
+        <div className="home-v3__frame home-v3__story-foot"><span>Images éditoriales d&apos;inspiration · tarifs et disponibilités vérifiés dans les résultats.</span>{editorialImages[places[destination].name] && <a href={editorialImages[places[destination].name].attributionUrl || 'https://www.pexels.com'} target="_blank" rel="noopener noreferrer">{editorialImages[places[destination].name].attribution}</a>}</div>
       </section>
 
       <HomeReviews />

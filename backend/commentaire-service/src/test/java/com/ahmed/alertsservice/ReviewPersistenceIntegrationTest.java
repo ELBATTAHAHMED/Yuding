@@ -71,4 +71,20 @@ class ReviewPersistenceIntegrationTest {
         assertThatThrownBy(() -> reviews.edit(id, new ReviewService.ReviewInput(5, "Un séjour vraiment agréable."), owner))
                 .isInstanceOf(ResponseStatusException.class).hasMessageContaining("409");
     }
+
+    @Test void featuredFeedOnlyContainsApprovedVerifiedReviews() {
+        UUID user = UUID.randomUUID();
+        UUID approved = insert(user, UUID.randomUUID(), "APPROVED", 5);
+        jdbc.update("update engagement.reviews set public_display_name = 'Lina Benali' where id = ?", approved);
+        insert(user, UUID.randomUUID(), "PENDING_MODERATION", 4);
+        UUID unverified = insert(user, UUID.randomUUID(), "APPROVED", 3);
+        jdbc.update("update engagement.reviews set is_verified_purchase = false where id = ?", unverified);
+        assertThat(reviews.featuredReviews()).anyMatch(review -> review.rating() == 5
+                && review.entityName().equals("Hôtel") && review.displayName().equals("Lina Benali"));
+        assertThat(reviews.featuredReviews().stream().filter(review -> review.entityName().equals("Hôtel")
+                && review.content().equals("Très bon séjour de test")).toList()).allMatch(review -> review.rating() == 5);
+        jdbc.update("update engagement.reviews set status = 'DELETED' where id = ?", approved);
+        assertThat(reviews.featuredReviews().stream().filter(review -> review.entityName().equals("Hôtel")
+                && review.content().equals("Très bon séjour de test")).toList()).isEmpty();
+    }
 }
