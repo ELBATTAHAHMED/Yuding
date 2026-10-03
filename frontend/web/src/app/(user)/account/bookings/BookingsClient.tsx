@@ -9,6 +9,7 @@ import { usePaginatedItems } from '@/hooks/usePaginatedItems';
 import { BookingDetailsDialog } from './BookingDetailsDialog';
 import { CancellationDialog } from './CancellationDialog';
 import { BookingReviewAction } from './BookingReviewAction';
+import { PostTripReviewPrompt } from './PostTripReviewPrompt';
 import { canRequestCancellation, cancellationOutcomeLabel } from '@/lib/cancellation-state';
 
 function getStatusPresentation(status: BookingStatus): {
@@ -140,6 +141,7 @@ export default function BookingsClient() {
 
   return (
     <main className="account-empty-page">
+      {!loading && !error && <PostTripReviewPrompt bookings={bookings} />}
       <header className="account-page-header">
         <div>
           <p className="account-kicker">VOTRE ESPACE VOYAGEUR</p>
@@ -306,7 +308,7 @@ export default function BookingsClient() {
                     </div>
                   )}
 
-                  <div className="library-item-actions">
+                  <div className="library-item-actions booking-item-actions">
                     {isPendingPayment && (
                       <Link
                         href={`/booking/${booking.bookingReference}/payment`}
@@ -337,8 +339,7 @@ export default function BookingsClient() {
                       <i className="fas fa-folder-open" /> Dossier
                     </button>
 
-                    {(booking.productType === 'HOTEL' || booking.productType === 'ACTIVITY') &&
-                      <BookingReviewAction reference={booking.bookingReference} />}
+                    {isConfirmedOrPaid && <BookingReviewAction reference={booking.bookingReference} />}
 
                     {showCancellationAction && <button type="button" className="booking-cancel-action"
                       onClick={() => setOpenCancellation(booking.bookingReference)}

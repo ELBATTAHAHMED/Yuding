@@ -16,13 +16,15 @@ export function BookingReviewAction({ reference }: { reference: string }) {
   if (eligibility.isError || mine.isError) return <span className="review-unavailable">Avis momentanément indisponibles</span>;
   if (!eligibility.data?.eligible && !review) return null;
   return <>
+    {!review && <span className="review-invitation">Votre voyage est terminé ? Votre avis nous intéresse, à votre rythme.</span>}
     <button type="button" className="booking-review-action" onClick={() => setOpen(true)}
       aria-label={review ? `Voir mon avis pour la réservation ${reference}` : `Laisser un avis pour la réservation ${reference}`}>
-      <i className="fas fa-star" aria-hidden="true" /> {review ? 'Mon avis' : 'Avis'}
+      <i className="fas fa-star" aria-hidden="true" /> {review ? 'Mon avis' : 'Donner mon avis'}
     </button>
     {open && <ReviewDialog reference={reference} entityName={eligibility.data?.entityName || 'votre voyage'}
       review={review || null} onClose={() => setOpen(false)} onChanged={() => {
         queryClient.invalidateQueries({ queryKey: ['reviews', 'mine', reference] });
+        queryClient.invalidateQueries({ queryKey: ['reviews', 'all-mine'] });
         queryClient.invalidateQueries({ queryKey: ['reviews', 'public'] });
       }} />}
   </>;

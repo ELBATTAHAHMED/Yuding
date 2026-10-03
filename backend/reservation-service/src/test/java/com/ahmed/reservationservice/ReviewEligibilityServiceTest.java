@@ -9,6 +9,8 @@ import com.ahmed.reservationservice.domain.service.ReviewEligibilityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -50,6 +52,32 @@ class ReviewEligibilityServiceTest {
         assertThat(result.eligible()).isTrue();
         assertThat(result.entityType()).isEqualTo("ACCOMMODATION");
         assertThat(result.entityReference()).isEqualTo("hotel-123");
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ProductType.class, names = {"ACTIVITY", "FLIGHT", "TRANSFER", "TRAIN"})
+    void completedPaidTripIsEligibleForEachProduct(ProductType productType) {
+        String past = LocalDate.now().minusDays(2).toString();
+        Map<String, Object> details = switch (productType) {
+            case ACTIVITY -> Map.of("title", "Desert tour", "date", past);
+            case FLIGHT -> Map.of("airlineName", "Atlas Air", "flightNumber", "AT123", "origin", "Casablanca", "destination", "Paris",
+                    "departureTime", past + "T08:00:00", "arrivalTime", past + "T10:00:00");
+            case TRANSFER -> Map.of("pickup", "Airport", "dropoff", "Hotel", "date", past);
+            case TRAIN -> Map.of("routeName", "Rabat - Casablanca", "departureDate", past);
+            default -> throw new IllegalArgumentException();
+        };
+        when(bookings.getBookingByReference(reference, owner, false)).thenReturn(Booking.builder()
+                .id(bookingId).bookingReference(reference).userId(owner)
+                .productType(productType).status(BookingStatus.CONFIRMED).build());
+        when(snapshots.findByBookingId(bookingId)).thenReturn(Optional.of(OfferSnapshot.builder()
+                .provider("PROVIDER").providerOfferId("offer-1").selectedDetails(details).build()));
+        when(payments.findByBookingIdOrderByCreatedAtDesc(bookingId)).thenReturn(List.of(
+                Payment.builder().status(PaymentStatus.SUCCEEDED).providerName("live").build()));
+        var result = service.evaluate(reference, owner);
+        assertThat(result.eligible()).isTrue();
+        assertThat(result.entityType()).isEqualTo(productType.name());
+        assertThat(result.entityReference()).isEqualTo("offer-1");
+        if (productType == ProductType.FLIGHT) assertThat(result.entityName()).contains("Casablanca → Paris");
     }
 
     @Test void futureOrUnpaidStayIsBlocked() {

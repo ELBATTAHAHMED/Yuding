@@ -3,6 +3,8 @@ package com.ahmed.alertsservice;
 import com.ahmed.alertsservice.services.ReviewRateLimiter;
 import com.ahmed.alertsservice.services.ReviewService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -86,5 +88,46 @@ class ReviewPersistenceIntegrationTest {
         jdbc.update("update engagement.reviews set status = 'DELETED' where id = ?", approved);
         assertThat(reviews.featuredReviews().stream().filter(review -> review.entityName().equals("Hôtel")
                 && review.content().equals("Très bon séjour de test")).toList()).isEmpty();
+    }
+
+    @Test void platformReviewIsUniquePerAuthorAndAppearsInTheirList() {
+        UUID user = UUID.randomUUID();
+        Jwt owner = Jwt.withTokenValue("test-token").header("alg", "RS256").subject(user.toString()).build();
+        var created = reviews.createPlatform(new ReviewService.ReviewInput(5,
+                "Une excellente expérience avec Yuding."), owner);
+        assertThat(created.entityType()).isEqualTo("PLATFORM");
+        assertThat(created.bookingReference()).isNull();
+        assertThat(reviews.platformMine(user).id()).isEqualTo(created.id());
+        assertThat(reviews.mineAll(user)).extracting(ReviewService.Review::id).contains(created.id());
+        assertThat(reviews.mineAll(UUID.randomUUID())).isEmpty();
+        assertThatThrownBy(() -> reviews.createPlatform(new ReviewService.ReviewInput(4,
+                "Une autre expérience avec Yuding."), owner))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("409");
+    }
+
+    @Test void deletedPlatformReviewNoLongerBlocksAnotherReview() {
+        UUID user = UUID.randomUUID();
+        Jwt owner = Jwt.withTokenValue("test-token").header("alg", "RS256").subject(user.toString()).build();
+        var first = reviews.createPlatform(new ReviewService.ReviewInput(5, "Une excellente expérience sur Yuding."), owner);
+        reviews.delete(first.id(), user);
+        assertThat(reviews.platformMine(user)).isNull();
+        var replacement = reviews.createPlatform(new ReviewService.ReviewInput(4, "Une expérience renouvelée sur Yuding."), owner);
+        assertThat(replacement.id()).isNotEqualTo(first.id());
+        assertThat(reviews.platformMine(user).id()).isEqualTo(replacement.id());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ACCOMMODATION", "FLIGHT", "ACTIVITY", "TRANSFER", "TRAIN"})
+    void eachCompletedBookingTypePersistsAndPublishesItsVerifiedReview(String type) {
+        String reference = "offer-" + type.toLowerCase();
+        UUID id = jdbc.queryForObject("""
+                insert into engagement.reviews
+                (user_id, booking_id, item_type, provider, item_reference, rating, content, title, is_verified_purchase, status)
+                values (?, ?, ?, 'TEST', ?, 5, 'Une expérience de voyage appréciée.', ?, true, 'APPROVED') returning id
+                """, UUID.class, UUID.randomUUID(), UUID.randomUUID(), type, reference, "Voyage " + type);
+        assertThat(id).isNotNull();
+        assertThat(reviews.publicReviews(type, "TEST", reference).reviewCount()).isEqualTo(1);
+        assertThat(reviews.featuredReviews()).anyMatch(review -> review.entityType().equals(type)
+                && review.entityName().equals("Voyage " + type) && review.verifiedBooking());
     }
 }

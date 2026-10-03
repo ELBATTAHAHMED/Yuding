@@ -25,6 +25,7 @@ import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -76,9 +77,13 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
                 });
 
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String path = exchange.getRequest().getURI().getPath();
+        boolean protectedReview = path.equals("/apic/reviews") || path.startsWith("/apic/reviews/")
+                && !path.startsWith("/apic/reviews/public/");
 
-        // If no Bearer token, proceed with stripped/clean request
+        // Review writes and account reads require a token at the perimeter.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            if (protectedReview) return writeError(exchange, HttpStatus.UNAUTHORIZED, "Authentication required");
             return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
         }
 
@@ -87,13 +92,14 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
 
-            if (rsaPublicKey != null) {
-                RSASSAVerifier verifier = new RSASSAVerifier(rsaPublicKey);
-                if (!signedJWT.verify(verifier)) {
-                    log.warn("Gateway: Rejected request to {} due to invalid JWT signature",
-                            exchange.getRequest().getURI().getPath());
-                    return writeError(exchange, HttpStatus.UNAUTHORIZED, "Invalid JWT signature");
-                }
+            if (rsaPublicKey == null || !"RS256".equals(signedJWT.getHeader().getAlgorithm().getName())) {
+                return writeError(exchange, HttpStatus.UNAUTHORIZED, "Invalid JWT configuration or algorithm");
+            }
+            RSASSAVerifier verifier = new RSASSAVerifier(rsaPublicKey);
+            if (!signedJWT.verify(verifier)) {
+                log.warn("Gateway: Rejected request to {} due to invalid JWT signature",
+                        exchange.getRequest().getURI().getPath());
+                return writeError(exchange, HttpStatus.UNAUTHORIZED, "Invalid JWT signature");
             }
 
             JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
@@ -112,6 +118,10 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
                 rolesStr = String.join(",", list.stream().map(Object::toString).toList());
             } else if (rolesClaim != null) {
                 rolesStr = rolesClaim.toString();
+            }
+            if (path.startsWith("/apic/reviews/moderation")
+                    && Arrays.stream(rolesStr.split(",")).noneMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_SUPPORT"))) {
+                return writeError(exchange, HttpStatus.FORBIDDEN, "Insufficient role privileges");
             }
 
             // Step 2: Inject verified claims from validated JWT only

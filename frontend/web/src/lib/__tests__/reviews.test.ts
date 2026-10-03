@@ -41,6 +41,22 @@ describe('Phase 52 verified review flow', () => {
     assert.equal(calls[1].authorization, undefined);
   });
 
+  it('loads owned reviews and submits a platform rating through the Gateway', async () => {
+    const calls: { url: string; method: string; body?: string; authorization?: string }[] = [];
+    globalThis.fetch = async (input, init) => {
+      calls.push({ url: String(input), method: init?.method || 'GET', body: String(init?.body || ''),
+        authorization: new Headers(init?.headers).get('Authorization') || undefined });
+      return Response.json(calls.length === 1 ? [] : calls.length === 2 ? { review: null } : {});
+    };
+    assert.deepEqual(await reviewService.allMine(), []);
+    assert.equal(await reviewService.platformMine(), null);
+    await reviewService.createPlatform(4, '');
+    assert.deepEqual(calls.map(call => new URL(call.url).pathname),
+      ['/apic/reviews/mine', '/apic/reviews/platform/mine', '/apic/reviews/platform']);
+    assert.ok(calls.every(call => call.authorization === 'Bearer phase52-test-token'));
+    assert.deepEqual(JSON.parse(calls[2].body || '{}'), { rating: 4, content: '' });
+  });
+
   it('shows the review action only from server eligibility or an owned existing review', () => {
     const action = readFileSync(resolve(here, '../../app/(user)/account/bookings/BookingReviewAction.tsx'), 'utf8');
     assert.match(action, /eligibility\.data\?\.eligible/);

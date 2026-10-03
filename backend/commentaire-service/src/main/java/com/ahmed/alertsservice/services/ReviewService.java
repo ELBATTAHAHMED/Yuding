@@ -25,11 +25,11 @@ public class ReviewService {
                               String entityType, String provider, String entityReference, String entityName) { }
     public record Review(UUID id, int rating, String content, String status, String entityType,
                          String provider, String entityReference, String entityName,
-                         OffsetDateTime createdAt, OffsetDateTime updatedAt) { }
+                         OffsetDateTime createdAt, OffsetDateTime updatedAt, String bookingReference) { }
     public record PublicReview(int rating, String content, String displayName, OffsetDateTime createdAt) { }
     public record PublicReviews(Double averageRating, long reviewCount, List<PublicReview> reviews) { }
     public record FeaturedReview(int rating, String content, String displayName, String entityName,
-                                 String entityType, OffsetDateTime createdAt) { }
+                                 String entityType, OffsetDateTime createdAt, boolean verifiedBooking) { }
     public record ReviewInput(int rating, String content, String publicDisplayName) {
         public ReviewInput(int rating, String content) { this(rating, content, null); }
     }
@@ -66,9 +66,25 @@ public class ReviewService {
 
     public Review mine(UUID bookingId, UUID userId) {
         List<Review> reviews = jdbc.query("""
-                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at
+                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at, booking_reference
                 from engagement.reviews where booking_id = ? and user_id = ?
                 """, (rs, row) -> readReview(rs), bookingId, userId);
+        return reviews.isEmpty() ? null : reviews.getFirst();
+    }
+
+    public List<Review> mineAll(UUID userId) {
+        return jdbc.query("""
+                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at, booking_reference
+                from engagement.reviews where user_id = ? and status <> 'DELETED'
+                order by created_at desc, id desc
+                """, (rs, row) -> readReview(rs), userId);
+    }
+
+    public Review platformMine(UUID userId) {
+        List<Review> reviews = jdbc.query("""
+                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at, booking_reference
+                from engagement.reviews where user_id = ? and item_type = 'PLATFORM' and status <> 'DELETED'
+                """, (rs, row) -> readReview(rs), userId);
         return reviews.isEmpty() ? null : reviews.getFirst();
     }
 
@@ -86,10 +102,10 @@ public class ReviewService {
         try {
             UUID id = jdbc.queryForObject("""
                     insert into engagement.reviews
-                    (user_id, booking_id, item_type, provider, item_reference, rating, content, title, is_verified_purchase, status, public_display_name)
-                    values (?, ?, ?, ?, ?, ?, ?, ?, true, ?, ?) returning id
-                    """, UUID.class, userId, target.bookingId(), target.entityType(), target.provider(),
-                    target.entityReference(), value.rating(), value.content(), title, value.status(), publicName);
+                    (user_id, booking_id, booking_reference, item_type, provider, item_reference, rating, content, title, is_verified_purchase, status, public_display_name)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, true, ?, ?) returning id
+                    """, UUID.class, userId, target.bookingId(), target.bookingReference(), target.entityType(),
+                    target.provider(), target.entityReference(), value.rating(), value.content(), title, value.status(), publicName);
             return owned(id, userId);
         } catch (DuplicateKeyException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Un avis existe déjà pour ce dossier.");
@@ -121,10 +137,12 @@ public class ReviewService {
     }
 
     public PublicReviews publicReviews(String type, String provider, String reference) {
-        if (!List.of("ACCOMMODATION", "ACTIVITY").contains(type))
+        if (!List.of("ACCOMMODATION", "ACTIVITY", "FLIGHT", "TRANSFER", "TRAIN", "PLATFORM").contains(type))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type non pris en charge.");
         List<PublicReview> reviews = jdbc.query("""
-                select rating, content, coalesce(nullif(public_display_name, ''), 'Voyageur vérifié'), created_at from engagement.reviews
+                select rating, content, coalesce(nullif(public_display_name, ''),
+                       case when item_type = 'PLATFORM' then 'Utilisateur Yuding' else 'Voyageur vérifié' end), created_at
+                from engagement.reviews
                 where item_type = ? and provider = ? and item_reference = ? and status = 'APPROVED'
                 order by created_at desc limit 50
                 """, (rs, row) -> new PublicReview(rs.getInt(1), rs.getString(2), rs.getString(3),
@@ -136,18 +154,39 @@ public class ReviewService {
         return new PublicReviews((Double) summary.get("average"), ((Number) summary.get("count")).longValue(), reviews);
     }
 
-    /** A bounded, public editorial feed. Only moderated, verified stays/activities appear. */
+    @Transactional
+    public Review createPlatform(ReviewInput input, Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        limiter.record(userId);
+        Validated value = ReviewContentPolicy.validate(input);
+        String publicName = publicDisplayName(input.publicDisplayName());
+        preventRepeatedContent(userId, value.content(), null);
+        try {
+            UUID id = jdbc.queryForObject("""
+                    insert into engagement.reviews
+                    (user_id, item_type, provider, item_reference, rating, content, title, is_verified_purchase, status, public_display_name)
+                    values (?, 'PLATFORM', 'YUDING', 'YUDING', ?, ?, 'Yuding', false, ?, ?) returning id
+                    """, UUID.class, userId, value.rating(), value.content(), value.status(), publicName);
+            return owned(id, userId);
+        } catch (DuplicateKeyException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Un avis général existe déjà pour ce compte.");
+        }
+    }
+
+    /** A bounded, public editorial feed of approved travel and platform reviews. */
     public List<FeaturedReview> featuredReviews() {
         return jdbc.query("""
-                select rating, content, coalesce(nullif(public_display_name, ''), 'Voyageur vérifié'),
-                       coalesce(nullif(title, ''), 'Voyage Yuding'), item_type, created_at
+                select rating, content, coalesce(nullif(public_display_name, ''),
+                       case when item_type = 'PLATFORM' then 'Utilisateur Yuding' else 'Voyageur vérifié' end),
+                       coalesce(nullif(title, ''), 'Voyage Yuding'), item_type, created_at, is_verified_purchase
                 from engagement.reviews
-                where status = 'APPROVED' and is_verified_purchase = true
-                  and item_type in ('ACCOMMODATION', 'ACTIVITY')
+                where status = 'APPROVED' and length(trim(content)) > 0 and
+                  ((is_verified_purchase = true and item_type in ('ACCOMMODATION', 'ACTIVITY', 'FLIGHT', 'TRANSFER', 'TRAIN'))
+                    or item_type = 'PLATFORM')
                 order by created_at desc, id desc limit 12
                 """, (rs, row) -> new FeaturedReview(rs.getInt(1), rs.getString(2),
                 rs.getString(3), rs.getString(4), rs.getString(5),
-                rs.getObject(6, OffsetDateTime.class)));
+                rs.getObject(6, OffsetDateTime.class), rs.getBoolean(7)));
     }
 
     private String publicDisplayName(String input) {
@@ -169,14 +208,14 @@ public class ReviewService {
 
     public List<Review> pending() {
         return jdbc.query("""
-                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at
+                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at, booking_reference
                 from engagement.reviews where status = 'PENDING_MODERATION' order by created_at limit 100
                 """, (rs, row) -> readReview(rs));
     }
 
     private Review owned(UUID id, UUID userId) {
         List<Review> reviews = jdbc.query("""
-                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at
+                select id, rating, content, status, item_type, provider, item_reference, coalesce(title, ''), created_at, updated_at, booking_reference
                 from engagement.reviews where id = ? and user_id = ?
                 """, (rs, row) -> readReview(rs), id, userId);
         if (reviews.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Avis introuvable.");
@@ -196,7 +235,7 @@ public class ReviewService {
     private static Review readReview(java.sql.ResultSet rs) throws java.sql.SQLException {
         return new Review((UUID) rs.getObject(1), rs.getInt(2), rs.getString(3), rs.getString(4),
                 rs.getString(5), rs.getString(6), rs.getString(7), rs.getString(8),
-                rs.getObject(9, OffsetDateTime.class), rs.getObject(10, OffsetDateTime.class));
+                rs.getObject(9, OffsetDateTime.class), rs.getObject(10, OffsetDateTime.class), rs.getString(11));
     }
 
 }

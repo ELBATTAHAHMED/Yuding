@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
@@ -12,12 +12,21 @@ export const Header: React.FC = () => {
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
   const [homeScrolled, setHomeScrolled] = useState(false);
 
   useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useLayoutEffect(() => {
     if (!isHome) return;
-    const update = () => setHomeScrolled(window.scrollY > 56);
+    let scrolled = false;
+    const update = () => {
+      const next = window.scrollY > 56;
+      if (next !== scrolled) { scrolled = next; setHomeScrolled(next); }
+    };
     update();
     window.addEventListener('scroll', update, { passive: true });
     return () => window.removeEventListener('scroll', update);
@@ -47,7 +56,7 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className={`header yuding-header ${isHome ? `home-header${homeScrolled ? ' home-header--scrolled' : ''}${menuOpen ? ' home-header--menu-open' : ''}` : 'subpage-header'}`}>
+    <header className={`header yuding-header${hydrated ? ' header--hydrated' : ''} ${isHome ? `home-header${homeScrolled ? ' home-header--scrolled' : ''}${menuOpen ? ' home-header--menu-open' : ''}` : 'subpage-header'}`}>
       <div className="header-top">
         <div className="container1 header-inner">
           <Link href="/" className="logo">
@@ -101,7 +110,7 @@ export const Header: React.FC = () => {
 
             <DarkModeToggle />
 
-            <button
+            {hydrated && <button
               type="button"
               className="yuding-menu-toggle"
               aria-expanded={menuOpen}
@@ -116,7 +125,7 @@ export const Header: React.FC = () => {
               }}
             >
               <i className={`fas ${menuOpen ? 'fa-times' : 'fa-bars'}`} aria-hidden="true" />
-            </button>
+            </button>}
           </div>
         </div>
       </div>
