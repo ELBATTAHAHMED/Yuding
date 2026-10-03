@@ -13,178 +13,184 @@ export default function AdminSettingsPage() {
       const updated = { ...settings, [key]: !settings[key] };
       setSettings(updated);
       adminService.saveOperationalSettings(updated);
-      setFeedback('Paramètres enregistrés.');
+      setFeedback('Paramètres enregistrés avec succès.');
       setTimeout(() => setFeedback(null), 2500);
     }
   };
 
+  const handleRateLimitChange = (val: number) => {
+    const updated = { ...settings, rateLimitPerMinute: val };
+    setSettings(updated);
+    adminService.saveOperationalSettings(updated);
+    setFeedback('Quota de débit mis à jour.');
+    setTimeout(() => setFeedback(null), 2500);
+  };
+
+  const toggleItems: Array<{
+    key: keyof OperationalSettings;
+    title: string;
+    description: string;
+    icon: string;
+    warning?: boolean;
+  }> = [
+    {
+      key: 'sandboxMode',
+      title: 'Mode Bac à Sable (Sandbox)',
+      description: 'Autorise les flux de test PayPal Sandbox et les requêtes QA sans impact financier réel.',
+      icon: 'fas fa-vial',
+    },
+    {
+      key: 'mockPaymentAllowed',
+      title: 'Paiement Mock Développeur',
+      description: 'Active le processeur local Mock Payment Provider pour les tests fonctionnels et tests d\'intégration.',
+      icon: 'fas fa-code',
+    },
+    {
+      key: 'autoReviewModeration',
+      title: 'Modération Automatique des Avis',
+      description: 'Publie automatiquement les avis sans lien externe suspect ni terme prohibé.',
+      icon: 'fas fa-shield-virus',
+    },
+    {
+      key: 'redisCacheEnabled',
+      title: 'Cache Distribué Redis',
+      description: 'Mise en cache des offres de voyage et des sessions de recherche pour réduire la charge sur les APIs partenaires.',
+      icon: 'fas fa-bolt',
+    },
+    {
+      key: 'maintenanceMode',
+      title: 'Mode Maintenance de la Plateforme',
+      description: 'Limite l\'accès utilisateur au portail public tout en conservant l\'accès aux équipes opérationnelles.',
+      icon: 'fas fa-tools',
+      warning: true,
+    },
+  ];
+
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
           Paramètres Opérationnels &amp; Feature Flags
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-          Contrôles environnementaux, bascule de bac à sable (sandbox) et politiques d&apos;exploitation
+        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+          Contrôles environnementaux, bac à sable (sandbox) et politiques d&apos;exploitation en direct
         </p>
       </div>
 
       {feedback && (
-        <div style={{ padding: '0.85rem 1.25rem', background: 'rgba(0, 212, 170, 0.15)', border: '1px solid #00D4AA', color: '#00D4AA', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
-          <i className="fas fa-check-circle" style={{ marginRight: '0.5rem' }} />
-          {feedback}
+        <div
+          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2"
+          style={{
+            backgroundColor: 'var(--admin-accent-subtle)',
+            borderColor: 'var(--admin-accent-border)',
+            color: 'var(--admin-accent)',
+          }}
+        >
+          <i className="fas fa-check-circle" />
+          <span>{feedback}</span>
         </div>
       )}
 
-      {/* Settings Cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        {/* Sandbox Mode */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-              Mode Bac à Sable (Sandbox Environment)
-            </h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0.35rem 0 0 0' }}>
-              Autorise les tests de paiement PayPal sandbox et les requêtes fictives pour la validation QA.
-            </p>
-          </div>
-          <button
-            onClick={() => handleToggle('sandboxMode')}
-            style={{
-              padding: '0.5rem 1.2rem',
-              borderRadius: '20px',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: settings.sandboxMode ? '#00D4AA' : 'rgba(255, 255, 255, 0.1)',
-              color: settings.sandboxMode ? '#0B0F19' : '#94a3b8',
-            }}
-          >
-            {settings.sandboxMode ? 'ACTIVÉ' : 'DÉSACTIVÉ'}
-          </button>
-        </div>
+      {/* Feature Flags Cards */}
+      <div className="space-y-3">
+        {toggleItems.map((item) => {
+          const isChecked = Boolean(settings[item.key]);
+          return (
+            <div
+              key={item.key}
+              className="admin-card p-4 flex items-center justify-between gap-4 transition-colors"
+              style={{
+                backgroundColor: 'var(--admin-surface)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              <div className="flex items-start gap-3 min-w-0">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{
+                    backgroundColor: isChecked ? 'var(--admin-accent-subtle)' : 'var(--admin-surface-muted)',
+                    color: isChecked ? 'var(--admin-accent)' : 'var(--admin-text-muted)',
+                  }}
+                >
+                  <i className={`${item.icon} text-xs`} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-bold truncate m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                      {item.title}
+                    </h3>
+                    {item.warning && (
+                      <span className="text-[0.625rem] font-bold px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
+                        Impact élevé
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[0.6875rem] leading-relaxed mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
+                    {item.description}
+                  </p>
+                </div>
+              </div>
 
-        {/* Mock Payment Provider */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-              Passerelle Mock Paiement
-            </h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0.35rem 0 0 0' }}>
-              Permet aux testeurs d&apos;exécuter le tunnel de réservation avec une carte de test fictive (DEMO_CARD).
-            </p>
-          </div>
-          <button
-            onClick={() => handleToggle('mockPaymentAllowed')}
-            style={{
-              padding: '0.5rem 1.2rem',
-              borderRadius: '20px',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: settings.mockPaymentAllowed ? '#00D4AA' : 'rgba(255, 255, 255, 0.1)',
-              color: settings.mockPaymentAllowed ? '#0B0F19' : '#94a3b8',
-            }}
-          >
-            {settings.mockPaymentAllowed ? 'ACTIVÉ' : 'DÉSACTIVÉ'}
-          </button>
-        </div>
+              {/* Toggle switch */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isChecked}
+                onClick={() => handleToggle(item.key)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                style={{
+                  backgroundColor: isChecked ? 'var(--admin-accent)' : 'var(--admin-border-strong)',
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                    isChecked ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          );
+        })}
+      </div>
 
-        {/* Auto Review Moderation */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-              Modération Préalable Systématique des Avis
-            </h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0.35rem 0 0 0' }}>
-              Place tous les avis déposés en file d&apos;attente manuelle, même sans détection de lien URL.
-            </p>
-          </div>
-          <button
-            onClick={() => handleToggle('autoReviewModeration')}
-            style={{
-              padding: '0.5rem 1.2rem',
-              borderRadius: '20px',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: settings.autoReviewModeration ? '#00D4AA' : 'rgba(255, 255, 255, 0.1)',
-              color: settings.autoReviewModeration ? '#0B0F19' : '#94a3b8',
-            }}
-          >
-            {settings.autoReviewModeration ? 'ACTIVÉ' : 'DÉSACTIVÉ'}
-          </button>
+      {/* Gateway Rate Limit Setting */}
+      <div
+        className="admin-card p-5 space-y-3"
+        style={{
+          backgroundColor: 'var(--admin-surface)',
+          borderColor: 'var(--admin-border)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <i className="fas fa-tachometer-alt text-xs" style={{ color: 'var(--admin-accent)' }} />
+          <h3 className="text-xs font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+            Quota de Requêtes Gateway (Redis Rate Limit)
+          </h3>
         </div>
+        <p className="text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+          Nombre maximal de requêtes autorisées par adresse IP par minute avant déclenchement d&apos;une réponse HTTP 429 Too Many Requests.
+        </p>
 
-        {/* Redis Cache */}
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-              Cache Redis &amp; Mémorisation Distribuée
-            </h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0.35rem 0 0 0' }}>
-              Mise en cache des recherches de vol et d&apos;hôtel pour réduire les coûts API partenaires.
-            </p>
-          </div>
-          <button
-            onClick={() => handleToggle('redisCacheEnabled')}
+        <div className="flex items-center gap-3 pt-1">
+          <input
+            type="number"
+            min={10}
+            max={500}
+            step={10}
+            value={settings.rateLimitPerMinute}
+            onChange={(e) => handleRateLimitChange(Number(e.target.value))}
+            className="w-32 px-3 py-1.5 rounded-md text-xs font-mono font-bold outline-none"
             style={{
-              padding: '0.5rem 1.2rem',
-              borderRadius: '20px',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: settings.redisCacheEnabled ? '#00D4AA' : 'rgba(255, 255, 255, 0.1)',
-              color: settings.redisCacheEnabled ? '#0B0F19' : '#94a3b8',
+              backgroundColor: 'var(--admin-surface-muted)',
+              border: '1px solid var(--admin-border)',
+              color: 'var(--admin-text-primary)',
             }}
-          >
-            {settings.redisCacheEnabled ? 'ACTIVÉ' : 'DÉSACTIVÉ'}
-          </button>
+          />
+          <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+            requêtes / minute par client
+          </span>
         </div>
       </div>
     </div>

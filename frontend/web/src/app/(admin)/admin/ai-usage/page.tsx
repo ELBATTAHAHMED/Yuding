@@ -1,9 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { AdminStatCard } from '@/components/admin/AdminStatCard';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
+
+interface ToolTelemetry {
+  name: string;
+  count: number;
+  avgDuration: string;
+  role: string;
+}
 
 export default function AdminAiUsagePage() {
-  const tools = [
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const tools: ToolTelemetry[] = [
     { name: 'searchFlights', count: 8, avgDuration: '3.18 s', role: 'Recherche d\'itinéraires et tarifs vols multi-compagnies' },
     { name: 'searchHotels', count: 2, avgDuration: '13.76 s', role: 'Disponibilités et tarifs hébergements via Nuitee API' },
     { name: 'searchActivities', count: 3, avgDuration: '0.40 s', role: 'Excursions et expériences au Maroc (HBX)' },
@@ -15,91 +27,114 @@ export default function AdminAiUsagePage() {
     { name: 'getBookingStatus', count: 1, avgDuration: '0.04 s', role: 'Interrogation autoritaire du statut d\'une réservation YUD-XXXX' },
   ];
 
+  const filtered = tools.filter((t) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return t.name.toLowerCase().includes(term) || t.role.toLowerCase().includes(term);
+  });
+
+  const columns = [
+    {
+      key: 'name',
+      header: 'NOM DU TOOL',
+      render: (t: ToolTelemetry) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
+          {t.name}()
+        </span>
+      ),
+    },
+    {
+      key: 'count',
+      header: 'APPELS ENREGISTRÉS',
+      align: 'center' as const,
+      render: (t: ToolTelemetry) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {t.count}
+        </span>
+      ),
+    },
+    {
+      key: 'avgDuration',
+      header: 'LATENCE MOYENNE',
+      render: (t: ToolTelemetry) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: '#38BDF8' }}>
+          {t.avgDuration}
+        </span>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'RÔLE FONCTIONNEL DANS L’ÉCOSYSTÈME',
+      render: (t: ToolTelemetry) => (
+        <span className="text-xs" style={{ color: 'var(--admin-text-secondary)' }}>
+          {t.role}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
           Télémétrie IA &amp; Outils RAG
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
+        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
           Supervision des exécutions d&apos;outils (ai.tool_calls), conversations persistantes et indexation vectorielle pgvector
         </p>
       </div>
 
-      {/* Metrics Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'var(--bg-secondary, #111827)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700 }}>CONVERSATIONS TOTALES</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>21</div>
-          <div style={{ fontSize: '0.75rem', color: '#00D4AA', marginTop: '0.2rem' }}>ai.conversations enregistrées</div>
-        </div>
-
-        <div style={{ background: 'var(--bg-secondary, #111827)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700 }}>APPELS D&apos;OUTILS (TOOLS)</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>38</div>
-          <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '0.2rem' }}>ai.tool_calls exécutés</div>
-        </div>
-
-        <div style={{ background: 'var(--bg-secondary, #111827)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700 }}>PLANS DE VOYAGE CRÉÉS</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>53</div>
-          <div style={{ fontSize: '0.75rem', color: '#fbbf24', marginTop: '0.2rem' }}>ai.trip_plans structurés</div>
-        </div>
-
-        <div style={{ background: 'var(--bg-secondary, #111827)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700 }}>BASE VECTORIELLE PGVECTOR</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>Actif</div>
-          <div style={{ fontSize: '0.75rem', color: '#c084fc', marginTop: '0.2rem' }}>Strictement isolé au schéma ai</div>
-        </div>
+      {/* KPI Ribbon */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AdminStatCard
+          label="Conversations Totales"
+          value="21"
+          subtext="Schéma ai.conversations"
+          icon="fas fa-comments"
+          variant="accent"
+        />
+        <AdminStatCard
+          label="Exécutions d'Outils"
+          value="38"
+          subtext="ai.tool_calls enregistrés"
+          icon="fas fa-toolbox"
+          variant="info"
+        />
+        <AdminStatCard
+          label="Plans de Voyage Générés"
+          value="53"
+          subtext="ai.trip_plans créés"
+          icon="fas fa-route"
+          variant="warning"
+        />
+        <AdminStatCard
+          label="Base Vectorielle"
+          value="Actif"
+          subtext="pgvector isolé au schéma ai"
+          icon="fas fa-database"
+          variant="accent"
+        />
       </div>
+
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Filtrer les outils IA par nom ou rôle..."
+        totalCount={tools.length}
+        filteredCount={filtered.length}
+        onResetFilters={() => setSearchTerm('')}
+        hasActiveFilters={Boolean(searchTerm)}
+      />
 
       {/* Tools Table */}
-      <div
-        style={{
-          background: 'var(--bg-secondary, #111827)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-            Catalogue &amp; Fréquence d&apos;Exécution des Outils d&apos;Agent (Tool Registry)
-          </h2>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.2)', color: '#94a3b8', textAlign: 'left' }}>
-                <th style={{ padding: '0.85rem 1rem' }}>NOM DE L&apos;OUTIL</th>
-                <th style={{ padding: '0.85rem 1rem' }}>EXÉCUTIONS RÉELLES</th>
-                <th style={{ padding: '0.85rem 1rem' }}>DURÉE MOYENNE</th>
-                <th style={{ padding: '0.85rem 1rem' }}>RÔLE OPÉRATIONNEL &amp; SOURCE DE DONNÉES</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tools.map((t) => (
-                <tr key={t.name} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                  <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#00D4AA' }}>
-                    {t.name}()
-                  </td>
-                  <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 700 }}>
-                    {t.count}
-                  </td>
-                  <td style={{ padding: '0.85rem 1rem', color: '#38bdf8', fontWeight: 600 }}>
-                    {t.avgDuration}
-                  </td>
-                  <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1', fontSize: '0.85rem' }}>
-                    {t.role}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AdminTable
+        columns={columns}
+        data={filtered}
+        keyExtractor={(t) => t.name}
+        emptyMessage="Aucun outil IA correspondant"
+      />
     </div>
   );
 }

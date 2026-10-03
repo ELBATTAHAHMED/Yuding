@@ -2,233 +2,325 @@
 
 import React, { useState } from 'react';
 import { useAdminRefunds, useAdminCancellations } from '@/hooks/queries/useAdminQueries';
+import { AdminRefund, AdminCancellation } from '@/types/admin.types';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
+import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
+import { AdminDrawer } from '@/components/admin/AdminDrawer';
 
 export default function AdminRefundsPage() {
   const [activeTab, setActiveTab] = useState<'REFUNDS' | 'CANCELLATIONS'>('REFUNDS');
-  const { data: refunds = [], isLoading: loadingRefunds, refetch: refetchRefunds } = useAdminRefunds(50);
-  const { data: cancellations = [], isLoading: loadingCancellations, refetch: refetchCancellations } = useAdminCancellations(50);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
-            Remboursements &amp; Annulations
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            Supervision du flux d&apos;annulation unifié Phase 51 et des remboursements exécutés (payment.refunds)
-          </p>
-        </div>
+  const { data: refunds = [], isLoading: loadingRefunds, refetch: refetchRefunds, isRefetching: refetchingRefunds } = useAdminRefunds(100);
+  const { data: cancellations = [], isLoading: loadingCancellations, refetch: refetchCancellations, isRefetching: refetchingCancellations } = useAdminCancellations(100);
 
-        <button
-          onClick={() => {
-            refetchRefunds();
-            refetchCancellations();
-          }}
+  const filteredRefunds = refunds.filter((r) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      r.refundReference.toLowerCase().includes(term) ||
+      r.bookingId.toLowerCase().includes(term) ||
+      (r.reason && r.reason.toLowerCase().includes(term))
+    );
+  });
+
+  const filteredCancellations = cancellations.filter((c) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      c.bookingId.toLowerCase().includes(term) ||
+      c.requestedBy.toLowerCase().includes(term) ||
+      (c.reason && c.reason.toLowerCase().includes(term))
+    );
+  });
+
+  const refundColumns = [
+    {
+      key: 'refundReference',
+      header: 'RÉFÉRENCE',
+      render: (r: AdminRefund) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: '#F87171' }}>
+          {r.refundReference}
+        </span>
+      ),
+    },
+    {
+      key: 'bookingId',
+      header: 'RÉSERVATION',
+      render: (r: AdminRefund) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-secondary)' }}>
+          {r.bookingId.substring(0, 8)}...
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'MONTANT REMBOURSÉ',
+      align: 'right' as const,
+      render: (r: AdminRefund) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          {Number(r.amount).toFixed(2)} {r.currency}
+        </span>
+      ),
+    },
+    {
+      key: 'reason',
+      header: 'MOTIF',
+      render: (r: AdminRefund) => (
+        <span className="text-xs truncate max-w-[200px] inline-block" style={{ color: 'var(--admin-text-muted)' }}>
+          {r.reason || 'Demande client standard'}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'DATE EXÉCUTION',
+      render: (r: AdminRefund) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {new Date(r.createdAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT',
+      render: (r: AdminRefund) => (
+        <AdminBadge variant={getStatusBadgeVariant(r.status)} size="sm">
+          {r.status}
+        </AdminBadge>
+      ),
+    },
+  ];
+
+  const cancellationColumns = [
+    {
+      key: 'bookingId',
+      header: 'RÉSERVATION ASSOCIÉE',
+      render: (c: AdminCancellation) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
+          {c.bookingId.substring(0, 8)}...
+        </span>
+      ),
+    },
+    {
+      key: 'requestedBy',
+      header: 'DEMANDEUR',
+      render: (c: AdminCancellation) => (
+        <span className="text-xs font-medium" style={{ color: 'var(--admin-text-secondary)' }}>
+          {c.requestedBy}
+        </span>
+      ),
+    },
+    {
+      key: 'policyType',
+      header: 'POLITIQUE',
+      render: (c: AdminCancellation) => (
+        <span
+          className="text-xs px-2 py-0.5 rounded font-bold"
           style={{
-            padding: '0.6rem 1.25rem',
-            background: 'rgba(0, 212, 170, 0.1)',
-            border: '1px solid #00D4AA',
-            color: '#00D4AA',
-            borderRadius: '8px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
+            backgroundColor: 'var(--admin-surface-muted)',
+            color: 'var(--admin-text-primary)',
           }}
         >
-          <i className="fas fa-sync" />
-          Actualiser
-        </button>
+          {c.policyType || 'STANDARD'}
+        </span>
+      ),
+    },
+    {
+      key: 'refundAmount',
+      header: 'REMBOURSEMENT CALCULÉ',
+      align: 'right' as const,
+      render: (c: AdminCancellation) => (
+        <span className="admin-mono-tabular font-bold text-xs" style={{ color: '#F87171' }}>
+          {c.refundAmount != null ? `${Number(c.refundAmount).toFixed(2)} ${c.currency || 'EUR'}` : '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'requestedAt',
+      header: 'DATE DE DEMANDE',
+      render: (c: AdminCancellation) => (
+        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {new Date(c.requestedAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'STATUT DEMANDE',
+      render: (c: AdminCancellation) => (
+        <AdminBadge variant={getStatusBadgeVariant(c.status)} size="sm">
+          {c.status}
+        </AdminBadge>
+      ),
+    },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+          Remboursements &amp; Annulations
+        </h1>
+        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+          Flux d&apos;annulation unifié Phase 51 et enregistrements financiers (payment.refunds &amp; booking.cancellation_requests)
+        </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.75rem' }}>
+      <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: 'var(--admin-border)' }}>
         <button
+          type="button"
           onClick={() => setActiveTab('REFUNDS')}
+          className={`admin-btn text-xs py-2 px-3.5 rounded-lg border transition-all ${
+            activeTab === 'REFUNDS' ? 'shadow-xs font-bold' : 'opacity-70 font-semibold'
+          }`}
           style={{
-            padding: '0.6rem 1.25rem',
-            borderRadius: '8px',
-            border: 'none',
-            background: activeTab === 'REFUNDS' ? 'rgba(0, 212, 170, 0.15)' : 'transparent',
-            color: activeTab === 'REFUNDS' ? '#00D4AA' : '#94a3b8',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            cursor: 'pointer',
+            backgroundColor: activeTab === 'REFUNDS' ? 'var(--admin-surface)' : 'transparent',
+            borderColor: activeTab === 'REFUNDS' ? 'var(--admin-border-strong)' : 'transparent',
+            color: activeTab === 'REFUNDS' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
           }}
         >
-          Grand Livre des Remboursements ({refunds.length})
+          <i className="fas fa-undo-alt text-xs" style={{ color: '#F87171' }} />
+          <span>Grand Livre des Remboursements</span>
+          <span className="admin-mono-tabular text-[0.6875rem] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 ml-1">
+            {refunds.length}
+          </span>
         </button>
+
         <button
+          type="button"
           onClick={() => setActiveTab('CANCELLATIONS')}
+          className={`admin-btn text-xs py-2 px-3.5 rounded-lg border transition-all ${
+            activeTab === 'CANCELLATIONS' ? 'shadow-xs font-bold' : 'opacity-70 font-semibold'
+          }`}
           style={{
-            padding: '0.6rem 1.25rem',
-            borderRadius: '8px',
-            border: 'none',
-            background: activeTab === 'CANCELLATIONS' ? 'rgba(0, 212, 170, 0.15)' : 'transparent',
-            color: activeTab === 'CANCELLATIONS' ? '#00D4AA' : '#94a3b8',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            cursor: 'pointer',
+            backgroundColor: activeTab === 'CANCELLATIONS' ? 'var(--admin-surface)' : 'transparent',
+            borderColor: activeTab === 'CANCELLATIONS' ? 'var(--admin-border-strong)' : 'transparent',
+            color: activeTab === 'CANCELLATIONS' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
           }}
         >
-          Demandes d&apos;Annulation ({cancellations.length})
+          <i className="fas fa-ban text-xs" style={{ color: '#F59E0B' }} />
+          <span>Demandes d&apos;Annulation (Phase 51)</span>
+          <span className="admin-mono-tabular text-[0.6875rem] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 ml-1">
+            {cancellations.length}
+          </span>
         </button>
       </div>
 
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder={
+          activeTab === 'REFUNDS'
+            ? 'Rechercher REF-XXXX, UUID réservation, motif...'
+            : 'Rechercher UUID réservation, demandeur, motif...'
+        }
+        onRefresh={() => {
+          refetchRefunds();
+          refetchCancellations();
+        }}
+        isRefreshing={loadingRefunds || loadingCancellations || refetchingRefunds || refetchingCancellations}
+        totalCount={activeTab === 'REFUNDS' ? refunds.length : cancellations.length}
+        filteredCount={activeTab === 'REFUNDS' ? filteredRefunds.length : filteredCancellations.length}
+        onResetFilters={() => setSearchTerm('')}
+        hasActiveFilters={Boolean(searchTerm)}
+      />
+
+      {/* Active Tab Table */}
       {activeTab === 'REFUNDS' ? (
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.2)', color: '#94a3b8', textAlign: 'left' }}>
-                  <th style={{ padding: '0.85rem 1rem' }}>RÉFÉRENCE REMBOURSEMENT</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>RÉSERVATION ID</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>MONTANT</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>STATUT</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>MOTIF</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>PROVIDER REFUND ID</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>DATE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingRefunds ? (
-                  <tr><td colSpan={7} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>Chargement des remboursements...</td></tr>
-                ) : refunds.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                      Aucun remboursement exécuté pour le moment.
-                    </td>
-                  </tr>
-                ) : (
-                  refunds.map((r) => (
-                    <tr key={r.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#38bdf8' }}>
-                        {r.refundReference}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
-                        {r.bookingId.slice(0, 8)}...
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 800 }}>
-                        {r.amount.toFixed(2)} {r.currency}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        <span
-                          style={{
-                            padding: '0.25rem 0.6rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background: r.status === 'SUCCEEDED' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                            color: r.status === 'SUCCEEDED' ? '#34d399' : '#f87171',
-                          }}
-                        >
-                          {r.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1', fontSize: '0.8rem' }}>
-                        {r.reason || '—'}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8' }}>
-                        {r.providerRefundId || '—'}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
-                        {new Date(r.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <AdminTable
+          columns={refundColumns}
+          data={filteredRefunds}
+          keyExtractor={(r) => r.id}
+          isLoading={loadingRefunds}
+          onRowClick={(r) => setSelectedItem(r)}
+          emptyMessage="Aucun remboursement trouvé"
+        />
       ) : (
-        <div
-          style={{
-            background: 'var(--bg-secondary, #111827)',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.2)', color: '#94a3b8', textAlign: 'left' }}>
-                  <th style={{ padding: '0.85rem 1rem' }}>RÉSERVATION ID</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>POLITIQUE</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>FOURNISSEUR</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>STATUT ANNULATION</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>REMBOURSEMENT</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>STATUT REMBOURSEMENT</th>
-                  <th style={{ padding: '0.85rem 1rem' }}>DATE DEMANDE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingCancellations ? (
-                  <tr><td colSpan={7} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>Chargement des demandes...</td></tr>
-                ) : cancellations.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                      Aucune demande d&apos;annulation enregistrée.
-                    </td>
-                  </tr>
-                ) : (
-                  cancellations.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 700, color: '#f8fafc' }}>
-                        {c.bookingId.slice(0, 8)}...
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1' }}>
-                        <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', fontSize: '0.75rem', fontWeight: 600 }}>
-                          {c.policyType || 'STANDARD'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1' }}>
-                        {c.providerName || 'YUDING_DEMO'}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        <span
-                          style={{
-                            padding: '0.25rem 0.6rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background: c.status === 'CANCELLED' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                            color: c.status === 'CANCELLED' ? '#34d399' : '#f87171',
-                          }}
-                        >
-                          {c.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#f8fafc', fontWeight: 700 }}>
-                        {c.refundAmount != null ? `${c.refundAmount.toFixed(2)} ${c.currency || 'EUR'}` : '0.00 EUR'}
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        <span style={{ fontSize: '0.75rem', color: c.refundStatus === 'PROCESSED' ? '#34d399' : '#94a3b8', fontWeight: 600 }}>
-                          {c.refundStatus || 'N/A'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#64748b', fontSize: '0.8rem' }}>
-                        {new Date(c.requestedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <AdminTable
+          columns={cancellationColumns}
+          data={filteredCancellations}
+          keyExtractor={(c) => c.id}
+          isLoading={loadingCancellations}
+          onRowClick={(c) => setSelectedItem(c)}
+          emptyMessage="Aucune demande d'annulation trouvée"
+        />
       )}
+
+      {/* Drawer */}
+      <AdminDrawer
+        isOpen={Boolean(selectedItem)}
+        onClose={() => setSelectedItem(null)}
+        title={selectedItem?.refundReference || selectedItem?.bookingId || 'Détail'}
+        subtitle="Inspection de l'opération"
+        badge={
+          selectedItem && (
+            <AdminBadge variant={getStatusBadgeVariant(selectedItem.status)} size="sm">
+              {selectedItem.status}
+            </AdminBadge>
+          )
+        }
+        rawJson={selectedItem}
+      >
+        {selectedItem && (
+          <div className="space-y-4 text-xs">
+            <div
+              className="p-4 rounded-lg border space-y-2"
+              style={{
+                backgroundColor: 'var(--admin-surface-muted)',
+                borderColor: 'var(--admin-border)',
+              }}
+            >
+              <div className="font-bold uppercase tracking-wider text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                Données de l&apos;Opération
+              </div>
+              <div>
+                <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                  Réservation
+                </span>
+                <span className="admin-mono-tabular font-bold" style={{ color: 'var(--admin-text-primary)' }}>
+                  {selectedItem.bookingId}
+                </span>
+              </div>
+              {selectedItem.amount != null && (
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Montant Remboursé
+                  </span>
+                  <span className="admin-mono-tabular font-extrabold text-sm" style={{ color: '#F87171' }}>
+                    {Number(selectedItem.amount).toFixed(2)} {selectedItem.currency}
+                  </span>
+                </div>
+              )}
+              {selectedItem.reason && (
+                <div>
+                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                    Motif / Justificatif
+                  </span>
+                  <span style={{ color: 'var(--admin-text-secondary)' }}>{selectedItem.reason}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </AdminDrawer>
     </div>
   );
 }

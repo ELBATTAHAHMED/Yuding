@@ -1,124 +1,122 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAdminDestinations } from '@/hooks/queries/useAdminQueries';
+import { AdminBadge } from '@/components/admin/AdminBadge';
+import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
 
 export default function AdminDestinationsPage() {
-  const { data: destinations = [], isLoading, refetch } = useAdminDestinations();
+  const { data: destinations = [], isLoading, refetch, isRefetching } = useAdminDestinations();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+
+  const filtered = destinations.filter((d) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      d.name.toLowerCase().includes(term) ||
+      d.city.toLowerCase().includes(term) ||
+      d.slug.toLowerCase().includes(term)
+    );
+  });
+
+  const handleCopy = (slug: string) => {
+    navigator.clipboard.writeText(slug);
+    setCopiedSlug(slug);
+    setTimeout(() => setCopiedSlug(null), 1500);
+  };
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
-            Destinations Phares &amp; Éditoriales
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            Catalogue des régions et villes marocaines enregistrées dans le schéma travel.destinations
-          </p>
-        </div>
-
-        <button
-          onClick={() => refetch()}
-          style={{
-            padding: '0.6rem 1.25rem',
-            background: 'rgba(0, 212, 170, 0.1)',
-            border: '1px solid #00D4AA',
-            color: '#00D4AA',
-            borderRadius: '8px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}
-        >
-          <i className="fas fa-sync" />
-          Actualiser
-        </button>
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+          Destinations Phares &amp; Éditoriales
+        </h1>
+        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+          Catalogue des régions et villes marocaines enregistrées dans le schéma travel.destinations
+        </p>
       </div>
 
-      {/* Grid of destinations */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '1.5rem',
-        }}
-      >
-        {isLoading ? (
-          <div style={{ padding: '3rem', color: '#64748b' }}>Chargement des destinations...</div>
-        ) : (
-          destinations.map((d) => (
+      {/* Filter Bar */}
+      <AdminFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher une destination par nom, ville, slug..."
+        onRefresh={() => refetch()}
+        isRefreshing={isLoading || isRefetching}
+        totalCount={destinations.length}
+        filteredCount={filtered.length}
+        onResetFilters={() => setSearchTerm('')}
+        hasActiveFilters={Boolean(searchTerm)}
+      />
+
+      {/* Destinations Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="admin-card p-6 h-48 animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((d) => (
             <div
               key={d.id}
+              className="admin-card p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5"
               style={{
-                background: 'var(--bg-secondary, #111827)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
+                backgroundColor: 'var(--admin-surface)',
+                borderColor: 'var(--admin-border)',
               }}
             >
-              <div
-                style={{
-                  height: '140px',
-                  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  padding: '1.25rem',
-                }}
-              >
-                <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-                  <span
-                    style={{
-                      padding: '0.25rem 0.6rem',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      background: d.isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                      color: d.isActive ? '#34d399' : '#f87171',
-                    }}
-                  >
-                    {d.isActive ? 'ACTIF' : 'INACTIF'}
-                  </span>
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold truncate m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                      {d.name}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-xs mt-0.5" style={{ color: 'var(--admin-text-secondary)' }}>
+                      <i className="fas fa-map-marker-alt text-[0.65rem]" style={{ color: 'var(--admin-accent)' }} />
+                      <span>{d.city}, {d.countryName || 'Maroc'}</span>
+                    </div>
+                  </div>
+
+                  <AdminBadge variant={d.isActive ? 'success' : 'neutral'} size="sm">
+                    {d.isActive ? 'Active' : 'Inactive'}
+                  </AdminBadge>
                 </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#00D4AA', fontWeight: 700, textTransform: 'uppercase' }}>
-                    {d.countryName} ({d.countryCode})
-                  </span>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f8fafc', margin: '0.1rem 0 0 0' }}>
-                    {d.name}
-                  </h3>
-                </div>
+
+                {d.description && (
+                  <p className="text-xs line-clamp-2" style={{ color: 'var(--admin-text-muted)' }}>
+                    {d.description}
+                  </p>
+                )}
               </div>
 
-              <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#64748b' }}>Ville :</span>
-                  <span style={{ color: '#f8fafc', fontWeight: 600 }}>{d.city}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#64748b' }}>Slug URL :</span>
-                  <span style={{ color: '#94a3b8', fontFamily: 'monospace', fontSize: '0.75rem' }}>{d.slug}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#64748b' }}>UUID Base :</span>
-                  <span style={{ color: '#94a3b8', fontFamily: 'monospace', fontSize: '0.75rem' }}>{d.id.slice(0, 13)}...</span>
+              <div
+                className="pt-3 border-t flex items-center justify-between text-xs"
+                style={{ borderColor: 'var(--admin-border)' }}
+              >
+                <div className="flex items-center gap-1.5 admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+                  <span>/{d.slug}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(d.slug)}
+                    className="opacity-50 hover:opacity-100 p-0.5"
+                    title="Copier le slug"
+                  >
+                    <i className={`fas ${copiedSlug === d.slug ? 'fa-check text-emerald-500' : 'fa-copy'}`} />
+                  </button>
                 </div>
 
-                <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>travel.destinations</span>
-                  <span style={{ fontSize: '0.75rem', color: '#00D4AA', fontWeight: 600 }}>Référencé en production</span>
-                </div>
+                <span className="text-[0.65rem] admin-mono-tabular font-bold" style={{ color: 'var(--admin-text-muted)' }}>
+                  {d.countryCode}
+                </span>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
