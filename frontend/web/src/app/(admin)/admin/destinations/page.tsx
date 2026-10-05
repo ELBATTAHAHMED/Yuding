@@ -27,15 +27,27 @@ export default function AdminDestinationsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-          Destinations Phares &amp; Éditoriales
-        </h1>
-        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
-          Catalogue des régions et villes marocaines enregistrées dans le schéma travel.destinations
-        </p>
+    <div className="max-w-7xl mx-auto space-y-4">
+      {/* Title & Actions Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Destinations Phares &amp; Éditoriales
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Catalogue des régions et villes marocaines enregistrées dans le schéma travel.destinations
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isRefetching}
+          className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
+        >
+          <i className={`fas fa-sync text-[11px] ${isRefetching ? 'animate-spin' : ''}`} />
+          <span>Actualiser ({destinations.length})</span>
+        </button>
       </div>
 
       {/* Filter Bar */}
@@ -43,40 +55,31 @@ export default function AdminDestinationsPage() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Rechercher une destination par nom, ville, slug..."
-        onRefresh={() => refetch()}
-        isRefreshing={isLoading || isRefetching}
-        totalCount={destinations.length}
-        filteredCount={filtered.length}
-        onResetFilters={() => setSearchTerm('')}
-        hasActiveFilters={Boolean(searchTerm)}
+        filters={[]}
       />
 
       {/* Destinations Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="admin-card p-6 h-48 animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 h-44 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filtered.map((d) => (
             <div
               key={d.id}
-              className="admin-card p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
+              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-2xs"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold truncate m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                    <h3 className="text-sm font-bold truncate text-slate-900 dark:text-slate-100 m-0">
                       {d.name}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-xs mt-0.5" style={{ color: 'var(--admin-text-secondary)' }}>
-                      <i className="fas fa-map-marker-alt text-[0.65rem]" style={{ color: 'var(--admin-accent)' }} />
+                    <div className="flex items-center gap-1.5 text-xs mt-0.5 text-slate-500 dark:text-slate-400">
+                      <i className="fas fa-map-marker-alt text-[10px] text-emerald-600 dark:text-emerald-400" />
                       <span>{d.city}, {d.countryName || 'Maroc'}</span>
                     </div>
                   </div>
@@ -87,29 +90,26 @@ export default function AdminDestinationsPage() {
                 </div>
 
                 {d.description && (
-                  <p className="text-xs line-clamp-2" style={{ color: 'var(--admin-text-muted)' }}>
+                  <p className="text-xs line-clamp-2 text-slate-500 dark:text-slate-400 m-0">
                     {d.description}
                   </p>
                 )}
               </div>
 
-              <div
-                className="pt-3 border-t flex items-center justify-between text-xs"
-                style={{ borderColor: 'var(--admin-border)' }}
-              >
-                <div className="flex items-center gap-1.5 admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
+              <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 admin-mono-tabular text-[11px] text-slate-400 dark:text-slate-500">
                   <span>/{d.slug}</span>
                   <button
                     type="button"
                     onClick={() => handleCopy(d.slug)}
-                    className="opacity-50 hover:opacity-100 p-0.5"
+                    className="opacity-50 hover:opacity-100 p-0.5 transition-opacity"
                     title="Copier le slug"
                   >
                     <i className={`fas ${copiedSlug === d.slug ? 'fa-check text-emerald-500' : 'fa-copy'}`} />
                   </button>
                 </div>
 
-                <span className="text-[0.65rem] admin-mono-tabular font-bold" style={{ color: 'var(--admin-text-muted)' }}>
+                <span className="text-[10px] admin-mono-tabular font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                   {d.countryCode}
                 </span>
               </div>

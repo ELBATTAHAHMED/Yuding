@@ -13,10 +13,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_SUPPORT', 'ROLE_CONTENT_MANAGER']}>
       <div className="admin-shell">
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar & Mobile Off-canvas Drawer */}
         <AdminSidebar
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed(!collapsed)}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
         />
 
         {/* Main Content Viewport */}
@@ -25,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <AdminHeader onToggleMobileMenu={() => setMobileOpen(!mobileOpen)} />
 
           {/* Main Content Workspace */}
-          <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+          <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
             {children}
           </main>
         </div>

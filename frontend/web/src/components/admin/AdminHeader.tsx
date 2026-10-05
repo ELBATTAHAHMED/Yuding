@@ -13,90 +13,79 @@ interface AdminHeaderProps {
 export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
   const pathname = usePathname();
 
-  // Find current nav item label
+  // Find current nav item label & category
   const currentItem = ADMIN_NAV_ITEMS.find((item) => item.href === pathname) || {
-    label: pathname.replace('/admin/', '').replace('/admin', 'Vue d\'ensemble'),
-    category: 'CONSOLE',
+    label: pathname.replace('/admin/', '').replace('/admin', "Vue d'ensemble"),
+    category: 'OPÉRATIONS',
   };
 
   return (
     <header
-      className="h-16 px-6 sticky top-0 z-20 flex items-center justify-between border-b backdrop-blur-md"
+      className="h-14 px-4 sm:px-6 sticky top-0 z-20 flex items-center justify-between border-b backdrop-blur-md shrink-0"
       style={{
         backgroundColor: 'var(--admin-surface)',
         borderColor: 'var(--admin-border)',
       }}
     >
-      {/* Left: Mobile trigger & Breadcrumbs */}
+      {/* Left: Mobile trigger & Compact Breadcrumbs */}
       <div className="flex items-center gap-3">
         {onToggleMobileMenu && (
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="md:hidden w-8 h-8 rounded-md flex items-center justify-center border"
+            className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center border text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
             style={{
               borderColor: 'var(--admin-border)',
-              color: 'var(--admin-text-secondary)',
+              backgroundColor: 'var(--admin-surface-muted)',
             }}
+            aria-label="Menu de navigation"
           >
-            <i className="fas fa-bars text-sm" />
+            <i className="fas fa-bars text-xs" />
           </button>
         )}
 
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs font-semibold">
+        {/* Breadcrumb Context */}
+        <nav aria-label="Fil d'ariane" className="flex items-center gap-1.5 text-xs">
           <Link
             href="/admin"
-            className="no-underline transition-colors hover:underline"
-            style={{ color: 'var(--admin-text-muted)' }}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium no-underline transition-colors"
           >
-            Yuding OPS
+            Console
           </Link>
-          <span style={{ color: 'var(--admin-text-muted)' }}>/</span>
-          <span style={{ color: 'var(--admin-text-primary)' }}>{currentItem.label}</span>
-        </div>
+          <span className="text-slate-300 dark:text-slate-600 select-none">/</span>
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold hidden sm:inline">
+            {currentItem.category}
+          </span>
+          <span className="text-slate-300 dark:text-slate-600 select-none hidden sm:inline">/</span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {currentItem.label}
+          </span>
+        </nav>
       </div>
 
-      {/* Center: System Status Indicator */}
+      {/* Center: Quiet Sandbox / Architecture Pill */}
       <div className="hidden lg:flex items-center gap-2">
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
-          style={{
-            backgroundColor: 'var(--admin-accent-subtle)',
-            color: 'var(--admin-accent)',
-            border: '1px solid var(--admin-accent-border)',
-          }}
-        >
-          <span
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ backgroundColor: 'var(--admin-accent)' }}
-          />
-          <span>Environnement Opérationnel</span>
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>PRODUCTION-READY (SANDBOX)</span>
         </div>
-        <span
-          className="text-xs admin-mono-tabular font-medium"
-          style={{ color: 'var(--admin-text-muted)' }}
-        >
-          PG16 · Redis 7 · Gateway :8888
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
+          PG16 · Gateway :8888 · Redis 7
         </span>
       </div>
 
-      {/* Right: Actions & Theme Toggle */}
-      <div className="flex items-center gap-3">
+      {/* Right: Quick Operational Utilities & Theme Toggle */}
+      <div className="flex items-center gap-2.5">
         <Link
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="admin-btn text-xs py-1.5 px-3 rounded-md no-underline transition-colors"
-          style={{
-            backgroundColor: 'var(--admin-surface-muted)',
-            border: '1px solid var(--admin-border)',
-            color: 'var(--admin-text-secondary)',
-          }}
+          href="/admin/providers"
+          className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors no-underline"
+          title="Consulter l'état des services et des passerelles"
         >
-          <i className="fas fa-external-link-alt text-[0.7rem]" />
-          <span className="hidden sm:inline">Portail Client</span>
+          <i className="fas fa-heartbeat text-[10px] text-emerald-500" />
+          <span>Système sain</span>
         </Link>
+
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
         <div className="flex items-center">
           <DarkModeToggle />
