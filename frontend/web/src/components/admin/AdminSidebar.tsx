@@ -213,8 +213,8 @@ export function AdminSidebar({
 
         {/* Device / Session Status Block (Like Macbook 2017 in Reference Dashboard) */}
         {!collapsed && (
-          <div className="px-3 py-2 border-t border-slate-100 dark:border-zinc-800/ space-y-1.5">
-            <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-900/ border border-slate-200/60 dark:border-zinc-800/ flex items-center gap-2.5">
+          <div className="px-3 py-2 border-t border-slate-100 dark:border-zinc-800 space-y-1.5">
+            <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 flex items-center gap-2.5">
               <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0">
                 <i className="fas fa-desktop" />
               </div>
@@ -250,7 +250,7 @@ export function AdminSidebar({
                 boxShadow: 'var(--admin-shadow-lg)',
               }}
             >
-              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-zinc-800/">
+              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-zinc-800">
                 <div className="font-bold text-slate-900 dark:text-zinc-100 truncate">
                   {userFullName}
                 </div>
@@ -288,7 +288,7 @@ export function AdminSidebar({
                 <span>Paramètres système</span>
               </Link>
 
-              <div className="pt-1 border-t border-slate-100 dark:border-zinc-800/">
+              <div className="pt-1 border-t border-slate-100 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={() => {

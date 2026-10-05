@@ -203,7 +203,7 @@ export default function AdminProvidersAndTelemetryPage() {
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
+                    <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
                       <span>{p.port ? `Port :${p.port}` : 'API Externe'}</span>
                       <span>{new Date(p.lastChecked).toLocaleTimeString('fr-FR')}</span>
                     </div>

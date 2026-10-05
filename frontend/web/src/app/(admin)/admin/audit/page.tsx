@@ -105,7 +105,7 @@ export default function AdminAuditPage() {
             e.stopPropagation();
             setSelectedLog(l);
           }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
         >
           <i className="fas fa-file-code text-[10px] mr-1" />
           <span>Payload</span>

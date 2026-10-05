@@ -25,7 +25,7 @@ export function AdminPagination({
 
   return (
     <div
-      className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t text-xs select-none bg-slate-50/60 dark:bg-zinc-900/ border-slate-100 dark:border-zinc-800/"
+      className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t text-xs select-none bg-slate-50/60 dark:bg-zinc-900 border-slate-100 dark:border-zinc-800"
     >
       {/* Range Info & Page Size */}
       <div className="flex items-center gap-3">

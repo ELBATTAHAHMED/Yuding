@@ -207,7 +207,7 @@ export default function AdminRefundsPage() {
             e.stopPropagation();
             setSelectedItem(r);
           }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
         >
           <i className="fas fa-file-invoice-dollar text-[10px] mr-1" />
           <span>Ticket</span>
@@ -235,7 +235,7 @@ export default function AdminRefundsPage() {
       key: 'policyType',
       header: 'POLITIQUE APPLIQUÉE',
       render: (c: AdminCancellation) => (
-        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
+        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
           {c.policyType || 'FLEXIBLE'}
         </span>
       ),
@@ -306,7 +306,7 @@ export default function AdminRefundsPage() {
             <button
               type="button"
               onClick={() => setSelectedItem(c)}
-              className="text-xs font-semibold py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
+              className="text-xs font-semibold py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
             >
               <i className="fas fa-eye text-[10px]" />
             </button>
@@ -580,7 +580,7 @@ export default function AdminRefundsPage() {
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/ text-xs space-y-1.5">
+            <div className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-xs space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-zinc-400">Montant à rembourser :</span>
                 <span className="font-bold admin-mono-tabular text-rose-600 dark:text-rose-400">

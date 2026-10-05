@@ -55,7 +55,7 @@ export function AdminFilterBar({
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full text-xs pl-9 pr-8 py-2.5 rounded-xl outline-none transition-all duration-150 bg-slate-50 dark:bg-zinc-800/ border border-slate-200/80 dark:border-zinc-700/ text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-slate-800"
+            className="w-full text-xs pl-9 pr-8 py-2.5 rounded-xl outline-none transition-all duration-150 bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-slate-800"
           />
           {searchTerm && (
             <button
@@ -75,7 +75,7 @@ export function AdminFilterBar({
             <select
               value={f.value}
               onChange={(e) => f.onChange(e.target.value)}
-              className="text-xs px-3 py-2.5 rounded-xl outline-none cursor-pointer font-semibold transition-colors bg-slate-50 dark:bg-zinc-800/ border border-slate-200/80 dark:border-zinc-700/ text-slate-700 dark:text-zinc-300 focus:border-slate-900 dark:focus:border-slate-400"
+              className="text-xs px-3 py-2.5 rounded-xl outline-none cursor-pointer font-semibold transition-colors bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 focus:border-slate-900 dark:focus:border-slate-400"
             >
               {f.options.map((opt) => (
                 <option
