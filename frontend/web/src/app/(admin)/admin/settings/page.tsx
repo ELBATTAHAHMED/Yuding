@@ -89,10 +89,10 @@ export default function AdminSettingsPage() {
     <div className="max-w-4xl mx-auto space-y-5">
       {/* Title */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
           Politiques &amp; Paramètres Opérationnels
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
           Gouvernance architecturale, paramètres d&apos;exploitation et règles système en vigueur sur Yuding V2
         </p>
       </div>
@@ -108,7 +108,7 @@ export default function AdminSettingsPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <i className="fas fa-landmark text-xs text-emerald-600 dark:text-emerald-400" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
             Politiques Architecturales Immuables (Backend Authoritative)
           </h2>
         </div>
@@ -116,21 +116,21 @@ export default function AdminSettingsPage() {
           {serverPolicies.map((p, idx) => (
             <div
               key={idx}
-              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-2 shadow-xs"
+              className="admin-concentric-card bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between space-y-2 shadow-xs"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-slate-900 dark:text-slate-100">
+                  <div className="flex items-center gap-2 font-bold text-xs text-slate-900 dark:text-zinc-100">
                     <i className={`${p.icon} text-xs text-emerald-600 dark:text-emerald-400`} />
                     <span>{p.title}</span>
                   </div>
                 </div>
-                <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400 m-0">
+                <p className="text-xs leading-relaxed text-slate-500 dark:text-zinc-400 m-0">
                   {p.description}
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between">
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
                   {p.status}
                 </span>
@@ -145,25 +145,25 @@ export default function AdminSettingsPage() {
       <div className="space-y-3 pt-2">
         <div className="flex items-center gap-2">
           <i className="fas fa-sliders-h text-xs text-sky-500" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
             Commutateurs d&apos;Exploitation en Temps Réel
           </h2>
         </div>
 
-        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
           {toggles.map((t) => {
             const isChecked = Boolean(settings[t.key]);
             return (
               <div key={t.key} className="p-4 flex items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-slate-600 dark:text-slate-300">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5 text-slate-600 dark:text-zinc-300">
                     <i className={`${t.icon} text-xs`} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 m-0">
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 m-0">
                       {t.title}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5 max-w-xl leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 m-0 mt-0.5 max-w-xl leading-relaxed">
                       {t.description}
                     </p>
                   </div>
@@ -185,12 +185,12 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Quota Setting */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 m-0">
+          <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 m-0">
             Plafond de Débit Global (Rate Limit)
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 m-0 mt-0.5">
             Nombre maximal de requêtes autorisées par minute et par IP via l&apos;API Gateway
           </p>
         </div>
@@ -203,7 +203,7 @@ export default function AdminSettingsPage() {
             step={10}
             value={settings.rateLimitPerMinute}
             onChange={(e) => handleRateLimitChange(Number(e.target.value))}
-            className="w-24 text-xs font-bold admin-mono-tabular p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-right"
+            className="w-24 text-xs font-bold admin-mono-tabular p-2 rounded-lg border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 text-right"
           />
           <span className="text-xs font-semibold text-slate-500">req/min</span>
         </div>

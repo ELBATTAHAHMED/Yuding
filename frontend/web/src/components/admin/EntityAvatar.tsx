@@ -77,7 +77,7 @@ export function EntityAvatar({
       <img
         src={blobUrl}
         alt={name || email || 'Avatar'}
-        className={`${sizeClasses} rounded-full object-cover flex-shrink-0 border border-slate-200 dark:border-slate-800 ${className}`}
+        className={`${sizeClasses} rounded-full object-cover flex-shrink-0 border border-slate-200 dark:border-zinc-800 ${className}`}
         onError={() => {
           setBlobUrl(null);
         }}
