@@ -63,15 +63,12 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
         </nav>
       </div>
 
-      {/* Center: Quiet Sandbox / Architecture Pill */}
-      <div className="hidden lg:flex items-center gap-2.5">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+      {/* Center: Quiet Sandbox / Environment Indicator */}
+      <div className="hidden lg:flex items-center gap-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>PRODUCTION-READY (SANDBOX)</span>
+          <span>Environnement Sandbox Opérationnel</span>
         </div>
-        <span className="text-[11px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
-          Gateway :8888 · Redis 7 · PG16
-        </span>
       </div>
 
       {/* Right: Quick Notification Bell, Heartbeat & Theme Toggle */}

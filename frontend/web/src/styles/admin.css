@@ -1,6 +1,6 @@
 /* ==========================================================================
    YUDING V2 — OPERATIONS CONSOLE (ADMIN) DESIGN SYSTEM
-   Senior UI/UX Production Theme: Light & Dark Mode
+   Senior UI/UX Production Theme: Light & TRUE Charcoal Dark Mode
    Grounded in Yuding V2 Architecture & Transitions.dev Motion Tokens
    ========================================================================== */
 
@@ -14,16 +14,16 @@
   --admin-surface-active: #E9ECEF;
   --admin-surface-elevated: #FFFFFF;
 
-  /* Dedicated Sidebar Tokens (Quiet rail separated from canvas) */
+  /* Dedicated Sidebar Tokens (260-280px Product Rail) */
   --admin-sidebar-bg: #FFFFFF;
   --admin-sidebar-border: #E5E7EB;
-  --admin-sidebar-width: 256px;
-  --admin-sidebar-active-bg: #0F172A; /* Bold deep navy active pill like Reference Dashboard */
+  --admin-sidebar-width: 270px;
+  --admin-sidebar-active-bg: #0F172A; /* Deep ink/charcoal active pill */
   --admin-sidebar-active-text: #FFFFFF;
   --admin-sidebar-active-icon: #00D4AA;
   --admin-sidebar-hover-bg: #F1F5F9;
 
-  /* Card Semantic Surfaces (Inspired by Reference Composition) */
+  /* Card Semantic Surfaces */
   --admin-card-cool: #EAF3FF;        /* Soft airy blue card */
   --admin-card-cool-border: #CCE2FF;
   --admin-card-cool-text: #1E40AF;
@@ -95,52 +95,53 @@
 }
 
 /* ==========================================================================
-   DARK MODE SYSTEM
+   TRUE DARK MODE SYSTEM (Pure Charcoal / Graphite, NOT Navy/Blue)
    ========================================================================== */
 .dark,
 [data-theme="dark"] {
-  --admin-bg: #090D15;
-  --admin-bg-subtle: #06090F;
-  --admin-surface: #0E1524;
-  --admin-surface-muted: #131C2E;
-  --admin-surface-hover: #19243B;
-  --admin-surface-active: #202E4B;
-  --admin-surface-elevated: #162035;
+  /* True Charcoal & Near-Black Foundation */
+  --admin-bg: #0C0E12;              /* Deep neutral charcoal backdrop */
+  --admin-bg-subtle: #080A0D;
+  --admin-surface: #14171D;         /* Elevated graphite surface */
+  --admin-surface-muted: #1A1E24;   /* Intermediate neutral charcoal */
+  --admin-surface-hover: #222730;   /* Hover graphite */
+  --admin-surface-active: #29303B;
+  --admin-surface-elevated: #1B1F27;
 
-  /* Dark Sidebar */
-  --admin-sidebar-bg: #0C1220;
+  /* True Charcoal Dark Sidebar */
+  --admin-sidebar-bg: #101217;      /* Clean neutral charcoal sidebar */
   --admin-sidebar-border: rgba(255, 255, 255, 0.07);
-  --admin-sidebar-active-bg: #1E293B;
+  --admin-sidebar-active-bg: #222732; /* Slightly elevated neutral surface */
   --admin-sidebar-active-text: #FFFFFF;
-  --admin-sidebar-active-icon: #00D4AA;
+  --admin-sidebar-active-icon: #00D4AA; /* Subtle teal accent */
   --admin-sidebar-hover-bg: rgba(255, 255, 255, 0.05);
 
-  /* Card Semantic Surfaces (Desaturated in Dark Mode) */
-  --admin-card-cool: #0C1E38;        /* Desaturated slate-navy */
-  --admin-card-cool-border: rgba(56, 189, 248, 0.25);
-  --admin-card-cool-text: #93C5FD;
+  /* Dark Semantic Surfaces (Neutral graphite undertones, NOT royal blue) */
+  --admin-card-cool: #131A24;        /* Charcoal with subtle cool slate undertone */
+  --admin-card-cool-border: rgba(56, 189, 248, 0.2);
+  --admin-card-cool-text: #BAE6FD;
 
-  --admin-card-warm: #261A10;        /* Desaturated dark amber */
-  --admin-card-warm-border: rgba(245, 158, 11, 0.25);
-  --admin-card-warm-text: #FDE68A;
+  --admin-card-warm: #1D1812;        /* Charcoal with very subtle amber undertone */
+  --admin-card-warm-border: rgba(245, 158, 11, 0.2);
+  --admin-card-warm-text: #FED7AA;
 
-  --admin-card-dark: #070B12;        /* Deep charcoal / near black */
+  --admin-card-dark: #07080A;        /* Deepest pure graphite near black */
   --admin-card-dark-text: #F8FAFC;
-  --admin-card-dark-muted: #64748B;
-  --admin-card-dark-border: rgba(255, 255, 255, 0.08);
+  --admin-card-dark-muted: #71717A;
+  --admin-card-dark-border: rgba(255, 255, 255, 0.09);
 
-  /* Structural Borders */
+  /* Structural Borders (Pure Neutral White Alpha) */
   --admin-border: rgba(255, 255, 255, 0.08);
   --admin-border-subtle: rgba(255, 255, 255, 0.04);
   --admin-border-strong: rgba(255, 255, 255, 0.16);
 
-  /* Typography */
-  --admin-text-primary: #F8FAFC;
-  --admin-text-secondary: #94A3B8;
-  --admin-text-muted: #64748B;
-  --admin-text-inverse: #090D15;
+  /* Typography (Off-White & Neutral Gray) */
+  --admin-text-primary: #F4F4F5;     /* Neutral off-white */
+  --admin-text-secondary: #A1A1AA;   /* Neutral zinc/gray secondary */
+  --admin-text-muted: #71717A;       /* Neutral muted text */
+  --admin-text-inverse: #0C0E12;
 
-  /* Brand & Accent (Vibrant Teal in Dark Mode) */
+  /* Brand & Accent (Vibrant Restrained Yuding Teal) */
   --admin-accent: #00D4AA;
   --admin-accent-hover: #02E0D5;
   --admin-accent-subtle: rgba(0, 212, 170, 0.12);
@@ -150,28 +151,28 @@
   --admin-brand-teal: #00D4AA;
 
   /* Elevation & Shadows */
-  --admin-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --admin-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
-  --admin-shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
-  --admin-drawer-shadow: -6px 0 32px rgba(0, 0, 0, 0.7);
+  --admin-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --admin-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.55);
+  --admin-shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.7);
+  --admin-drawer-shadow: -6px 0 32px rgba(0, 0, 0, 0.85);
 
-  /* Status Tokens */
+  /* Semantic Status Tokens (Muted Contrast in Dark Mode) */
   --admin-status-success-bg: rgba(16, 185, 129, 0.15);
   --admin-status-success-text: #34D399;
-  --admin-status-success-border: rgba(16, 185, 129, 0.3);
+  --admin-status-success-border: rgba(16, 185, 129, 0.28);
 
   --admin-status-warning-bg: rgba(245, 158, 11, 0.15);
   --admin-status-warning-text: #FBBF24;
-  --admin-status-warning-border: rgba(245, 158, 11, 0.3);
+  --admin-status-warning-border: rgba(245, 158, 11, 0.28);
 
   --admin-status-danger-bg: rgba(239, 68, 68, 0.15);
   --admin-status-danger-text: #F87171;
-  --admin-status-danger-border: rgba(239, 68, 68, 0.3);
+  --admin-status-danger-border: rgba(239, 68, 68, 0.28);
 
   --admin-status-info-bg: rgba(56, 189, 248, 0.15);
   --admin-status-info-text: #38BDF8;
-  --admin-status-info-border: rgba(56, 189, 248, 0.3);
+  --admin-status-info-border: rgba(56, 189, 248, 0.28);
 }
 
 /* ==========================================================================

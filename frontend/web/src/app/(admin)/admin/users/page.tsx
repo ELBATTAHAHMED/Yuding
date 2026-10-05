@@ -186,7 +186,13 @@ export default function AdminUsersPage() {
         const fullName = `${u.firstName} ${u.lastName}`.trim() || 'Utilisateur';
         return (
           <div className="flex items-center gap-2.5 py-1">
-            <EntityAvatar name={fullName} email={u.email} size="sm" />
+            <EntityAvatar
+              name={fullName}
+              email={u.email}
+              userId={u.id}
+              hasProfilePhoto={true}
+              size="sm"
+            />
             <div className="min-w-0">
               <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
                 {fullName}
@@ -487,6 +493,8 @@ export default function AdminUsersPage() {
                 <EntityAvatar
                   name={`${selectedUser.firstName} ${selectedUser.lastName}`}
                   email={selectedUser.email}
+                  userId={selectedUser.id}
+                  hasProfilePhoto={true}
                   size="lg"
                 />
                 <div className="min-w-0">
@@ -556,6 +564,57 @@ export default function AdminUsersPage() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Administrative Governance Actions */}
+            <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 block">
+                Actions Administratives &amp; Sécurité
+              </span>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenRoleModal(selectedUser)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition-colors"
+                  >
+                    <i className="fas fa-user-shield text-xs text-emerald-500" />
+                    <span>Modifier les rôles RBAC</span>
+                  </button>
+                )}
+
+                {selectedUser.lockedUntil && new Date(selectedUser.lockedUntil) > new Date() && (
+                  <button
+                    type="button"
+                    onClick={() => handleUnlock(selectedUser.id)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-900/40 transition-colors"
+                  >
+                    <i className="fas fa-unlock text-xs" />
+                    <span>Déverrouiller le compte</span>
+                  </button>
+                )}
+
+                {selectedUser.status === 'ACTIVE' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSuspendModal(selectedUser)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200/70 dark:border-rose-900/40 transition-colors"
+                  >
+                    <i className="fas fa-ban text-xs" />
+                    <span>Suspendre le compte</span>
+                  </button>
+                ) : selectedUser.status === 'SUSPENDED' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleReactivate(selectedUser)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/40 transition-colors"
+                  >
+                    <i className="fas fa-check-circle text-xs" />
+                    <span>Réactiver le compte</span>
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         )}

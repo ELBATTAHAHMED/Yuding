@@ -106,14 +106,15 @@ export function AdminSidebar({
         }}
         aria-label="Navigation d'administration"
       >
-        {/* Brand Header — Clean Wordmark like HereSafe in Reference */}
+        {/* Brand Header — Clean Product Mark & Operations Title */}
         <div
-          className="h-16 px-4 flex items-center justify-between shrink-0"
+          className="h-16 px-4 flex items-center justify-between shrink-0 border-b"
+          style={{ borderColor: 'var(--admin-sidebar-border)' }}
         >
           {!collapsed ? (
-            <Link href="/admin" className="flex items-center gap-2.5 no-underline group">
+            <Link href="/admin" className="flex items-center gap-3 no-underline group">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm text-slate-900 shadow-sm shrink-0 transition-transform duration-150 group-hover:scale-105"
+                className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-slate-900 shadow-sm shrink-0 transition-transform duration-150 group-hover:scale-105"
                 style={{
                   background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
                 }}
@@ -121,16 +122,11 @@ export function AdminSidebar({
                 Y
               </div>
               <div className="flex flex-col min-w-0">
-                <div className="flex items-baseline gap-1">
-                  <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-                    Yuding
-                  </span>
-                  <span className="font-light text-slate-400 dark:text-slate-500 text-xs">
-                    Ops
-                  </span>
-                </div>
-                <span className="text-[9px] uppercase tracking-widest font-semibold text-emerald-600 dark:text-emerald-400">
-                  Console V2 · 8888
+                <span className="font-extrabold text-[15px] tracking-tight text-slate-900 dark:text-zinc-100 font-sans leading-tight">
+                  Yuding
+                </span>
+                <span className="text-[11px] font-semibold tracking-wider uppercase text-emerald-600 dark:text-emerald-400 leading-tight">
+                  Console Opérations
                 </span>
               </div>
             </Link>
@@ -138,7 +134,7 @@ export function AdminSidebar({
             <div className="w-full flex justify-center">
               <Link
                 href="/admin"
-                className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm text-slate-900 no-underline shadow-sm"
+                className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-slate-900 no-underline shadow-sm"
                 style={{
                   background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
                 }}
@@ -153,32 +149,32 @@ export function AdminSidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="hidden md:flex w-6 h-6 rounded-md items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="hidden md:flex w-7 h-7 rounded-lg items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
             title={collapsed ? 'Déplier' : 'Replier'}
             aria-label="Basculer le panneau de navigation"
           >
-            <i className={`fas fa-chevron-${collapsed ? 'right' : 'left'} text-[10px]`} />
+            <i className={`fas fa-chevron-${collapsed ? 'right' : 'left'} text-xs`} />
           </button>
 
           {/* Mobile close button */}
           <button
             type="button"
             onClick={onCloseMobile}
-            className="md:hidden w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="md:hidden w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800"
             aria-label="Fermer le menu mobile"
           >
             <i className="fas fa-times text-xs" />
           </button>
         </div>
 
-        {/* Navigation Groups with Refined Rhythm */}
-        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4 admin-custom-scrollbar">
+        {/* Navigation Groups with Confident Typographic Scale */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-5 admin-custom-scrollbar">
           {categories.map((cat) => {
             const items = ADMIN_NAV_ITEMS.filter((i) => i.category === cat);
             return (
               <div key={cat} className="space-y-1">
                 {!collapsed && (
-                  <div className="px-3 pb-1 text-[10px] font-bold tracking-widest uppercase text-slate-400/90 dark:text-slate-500 truncate">
+                  <div className="px-3 pb-1 text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500 truncate">
                     {cat}
                   </div>
                 )}
@@ -188,21 +184,25 @@ export function AdminSidebar({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold no-underline transition-all duration-150 ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-semibold no-underline transition-all duration-150 min-h-[40px] relative ${
                         isActive
-                          ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-800 dark:text-white'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                          ? 'bg-slate-900 text-white shadow-xs dark:bg-zinc-800/90 dark:text-zinc-50'
+                          : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/80 dark:hover:bg-zinc-800/50'
                       }`}
                       title={collapsed ? item.label : undefined}
                     >
+                      {/* Left subtle active indicator bar */}
+                      {isActive && (
+                        <span className="absolute left-1 top-2 bottom-2 w-1 rounded-full bg-emerald-400" />
+                      )}
                       <i
-                        className={`${item.icon} text-xs w-4 text-center shrink-0 ${
+                        className={`${item.icon} text-sm w-5 text-center shrink-0 ${
                           isActive
                             ? 'text-emerald-400 dark:text-emerald-400'
-                            : 'text-slate-400 dark:text-slate-500'
+                            : 'text-slate-400 dark:text-zinc-500'
                         }`}
                       />
-                      {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+                      {!collapsed && <span className="truncate flex-1 ml-0.5">{item.label}</span>}
                     </Link>
                   );
                 })}
@@ -315,6 +315,8 @@ export function AdminSidebar({
             <EntityAvatar
               name={userFullName}
               email={user?.email}
+              userId={user?.id}
+              hasProfilePhoto={user?.hasProfilePhoto}
               size="md"
               variant="operator"
             />
