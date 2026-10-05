@@ -333,6 +333,42 @@
   text-wrap: balance;
 }
 
+/* Scoped Admin Dark Mode Toggle Reset */
+.admin-shell .dark-mode-toggle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+  background: var(--admin-surface-muted) !important;
+  border: 1px solid var(--admin-border) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all var(--duration-quick) var(--ease-smooth-out) !important;
+}
+
+.admin-shell .dark-mode-toggle::before,
+.admin-shell .dark-mode-toggle::after {
+  display: none !important;
+}
+
+.admin-shell .dark-mode-toggle i {
+  font-size: 13px !important;
+  color: var(--admin-text-secondary) !important;
+  transition: color var(--duration-quick) var(--ease-smooth-out) !important;
+}
+
+.admin-shell .dark-mode-toggle:hover {
+  background: var(--admin-surface-hover) !important;
+  border-color: var(--admin-border-strong) !important;
+}
+
+.admin-shell .dark-mode-toggle:hover i {
+  color: var(--admin-text-primary) !important;
+}
+
 /* Reduced motion preference override */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -345,3 +381,4 @@
     transform: none !important;
   }
 }
+

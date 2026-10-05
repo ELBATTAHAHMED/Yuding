@@ -3,7 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/features/auth/useAuth';
 import { DarkModeToggle } from '@/components/common/DarkModeToggle';
+import { EntityAvatar } from './EntityAvatar';
 import { ADMIN_NAV_ITEMS } from './AdminSidebar';
 
 interface AdminHeaderProps {
@@ -12,6 +14,17 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const userFullName = user?.firstName
+    ? `${user.firstName} ${user.lastName || ''}`.trim()
+    : 'Ahmed EL BATTAH';
+
+  const roleName = user?.roles?.includes('ROLE_ADMIN')
+    ? 'Admin Principal'
+    : user?.roles?.includes('ROLE_CONTENT_MANAGER')
+    ? 'Contenu'
+    : 'Opérateur';
 
   // Find current nav item label & category
   const currentItem = ADMIN_NAV_ITEMS.find((item) => item.href === pathname) || {
@@ -71,7 +84,7 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
         </div>
       </div>
 
-      {/* Right: Quick Notification Bell, Heartbeat & Theme Toggle */}
+      {/* Right: Quick Notification Bell, Theme Toggle & Operator Profile (Reference Design) */}
       <div className="flex items-center gap-3">
         {/* Notification Bell matching Reference Dashboard */}
         <button
@@ -84,12 +97,37 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
           <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
         </button>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
-
         <div className="flex items-center">
           <DarkModeToggle />
         </div>
+
+        <div className="h-5 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
+
+        {/* Top-Right Operator Identity Block (Like Reference Mykola Ledenov / CEO Niled) */}
+        <Link
+          href="/account/profile"
+          className="hidden sm:flex items-center gap-2.5 pl-1.5 pr-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors no-underline group"
+          title="Consulter mon profil"
+        >
+          <EntityAvatar
+            name={userFullName}
+            email={user?.email}
+            userId={user?.id}
+            hasProfilePhoto={user?.hasProfilePhoto}
+            size="sm"
+            variant="operator"
+          />
+          <div className="flex flex-col text-left leading-none">
+            <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              {userFullName}
+            </span>
+            <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">
+              {roleName}
+            </span>
+          </div>
+        </Link>
       </div>
     </header>
   );
 }
+
