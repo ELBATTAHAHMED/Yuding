@@ -9,6 +9,8 @@ import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
 import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
 import { AdminDrawer } from '@/components/admin/AdminDrawer';
 import { AdminPagination } from '@/components/admin/AdminPagination';
+import { BookingVisual } from '@/components/admin/BookingVisual';
+import { EntityAvatar } from '@/components/admin/EntityAvatar';
 import { parseTravelContext } from '@/lib/admin-travel';
 import { exportToCsv } from '@/lib/admin-csv';
 
@@ -37,11 +39,7 @@ export default function AdminBookingsPage() {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
-  const getUserLabel = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    if (!user) return userId.substring(0, 8) + '...';
-    return `${user.firstName} ${user.lastName}`.trim() || user.email;
-  };
+  const getUser = (userId: string) => users.find((u) => u.id === userId);
 
   const filteredBookings = bookings.filter((b) => {
     if (!searchTerm.trim()) return true;
@@ -82,55 +80,22 @@ export default function AdminBookingsPage() {
     exportToCsv('reservations_yuding', rows);
   };
 
+  const selectedTravel = selectedBooking ? parseTravelContext(selectedBooking) : null;
+  const selectedUser = selectedBooking ? getUser(selectedBooking.userId) : null;
+
   const columns = [
     {
       key: 'bookingReference',
-      header: 'RÉFÉRENCE & VOYAGE',
+      header: 'DOSSIER & VOYAGE',
       render: (b: AdminBooking) => {
         const travel = parseTravelContext(b);
         return (
           <div className="flex items-center gap-3 py-1">
-            {/* Real Thumbnail or Route/Icon badge */}
-            {travel.imageUrl ? (
-              <img
-                src={travel.imageUrl}
-                alt={travel.title}
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border shadow-2xs"
-                style={{ borderColor: 'var(--admin-border)' }}
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div
-                className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0 border font-black text-xs shadow-2xs"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  borderColor: 'var(--admin-border)',
-                  color: travel.badgeColor,
-                }}
-              >
-                <i
-                  className={
-                    b.productType === 'FLIGHT'
-                      ? 'fas fa-plane'
-                      : b.productType === 'HOTEL'
-                      ? 'fas fa-hotel'
-                      : b.productType === 'ACTIVITY'
-                      ? 'fas fa-hiking'
-                      : b.productType === 'TRANSFER'
-                      ? 'fas fa-car-side'
-                      : 'fas fa-train'
-                  }
-                />
-                <span className="text-[0.6rem] font-bold mt-0.5">{travel.badge}</span>
-              </div>
-            )}
+            <BookingVisual booking={b} size="md" />
 
-            {/* Travel Details */}
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="admin-mono-tabular font-extrabold text-xs" style={{ color: 'var(--admin-accent)' }}>
+              <div className="flex items-center gap-1.5">
+                <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400">
                   {b.bookingReference}
                 </span>
                 <button
@@ -142,13 +107,13 @@ export default function AdminBookingsPage() {
                   className="opacity-40 hover:opacity-100 transition-opacity p-0.5"
                   title="Copier la référence"
                 >
-                  <i className={`fas ${copiedId === b.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[0.65rem]`} />
+                  <i className={`fas ${copiedId === b.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[10px]`} />
                 </button>
               </div>
-              <div className="font-bold text-xs truncate max-w-xs sm:max-w-md" style={{ color: 'var(--admin-text-primary)' }}>
+              <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate max-w-xs sm:max-w-md">
                 {travel.title}
               </div>
-              <div className="text-[0.6875rem] truncate max-w-xs sm:max-w-md" style={{ color: 'var(--admin-text-muted)' }}>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs sm:max-w-md">
                 {travel.subtitle}
               </div>
             </div>
@@ -158,16 +123,16 @@ export default function AdminBookingsPage() {
     },
     {
       key: 'productType',
-      header: 'CALENDRIER',
+      header: 'DATES / PÉRIODE',
       render: (b: AdminBooking) => {
         const travel = parseTravelContext(b);
         return (
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {travel.dates}
             </span>
-            <span className="text-[0.65rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
-              Créé le {new Date(b.createdAt).toLocaleDateString('fr-FR')}
+            <span className="text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+              {new Date(b.createdAt).toLocaleDateString('fr-FR')} • {travel.badge}
             </span>
           </div>
         );
@@ -175,24 +140,21 @@ export default function AdminBookingsPage() {
     },
     {
       key: 'userId',
-      header: 'VOYAGEUR (CLIENT)',
+      header: 'CLIENT VOYAGEUR',
       render: (b: AdminBooking) => {
-        const user = users.find((u) => u.id === b.userId);
+        const user = getUser(b.userId);
+        const name = user ? `${user.firstName} ${user.lastName}`.trim() : `Voyageur (${b.userId.slice(0, 6)})`;
         return (
-          <div className="flex flex-col min-w-0">
-            <Link
-              href={`/admin/users?search=${encodeURIComponent(b.userId)}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs font-bold no-underline hover:underline truncate"
-              style={{ color: 'var(--admin-text-primary)' }}
-            >
-              {getUserLabel(b.userId)}
-            </Link>
-            {user?.email && (
-              <span className="text-[0.6875rem] truncate" style={{ color: 'var(--admin-text-muted)' }}>
-                {user.email}
+          <div className="flex items-center gap-2 py-0.5">
+            <EntityAvatar name={name} email={user?.email} size="sm" />
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
+                {name}
               </span>
-            )}
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[140px]">
+                {user?.email || b.userId.slice(0, 8)}
+              </span>
+            </div>
           </div>
         );
       },
@@ -201,29 +163,22 @@ export default function AdminBookingsPage() {
       key: 'provider',
       header: 'FOURNISSEUR',
       render: (b: AdminBooking) => (
-        <span
-          className="text-xs px-2 py-0.5 rounded font-semibold uppercase tracking-wider"
-          style={{
-            backgroundColor: 'var(--admin-surface-muted)',
-            color: 'var(--admin-text-secondary)',
-            border: '1px solid var(--admin-border)',
-          }}
-        >
+        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
           {b.provider || 'DIRECT'}
         </span>
       ),
     },
     {
       key: 'amount',
-      header: 'TARIF SERVEUR',
+      header: 'MONTANT TTC',
       align: 'right' as const,
       render: (b: AdminBooking) => (
         <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-black text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
             {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
           </span>
-          <span className="text-[0.625rem]" style={{ color: 'var(--admin-text-muted)' }}>
-            TTC Garanti
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+            Tarif serveur
           </span>
         </div>
       ),
@@ -239,7 +194,7 @@ export default function AdminBookingsPage() {
     },
     {
       key: 'actions',
-      header: 'ACTIONS',
+      header: 'DOSSIER',
       align: 'right' as const,
       render: (b: AdminBooking) => (
         <button
@@ -248,77 +203,25 @@ export default function AdminBookingsPage() {
             e.stopPropagation();
             setSelectedBooking(b);
           }}
-          className="admin-btn text-[0.7rem] py-1 px-2.5 rounded font-bold shadow-2xs"
-          style={{
-            backgroundColor: 'var(--admin-accent-subtle)',
-            border: '1px solid var(--admin-accent-border)',
-            color: 'var(--admin-accent)',
-          }}
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
         >
-          <i className="fas fa-search-plus text-[0.65rem] mr-1" />
+          <i className="fas fa-search-plus text-[10px] mr-1" />
           <span>Examiner</span>
         </button>
       ),
     },
   ];
 
-  const filterSelects = [
-    {
-      key: 'status',
-      label: 'Statut',
-      value: statusFilter,
-      onChange: (val: string) => {
-        setStatusFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: 'Tous les statuts', value: 'ALL' },
-        { label: 'CONFIRMED', value: 'CONFIRMED' },
-        { label: 'PENDING_PAYMENT', value: 'PENDING_PAYMENT' },
-        { label: 'CANCELLED', value: 'CANCELLED' },
-        { label: 'EXPIRED', value: 'EXPIRED' },
-      ],
-    },
-    {
-      key: 'productType',
-      label: 'Verticale',
-      value: productFilter,
-      onChange: (val: string) => {
-        setProductFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: 'Toutes les verticales', value: 'ALL' },
-        { label: 'Hôtels (HOTEL)', value: 'HOTEL' },
-        { label: 'Vols (FLIGHT)', value: 'FLIGHT' },
-        { label: 'Activités (ACTIVITY)', value: 'ACTIVITY' },
-        { label: 'Transferts (TRANSFER)', value: 'TRANSFER' },
-        { label: 'Trains ONCF (TRAIN)', value: 'TRAIN' },
-      ],
-    },
-  ];
-
-  const handleResetFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('ALL');
-    setProductFilter('ALL');
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters = Boolean(searchTerm || statusFilter !== 'ALL' || productFilter !== 'ALL');
-  const selectedTravel = selectedBooking ? parseTravelContext(selectedBooking) : null;
-  const selectedUser = selectedBooking ? users.find((u) => u.id === selectedBooking.userId) : null;
-
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      {/* Page Title & Top Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-4">
+      {/* Title & Stats Ribbon */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-            Réservations & Dossiers Voyage
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Réservations &amp; Dossiers Voyage
           </h1>
-          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
-            Supervision autoritaire des 5 verticales Yuding : Hôtels, Vols, Activités, Transferts et Trains
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Supervision autoritaire du cycle de vie des réservations multi-verticales et traçabilité des prestataires
           </p>
         </div>
 
@@ -327,15 +230,20 @@ export default function AdminBookingsPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={filteredBookings.length === 0}
-            className="admin-btn text-xs py-2 px-3.5 rounded-lg border font-semibold"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-              color: 'var(--admin-text-secondary)',
-            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors disabled:opacity-50"
           >
-            <i className="fas fa-file-csv text-xs mr-1 text-emerald-500" />
-            <span>Exporter CSV ({filteredBookings.length})</span>
+            <i className="fas fa-file-csv text-[11px]" />
+            <span>Exporter CSV</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
+          >
+            <i className={`fas fa-sync text-[11px] ${isRefetching ? 'animate-spin' : ''}`} />
+            <span>Actualiser</span>
           </button>
         </div>
       </div>
@@ -343,35 +251,59 @@ export default function AdminBookingsPage() {
       {/* Filter Bar */}
       <AdminFilterBar
         searchTerm={searchTerm}
-        onSearchChange={(val) => {
-          setSearchTerm(val);
-          setCurrentPage(1);
-        }}
-        searchPlaceholder="Rechercher par référence YUD-XXXX, hôtel, vol, client..."
-        filters={filterSelects}
-        onRefresh={() => refetch()}
-        isRefreshing={isLoading || isRefetching}
-        totalCount={bookings.length}
-        filteredCount={filteredBookings.length}
-        onResetFilters={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher par référence, client, destination..."
+        filters={[
+          {
+            key: 'status',
+            label: 'Statut',
+            value: statusFilter,
+            onChange: (v) => {
+              setStatusFilter(v);
+              setCurrentPage(1);
+            },
+            options: [
+              { value: 'ALL', label: 'Tous les statuts' },
+              { value: 'CONFIRMED', label: 'Confirmé' },
+              { value: 'PENDING', label: 'En attente' },
+              { value: 'CANCELLED', label: 'Annulé' },
+              { value: 'FAILED', label: 'Échoué' },
+            ],
+          },
+          {
+            key: 'product',
+            label: 'Prestation',
+            value: productFilter,
+            onChange: (v) => {
+              setProductFilter(v);
+              setCurrentPage(1);
+            },
+            options: [
+              { value: 'ALL', label: 'Toutes prestations' },
+              { value: 'HOTEL', label: 'Hôtels' },
+              { value: 'FLIGHT', label: 'Vols' },
+              { value: 'ACTIVITY', label: 'Activités' },
+              { value: 'TRANSFER', label: 'Transferts' },
+              { value: 'TRAIN', label: 'Trains ONCF' },
+            ],
+          },
+        ]}
       />
 
-      {/* Main Bookings Table with Pagination */}
+      {/* Bookings Table */}
       <AdminTable
         columns={columns}
         data={paginatedBookings}
         keyExtractor={(b) => b.id}
         isLoading={isLoading}
         onRowClick={(b) => setSelectedBooking(b)}
-        emptyMessage="Aucune réservation trouvée"
-        emptySubtext="Modifiez vos critères de recherche ou réinitialisez les filtres."
+        emptyMessage="Aucune réservation ne correspond aux critères sélectionnés."
         footer={
-          filteredBookings.length > 0 ? (
+          totalItems > 0 ? (
             <AdminPagination
               currentPage={currentPage}
-              pageSize={pageSize}
               totalItems={totalItems}
+              pageSize={pageSize}
               onPageChange={setCurrentPage}
               onPageSizeChange={(newSize) => {
                 setPageSize(newSize);
@@ -398,15 +330,9 @@ export default function AdminBookingsPage() {
         rawJson={selectedBooking}
       >
         {selectedBooking && selectedTravel && (
-          <div className="space-y-6">
-            {/* Travel Header Card with Real Image / Route */}
-            <div
-              className="rounded-xl border overflow-hidden shadow-xs"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
+          <div className="space-y-5">
+            {/* Travel Hero Header with Real Image or Semantic Route */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs">
               {selectedTravel.imageUrl && (
                 <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
                   <img
@@ -417,12 +343,12 @@ export default function AdminBookingsPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-3 left-4 right-4">
                     <span
-                      className="text-[0.65rem] font-bold px-2 py-0.5 rounded text-white uppercase tracking-wider"
+                      className="text-[10px] font-bold px-2 py-0.5 rounded text-white uppercase tracking-wider shadow-sm"
                       style={{ backgroundColor: selectedTravel.badgeColor }}
                     >
                       {selectedTravel.badge}
                     </span>
-                    <h3 className="text-base font-extrabold text-white mt-1 leading-tight drop-shadow-xs">
+                    <h3 className="text-base font-black text-white mt-1 leading-tight drop-shadow-xs">
                       {selectedTravel.title}
                     </h3>
                   </div>
@@ -432,53 +358,29 @@ export default function AdminBookingsPage() {
               <div className="p-4 space-y-3">
                 {!selectedTravel.imageUrl && (
                   <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center font-black text-sm"
-                      style={{
-                        backgroundColor: 'var(--admin-accent-subtle)',
-                        color: selectedTravel.badgeColor,
-                      }}
-                    >
-                      <i
-                        className={
-                          selectedBooking.productType === 'FLIGHT'
-                            ? 'fas fa-plane'
-                            : selectedBooking.productType === 'HOTEL'
-                            ? 'fas fa-hotel'
-                            : selectedBooking.productType === 'ACTIVITY'
-                            ? 'fas fa-hiking'
-                            : selectedBooking.productType === 'TRANSFER'
-                            ? 'fas fa-car-side'
-                            : 'fas fa-train'
-                        }
-                      />
-                    </div>
+                    <BookingVisual booking={selectedBooking} size="lg" />
                     <div>
-                      <h3 className="text-sm font-extrabold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+                      <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 m-0 leading-tight">
                         {selectedTravel.title}
                       </h3>
-                      <p className="text-xs m-0" style={{ color: 'var(--admin-text-muted)' }}>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">
                         {selectedTravel.subtitle}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Travel Details Grid */}
-                <div className="grid grid-cols-2 gap-2.5 pt-2">
+                {/* Specific Travel Details Grid */}
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
                   {selectedTravel.details.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-lg border text-xs"
-                      style={{
-                        backgroundColor: 'var(--admin-surface-muted)',
-                        borderColor: 'var(--admin-border)',
-                      }}
+                      className="p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs"
                     >
-                      <span className="block text-[0.65rem] font-semibold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                         {item.label}
                       </span>
-                      <span className="font-bold block mt-0.5 truncate" style={{ color: 'var(--admin-text-primary)' }}>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
                         {item.value}
                       </span>
                     </div>
@@ -487,133 +389,75 @@ export default function AdminBookingsPage() {
               </div>
             </div>
 
-            {/* Financial Card & Cross Links */}
-            <div
-              className="p-4 rounded-xl border space-y-3"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                  Facturation & Règlement
-                </span>
-                <Link
-                  href={`/admin/payments?search=${encodeURIComponent(selectedBooking.id)}`}
-                  className="text-xs font-bold no-underline hover:underline flex items-center gap-1"
-                  style={{ color: '#38BDF8' }}
-                >
-                  <i className="fas fa-credit-card text-[0.65rem]" />
-                  <span>Voir Paiement Associé →</span>
-                </Link>
-              </div>
+            {/* Financial & Settlement Breakdown */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0 flex items-center gap-2">
+                <i className="fas fa-coins text-emerald-600 dark:text-emerald-400 text-xs" />
+                <span>Règlement Financier &amp; Facturation</span>
+              </h4>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="block text-[0.65rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    Montant Autoritaire
-                  </span>
-                  <span className="font-black text-sm admin-mono-tabular" style={{ color: 'var(--admin-accent)' }}>
-                    {selectedBooking.amount != null
-                      ? `${Number(selectedBooking.amount).toFixed(2)} ${selectedBooking.currency || 'MAD'}`
-                      : '0.00 MAD'}
+                  <span className="text-slate-400 dark:text-slate-500 block text-[11px]">Tarif Total Garanti</span>
+                  <span className="admin-mono-tabular font-black text-base text-slate-900 dark:text-slate-100">
+                    {selectedBooking.amount != null ? `${Number(selectedBooking.amount).toFixed(2)} ${selectedBooking.currency || 'MAD'}` : '—'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[0.65rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    Fournisseur & Adapter
-                  </span>
-                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                    {selectedBooking.provider || 'DIRECT'}
+                  <span className="text-slate-400 dark:text-slate-500 block text-[11px]">Passerelle / Fournisseur</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {selectedBooking.provider || 'Régie Directe Yuding'}
                   </span>
                 </div>
               </div>
-            </div>
 
-            {/* Customer Profile Mini Card */}
-            <div
-              className="p-4 rounded-xl border space-y-3"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                  Voyageur Principal
-                </span>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400">Grand Livre des Paiements :</span>
                 <Link
-                  href={`/admin/users?search=${encodeURIComponent(selectedBooking.userId)}`}
-                  className="text-xs font-bold no-underline hover:underline flex items-center gap-1"
-                  style={{ color: 'var(--admin-accent)' }}
+                  href={`/admin/payments?search=${encodeURIComponent(selectedBooking.bookingReference)}`}
+                  className="font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 no-underline"
                 >
-                  <i className="fas fa-user text-[0.65rem]" />
-                  <span>Fiche Client →</span>
+                  <span>Voir la transaction associée</span>
+                  <i className="fas fa-arrow-right text-[10px]" />
                 </Link>
               </div>
+            </div>
+
+            {/* Traveler Profile Card */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0 flex items-center gap-2">
+                <i className="fas fa-user-circle text-slate-400 text-xs" />
+                <span>Identité du Client</span>
+              </h4>
 
               <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs"
-                  style={{
-                    backgroundColor: 'var(--admin-accent-subtle)',
-                    color: 'var(--admin-accent)',
-                  }}
-                >
-                  {selectedUser?.firstName ? selectedUser.firstName[0].toUpperCase() : 'U'}
-                </div>
+                <EntityAvatar
+                  name={selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'Client'}
+                  email={selectedUser?.email}
+                  size="md"
+                />
                 <div className="min-w-0">
-                  <div className="font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
-                    {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'Compte Utilisateur'}
+                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                    {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : `Utilisateur #${selectedBooking.userId.slice(0, 8)}`}
                   </div>
-                  <div className="text-[0.6875rem] truncate" style={{ color: 'var(--admin-text-muted)' }}>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                     {selectedUser?.email || selectedBooking.userId}
+                  </div>
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 admin-mono-tabular">
+                    ID autoritaire : {selectedBooking.userId}
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Lifecycle Timeline */}
-            <div
-              className="p-4 rounded-xl border space-y-3"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                Chronologie d&apos;Événements
-              </span>
-              <div className="space-y-3 border-l-2 ml-2 pl-4" style={{ borderColor: 'var(--admin-accent-border)' }}>
-                <div className="text-xs">
-                  <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                    Création du dossier
-                  </div>
-                  <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    {new Date(selectedBooking.createdAt).toLocaleString('fr-FR')}
-                  </div>
-                </div>
-
-                <div className="text-xs">
-                  <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                    Dernière modification de statut
-                  </div>
-                  <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    {new Date(selectedBooking.statusChangedAt || selectedBooking.updatedAt).toLocaleString('fr-FR')}
-                  </div>
-                </div>
-
-                {selectedBooking.expiresAt && (
-                  <div className="text-xs">
-                    <div className="font-bold text-amber-500">
-                      Échéance du blocage d&apos;inventaire
-                    </div>
-                    <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                      {new Date(selectedBooking.expiresAt).toLocaleString('fr-FR')}
-                    </div>
-                  </div>
-                )}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400">Gouvernance du compte :</span>
+                <Link
+                  href={`/admin/users?search=${encodeURIComponent(selectedBooking.userId)}`}
+                  className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 no-underline"
+                >
+                  <span>Gérer l&apos;utilisateur RBAC</span>
+                  <i className="fas fa-arrow-right text-[10px]" />
+                </Link>
               </div>
             </div>
           </div>

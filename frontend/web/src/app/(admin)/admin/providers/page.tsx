@@ -81,26 +81,19 @@ export default function AdminProvidersAndTelemetryPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
+    <div className="max-w-7xl mx-auto space-y-4">
       {/* Title & Top Strip */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
             Santé, Passerelle &amp; Télémétrie Système
           </h1>
-          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Console d&apos;observabilité unifiée : Microservices Spring Boot, Infrastructure, Routage API Gateway et Moteur IA
           </p>
         </div>
 
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold"
-          style={{
-            backgroundColor: 'var(--admin-surface)',
-            borderColor: 'var(--admin-border)',
-            color: 'var(--admin-text-secondary)',
-          }}
-        >
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs">
           <span
             className="w-2 h-2 rounded-full"
             style={{
@@ -112,52 +105,43 @@ export default function AdminProvidersAndTelemetryPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: 'var(--admin-border)' }}>
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('HEALTH')}
-          className={`admin-btn text-xs py-2 px-3.5 rounded-lg border transition-all ${
-            activeTab === 'HEALTH' ? 'shadow-xs font-bold' : 'opacity-70 font-semibold'
+          className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
+            activeTab === 'HEALTH'
+              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
-          style={{
-            backgroundColor: activeTab === 'HEALTH' ? 'var(--admin-surface)' : 'transparent',
-            borderColor: activeTab === 'HEALTH' ? 'var(--admin-border-strong)' : 'transparent',
-            color: activeTab === 'HEALTH' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
-          }}
         >
-          <i className="fas fa-server text-xs" style={{ color: 'var(--admin-accent)' }} />
+          <i className="fas fa-server text-emerald-500 text-xs" />
           <span>Services &amp; Infrastructure ({providers.length})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('GATEWAY')}
-          className={`admin-btn text-xs py-2 px-3.5 rounded-lg border transition-all ${
-            activeTab === 'GATEWAY' ? 'shadow-xs font-bold' : 'opacity-70 font-semibold'
+          className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
+            activeTab === 'GATEWAY'
+              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
-          style={{
-            backgroundColor: activeTab === 'GATEWAY' ? 'var(--admin-surface)' : 'transparent',
-            borderColor: activeTab === 'GATEWAY' ? 'var(--admin-border-strong)' : 'transparent',
-            color: activeTab === 'GATEWAY' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
-          }}
         >
-          <i className="fas fa-network-wired text-xs" style={{ color: '#38BDF8' }} />
+          <i className="fas fa-network-wired text-sky-500 text-xs" />
           <span>Passerelle &amp; Quotas Redis ({routes.length})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('AI')}
-          className={`admin-btn text-xs py-2 px-3.5 rounded-lg border transition-all ${
-            activeTab === 'AI' ? 'shadow-xs font-bold' : 'opacity-70 font-semibold'
+          className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
+            activeTab === 'AI'
+              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
-          style={{
-            backgroundColor: activeTab === 'AI' ? 'var(--admin-surface)' : 'transparent',
-            borderColor: activeTab === 'AI' ? 'var(--admin-border-strong)' : 'transparent',
-            color: activeTab === 'AI' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
-          }}
         >
-          <i className="fas fa-robot text-xs" style={{ color: '#A855F7' }} />
+          <i className="fas fa-robot text-purple-500 text-xs" />
           <span>Télémétrie IA &amp; RAG ({tools.length} outils)</span>
         </button>
       </div>
@@ -184,40 +168,26 @@ export default function AdminProvidersAndTelemetryPage() {
                 onChange: setProviderTypeFilter,
               },
             ]}
-            onRefresh={() => refetch()}
-            isRefreshing={isLoading || isRefetching}
-            totalCount={providers.length}
-            filteredCount={filteredProviders.length}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {isLoading ? (
-              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-card p-5 h-36 animate-pulse" />)
+              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 h-36 animate-pulse" />)
             ) : (
               filteredProviders.map((p) => {
                 const isUp = p.status === 'UP';
                 return (
                   <div
                     key={p.name}
-                    className="admin-card p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5"
-                    style={{
-                      backgroundColor: 'var(--admin-surface)',
-                      borderColor: 'var(--admin-border)',
-                    }}
+                    className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-2xs"
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="font-bold text-xs truncate" style={{ color: 'var(--admin-text-primary)' }}>
+                          <div className="font-bold text-xs truncate text-slate-900 dark:text-slate-100">
                             {p.name}
                           </div>
-                          <span
-                            className="text-[0.625rem] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded inline-block mt-0.5"
-                            style={{
-                              backgroundColor: 'var(--admin-surface-muted)',
-                              color: 'var(--admin-text-muted)',
-                            }}
-                          >
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded inline-block mt-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                             {p.type}
                           </span>
                         </div>
@@ -227,19 +197,13 @@ export default function AdminProvidersAndTelemetryPage() {
                       </div>
 
                       {p.details && (
-                        <p className="text-[0.6875rem] leading-relaxed line-clamp-2" style={{ color: 'var(--admin-text-secondary)' }}>
+                        <p className="text-xs leading-relaxed line-clamp-2 text-slate-500 dark:text-slate-400 m-0">
                           {p.details}
                         </p>
                       )}
                     </div>
 
-                    <div
-                      className="pt-2 border-t flex items-center justify-between text-[0.65rem] admin-mono-tabular"
-                      style={{
-                        borderColor: 'var(--admin-border)',
-                        color: 'var(--admin-text-muted)',
-                      }}
-                    >
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
                       <span>{p.port ? `Port :${p.port}` : 'API Externe'}</span>
                       <span>{new Date(p.lastChecked).toLocaleTimeString('fr-FR')}</span>
                     </div>
@@ -258,10 +222,7 @@ export default function AdminProvidersAndTelemetryPage() {
             searchTerm={gatewaySearch}
             onSearchChange={setGatewaySearch}
             searchPlaceholder="Filtrer par route, service cible, méthode..."
-            totalCount={routes.length}
-            filteredCount={filteredRoutes.length}
-            onResetFilters={() => setGatewaySearch('')}
-            hasActiveFilters={Boolean(gatewaySearch)}
+            filters={[]}
           />
 
           <AdminTable
@@ -271,8 +232,8 @@ export default function AdminProvidersAndTelemetryPage() {
                 header: 'MÉTHODE',
                 render: (r: RouteSpec) => (
                   <span
-                    className={`text-[0.6875rem] font-black px-2 py-0.5 rounded ${
-                      r.method === 'POST' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-sky-500/10 text-sky-500 border border-sky-500/20'
+                    className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                      r.method === 'POST' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20'
                     }`}
                   >
                     {r.method}
@@ -283,7 +244,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'path',
                 header: 'ROUTE GATEWAY (PORT 8888)',
                 render: (r: RouteSpec) => (
-                  <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+                  <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
                     {r.path}
                   </span>
                 ),
@@ -292,13 +253,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'service',
                 header: 'MICROSERVICE CIBLE',
                 render: (r: RouteSpec) => (
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-mono font-medium"
-                    style={{
-                      backgroundColor: 'var(--admin-surface-muted)',
-                      color: 'var(--admin-text-secondary)',
-                    }}
-                  >
+                  <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                     {r.service}
                   </span>
                 ),
@@ -307,7 +262,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'rateLimit',
                 header: 'QUOTA REDIS',
                 render: (r: RouteSpec) => (
-                  <span className="admin-mono-tabular text-xs font-bold" style={{ color: 'var(--admin-accent)' }}>
+                  <span className="admin-mono-tabular text-xs font-bold text-emerald-600 dark:text-emerald-400">
                     {r.rateLimit}
                   </span>
                 ),
@@ -316,7 +271,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'authRequired',
                 header: 'SÉCURITÉ & AUTH',
                 render: (r: RouteSpec) => (
-                  <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                     {r.authRequired}
                   </span>
                 ),
@@ -332,34 +287,34 @@ export default function AdminProvidersAndTelemetryPage() {
       {/* Tab 3: AI Telemetry & RAG */}
       {activeTab === 'AI' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             <AdminStatCard
               label="Conversations Totales"
               value="21"
               subtext="Schéma ai.conversations"
               icon="fas fa-comments"
-              variant="accent"
+              variant="cool"
             />
             <AdminStatCard
               label="Exécutions d'Outils"
               value="38"
               subtext="ai.tool_calls enregistrés"
               icon="fas fa-tools"
-              variant="info"
+              variant="default"
             />
             <AdminStatCard
               label="Index Vectoriel"
               value="1 536 d"
               subtext="pgvector cosine distance"
               icon="fas fa-brain"
-              variant="accent"
+              variant="dark"
             />
             <AdminStatCard
               label="Précision RAG"
               value="98.2 %"
               subtext="Évaluation sémantique"
               icon="fas fa-check-double"
-              variant="info"
+              variant="warm"
             />
           </div>
 
@@ -367,10 +322,7 @@ export default function AdminProvidersAndTelemetryPage() {
             searchTerm={aiSearch}
             onSearchChange={setAiSearch}
             searchPlaceholder="Rechercher par nom d'outil ou rôle..."
-            totalCount={tools.length}
-            filteredCount={filteredTools.length}
-            onResetFilters={() => setAiSearch('')}
-            hasActiveFilters={Boolean(aiSearch)}
+            filters={[]}
           />
 
           <AdminTable
@@ -379,7 +331,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'name',
                 header: 'NOM DU TOOL',
                 render: (t: ToolTelemetry) => (
-                  <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-accent)' }}>
+                  <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400">
                     {t.name}()
                   </span>
                 ),
@@ -389,7 +341,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 header: 'APPELS ENREGISTRÉS',
                 align: 'center' as const,
                 render: (t: ToolTelemetry) => (
-                  <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+                  <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
                     {t.count}
                   </span>
                 ),
@@ -398,7 +350,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'avgDuration',
                 header: 'LATENCE MOYENNE',
                 render: (t: ToolTelemetry) => (
-                  <span className="admin-mono-tabular text-xs" style={{ color: '#38BDF8' }}>
+                  <span className="admin-mono-tabular text-xs text-sky-600 dark:text-sky-400 font-semibold">
                     {t.avgDuration}
                   </span>
                 ),
@@ -407,7 +359,7 @@ export default function AdminProvidersAndTelemetryPage() {
                 key: 'role',
                 header: 'RÔLE FONCTIONNEL DANS L’ÉCOSYSTÈME',
                 render: (t: ToolTelemetry) => (
-                  <span className="text-xs font-medium" style={{ color: 'var(--admin-text-secondary)' }}>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                     {t.role}
                   </span>
                 ),

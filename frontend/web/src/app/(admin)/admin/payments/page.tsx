@@ -81,10 +81,10 @@ export default function AdminPaymentsPage() {
   const columns = [
     {
       key: 'paymentReference',
-      header: 'RÉFÉRENCE PAIEMENT',
+      header: 'RÉFÉRENCE TRANSACTION',
       render: (p: AdminPayment) => (
         <div className="flex items-center gap-1.5 py-1">
-          <span className="admin-mono-tabular font-extrabold text-xs" style={{ color: '#38BDF8' }}>
+          <span className="admin-mono-tabular font-bold text-xs text-sky-600 dark:text-sky-400">
             {p.paymentReference}
           </span>
           <button
@@ -96,7 +96,7 @@ export default function AdminPaymentsPage() {
             className="opacity-40 hover:opacity-100 transition-opacity p-0.5"
             title="Copier la référence de paiement"
           >
-            <i className={`fas ${copiedId === p.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[0.65rem]`} />
+            <i className={`fas ${copiedId === p.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[10px]`} />
           </button>
         </div>
       ),
@@ -107,14 +107,13 @@ export default function AdminPaymentsPage() {
       render: (p: AdminPayment) => {
         const bRef = getBookingRef(p.bookingId);
         return (
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
             <Link
               href={`/admin/bookings?search=${encodeURIComponent(p.bookingId)}`}
-              className="admin-mono-tabular font-bold text-xs no-underline hover:underline flex items-center gap-1.5"
-              style={{ color: 'var(--admin-accent)' }}
+              className="admin-mono-tabular font-semibold text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5 no-underline"
             >
               <span>{bRef}</span>
-              <i className="fas fa-external-link-alt text-[0.6rem] opacity-60" />
+              <i className="fas fa-external-link-alt text-[9px] opacity-60" />
             </Link>
           </div>
         );
@@ -125,17 +124,10 @@ export default function AdminPaymentsPage() {
       header: 'PASSERELLE & MÉTHODE',
       render: (p: AdminPayment) => (
         <div className="flex flex-col gap-0.5">
-          <span
-            className="text-xs px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider"
-            style={{
-              backgroundColor: 'var(--admin-surface-muted)',
-              color: 'var(--admin-text-secondary)',
-              border: '1px solid var(--admin-border)',
-            }}
-          >
+          <span className="text-[11px] px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
             {p.providerName}
           </span>
-          <span className="text-[0.65rem] truncate max-w-[140px]" style={{ color: 'var(--admin-text-muted)' }}>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[130px]">
             {p.paymentMethodType || 'Standard'}
           </span>
         </div>
@@ -143,9 +135,9 @@ export default function AdminPaymentsPage() {
     },
     {
       key: 'providerTransactionId',
-      header: 'TXID FOURNISSEUR',
+      header: 'TXID PROCESSEUR',
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular text-xs truncate max-w-[150px] inline-block" style={{ color: 'var(--admin-text-muted)' }}>
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px] inline-block">
           {p.providerTransactionId || '—'}
         </span>
       ),
@@ -156,10 +148,10 @@ export default function AdminPaymentsPage() {
       align: 'right' as const,
       render: (p: AdminPayment) => (
         <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-black text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
             {Number(p.amount).toFixed(2)} {p.currency}
           </span>
-          <span className="text-[0.625rem]" style={{ color: 'var(--admin-text-muted)' }}>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">
             Débit Net
           </span>
         </div>
@@ -167,13 +159,12 @@ export default function AdminPaymentsPage() {
     },
     {
       key: 'createdAt',
-      header: 'DATE TRANSACT.',
+      header: 'HORODATAGE',
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400">
           {new Date(p.createdAt).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'short',
-            year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
           })}
@@ -189,7 +180,7 @@ export default function AdminPaymentsPage() {
             {p.status}
           </AdminBadge>
           {p.errorMessage && (
-            <span className="text-[0.625rem] text-red-500 font-semibold truncate max-w-[130px]" title={p.errorMessage}>
+            <span className="text-[10px] text-rose-500 font-semibold truncate max-w-[130px]" title={p.errorMessage}>
               <i className="fas fa-exclamation-triangle mr-1" />
               {p.errorMessage}
             </span>
@@ -208,73 +199,25 @@ export default function AdminPaymentsPage() {
             e.stopPropagation();
             setSelectedPayment(p);
           }}
-          className="admin-btn text-[0.7rem] py-1 px-2.5 rounded font-bold shadow-2xs"
-          style={{
-            backgroundColor: 'var(--admin-surface-muted)',
-            border: '1px solid var(--admin-border)',
-            color: 'var(--admin-text-secondary)',
-          }}
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors shadow-2xs"
         >
-          <i className="fas fa-receipt text-[0.65rem] mr-1" />
+          <i className="fas fa-receipt text-[10px] mr-1" />
           <span>Ticket</span>
         </button>
       ),
     },
   ];
 
-  const filterSelects = [
-    {
-      key: 'status',
-      label: 'Statut',
-      value: statusFilter,
-      onChange: (val: string) => {
-        setStatusFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: 'Tous les statuts', value: 'ALL' },
-        { label: 'COMPLETED / PAID', value: 'COMPLETED' },
-        { label: 'PENDING', value: 'PENDING' },
-        { label: 'FAILED', value: 'FAILED' },
-      ],
-    },
-    {
-      key: 'provider',
-      label: 'Passerelle',
-      value: providerFilter,
-      onChange: (val: string) => {
-        setProviderFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: 'Toutes les passerelles', value: 'ALL' },
-        { label: 'PAYPAL', value: 'PAYPAL' },
-        { label: 'MOCK', value: 'MOCK' },
-        { label: 'STRIPE', value: 'STRIPE' },
-      ],
-    },
-  ];
-
-  const handleResetFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('ALL');
-    setProviderFilter('ALL');
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters = Boolean(searchTerm || statusFilter !== 'ALL' || providerFilter !== 'ALL');
-  const associatedBooking = selectedPayment ? bookings.find((b) => b.id === selectedPayment.bookingId) : null;
-
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      {/* Page Title & Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-4">
+      {/* Title & Actions Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-            Grand Livre des Paiements &amp; Ledger
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Paiements &amp; Grand Livre
           </h1>
-          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
-            Traçabilité immuable des flux d&apos;encaissement (payment.payments) connectés aux passerelles autoritaires
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Audit exhaustif des flux de trésorerie, règlements passerelles et traçabilité des processeurs
           </p>
         </div>
 
@@ -283,15 +226,20 @@ export default function AdminPaymentsPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={filteredPayments.length === 0}
-            className="admin-btn text-xs py-2 px-3.5 rounded-lg border font-semibold"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-              color: 'var(--admin-text-secondary)',
-            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors disabled:opacity-50"
           >
-            <i className="fas fa-file-csv text-xs mr-1 text-emerald-500" />
-            <span>Exporter CSV ({filteredPayments.length})</span>
+            <i className="fas fa-file-csv text-[11px]" />
+            <span>Exporter CSV</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40 transition-colors shadow-2xs"
+          >
+            <i className={`fas fa-sync text-[11px] ${isRefetching ? 'animate-spin' : ''}`} />
+            <span>Actualiser</span>
           </button>
         </div>
       </div>
@@ -299,35 +247,56 @@ export default function AdminPaymentsPage() {
       {/* Filter Bar */}
       <AdminFilterBar
         searchTerm={searchTerm}
-        onSearchChange={(val) => {
-          setSearchTerm(val);
-          setCurrentPage(1);
-        }}
-        searchPlaceholder="Rechercher PAY-XXXX, réservation YUD-XXXX, passerelle, motif d'échec..."
-        filters={filterSelects}
-        onRefresh={() => refetch()}
-        isRefreshing={isLoading || isRefetching}
-        totalCount={payments.length}
-        filteredCount={filteredPayments.length}
-        onResetFilters={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher par référence, TXID, dossier ou passerelle..."
+        filters={[
+          {
+            key: 'status',
+            label: 'Statut',
+            value: statusFilter,
+            onChange: (v) => {
+              setStatusFilter(v);
+              setCurrentPage(1);
+            },
+            options: [
+              { value: 'ALL', label: 'Tous les statuts' },
+              { value: 'COMPLETED', label: 'Confirmé / Réussi' },
+              { value: 'PENDING', label: 'En attente' },
+              { value: 'FAILED', label: 'Échoué' },
+            ],
+          },
+          {
+            key: 'provider',
+            label: 'Passerelle',
+            value: providerFilter,
+            onChange: (v) => {
+              setProviderFilter(v);
+              setCurrentPage(1);
+            },
+            options: [
+              { value: 'ALL', label: 'Toutes les passerelles' },
+              { value: 'PAYPAL', label: 'PayPal Gateway' },
+              { value: 'MOCK', label: 'Sandbox / Mock' },
+              { value: 'STRIPE', label: 'Stripe' },
+            ],
+          },
+        ]}
       />
 
-      {/* Main Table with Pagination */}
+      {/* Payments Table */}
       <AdminTable
         columns={columns}
         data={paginatedPayments}
         keyExtractor={(p) => p.id}
         isLoading={isLoading}
         onRowClick={(p) => setSelectedPayment(p)}
-        emptyMessage="Aucun paiement trouvé"
-        emptySubtext="Aucune transaction ne correspond aux filtres appliqués."
+        emptyMessage="Aucune transaction de paiement ne correspond à ces critères."
         footer={
-          filteredPayments.length > 0 ? (
+          totalItems > 0 ? (
             <AdminPagination
               currentPage={currentPage}
-              pageSize={pageSize}
               totalItems={totalItems}
+              pageSize={pageSize}
               onPageChange={setCurrentPage}
               onPageSizeChange={(newSize) => {
                 setPageSize(newSize);
@@ -338,12 +307,12 @@ export default function AdminPaymentsPage() {
         }
       />
 
-      {/* Inspection Drawer */}
+      {/* Payment Inspection Drawer */}
       <AdminDrawer
         isOpen={Boolean(selectedPayment)}
         onClose={() => setSelectedPayment(null)}
         title={selectedPayment ? selectedPayment.paymentReference : ''}
-        subtitle="Récépissé de transaction financière"
+        subtitle="Récépissé de transaction bancaire"
         badge={
           selectedPayment && (
             <AdminBadge variant={getStatusBadgeVariant(selectedPayment.status)} size="sm">
@@ -354,122 +323,56 @@ export default function AdminPaymentsPage() {
         rawJson={selectedPayment}
       >
         {selectedPayment && (
-          <div className="space-y-6">
-            {/* Financial Details */}
-            <div
-              className="p-4 rounded-xl border space-y-3"
-              style={{
-                backgroundColor: 'var(--admin-surface-muted)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                Données Transactionnelles
+          <div className="space-y-4">
+            {/* Amount Banner */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-center shadow-2xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Montant Net Traité
+              </span>
+              <div className="text-2xl font-black text-slate-900 dark:text-slate-100 admin-mono-tabular mt-1">
+                {Number(selectedPayment.amount).toFixed(2)} {selectedPayment.currency}
               </div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    Montant Capturé
-                  </span>
-                  <span className="text-base font-extrabold admin-mono-tabular" style={{ color: '#38BDF8' }}>
-                    {Number(selectedPayment.amount).toFixed(2)} {selectedPayment.currency}
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Passerelle : <strong className="text-slate-800 dark:text-slate-200">{selectedPayment.providerName}</strong>
+              </div>
+            </div>
+
+            {/* Processor Details Grid */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+                Détails du Processeur
+              </h4>
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">TXID Processeur</span>
+                  <span className="admin-mono-tabular font-semibold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+                    {selectedPayment.providerTransactionId || 'N/A'}
                   </span>
                 </div>
-                <div>
-                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    Passerelle Utilisée
-                  </span>
-                  <span className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                    {selectedPayment.providerName}
-                  </span>
-                </div>
-                <div>
-                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    Type de Moyen
-                  </span>
-                  <span className="font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Mode de Paiement</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
                     {selectedPayment.paymentMethodType || 'Standard'}
                   </span>
                 </div>
-                <div>
-                  <span className="block text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                    ID Transaction Fournisseur
-                  </span>
-                  <span className="admin-mono-tabular font-medium break-all" style={{ color: 'var(--admin-text-primary)' }}>
-                    {selectedPayment.providerTransactionId || 'Non fourni'}
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* Cross Link to Associated Booking */}
-            <div
-              className="p-4 rounded-xl border space-y-2 text-xs"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                  Dossier Réservation Associé
-                </span>
+            {/* Link to Booking */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs">
+              <div className="flex items-center justify-between text-xs">
+                <div>
+                  <span className="block text-slate-400 dark:text-slate-500 text-[11px]">Dossier Voyage Rattaché</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5 block admin-mono-tabular">
+                    {getBookingRef(selectedPayment.bookingId)}
+                  </span>
+                </div>
                 <Link
                   href={`/admin/bookings?search=${encodeURIComponent(selectedPayment.bookingId)}`}
-                  className="font-bold no-underline hover:underline flex items-center gap-1"
-                  style={{ color: 'var(--admin-accent)' }}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border border-emerald-200/60 dark:border-emerald-800/40 hover:underline no-underline"
                 >
-                  <span>Ouvrir dans Réservations →</span>
+                  Ouvrir le dossier →
                 </Link>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="admin-mono-tabular font-bold text-sm" style={{ color: 'var(--admin-accent)' }}>
-                  {associatedBooking ? associatedBooking.bookingReference : selectedPayment.bookingId}
-                </span>
-                {associatedBooking && (
-                  <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
-                    {associatedBooking.productType}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Error Message if failed */}
-            {selectedPayment.errorMessage && (
-              <div
-                className="p-4 rounded-xl border text-xs"
-                style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                  borderColor: 'rgba(239, 68, 68, 0.25)',
-                  color: '#F87171',
-                }}
-              >
-                <div className="font-bold flex items-center gap-1.5 mb-1 text-red-500">
-                  <i className="fas fa-exclamation-triangle" />
-                  <span>Raison de l&apos;échec enregistrée :</span>
-                </div>
-                <div className="admin-mono-tabular font-semibold">{selectedPayment.errorMessage}</div>
-              </div>
-            )}
-
-            {/* Timestamps */}
-            <div className="space-y-2 border-l-2 ml-2 pl-4" style={{ borderColor: 'var(--admin-accent-border)' }}>
-              <div className="text-xs">
-                <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                  Initiation du paiement
-                </div>
-                <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                  {new Date(selectedPayment.createdAt).toLocaleString('fr-FR')}
-                </div>
-              </div>
-              <div className="text-xs mt-3">
-                <div className="font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                  Dernière mise à jour
-                </div>
-                <div className="admin-mono-tabular text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                  {new Date(selectedPayment.updatedAt).toLocaleString('fr-FR')}
-                </div>
               </div>
             </div>
           </div>

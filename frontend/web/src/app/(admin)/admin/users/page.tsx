@@ -17,12 +17,13 @@ import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
 import { AdminBadge } from '@/components/admin/AdminBadge';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminDrawer } from '@/components/admin/AdminDrawer';
+import { EntityAvatar } from '@/components/admin/EntityAvatar';
 import { exportToCsv } from '@/lib/admin-csv';
 
 const AVAILABLE_ROLES = [
   { role: 'ROLE_USER', label: 'Client / Voyageur', desc: 'Accès standard aux réservations & paiements' },
   { role: 'ROLE_ADMIN', label: 'Super Administrateur', desc: 'Contrôle complet de la plateforme et gouvernance' },
-  { role: 'ROLE_SUPPORT', label: 'Support Client', desc: 'Gestion des réclamations, annulations et assistance' },
+  { role: 'ROLE_SUPPORT', label: 'Support Client', desc: 'Gestion des réclamations, annulations et déverrouillage' },
   { role: 'ROLE_CONTENT_MANAGER', label: 'Gestionnaire Éditorial', desc: 'Modération des avis et gestion des destinations' },
 ];
 
@@ -156,8 +157,8 @@ export default function AdminUsersPage() {
 
   const handleExportCsv = () => {
     const rows = filteredUsers.map((u) => {
-      const userBookings = allBookings.filter((b) => b.userId === u.id);
-      const spend = userBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
+      const userB = allBookings.filter((b) => b.userId === u.id);
+      const spend = userB.reduce((sum, b) => sum + (b.amount || 0), 0);
       return {
         Id: u.id,
         Email: u.email,
@@ -165,7 +166,7 @@ export default function AdminUsersPage() {
         LastName: u.lastName,
         Status: u.status,
         Roles: u.roles.join('; '),
-        BookingsCount: userBookings.length,
+        BookingsCount: userB.length,
         TotalSpendMAD: spend.toFixed(2),
         FailedLogins: u.failedLoginAttempts,
         CreatedAt: u.createdAt,
@@ -174,7 +175,6 @@ export default function AdminUsersPage() {
     exportToCsv('utilisateurs_yuding', rows);
   };
 
-  // Inspect User Data
   const userBookings = selectedUser ? allBookings.filter((b) => b.userId === selectedUser.id) : [];
   const totalSpend = userBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
 
@@ -182,27 +182,22 @@ export default function AdminUsersPage() {
     {
       key: 'name',
       header: 'UTILISATEUR (IDENTITÉ)',
-      render: (u: AdminUserSummary) => (
-        <div className="flex items-center gap-2.5 py-1">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs"
-            style={{
-              background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
-              color: '#0B0F19',
-            }}
-          >
-            {u.firstName ? u.firstName[0].toUpperCase() : 'U'}
-          </div>
-          <div className="min-w-0">
-            <div className="font-bold text-xs truncate" style={{ color: 'var(--admin-text-primary)' }}>
-              {u.firstName} {u.lastName}
-            </div>
-            <div className="text-[0.6875rem] truncate" style={{ color: 'var(--admin-text-muted)' }}>
-              {u.email}
+      render: (u: AdminUserSummary) => {
+        const fullName = `${u.firstName} ${u.lastName}`.trim() || 'Utilisateur';
+        return (
+          <div className="flex items-center gap-2.5 py-1">
+            <EntityAvatar name={fullName} email={u.email} size="sm" />
+            <div className="min-w-0">
+              <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
+                {fullName}
+              </div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                {u.email}
+              </div>
             </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: 'roles',
@@ -237,7 +232,7 @@ export default function AdminUsersPage() {
               {isSuspended ? 'SUSPENDU' : isLocked ? 'VERROUILLÉ' : u.status}
             </AdminBadge>
             {u.isEmailVerified && (
-              <span title="Email vérifié" className="text-emerald-500 text-[0.7rem]">
+              <span title="Email vérifié" className="text-emerald-500 text-[10px]">
                 <i className="fas fa-check-circle" />
               </span>
             )}
@@ -253,11 +248,11 @@ export default function AdminUsersPage() {
         const spend = uB.reduce((sum, b) => sum + (b.amount || 0), 0);
         return (
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold admin-mono-tabular" style={{ color: 'var(--admin-text-primary)' }}>
+            <span className="text-xs font-bold admin-mono-tabular text-slate-900 dark:text-slate-100">
               {uB.length} réservation(s)
             </span>
-            <span className="text-[0.65rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
-              {spend > 0 ? `${spend.toFixed(2)} MAD dépensés` : 'Aucun achat finalisé'}
+            <span className="text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+              {spend > 0 ? `${spend.toFixed(2)} MAD dépensés` : 'Aucun achat'}
             </span>
           </div>
         );
@@ -267,7 +262,7 @@ export default function AdminUsersPage() {
       key: 'createdAt',
       header: 'INSCRIPTION',
       render: (u: AdminUserSummary) => (
-        <span className="admin-mono-tabular text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400">
           {new Date(u.createdAt).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'short',
@@ -292,15 +287,10 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={() => handleUnlock(u.id)}
                 disabled={unlockUserMutation.isPending}
-                className="admin-btn text-[0.6875rem] py-1 px-2 rounded"
-                style={{
-                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                  border: '1px solid rgba(245, 158, 11, 0.25)',
-                  color: '#F59E0B',
-                }}
+                className="text-xs font-bold py-1 px-2 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 transition-colors shadow-2xs"
                 title="Déverrouiller le compte"
               >
-                <i className="fas fa-unlock text-[0.65rem]" />
+                <i className="fas fa-unlock text-[10px] mr-1" />
                 <span>Débloquer</span>
               </button>
             )}
@@ -310,15 +300,10 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={() => handleReactivate(u)}
                 disabled={reactivateUserMutation.isPending}
-                className="admin-btn text-[0.6875rem] py-1 px-2 rounded font-semibold"
-                style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                  color: '#10B981',
-                }}
+                className="text-xs font-semibold py-1 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
                 title="Réactiver le compte utilisateur"
               >
-                <i className="fas fa-check-circle text-[0.65rem]" />
+                <i className="fas fa-check-circle text-[10px] mr-1" />
                 <span>Réactiver</span>
               </button>
             ) : (
@@ -326,15 +311,10 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={() => handleOpenSuspendModal(u)}
-                  className="admin-btn text-[0.6875rem] py-1 px-2 rounded"
-                  style={{
-                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                    color: '#EF4444',
-                  }}
+                  className="text-xs font-medium py-1 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200/50 dark:border-rose-900/40 transition-colors"
                   title="Suspendre l'accès utilisateur"
                 >
-                  <i className="fas fa-ban text-[0.65rem]" />
+                  <i className="fas fa-ban text-[10px] mr-1" />
                   <span>Suspendre</span>
                 </button>
               )
@@ -344,15 +324,10 @@ export default function AdminUsersPage() {
               <button
                 type="button"
                 onClick={() => handleOpenRoleModal(u)}
-                className="admin-btn text-[0.6875rem] py-1 px-2 rounded"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  border: '1px solid var(--admin-border)',
-                  color: 'var(--admin-text-secondary)',
-                }}
+                className="text-xs font-medium py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 transition-colors"
                 title="Gérer les rôles RBAC"
               >
-                <i className="fas fa-user-shield text-[0.65rem]" />
+                <i className="fas fa-user-shield text-[10px] mr-1" />
                 <span>Rôles</span>
               </button>
             )}
@@ -360,15 +335,10 @@ export default function AdminUsersPage() {
             <button
               type="button"
               onClick={() => setSelectedUser(u)}
-              className="admin-btn text-[0.6875rem] py-1 px-2 rounded"
-              style={{
-                backgroundColor: 'var(--admin-accent-subtle)',
-                border: '1px solid var(--admin-accent-border)',
-                color: 'var(--admin-accent)',
-              }}
+              className="text-xs font-semibold py-1 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
               title="Inspecter le profil client"
             >
-              <i className="fas fa-eye text-[0.65rem]" />
+              <i className="fas fa-eye text-[10px]" />
             </button>
           </div>
         );
@@ -376,59 +346,16 @@ export default function AdminUsersPage() {
     },
   ];
 
-  const filterSelects = [
-    {
-      key: 'status',
-      label: 'Statut',
-      value: statusFilter,
-      onChange: (val: string) => {
-        setStatusFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: 'Tous les statuts', value: 'ALL' },
-        { label: 'Actifs (ACTIVE)', value: 'ACTIVE' },
-        { label: 'Suspendus (SUSPENDED)', value: 'SUSPENDED' },
-        { label: 'Verrouillés (LOCKED)', value: 'LOCKED' },
-      ],
-    },
-    {
-      key: 'role',
-      label: 'Rôle RBAC',
-      value: roleFilter,
-      onChange: (val: string) => {
-        setRoleFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: 'Tous les rôles', value: 'ALL' },
-        { label: 'ROLE_ADMIN', value: 'ROLE_ADMIN' },
-        { label: 'ROLE_SUPPORT', value: 'ROLE_SUPPORT' },
-        { label: 'ROLE_CONTENT_MANAGER', value: 'ROLE_CONTENT_MANAGER' },
-        { label: 'ROLE_USER', value: 'ROLE_USER' },
-      ],
-    },
-  ];
-
-  const handleResetFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('ALL');
-    setRoleFilter('ALL');
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters = Boolean(searchTerm || statusFilter !== 'ALL' || roleFilter !== 'ALL');
-
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      {/* Page Title & Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-4">
+      {/* Title & Actions Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-            Gouvernance des Utilisateurs &amp; RBAC
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Utilisateurs &amp; Gouvernance RBAC
           </h1>
-          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
-            Contrôle d&apos;accès autoritaire, historique des dépenses, verrouillage de sécurité et gestion des rôles
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Administration autoritaire des comptes identité, rôles, statuts de sécurité et déverrouillage
           </p>
         </div>
 
@@ -437,27 +364,31 @@ export default function AdminUsersPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={filteredUsers.length === 0}
-            className="admin-btn text-xs py-2 px-3.5 rounded-lg border font-semibold"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-              color: 'var(--admin-text-secondary)',
-            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors disabled:opacity-50"
           >
-            <i className="fas fa-file-csv text-xs mr-1 text-emerald-500" />
+            <i className="fas fa-file-csv text-[11px]" />
             <span>Exporter CSV ({filteredUsers.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
+          >
+            <i className={`fas fa-sync text-[11px] ${isRefetching ? 'animate-spin' : ''}`} />
+            <span>Actualiser</span>
           </button>
         </div>
       </div>
 
       {feedback && (
         <div
-          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2 animate-fade-in"
-          style={{
-            backgroundColor: feedback.type === 'success' ? 'var(--admin-accent-subtle)' : 'rgba(239, 68, 68, 0.1)',
-            borderColor: feedback.type === 'success' ? 'var(--admin-accent-border)' : 'rgba(239, 68, 68, 0.3)',
-            color: feedback.type === 'success' ? 'var(--admin-accent)' : '#EF4444',
-          }}
+          className={`p-3 rounded-lg border text-xs font-semibold flex items-center gap-2 animate-fade-in ${
+            feedback.type === 'success'
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800'
+              : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800'
+          }`}
         >
           <i className={feedback.type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'} />
           <span>{feedback.message}</span>
@@ -467,35 +398,57 @@ export default function AdminUsersPage() {
       {/* Filter Bar */}
       <AdminFilterBar
         searchTerm={searchTerm}
-        onSearchChange={(val) => {
-          setSearchTerm(val);
-          setCurrentPage(1);
-        }}
-        searchPlaceholder="Rechercher par nom, email ou UUID utilisateur..."
-        filters={filterSelects}
-        onRefresh={() => refetch()}
-        isRefreshing={isLoading || isRefetching}
-        totalCount={users.length}
-        filteredCount={filteredUsers.length}
-        onResetFilters={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher par nom, email, identifiant autoritaire..."
+        filters={[
+          {
+            key: 'status',
+            label: 'Statut',
+            value: statusFilter,
+            onChange: (v) => {
+              setStatusFilter(v);
+              setCurrentPage(1);
+            },
+            options: [
+              { value: 'ALL', label: 'Tous les statuts' },
+              { value: 'ACTIVE', label: 'Actifs (ACTIVE)' },
+              { value: 'SUSPENDED', label: 'Suspendus (SUSPENDED)' },
+              { value: 'LOCKED', label: 'Verrouillés (LOCKED)' },
+            ],
+          },
+          {
+            key: 'role',
+            label: 'Rôle RBAC',
+            value: roleFilter,
+            onChange: (v) => {
+              setRoleFilter(v);
+              setCurrentPage(1);
+            },
+            options: [
+              { value: 'ALL', label: 'Tous les rôles' },
+              { value: 'ROLE_USER', label: 'ROLE_USER (Voyageur)' },
+              { value: 'ROLE_ADMIN', label: 'ROLE_ADMIN (Super Admin)' },
+              { value: 'ROLE_SUPPORT', label: 'ROLE_SUPPORT' },
+              { value: 'ROLE_CONTENT_MANAGER', label: 'ROLE_CONTENT_MANAGER' },
+            ],
+          },
+        ]}
       />
 
-      {/* Main Table with Pagination */}
+      {/* Users Table */}
       <AdminTable
         columns={columns}
         data={paginatedUsers}
         keyExtractor={(u) => u.id}
         isLoading={isLoading}
         onRowClick={(u) => setSelectedUser(u)}
-        emptyMessage="Aucun utilisateur trouvé"
-        emptySubtext="Modifiez vos critères de recherche ou réinitialisez les filtres."
+        emptyMessage="Aucun utilisateur ne correspond aux filtres appliqués."
         footer={
-          filteredUsers.length > 0 ? (
+          totalItems > 0 ? (
             <AdminPagination
               currentPage={currentPage}
-              pageSize={pageSize}
               totalItems={totalItems}
+              pageSize={pageSize}
               onPageChange={setCurrentPage}
               onPageSizeChange={(newSize) => {
                 setPageSize(newSize);
@@ -506,15 +459,18 @@ export default function AdminUsersPage() {
         }
       />
 
-      {/* User Inspection Profile Drawer */}
+      {/* User Inspection Drawer */}
       <AdminDrawer
         isOpen={Boolean(selectedUser)}
         onClose={() => setSelectedUser(null)}
         title={selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : ''}
-        subtitle={selectedUser ? `Fiche Client • ${selectedUser.email}` : ''}
+        subtitle={selectedUser?.email || 'Fiche utilisateur autoritaire'}
         badge={
           selectedUser && (
-            <AdminBadge variant={selectedUser.status === 'ACTIVE' ? 'success' : 'danger'} size="sm">
+            <AdminBadge
+              variant={selectedUser.status === 'ACTIVE' ? 'success' : 'danger'}
+              size="sm"
+            >
               {selectedUser.status}
             </AdminBadge>
           )
@@ -522,365 +478,170 @@ export default function AdminUsersPage() {
         rawJson={selectedUser}
       >
         {selectedUser && (
-          <div className="space-y-6">
-            {/* Identity Card */}
-            <div
-              className="p-4 rounded-xl border flex items-center gap-4"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center font-black text-xl shadow-xs"
-                style={{
-                  background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
-                  color: '#0B0F19',
-                }}
-              >
-                {selectedUser.firstName ? selectedUser.firstName[0].toUpperCase() : 'U'}
+          <div className="space-y-4">
+            {/* Header User Card */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <EntityAvatar
+                  name={`${selectedUser.firstName} ${selectedUser.lastName}`}
+                  email={selectedUser.email}
+                  size="lg"
+                />
+                <div className="min-w-0">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 m-0">
+                    {selectedUser.firstName} {selectedUser.lastName}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">
+                    {selectedUser.email}
+                  </p>
+                  <div className="text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500 mt-1">
+                    ID autoritaire : {selectedUser.id}
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-extrabold text-sm" style={{ color: 'var(--admin-text-primary)' }}>
-                  {selectedUser.firstName} {selectedUser.lastName}
+
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                <div>
+                  <span className="text-slate-400 dark:text-slate-500 text-[11px] block">Dépenses Cumulées</span>
+                  <span className="font-bold admin-mono-tabular text-emerald-600 dark:text-emerald-400">
+                    {totalSpend.toFixed(2)} MAD
+                  </span>
                 </div>
-                <div className="text-xs admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
-                  {selectedUser.email}
-                </div>
-                <div className="flex items-center gap-1.5 mt-2">
-                  {selectedUser.roles.map((r) => (
-                    <span
-                      key={r}
-                      className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded uppercase"
-                      style={{
-                        backgroundColor: 'var(--admin-surface-muted)',
-                        color: 'var(--admin-text-secondary)',
-                        border: '1px solid var(--admin-border)',
-                      }}
-                    >
-                      {r.replace('ROLE_', '')}
-                    </span>
-                  ))}
+                <div>
+                  <span className="text-slate-400 dark:text-slate-500 text-[11px] block">Réservations Totales</span>
+                  <span className="font-bold admin-mono-tabular text-slate-800 dark:text-slate-200">
+                    {userBookings.length} dossier(s)
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Lifetime Spend & Booking Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div
-                className="p-3 rounded-lg border text-xs"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  borderColor: 'var(--admin-border)',
-                }}
-              >
-                <span className="block text-[0.65rem] uppercase font-bold tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                  Dépenses Cumulées
-                </span>
-                <span className="font-black text-base admin-mono-tabular mt-1 block" style={{ color: 'var(--admin-accent)' }}>
-                  {totalSpend.toFixed(2)} MAD
-                </span>
-                <span className="text-[0.625rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                  Sur toutes ses réservations
-                </span>
-              </div>
-
-              <div
-                className="p-3 rounded-lg border text-xs"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  borderColor: 'var(--admin-border)',
-                }}
-              >
-                <span className="block text-[0.65rem] uppercase font-bold tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                  Dossiers Voyage
-                </span>
-                <span className="font-black text-base admin-mono-tabular mt-1 block" style={{ color: 'var(--admin-text-primary)' }}>
-                  {userBookings.length}
-                </span>
-                <span className="text-[0.625rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                  {userBookings.filter((b) => b.status === 'CONFIRMED').length} confirmées
-                </span>
-              </div>
-            </div>
-
-            {/* Associated Bookings History */}
-            <div className="space-y-3">
+            {/* Bookings associated with user */}
+            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-2.5 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                  Historique des Réservations Client
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Dossiers Voyage Associés ({userBookings.length})
                 </span>
                 <Link
                   href={`/admin/bookings?search=${encodeURIComponent(selectedUser.id)}`}
-                  className="text-xs font-bold no-underline hover:underline"
-                  style={{ color: 'var(--admin-accent)' }}
+                  className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline no-underline"
                 >
-                  Ouvrir dans Réservations →
+                  Filtrer dans Réservations →
                 </Link>
               </div>
 
               {userBookings.length === 0 ? (
-                <div
-                  className="p-4 rounded-lg border text-center text-xs"
-                  style={{
-                    backgroundColor: 'var(--admin-surface-muted)',
-                    borderColor: 'var(--admin-border)',
-                    color: 'var(--admin-text-muted)',
-                  }}
-                >
-                  Aucune réservation enregistrée pour ce client.
-                </div>
+                <p className="text-xs text-slate-400 py-2 m-0">Aucune réservation passée par ce compte.</p>
               ) : (
-                <div className="space-y-2">
-                  {userBookings.slice(0, 5).map((b) => (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto admin-custom-scrollbar">
+                  {userBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="p-2.5 rounded-lg border flex items-center justify-between text-xs"
-                      style={{
-                        backgroundColor: 'var(--admin-surface-muted)',
-                        borderColor: 'var(--admin-border)',
-                      }}
+                      className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs"
                     >
-                      <div className="min-w-0">
-                        <div className="font-bold admin-mono-tabular" style={{ color: 'var(--admin-accent)' }}>
+                      <div className="flex flex-col">
+                        <span className="font-bold admin-mono-tabular text-slate-900 dark:text-slate-100">
                           {b.bookingReference}
-                        </div>
-                        <div className="text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                          {b.productType} • {new Date(b.createdAt).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold admin-mono-tabular" style={{ color: 'var(--admin-text-primary)' }}>
-                          {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
                         </span>
-                        <AdminBadge variant={b.status === 'CONFIRMED' ? 'success' : 'neutral'} size="sm">
-                          {b.status}
-                        </AdminBadge>
+                        <span className="text-[10px] text-slate-400">
+                          {b.productType} • {new Date(b.createdAt).toLocaleDateString('fr-FR')}
+                        </span>
                       </div>
+                      <span className="font-bold admin-mono-tabular text-slate-800 dark:text-slate-200">
+                        {b.amount ? `${b.amount.toFixed(2)} MAD` : '—'}
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Security Profile */}
-            <div
-              className="p-4 rounded-xl border space-y-2.5 text-xs"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
-            >
-              <span className="font-bold uppercase tracking-wider block" style={{ color: 'var(--admin-text-muted)' }}>
-                Sécurité & Vérification
-              </span>
-              <div className="flex items-center justify-between">
-                <span style={{ color: 'var(--admin-text-secondary)' }}>Échecs de mot de passe :</span>
-                <span className="admin-mono-tabular font-bold" style={{ color: selectedUser.failedLoginAttempts > 0 ? '#EF4444' : 'var(--admin-text-primary)' }}>
-                  {selectedUser.failedLoginAttempts} tentative(s)
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span style={{ color: 'var(--admin-text-secondary)' }}>Vérification Email :</span>
-                <span className="font-bold" style={{ color: selectedUser.isEmailVerified ? '#10B981' : '#F59E0B' }}>
-                  {selectedUser.isEmailVerified ? 'Vérifié' : 'En attente'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span style={{ color: 'var(--admin-text-secondary)' }}>UUID Autoritaire :</span>
-                <span className="admin-mono-tabular text-[0.65rem] truncate max-w-[200px]" style={{ color: 'var(--admin-text-muted)' }}>
-                  {selectedUser.id}
-                </span>
-              </div>
-            </div>
           </div>
         )}
       </AdminDrawer>
 
-      {/* Suspend Account Confirmation Modal */}
-      {suspendModalUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-            onClick={() => setSuspendModalUser(null)}
-          />
-          <div
-            className="relative z-10 w-full max-w-md p-6 rounded-xl border shadow-2xl space-y-4"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'rgba(239, 68, 68, 0.4)',
-              color: 'var(--admin-text-primary)',
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-red-500"
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
-              >
-                <i className="fas fa-exclamation-triangle text-base" />
-              </div>
-              <div>
-                <h3 className="text-base font-black m-0" style={{ color: '#EF4444' }}>
-                  Suspendre le Compte Utilisateur
-                </h3>
-                <p className="text-xs m-0 truncate" style={{ color: 'var(--admin-text-muted)' }}>
-                  {suspendModalUser.email}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--admin-text-secondary)' }}>
-              La suspension révoquera immédiatement toute session active et bloquera toute tentative de connexion ultérieure (`LOGIN_BLOCKED_SUSPENDED`). Cette action sera inscrite au Journal d&apos;Audit.
-            </p>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                Motif obligatoire de la suspension :
-              </label>
-              <textarea
-                value={suspendReason}
-                onChange={(e) => setSuspendReason(e.target.value)}
-                rows={3}
-                className="w-full text-xs p-2.5 rounded-lg border focus:outline-none"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  borderColor: 'var(--admin-border)',
-                  color: 'var(--admin-text-primary)',
-                }}
-                placeholder="Ex : Activité frauduleuse suspectée, impayé..."
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--admin-border)' }}>
-              <button
-                type="button"
-                onClick={() => setSuspendModalUser(null)}
-                className="admin-btn text-xs py-2 px-3 rounded"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'var(--admin-text-muted)',
-                }}
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmSuspend}
-                disabled={suspendUserMutation.isPending || !suspendReason.trim()}
-                className="admin-btn text-xs py-2 px-4 rounded font-bold"
-                style={{
-                  backgroundColor: '#EF4444',
-                  color: '#FFFFFF',
-                }}
-              >
-                {suspendUserMutation.isPending ? 'Suspension en cours...' : 'Confirmer la Suspension'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Role Management Modal with Admin Confirmation Check */}
+      {/* Role Assignment Modal */}
       {roleModalUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setRoleModalUser(null)}
           />
-          <div
-            className="relative z-10 w-full max-w-md p-6 rounded-xl border shadow-2xl space-y-4"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-              color: 'var(--admin-text-primary)',
-            }}
-          >
-            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--admin-border)' }}>
+          <div className="relative z-10 w-full max-w-lg p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 shrink-0">
+                <i className="fas fa-user-shield text-base" />
+              </div>
               <div>
-                <h3 className="text-base font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
-                  Modifier les Privilèges RBAC
+                <h3 className="text-base font-black text-slate-900 dark:text-slate-100 m-0">
+                  Gouvernance des Rôles RBAC
                 </h3>
-                <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--admin-text-muted)' }}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
                   {roleModalUser.email}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setRoleModalUser(null)}
-                className="w-7 h-7 rounded flex items-center justify-center opacity-60 hover:opacity-100"
-              >
-                <i className="fas fa-times text-sm" />
-              </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2 pt-1">
               {AVAILABLE_ROLES.map(({ role, label, desc }) => {
                 const isSelected = selectedRoles.includes(role);
                 return (
-                  <label
+                  <div
                     key={role}
                     onClick={() => handleToggleRole(role)}
-                    className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors select-none"
-                    style={{
-                      backgroundColor: isSelected ? 'var(--admin-accent-subtle)' : 'var(--admin-surface-muted)',
-                      borderColor: isSelected ? 'var(--admin-accent-border)' : 'var(--admin-border)',
-                    }}
+                    className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20'
+                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                    }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {}}
-                      className="mt-0.5 accent-emerald-500"
-                    />
-                    <div className="flex-1">
-                      <div className="text-xs font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                        {label}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="w-4 h-4 text-emerald-600 rounded"
+                        />
+                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{label}</span>
                       </div>
-                      <div className="text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                        {desc}
-                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">{role}</span>
                     </div>
-                  </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 pl-6 m-0">
+                      {desc}
+                    </p>
+                  </div>
                 );
               })}
             </div>
 
             {selectedRoles.includes('ROLE_ADMIN') && !roleModalUser.roles.includes('ROLE_ADMIN') && (
-              <div
-                className="p-3 rounded-lg border space-y-2 text-xs"
-                style={{
-                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                  borderColor: 'rgba(245, 158, 11, 0.3)',
-                }}
-              >
-                <div className="flex items-center gap-2 font-bold text-amber-500">
-                  <i className="fas fa-shield-alt" />
-                  <span>Avertissement de Sécurité : Super Administrateur</span>
+              <div className="p-3 rounded-xl border border-rose-200 bg-rose-50/60 dark:border-rose-900/40 dark:bg-rose-950/20 text-xs space-y-1">
+                <div className="font-bold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                  <i className="fas fa-exclamation-triangle" />
+                  <span>Élévation de Privilège Critique</span>
                 </div>
-                <p className="text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-                  Ce rôle confère un accès illimité à toutes les données, flux financiers et configurations de la plateforme.
+                <p className="text-[11px] text-rose-600 dark:text-rose-400 m-0">
+                  Ce rôle permet de modifier les permissions d&apos;autrui et d&apos;exécuter des actions destructives.
                 </p>
-                <label className="flex items-center gap-2 cursor-pointer font-bold select-none text-[0.6875rem]">
+                <label className="flex items-center gap-2 mt-2 pt-1 border-t border-rose-200/60 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={adminRoleConfirmed}
                     onChange={(e) => setAdminRoleConfirmed(e.target.checked)}
-                    className="accent-amber-500"
+                    className="w-3.5 h-3.5 text-rose-600"
                   />
-                  <span>Je confirme autoriser ces prérogatives critiques.</span>
+                  <span className="font-semibold text-[11px] text-rose-800 dark:text-rose-200">
+                    Je confirme octroyer les privilèges Super Administrateur à ce compte.
+                  </span>
                 </label>
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--admin-border)' }}>
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setRoleModalUser(null)}
-                className="admin-btn text-xs py-2 px-3 rounded"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'var(--admin-text-muted)',
-                }}
+                className="text-xs py-2 px-3.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Annuler
               </button>
@@ -888,13 +649,69 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={handleSaveRoles}
                 disabled={updateUserRolesMutation.isPending}
-                className="admin-btn text-xs py-2 px-4 rounded font-bold"
-                style={{
-                  backgroundColor: 'var(--admin-accent)',
-                  color: '#0B0F19',
-                }}
+                className="text-xs py-2 px-4 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors disabled:opacity-50"
               >
-                {updateUserRolesMutation.isPending ? 'Enregistrement...' : 'Enregistrer les rôles'}
+                {updateUserRolesMutation.isPending ? 'Enregistrement...' : 'Enregistrer les Privilèges'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Account Suspension Modal */}
+      {suspendModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => setSuspendModalUser(null)}
+          />
+          <div className="relative z-10 w-full max-w-md p-6 rounded-2xl border border-rose-300 dark:border-rose-900 bg-white dark:bg-slate-900 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-rose-100 dark:bg-rose-950/60 text-rose-600 shrink-0">
+                <i className="fas fa-ban text-base" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-rose-600 dark:text-rose-400 m-0">
+                  Suspendre le Compte
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
+                  {suspendModalUser.email}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 m-0">
+              La suspension révoquera immédiatement les sessions actives et bloquera toute tentative de connexion ou réservation.
+            </p>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Motif réglementaire (Journal d&apos;Audit)
+              </label>
+              <textarea
+                value={suspendReason}
+                onChange={(e) => setSuspendReason(e.target.value)}
+                rows={3}
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                placeholder="Précisez le motif..."
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setSuspendModalUser(null)}
+                className="text-xs py-2 px-3.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSuspend}
+                disabled={suspendUserMutation.isPending}
+                className="text-xs py-2 px-4 rounded-lg font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors disabled:opacity-50"
+              >
+                {suspendUserMutation.isPending ? 'Suspension...' : 'Confirmer la Suspension'}
               </button>
             </div>
           </div>

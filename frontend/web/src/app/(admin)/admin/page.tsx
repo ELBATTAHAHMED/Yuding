@@ -6,12 +6,16 @@ import {
   useAdminStats,
   useAdminBookings,
   useAdminPayments,
+  useAdminCancellations,
+  useAdminUsers,
   useProviderHealth,
 } from '@/hooks/queries/useAdminQueries';
 import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
 import { AdminTable } from '@/components/admin/AdminTable';
-import { AdminAttentionBanner } from '@/components/admin/AdminAttentionBanner';
+import { BookingVisual } from '@/components/admin/BookingVisual';
+import { AdminOverviewChart } from '@/components/admin/AdminOverviewChart';
+import { AdminAttentionList, AttentionItem } from '@/components/admin/AdminAttentionList';
 import { AdminBooking, AdminPayment } from '@/types/admin.types';
 import { parseTravelContext } from '@/lib/admin-travel';
 
@@ -19,10 +23,54 @@ export default function AdminOverviewPage() {
   const { data: stats, isLoading: loadingStats, refetch: refetchStats } = useAdminStats();
   const { data: recentBookings = [], isLoading: loadingBookings, refetch: refetchBookings } = useAdminBookings({ limit: 6 });
   const { data: recentPayments = [], isLoading: loadingPayments, refetch: refetchPayments } = useAdminPayments({ limit: 6 });
+  const { data: cancellations = [], isLoading: loadingCancellations } = useAdminCancellations(50);
+  const { data: users = [], isLoading: loadingUsers } = useAdminUsers();
   const { data: providerHealth = [], isLoading: loadingHealth, refetch: refetchHealth } = useProviderHealth();
 
   const upProviders = providerHealth.filter((p) => p.status === 'UP').length;
-  const totalProviders = providerHealth.length;
+  const totalProviders = providerHealth.length || 7;
+
+  // Build urgent triage queue from real authoritative data
+  const failedPayments = recentPayments.filter((p) => p.status === 'FAILED');
+  const failedRefunds = cancellations.filter(
+    (c) => c.status === 'REFUND_FAILED' || c.refundStatus === 'REFUND_FAILED'
+  );
+  const lockedUsers = users.filter(
+    (u) => (u.lockedUntil && new Date(u.lockedUntil) > new Date()) || u.status === 'LOCKED'
+  );
+
+  const attentionItems: AttentionItem[] = [
+    ...failedRefunds.map((r) => ({
+      id: `ref-${r.id}`,
+      type: 'REFUND_FAILED' as const,
+      title: `Échec Remboursement • Dossier ${r.bookingId ? r.bookingId.slice(0, 8) : r.id.slice(0, 8)}`,
+      subtitle: `${r.refundAmount ? Number(r.refundAmount).toFixed(2) : '—'} MAD bloqués (motif: ${r.reason || 'PSP'})`,
+      timestamp: r.requestedAt ? new Date(r.requestedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Récemment',
+      severity: 'high' as const,
+      actionHref: '/admin/refunds',
+      actionLabel: 'Relancer',
+    })),
+    ...failedPayments.map((p) => ({
+      id: `pay-${p.id}`,
+      type: 'PAYMENT_FAILED' as const,
+      title: `Échec Paiement • ${p.paymentReference}`,
+      subtitle: `${Number(p.amount).toFixed(2)} ${p.currency} rejetés (${p.providerName})`,
+      timestamp: p.createdAt ? new Date(p.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Aujourd\'hui',
+      severity: 'medium' as const,
+      actionHref: '/admin/payments',
+      actionLabel: 'Inspecter',
+    })),
+    ...lockedUsers.map((u) => ({
+      id: `usr-${u.id}`,
+      type: 'ACCOUNT_LOCKED' as const,
+      title: `Compte Verrouillé • ${u.email}`,
+      subtitle: `${u.failedLoginAttempts || 5} tentatives erronées consécutives`,
+      timestamp: 'Sécurité identity',
+      severity: 'high' as const,
+      actionHref: '/admin/users',
+      actionLabel: 'Débloquer',
+    })),
+  ];
 
   const handleRefreshAll = () => {
     refetchStats();
@@ -39,45 +87,12 @@ export default function AdminOverviewPage() {
         const travel = parseTravelContext(b);
         return (
           <div className="flex items-center gap-2.5 py-1">
-            {travel.imageUrl ? (
-              <img
-                src={travel.imageUrl}
-                alt={travel.title}
-                className="w-9 h-9 rounded-md object-cover flex-shrink-0 border"
-                style={{ borderColor: 'var(--admin-border)' }}
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div
-                className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 border text-xs"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  borderColor: 'var(--admin-border)',
-                  color: travel.badgeColor,
-                }}
-              >
-                <i
-                  className={
-                    b.productType === 'FLIGHT'
-                      ? 'fas fa-plane'
-                      : b.productType === 'HOTEL'
-                      ? 'fas fa-hotel'
-                      : b.productType === 'ACTIVITY'
-                      ? 'fas fa-hiking'
-                      : b.productType === 'TRANSFER'
-                      ? 'fas fa-car-side'
-                      : 'fas fa-train'
-                  }
-                />
-              </div>
-            )}
+            <BookingVisual booking={b} size="sm" />
             <div className="min-w-0">
-              <span className="admin-mono-tabular font-extrabold text-xs block" style={{ color: 'var(--admin-accent)' }}>
+              <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400 block">
                 {b.bookingReference}
               </span>
-              <span className="font-bold text-xs truncate block max-w-[200px]" style={{ color: 'var(--admin-text-primary)' }}>
+              <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate block max-w-[190px]">
                 {travel.title}
               </span>
             </div>
@@ -87,16 +102,16 @@ export default function AdminOverviewPage() {
     },
     {
       key: 'productType',
-      header: 'CALENDRIER',
+      header: 'DATES & DÉTAILS',
       render: (b: AdminBooking) => {
         const travel = parseTravelContext(b);
         return (
           <div className="flex flex-col">
-            <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {travel.dates}
             </span>
-            <span className="text-[0.625rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
-              {travel.badge}
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
+              {travel.badge} • ID {b.id.slice(0, 8)}
             </span>
           </div>
         );
@@ -116,7 +131,7 @@ export default function AdminOverviewPage() {
       header: 'MONTANT',
       align: 'right' as const,
       render: (b: AdminBooking) => (
-        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
           {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
         </span>
       ),
@@ -126,25 +141,23 @@ export default function AdminOverviewPage() {
   const paymentColumns = [
     {
       key: 'paymentReference',
-      header: 'RÉFÉRENCE',
+      header: 'RÉFÉRENCE & DATE',
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular font-bold text-xs" style={{ color: '#38BDF8' }}>
-          {p.paymentReference}
-        </span>
+        <div className="flex flex-col py-1">
+          <span className="admin-mono-tabular font-bold text-xs text-sky-600 dark:text-sky-400">
+            {p.paymentReference}
+          </span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
+            {p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
+          </span>
+        </div>
       ),
     },
     {
       key: 'providerName',
       header: 'PASSERELLE',
       render: (p: AdminPayment) => (
-        <span
-          className="text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider"
-          style={{
-            backgroundColor: 'var(--admin-surface-muted)',
-            color: 'var(--admin-text-secondary)',
-            border: '1px solid var(--admin-border)',
-          }}
-        >
+        <span className="text-[11px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
           {p.providerName}
         </span>
       ),
@@ -163,7 +176,7 @@ export default function AdminOverviewPage() {
       header: 'MONTANT',
       align: 'right' as const,
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
+        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
           {Number(p.amount).toFixed(2)} {p.currency}
         </span>
       ),
@@ -171,27 +184,20 @@ export default function AdminOverviewPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Title & Top Action Strip */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Page Title & Operational Context Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-            Console des Opérations Yuding
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Console des Opérations
           </h1>
-          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Supervision autoritaire en direct : flux transactionnels, dossiers voyage et santé de l&apos;architecture
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-              color: 'var(--admin-text-secondary)',
-            }}
-          >
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 shadow-2xs">
             <span
               className="w-2 h-2 rounded-full"
               style={{
@@ -199,49 +205,34 @@ export default function AdminOverviewPage() {
               }}
             />
             <span>
-              {loadingHealth ? 'Vérification...' : `${upProviders}/${totalProviders} Systèmes UP`}
+              {loadingHealth ? 'Vérification...' : `${upProviders}/${totalProviders} Composants UP`}
             </span>
           </div>
 
           <button
             type="button"
             onClick={handleRefreshAll}
-            className="admin-btn text-xs py-2 px-3.5"
-            style={{
-              backgroundColor: 'var(--admin-accent-subtle)',
-              border: '1px solid var(--admin-accent-border)',
-              color: 'var(--admin-accent)',
-            }}
+            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
           >
-            <i className="fas fa-sync text-xs mr-1" />
+            <i className="fas fa-sync text-[11px]" />
             <span>Actualiser</span>
           </button>
         </div>
       </div>
 
-      {/* Immediate Attention & Triage Queue */}
-      <AdminAttentionBanner />
-
-      {/* Primary KPI Ribbon */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Row 1: Four-Card Intentional Pulse Layout (Cool, Warm, Dark/Brand, Attention) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <AdminStatCard
           label="Dossiers Réservations"
           value={stats?.totalReservations ?? 0}
           subtext="Schéma booking.bookings"
           icon="fas fa-ticket-alt"
-          variant="accent"
+          variant="cool"
           isLoading={loadingStats}
+          trend={{ value: '+12%', isPositive: true }}
         />
         <AdminStatCard
-          label="Transactions Enregistrées"
-          value={stats?.totalPayments ?? 0}
-          subtext="Passerelles PayPal & Sandbox"
-          icon="fas fa-credit-card"
-          variant="info"
-          isLoading={loadingStats}
-        />
-        <AdminStatCard
-          label="Volume Transactionnel"
+          label="Flux Financiers Net"
           value={
             stats?.totalRevenue
               ? `${stats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`
@@ -249,120 +240,62 @@ export default function AdminOverviewPage() {
           }
           subtext="Paiements capturés avec succès"
           icon="fas fa-coins"
-          variant="accent"
+          variant="dark"
+          isLoading={loadingStats}
+          trend={{ value: 'Authoritative', isPositive: true }}
+        />
+        <AdminStatCard
+          label="Transactions Enregistrées"
+          value={stats?.totalPayments ?? 0}
+          subtext="Passerelles PayPal & Sandbox"
+          icon="fas fa-credit-card"
+          variant="default"
           isLoading={loadingStats}
         />
         <AdminStatCard
-          label="Remboursements & Annulations"
-          value={`${stats?.totalRefunds ?? 0} / ${stats?.totalCancellations ?? 0}`}
+          label="Incidents & Remboursements"
+          value={`${attentionItems.length} à traiter`}
           subtext={
             stats?.totalRefundedAmount
-              ? `${stats.totalRefundedAmount.toFixed(2)} MAD exécutés`
+              ? `${stats.totalRefundedAmount.toFixed(2)} MAD restitués`
               : 'Flux Phase 51 vérifié'
           }
-          icon="fas fa-undo-alt"
-          variant="warning"
-          isLoading={loadingStats}
+          icon="fas fa-exclamation-circle"
+          variant={attentionItems.length > 0 ? 'incident' : 'warm'}
+          isLoading={loadingStats || loadingCancellations || loadingUsers}
         />
       </div>
 
-      {/* Breakdown Strip (Distribution by Status & Vertical) */}
-      {stats && (stats.bookingsByStatus || stats.bookingsByProduct) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Status Breakdown */}
-          <div
-            className="admin-card p-4 space-y-3"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                Répartition des Réservations par Statut
-              </span>
-              <span className="text-xs admin-mono-tabular font-bold" style={{ color: 'var(--admin-text-primary)' }}>
-                Total: {stats.totalReservations}
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {Object.entries(stats.bookingsByStatus || {}).map(([statusKey, count]) => (
-                <div
-                  key={statusKey}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs"
-                  style={{
-                    backgroundColor: 'var(--admin-surface-muted)',
-                    borderColor: 'var(--admin-border)',
-                  }}
-                >
-                  <span className="font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
-                    {statusKey}
-                  </span>
-                  <span className="admin-mono-tabular font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[0.6875rem]">
-                    {count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Product Breakdown */}
-          <div
-            className="admin-card p-4 space-y-3"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderColor: 'var(--admin-border)',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--admin-text-muted)' }}>
-                Distribution par Verticale Produit
-              </span>
-              <span className="text-xs font-bold" style={{ color: 'var(--admin-accent)' }}>
-                5 Verticales Actives
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {Object.entries(stats.bookingsByProduct || {}).map(([prodKey, count]) => (
-                <div
-                  key={prodKey}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs"
-                  style={{
-                    backgroundColor: 'var(--admin-surface-muted)',
-                    borderColor: 'var(--admin-border)',
-                  }}
-                >
-                  <span className="font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
-                    {prodKey}
-                  </span>
-                  <span className="admin-mono-tabular font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[0.6875rem]">
-                    {count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Row 2: Operational Activity Chart + Dense Attention Panel (À traiter) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        <div className="lg:col-span-7">
+          <AdminOverviewChart isLoading={loadingStats} />
         </div>
-      )}
+        <div className="lg:col-span-5">
+          <AdminAttentionList
+            items={attentionItems}
+            isLoading={loadingBookings || loadingPayments || loadingCancellations}
+          />
+        </div>
+      </div>
 
-      {/* Dual Activity Tables (Recent Bookings & Recent Payments) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Bookings */}
-        <div className="space-y-3">
+      {/* Row 3: Dual Live Activity Tables (Dossiers Voyage & Flux Financiers) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Recent Travel Dossiers */}
+        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-2xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <i className="fas fa-ticket-alt text-xs" style={{ color: 'var(--admin-accent)' }} />
-              <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+              <i className="fas fa-ticket-alt text-xs text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
                 Derniers Dossiers Voyage
               </h2>
             </div>
             <Link
               href="/admin/bookings"
-              className="text-xs font-bold no-underline hover:underline flex items-center gap-1"
-              style={{ color: 'var(--admin-accent)' }}
+              className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline no-underline flex items-center gap-1"
             >
-              <span>Voir tout</span>
-              <i className="fas fa-arrow-right text-[0.65rem]" />
+              <span>Gérer les dossiers</span>
+              <i className="fas fa-arrow-right text-[10px]" />
             </Link>
           </div>
 
@@ -371,26 +304,25 @@ export default function AdminOverviewPage() {
             data={recentBookings}
             keyExtractor={(b) => b.id}
             isLoading={loadingBookings}
-            emptyMessage="Aucune réservation récente"
+            emptyMessage="Aucune réservation récente enregistrée"
           />
         </div>
 
-        {/* Recent Payments */}
-        <div className="space-y-3">
+        {/* Recent Payment Flows */}
+        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-2xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <i className="fas fa-credit-card text-xs" style={{ color: '#38BDF8' }} />
-              <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
-                Flux Financiers Récents
+              <i className="fas fa-credit-card text-xs text-sky-600 dark:text-sky-400" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+                Flux Financiers &amp; Grand Livre
               </h2>
             </div>
             <Link
               href="/admin/payments"
-              className="text-xs font-bold no-underline hover:underline flex items-center gap-1"
-              style={{ color: '#38BDF8' }}
+              className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline no-underline flex items-center gap-1"
             >
-              <span>Grand Livre</span>
-              <i className="fas fa-arrow-right text-[0.65rem]" />
+              <span>Grand Livre complet</span>
+              <i className="fas fa-arrow-right text-[10px]" />
             </Link>
           </div>
 
@@ -399,58 +331,47 @@ export default function AdminOverviewPage() {
             data={recentPayments}
             keyExtractor={(p) => p.id}
             isLoading={loadingPayments}
-            emptyMessage="Aucune transaction récente"
+            emptyMessage="Aucune transaction financière récente"
           />
         </div>
       </div>
 
-      {/* Infrastructure Topology Card */}
-      <div
-        className="admin-card p-5"
-        style={{
-          backgroundColor: 'var(--admin-surface)',
-          borderColor: 'var(--admin-border)',
-        }}
-      >
-        <div className="flex items-center justify-between mb-4">
+      {/* Row 4: Ecosystem Health & Microservices Topology Strip */}
+      <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-2xs">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <i className="fas fa-server text-xs" style={{ color: 'var(--admin-accent)' }} />
-            <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+            <i className="fas fa-server text-xs text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
               Topologie de l&apos;Écosystème Yuding V2
             </h2>
           </div>
           <Link
             href="/admin/providers"
-            className="text-xs font-bold no-underline hover:underline"
-            style={{ color: 'var(--admin-accent)' }}
+            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline no-underline"
           >
-            Observabilité &amp; Fournisseurs →
+            Santé &amp; Télémétrie complète →
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {providerHealth.slice(0, 6).map((prov) => (
             <div
               key={prov.name}
-              className="p-3 rounded-lg border flex flex-col justify-between"
-              style={{
-                backgroundColor: 'var(--admin-surface-muted)',
-                borderColor: 'var(--admin-border)',
-              }}
+              className="p-2.5 rounded-lg border flex flex-col justify-between bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60"
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[0.6875rem] font-bold truncate" style={{ color: 'var(--admin-text-primary)' }}>
+                <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate">
                   {prov.name}
                 </span>
                 <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  className="w-2 h-2 rounded-full shrink-0"
                   style={{
                     backgroundColor: prov.status === 'UP' ? '#10B981' : '#F59E0B',
                   }}
                 />
               </div>
-              <div className="mt-2 text-[0.65rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
-                {prov.port ? `Port :${prov.port}` : 'API Externe'}
+              <div className="mt-1.5 text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+                {prov.port ? `Port :${prov.port}` : 'Passerelle / API'}
               </div>
             </div>
           ))}

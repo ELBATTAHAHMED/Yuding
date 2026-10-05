@@ -31,36 +31,31 @@ export default function AdminReviewsPage() {
 
   if (!allowed) {
     return (
-      <div className="p-8 text-center text-sm" style={{ color: 'var(--admin-text-muted)' }}>
-        Accès restreint : privilèges de modération requis.
+      <div className="p-8 text-center text-sm text-slate-400">
+        Accès restreint : privilèges de modération requis (ROLE_CONTENT_MANAGER, ROLE_SUPPORT ou ROLE_ADMIN).
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-4xl mx-auto space-y-4">
+      {/* Title & Actions Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
-            Modération des Avis Communautaires
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Modération des Avis Voyageurs
           </h1>
-          <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
-            Les avis avec liens ou nécessitant une vérification éditoriale restent invisibles au public jusqu’à décision
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            File de conformité et modération de contenu : avis avec liens, signalements ou vérification éditoriale requise
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => refetch()}
-          className="admin-btn text-xs py-2 px-3.5"
-          style={{
-            backgroundColor: 'var(--admin-accent-subtle)',
-            border: '1px solid var(--admin-accent-border)',
-            color: 'var(--admin-accent)',
-          }}
+          className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
         >
-          <i className="fas fa-sync text-xs" />
+          <i className="fas fa-sync text-[11px]" />
           <span>Actualiser ({reviews.length})</span>
         </button>
       </div>
@@ -68,12 +63,7 @@ export default function AdminReviewsPage() {
       {error && (
         <div
           role="alert"
-          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2"
-          style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            borderColor: 'rgba(239, 68, 68, 0.25)',
-            color: '#F87171',
-          }}
+          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800"
         >
           <i className="fas fa-exclamation-circle" />
           <span>{error}</span>
@@ -82,93 +72,70 @@ export default function AdminReviewsPage() {
 
       {/* Review Queue */}
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="admin-card p-6 h-36 animate-pulse" />
+            <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 h-36 animate-pulse" />
           ))}
         </div>
       ) : isError ? (
-        <div className="admin-card p-8 text-center" style={{ color: '#F87171' }}>
+        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 rounded-xl p-8 text-center text-rose-600">
           <i className="fas fa-exclamation-triangle text-2xl mb-2" />
           <div className="font-bold text-sm">Impossible de charger la file de modération</div>
         </div>
       ) : reviews.length === 0 ? (
-        <div
-          className="admin-card p-12 text-center flex flex-col items-center justify-center gap-2"
-          style={{
-            backgroundColor: 'var(--admin-surface)',
-            borderColor: 'var(--admin-border)',
-          }}
-        >
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1"
-            style={{
-              backgroundColor: 'var(--admin-accent-subtle)',
-              color: 'var(--admin-accent)',
-            }}
-          >
+        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-12 text-center flex flex-col items-center justify-center gap-2 shadow-2xs">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
             <i className="fas fa-check-double" />
           </div>
-          <div className="font-bold text-sm" style={{ color: 'var(--admin-text-primary)' }}>
+          <div className="font-bold text-sm text-slate-900 dark:text-slate-100">
             File de modération à jour
           </div>
-          <div className="text-xs max-w-sm" style={{ color: 'var(--admin-text-muted)' }}>
-            Aucun avis en attente de validation. Les nouveaux avis soumis apparaîtront automatiquement ici.
+          <div className="text-xs text-slate-400 dark:text-slate-500 max-w-sm">
+            Aucun avis en attente de validation éditoriale. Tout retour soumis avec lien ou contenu suspect sera acheminé ici.
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {reviews.map((review) => (
             <article
               key={review.id}
-              className="admin-card p-5 space-y-4 transition-all duration-150"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
+              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-2xs"
             >
               {/* Header: Target entity & stars */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3" style={{ borderColor: 'var(--admin-border)' }}>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm" style={{ color: 'var(--admin-text-primary)' }}>
+                  <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
                     {review.entityName || review.entityReference}
                   </span>
                   <AdminBadge variant="info" size="sm" dot={false}>
                     {review.entityType}
                   </AdminBadge>
                   {review.provider && (
-                    <span className="text-[0.6875rem] px-2 py-0.5 rounded font-mono bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                       {review.provider}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 text-amber-400 text-sm">
+                <div className="flex items-center gap-1 text-amber-400 text-xs">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <i
                       key={i}
                       className={`fas fa-star ${i < review.rating ? 'opacity-100' : 'opacity-20'}`}
                     />
                   ))}
-                  <span className="text-xs font-bold text-slate-400 ml-1">({review.rating}/5)</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 ml-1">({review.rating}/5)</span>
                 </div>
               </div>
 
               {/* Review Content */}
-              <p
-                className="text-xs leading-relaxed whitespace-pre-wrap rounded-lg p-3 border"
-                style={{
-                  backgroundColor: 'var(--admin-surface-muted)',
-                  borderColor: 'var(--admin-border)',
-                  color: 'var(--admin-text-primary)',
-                }}
-              >
+              <p className="text-xs leading-relaxed whitespace-pre-wrap rounded-lg p-3 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-normal m-0">
                 &ldquo;{review.content}&rdquo;
               </p>
 
               {/* Actions Footer */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[0.6875rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
+                <span className="text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
                   ID : {review.id}
                 </span>
 
@@ -177,14 +144,9 @@ export default function AdminReviewsPage() {
                     type="button"
                     disabled={decision.isPending}
                     onClick={() => decision.mutate({ id: review.id, status: 'REJECTED' })}
-                    className="admin-btn text-xs py-1.5 px-3 rounded"
-                    style={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                      border: '1px solid rgba(239, 68, 68, 0.25)',
-                      color: '#F87171',
-                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200/50 dark:border-rose-900/40 transition-colors shadow-2xs"
                   >
-                    <i className="fas fa-times text-xs" />
+                    <i className="fas fa-times text-[10px]" />
                     <span>Rejeter</span>
                   </button>
 
@@ -192,13 +154,9 @@ export default function AdminReviewsPage() {
                     type="button"
                     disabled={decision.isPending}
                     onClick={() => decision.mutate({ id: review.id, status: 'APPROVED' })}
-                    className="admin-btn text-xs py-1.5 px-3.5 rounded font-bold"
-                    style={{
-                      backgroundColor: 'var(--admin-accent)',
-                      color: '#0B0F19',
-                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs"
                   >
-                    <i className="fas fa-check text-xs" />
+                    <i className="fas fa-check text-[10px]" />
                     <span>Approuver &amp; Publier</span>
                   </button>
                 </div>

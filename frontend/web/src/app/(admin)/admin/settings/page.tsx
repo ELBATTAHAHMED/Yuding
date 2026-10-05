@@ -29,7 +29,7 @@ export default function AdminSettingsPage() {
   const serverPolicies = [
     {
       title: 'Authentification RS256 & Signature JWT Asymétrique',
-      description: 'Garantie cryptographique stricte : l’identity-service signe les jetons avec une clé privée RSA 2048-bits, validée downstream via la clé publique.',
+      description: 'Garantie cryptographique stricte : identity-service signe les jetons avec une clé privée RSA 2048-bits, validée downstream via la clé publique.',
       status: 'Actif & Immuable',
       icon: 'fas fa-key',
     },
@@ -61,8 +61,8 @@ export default function AdminSettingsPage() {
   }> = [
     {
       key: 'sandboxMode',
-      title: 'Environnement de Test Bac à Sable (Sandbox)',
-      description: 'Aiguille les flux de paiement et de réservation vers les émulateurs et bacs à sable partenaires sans impact financier réel.',
+      title: 'Environnement Bac à Sable (Sandbox)',
+      description: 'Aiguille les flux de paiement et de réservation vers les émulateurs partenaires sans impact financier réel.',
       icon: 'fas fa-vial',
     },
     {
@@ -86,26 +86,19 @@ export default function AdminSettingsPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-5">
       {/* Title */}
       <div>
-        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--admin-text-primary)' }}>
+        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
           Politiques &amp; Paramètres Opérationnels
         </h1>
-        <p className="text-xs font-medium mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Gouvernance architecturale, paramètres d&apos;exploitation et règles système en vigueur sur Yuding V2
         </p>
       </div>
 
       {feedback && (
-        <div
-          className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2 animate-fade-in"
-          style={{
-            backgroundColor: 'var(--admin-accent-subtle)',
-            borderColor: 'var(--admin-accent-border)',
-            color: 'var(--admin-accent)',
-          }}
-        >
+        <div className="p-3 rounded-lg border text-xs font-semibold flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800 animate-fade-in">
           <i className="fas fa-check-circle" />
           <span>{feedback}</span>
         </div>
@@ -114,8 +107,8 @@ export default function AdminSettingsPage() {
       {/* Authoritative Architectural Policies Section */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <i className="fas fa-landmark text-xs" style={{ color: 'var(--admin-accent)' }} />
-          <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
+          <i className="fas fa-landmark text-xs text-emerald-600 dark:text-emerald-400" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
             Politiques Architecturales Immuables (Backend Authoritative)
           </h2>
         </div>
@@ -123,120 +116,86 @@ export default function AdminSettingsPage() {
           {serverPolicies.map((p, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl border flex flex-col justify-between space-y-2"
-              style={{
-                backgroundColor: 'var(--admin-surface)',
-                borderColor: 'var(--admin-border)',
-              }}
+              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-2 shadow-2xs"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 font-bold text-xs" style={{ color: 'var(--admin-text-primary)' }}>
-                    <i className={`${p.icon} text-xs`} style={{ color: 'var(--admin-accent)' }} />
+                  <div className="flex items-center gap-2 font-bold text-xs text-slate-900 dark:text-slate-100">
+                    <i className={`${p.icon} text-xs text-emerald-600 dark:text-emerald-400`} />
                     <span>{p.title}</span>
                   </div>
                 </div>
-                <p className="text-[0.6875rem] leading-relaxed" style={{ color: 'var(--admin-text-muted)' }}>
+                <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400 m-0">
                   {p.description}
                 </p>
               </div>
-              <div className="pt-2 border-t flex items-center justify-between" style={{ borderColor: 'var(--admin-border)' }}>
-                <span className="text-[0.625rem] uppercase font-bold text-emerald-500 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
                   {p.status}
                 </span>
-                <span className="text-[0.625rem] admin-mono-tabular" style={{ color: 'var(--admin-text-muted)' }}>
-                  AGENTS.md
-                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Architecture V2</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Client-side Feature Toggles */}
-      <div className="space-y-3">
+      {/* Operational Toggles */}
+      <div className="space-y-3 pt-2">
         <div className="flex items-center gap-2">
-          <i className="fas fa-toggle-on text-xs" style={{ color: '#38BDF8' }} />
-          <h2 className="text-sm font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
-            Paramètres d&apos;Exploitation et Drapeaux d&apos;Expérimentation (Feature Flags)
+          <i className="fas fa-sliders-h text-xs text-sky-500" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+            Commutateurs d&apos;Exploitation en Temps Réel
           </h2>
         </div>
-        <div className="space-y-2.5">
-          {toggles.map((item) => {
-            const isChecked = Boolean(settings[item.key]);
+
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
+          {toggles.map((t) => {
+            const isChecked = Boolean(settings[t.key]);
             return (
-              <div
-                key={item.key}
-                className="admin-card p-4 flex items-center justify-between gap-4 transition-colors"
-                style={{
-                  backgroundColor: 'var(--admin-surface)',
-                  borderColor: 'var(--admin-border)',
-                }}
-              >
-                <div className="flex items-start gap-3 min-w-0">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{
-                      backgroundColor: isChecked ? 'var(--admin-accent-subtle)' : 'var(--admin-surface-muted)',
-                      color: isChecked ? 'var(--admin-accent)' : 'var(--admin-text-muted)',
-                    }}
-                  >
-                    <i className={`${item.icon} text-xs`} />
+              <div key={t.key} className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-slate-600 dark:text-slate-300">
+                    <i className={`${t.icon} text-xs`} />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-xs font-bold truncate m-0" style={{ color: 'var(--admin-text-primary)' }}>
-                      {item.title}
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 m-0">
+                      {t.title}
                     </h3>
-                    <p className="text-[0.6875rem] leading-relaxed mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
-                      {item.description}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5 max-w-xl leading-relaxed">
+                      {t.description}
                     </p>
                   </div>
                 </div>
 
-                {/* Toggle switch */}
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={isChecked}
-                  onClick={() => handleToggle(item.key)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
-                  style={{
-                    backgroundColor: isChecked ? 'var(--admin-accent)' : 'var(--admin-border-strong)',
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      isChecked ? 'translate-x-5' : 'translate-x-0'
-                    }`}
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handleToggle(t.key)}
+                    className="sr-only peer"
                   />
-                </button>
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600" />
+                </label>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Gateway Rate Limit Setting */}
-      <div
-        className="admin-card p-5 space-y-3"
-        style={{
-          backgroundColor: 'var(--admin-surface)',
-          borderColor: 'var(--admin-border)',
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <i className="fas fa-tachometer-alt text-xs" style={{ color: 'var(--admin-accent)' }} />
-          <h3 className="text-xs font-bold m-0" style={{ color: 'var(--admin-text-primary)' }}>
-            Quota de Requêtes Gateway (Redis Rate Limit)
+      {/* Quota Setting */}
+      <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 m-0">
+            Plafond de Débit Global (Rate Limit)
           </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">
+            Nombre maximal de requêtes autorisées par minute et par IP via l&apos;API Gateway
+          </p>
         </div>
-        <p className="text-[0.6875rem]" style={{ color: 'var(--admin-text-muted)' }}>
-          Seuil standard de requêtes par minute configuré au niveau de la passerelle Spring Cloud Gateway avec Redis KeyResolver.
-        </p>
 
-        <div className="flex items-center gap-3 pt-1">
+        <div className="flex items-center gap-2">
           <input
             type="number"
             min={10}
@@ -244,16 +203,9 @@ export default function AdminSettingsPage() {
             step={10}
             value={settings.rateLimitPerMinute}
             onChange={(e) => handleRateLimitChange(Number(e.target.value))}
-            className="w-32 px-3 py-1.5 rounded-md text-xs font-mono font-bold outline-none"
-            style={{
-              backgroundColor: 'var(--admin-surface-muted)',
-              border: '1px solid var(--admin-border)',
-              color: 'var(--admin-text-primary)',
-            }}
+            className="w-24 text-xs font-bold admin-mono-tabular p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-right"
           />
-          <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
-            requêtes / minute par adresse IP cliente
-          </span>
+          <span className="text-xs font-semibold text-slate-500">req/min</span>
         </div>
       </div>
     </div>
