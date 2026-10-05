@@ -1,11 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { authService } from '@/services/auth.service';
 
 interface EntityAvatarProps {
   name?: string;
   email?: string;
   photoUrl?: string | null;
+  userId?: string;
+  hasProfilePhoto?: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'brand' | 'neutral' | 'accent' | 'operator';
   className?: string;
@@ -23,11 +27,36 @@ export function EntityAvatar({
   name,
   email,
   photoUrl,
+  userId,
+  hasProfilePhoto,
   size = 'sm',
   variant = 'brand',
   className = '',
 }: EntityAvatarProps) {
   const sizeClasses = SIZE_MAP[size] || SIZE_MAP.sm;
+  const [blobUrl, setBlobUrl] = useState<string | null>(photoUrl || null);
+
+  // If this entity is an operator/user with hasProfilePhoto, fetch via authService if needed
+  const shouldFetchPhoto = Boolean(hasProfilePhoto && !photoUrl);
+  const photoQuery = useQuery({
+    queryKey: ['entity-avatar-photo', userId || email],
+    queryFn: authService.getProfilePhoto,
+    enabled: shouldFetchPhoto,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (photoUrl) {
+      setBlobUrl(photoUrl);
+      return;
+    }
+    if (photoQuery.data) {
+      const url = URL.createObjectURL(photoQuery.data);
+      setBlobUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [photoUrl, photoQuery.data]);
 
   const initials = React.useMemo(() => {
     if (name && name.trim()) {
@@ -43,15 +72,14 @@ export function EntityAvatar({
     return 'YD';
   }, [name, email]);
 
-  if (photoUrl) {
+  if (blobUrl) {
     return (
       <img
-        src={photoUrl}
+        src={blobUrl}
         alt={name || email || 'Avatar'}
         className={`${sizeClasses} rounded-full object-cover flex-shrink-0 border border-slate-200 dark:border-slate-800 ${className}`}
-        onError={(e) => {
-          // If image fails to load, hide image and show fallback
-          (e.target as HTMLElement).style.display = 'none';
+        onError={() => {
+          setBlobUrl(null);
         }}
       />
     );

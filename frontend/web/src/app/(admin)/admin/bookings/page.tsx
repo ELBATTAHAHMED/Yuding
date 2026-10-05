@@ -146,7 +146,13 @@ export default function AdminBookingsPage() {
         const name = user ? `${user.firstName} ${user.lastName}`.trim() : `Voyageur (${b.userId.slice(0, 6)})`;
         return (
           <div className="flex items-center gap-2 py-0.5">
-            <EntityAvatar name={name} email={user?.email} size="sm" />
+            <EntityAvatar
+              name={name}
+              email={user?.email}
+              userId={b.userId}
+              hasProfilePhoto={true}
+              size="sm"
+            />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
                 {name}
@@ -436,6 +442,8 @@ export default function AdminBookingsPage() {
                 <EntityAvatar
                   name={selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'Client'}
                   email={selectedUser?.email}
+                  userId={selectedBooking.userId}
+                  hasProfilePhoto={true}
                   size="md"
                 />
                 <div className="min-w-0">

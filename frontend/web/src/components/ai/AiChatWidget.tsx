@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/AuthContext';
 import { aiService } from '@/services/ai.service';
 import type { AiAttachmentDto, ChatMessage, ConversationSummaryDto } from '@/types/ai.types';
@@ -138,7 +139,13 @@ function SourcesList({ sources }: { sources: NonNullable<ChatMessage['sources']>
 }
 
 export const AiChatWidget: React.FC = () => {
+  const pathname = usePathname();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+
+  // Do not render floating chatbot inside the admin operations console to prevent UI overlap
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [view, setView] = useState<'chat' | 'history'>('chat');
