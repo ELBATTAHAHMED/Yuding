@@ -51,7 +51,7 @@ export function AdminStatCard({
         };
       case 'dark':
         return {
-          cardClass: 'bg-[#121826] text-white border-[#1E2738] shadow-md dark:bg-[#070B12] dark:border-slate-800',
+          cardClass: 'bg-[#121826] text-white border-[#1E2738] shadow-md dark:bg-[#070B12] dark:border-zinc-800',
           iconWrapper: 'bg-slate-800 text-emerald-400',
           labelColor: 'text-slate-300 font-medium',
           valueColor: 'text-white',
@@ -69,11 +69,11 @@ export function AdminStatCard({
         };
       default:
         return {
-          cardClass: 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs',
-          iconWrapper: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
-          labelColor: 'text-slate-500 dark:text-slate-400 font-medium',
-          valueColor: 'text-slate-900 dark:text-slate-100',
-          badgeColor: 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 font-medium',
+          cardClass: 'bg-white dark:bg-zinc-900 border-slate-200/80 dark:border-zinc-800 shadow-xs',
+          iconWrapper: 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300',
+          labelColor: 'text-slate-500 dark:text-zinc-400 font-medium',
+          valueColor: 'text-slate-900 dark:text-zinc-100',
+          badgeColor: 'text-slate-600 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800 font-medium',
           sparklineColor: '#64748B',
         };
     }
@@ -101,7 +101,7 @@ export function AdminStatCard({
 
       <div className="mt-3.5">
         {isLoading ? (
-          <div className="h-8 w-28 rounded-lg bg-slate-200/70 dark:bg-slate-800 animate-pulse my-0.5" />
+          <div className="h-8 w-28 rounded-lg bg-slate-200/70 dark:bg-zinc-800 animate-pulse my-0.5" />
         ) : (
           <div className="flex items-baseline justify-between gap-2">
             <span className={`text-2xl font-black admin-mono-tabular tracking-tight leading-none ${styles.valueColor}`}>
@@ -116,7 +116,7 @@ export function AdminStatCard({
         )}
 
         {subtext && (
-          <div className="text-[11px] font-medium mt-2 text-slate-500 dark:text-slate-400 truncate opacity-85">
+          <div className="text-[11px] font-medium mt-2 text-slate-500 dark:text-zinc-400 truncate opacity-85">
             {subtext}
           </div>
         )}

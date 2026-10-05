@@ -157,7 +157,7 @@ export default function AdminRefundsPage() {
       align: 'right' as const,
       render: (r: AdminRefund) => (
         <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
             {Number(r.amount).toFixed(2)} {r.currency}
           </span>
           <span className="text-[10px] text-rose-500 font-semibold">Crédité au client</span>
@@ -168,7 +168,7 @@ export default function AdminRefundsPage() {
       key: 'reason',
       header: 'MOTIF DU REMBOURSEMENT',
       render: (r: AdminRefund) => (
-        <span className="text-xs truncate max-w-[200px] inline-block font-medium text-slate-600 dark:text-slate-300">
+        <span className="text-xs truncate max-w-[200px] inline-block font-medium text-slate-600 dark:text-zinc-300">
           {r.reason || 'Annulation conforme au barème'}
         </span>
       ),
@@ -177,7 +177,7 @@ export default function AdminRefundsPage() {
       key: 'createdAt',
       header: 'DATE EXÉCUTION',
       render: (r: AdminRefund) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400">
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400">
           {new Date(r.createdAt).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'short',
@@ -207,7 +207,7 @@ export default function AdminRefundsPage() {
             e.stopPropagation();
             setSelectedItem(r);
           }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors shadow-2xs"
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
         >
           <i className="fas fa-file-invoice-dollar text-[10px] mr-1" />
           <span>Ticket</span>
@@ -235,7 +235,7 @@ export default function AdminRefundsPage() {
       key: 'policyType',
       header: 'POLITIQUE APPLIQUÉE',
       render: (c: AdminCancellation) => (
-        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
           {c.policyType || 'FLEXIBLE'}
         </span>
       ),
@@ -253,7 +253,7 @@ export default function AdminRefundsPage() {
             <span className="admin-mono-tabular font-bold text-xs text-rose-600 dark:text-rose-400">
               {refundAmt.toFixed(2)} {curr}
             </span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] text-slate-400 dark:text-zinc-500">
               Frais : {fee.toFixed(2)} {curr}
             </span>
           </div>
@@ -264,7 +264,7 @@ export default function AdminRefundsPage() {
       key: 'requestedAt',
       header: 'DEMANDE ÉMISE',
       render: (c: AdminCancellation) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400">
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400">
           {new Date(c.requestedAt).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'short',
@@ -306,7 +306,7 @@ export default function AdminRefundsPage() {
             <button
               type="button"
               onClick={() => setSelectedItem(c)}
-              className="text-xs font-semibold py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors shadow-2xs"
+              className="text-xs font-semibold py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
             >
               <i className="fas fa-eye text-[10px]" />
             </button>
@@ -321,10 +321,10 @@ export default function AdminRefundsPage() {
       {/* Title & Actions Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
             Remboursements &amp; Annulations
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Flux autoritaire Phase 51 : Calcul du barème d&apos;annulation et exécution des remboursements (payment.refunds)
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function AdminRefundsPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={totalItems === 0}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/ text-slate-700 dark:text-zinc-300 shadow-2xs transition-colors disabled:opacity-50"
           >
             <i className="fas fa-file-csv text-[11px]" />
             <span>Exporter CSV ({totalItems})</span>
@@ -356,7 +356,7 @@ export default function AdminRefundsPage() {
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2">
         <button
           type="button"
           onClick={() => {
@@ -366,13 +366,13 @@ export default function AdminRefundsPage() {
           }}
           className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
             activeTab === 'REFUNDS'
-              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'bg-white dark:bg-zinc-900 border-slate-300 dark:border-zinc-700 font-bold text-slate-900 dark:text-zinc-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
           }`}
         >
           <i className="fas fa-undo-alt text-rose-500 text-xs" />
           <span>Grand Livre des Remboursements</span>
-          <span className="admin-mono-tabular text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <span className="admin-mono-tabular text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
             {refunds.length}
           </span>
         </button>
@@ -386,13 +386,13 @@ export default function AdminRefundsPage() {
           }}
           className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
             activeTab === 'CANCELLATIONS'
-              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'bg-white dark:bg-zinc-900 border-slate-300 dark:border-zinc-700 font-bold text-slate-900 dark:text-zinc-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
           }`}
         >
           <i className="fas fa-ban text-amber-500 text-xs" />
           <span>Demandes d&apos;Annulation (Phase 51)</span>
-          <span className="admin-mono-tabular text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <span className="admin-mono-tabular text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
             {cancellations.length}
           </span>
         </button>
@@ -436,7 +436,7 @@ export default function AdminRefundsPage() {
       />
 
       {/* Active Tab Table inside Reference-style Rounded-2xl Card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
         {activeTab === 'REFUNDS' ? (
           <AdminTable
             columns={refundColumns}
@@ -503,13 +503,13 @@ export default function AdminRefundsPage() {
       >
         {selectedItem && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                 Données de l&apos;Opération
               </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="block text-[11px] text-slate-400 dark:text-slate-500">Dossier Réservation</span>
+                  <span className="block text-[11px] text-slate-400 dark:text-zinc-500">Dossier Réservation</span>
                   <Link
                     href={`/admin/bookings?search=${encodeURIComponent(selectedItem.bookingId)}`}
                     className="font-bold admin-mono-tabular text-emerald-600 dark:text-emerald-400 no-underline hover:underline"
@@ -519,7 +519,7 @@ export default function AdminRefundsPage() {
                 </div>
                 {selectedItem.amount != null && (
                   <div>
-                    <span className="block text-[11px] text-slate-400 dark:text-slate-500">Montant Recédé</span>
+                    <span className="block text-[11px] text-slate-400 dark:text-zinc-500">Montant Recédé</span>
                     <span className="admin-mono-tabular font-black text-sm text-rose-600 dark:text-rose-400">
                       {Number(selectedItem.amount).toFixed(2)} {selectedItem.currency}
                     </span>
@@ -527,7 +527,7 @@ export default function AdminRefundsPage() {
                 )}
                 {selectedItem.refundAmount != null && (
                   <div>
-                    <span className="block text-[11px] text-slate-400 dark:text-slate-500">Remboursement Net</span>
+                    <span className="block text-[11px] text-slate-400 dark:text-zinc-500">Remboursement Net</span>
                     <span className="admin-mono-tabular font-black text-sm text-rose-600 dark:text-rose-400">
                       {Number(selectedItem.refundAmount).toFixed(2)} {selectedItem.currency || 'MAD'}
                     </span>
@@ -535,8 +535,8 @@ export default function AdminRefundsPage() {
                 )}
                 {selectedItem.cancellationFee != null && (
                   <div>
-                    <span className="block text-[11px] text-slate-400 dark:text-slate-500">Frais Retenus</span>
-                    <span className="admin-mono-tabular font-bold text-slate-700 dark:text-slate-300">
+                    <span className="block text-[11px] text-slate-400 dark:text-zinc-500">Frais Retenus</span>
+                    <span className="admin-mono-tabular font-bold text-slate-700 dark:text-zinc-300">
                       {Number(selectedItem.cancellationFee).toFixed(2)} {selectedItem.currency || 'MAD'}
                     </span>
                   </div>
@@ -545,11 +545,11 @@ export default function AdminRefundsPage() {
             </div>
 
             {selectedItem.reason && (
-              <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-xs shadow-2xs">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+              <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-xs shadow-2xs">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-1">
                   Motif Fourni
                 </span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <span className="font-semibold text-slate-700 dark:text-zinc-300">
                   {selectedItem.reason}
                 </span>
               </div>
@@ -565,7 +565,7 @@ export default function AdminRefundsPage() {
             className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setRetryModalItem(null)}
           />
-          <div className="relative z-10 w-full max-w-md p-6 rounded-2xl border border-rose-300 dark:border-rose-800/80 bg-white dark:bg-slate-900 shadow-2xl space-y-4">
+          <div className="relative z-10 w-full max-w-md p-6 rounded-2xl border border-rose-300 dark:border-rose-800/80 bg-white dark:bg-zinc-900 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
                 <i className="fas fa-undo-alt text-base" />
@@ -574,34 +574,34 @@ export default function AdminRefundsPage() {
                 <h3 className="text-base font-black text-rose-600 dark:text-rose-400 m-0">
                   Relancer le Remboursement
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 m-0 truncate">
+                <p className="text-xs text-slate-500 dark:text-zinc-400 m-0 truncate">
                   Dossier {getBookingRef(retryModalItem.bookingId)}
                 </p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xs space-y-1.5">
+            <div className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/ text-xs space-y-1.5">
               <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Montant à rembourser :</span>
+                <span className="text-slate-500 dark:text-zinc-400">Montant à rembourser :</span>
                 <span className="font-bold admin-mono-tabular text-rose-600 dark:text-rose-400">
                   {retryModalItem.refundAmount?.toFixed(2)} {retryModalItem.currency || 'MAD'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Fournisseur :</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">{retryModalItem.providerName || 'Passerelle'}</span>
+                <span className="text-slate-500 dark:text-zinc-400">Fournisseur :</span>
+                <span className="font-bold text-slate-800 dark:text-zinc-200">{retryModalItem.providerName || 'Passerelle'}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
               Une nouvelle transaction de remboursement va être soumise à la passerelle de paiement. Si la passerelle valide le crédit, le statut passera à <strong>REFUNDED</strong> et sera consigné dans le Journal d&apos;Audit.
             </p>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => setRetryModalItem(null)}
-                className="text-xs py-2 px-3.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="text-xs py-2 px-3.5 rounded-lg border border-slate-300 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
               >
                 Annuler
               </button>

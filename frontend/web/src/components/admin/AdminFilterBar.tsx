@@ -42,26 +42,26 @@ export function AdminFilterBar({
 }: AdminFilterBarProps) {
   return (
     <div
-      className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 mb-5 flex flex-wrap items-center justify-between gap-3 shadow-xs"
+      className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-4 mb-5 flex flex-wrap items-center justify-between gap-3 shadow-xs"
     >
       <div className="flex flex-1 flex-wrap items-center gap-3 min-w-[280px]">
         {/* Search input matching Reference Q Search */}
         <div className="relative flex-1 min-w-[220px]">
           <i
-            className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500"
+            className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-zinc-500"
           />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full text-xs pl-9 pr-8 py-2.5 rounded-xl outline-none transition-all duration-150 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-slate-800"
+            className="w-full text-xs pl-9 pr-8 py-2.5 rounded-xl outline-none transition-all duration-150 bg-slate-50 dark:bg-zinc-800/ border border-slate-200/80 dark:border-zinc-700/ text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-slate-800"
           />
           {searchTerm && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200"
               title="Effacer la recherche"
             >
               <i className="fas fa-times" />
@@ -75,13 +75,13 @@ export function AdminFilterBar({
             <select
               value={f.value}
               onChange={(e) => f.onChange(e.target.value)}
-              className="text-xs px-3 py-2.5 rounded-xl outline-none cursor-pointer font-semibold transition-colors bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 focus:border-slate-900 dark:focus:border-slate-400"
+              className="text-xs px-3 py-2.5 rounded-xl outline-none cursor-pointer font-semibold transition-colors bg-slate-50 dark:bg-zinc-800/ border border-slate-200/80 dark:border-zinc-700/ text-slate-700 dark:text-zinc-300 focus:border-slate-900 dark:focus:border-slate-400"
             >
               {f.options.map((opt) => (
                 <option
                   key={opt.value}
                   value={opt.value}
-                  className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
                 >
                   {opt.label}
                 </option>
@@ -107,14 +107,14 @@ export function AdminFilterBar({
       <div className="flex items-center gap-3">
         {totalCount !== undefined && (
           <div
-            className="text-xs admin-mono-tabular font-medium flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
+            className="text-xs admin-mono-tabular font-medium flex items-center gap-1.5 text-slate-500 dark:text-zinc-400"
           >
             <span>Affichage :</span>
-            <span className="font-bold text-slate-900 dark:text-slate-100">
+            <span className="font-bold text-slate-900 dark:text-zinc-100">
               {filteredCount !== undefined ? filteredCount : totalCount}
             </span>
             {filteredCount !== undefined && filteredCount !== totalCount && (
-              <span className="text-slate-400 dark:text-slate-500">/ {totalCount}</span>
+              <span className="text-slate-400 dark:text-zinc-500">/ {totalCount}</span>
             )}
           </div>
         )}
@@ -124,7 +124,7 @@ export function AdminFilterBar({
             type="button"
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="text-xs font-bold py-2 px-3.5 rounded-xl transition-all flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 shadow-2xs disabled:opacity-50"
+            className="text-xs font-bold py-2 px-3.5 rounded-xl transition-all flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 shadow-2xs disabled:opacity-50"
             title="Actualiser les données"
           >
             <i

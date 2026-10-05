@@ -49,19 +49,19 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xs h-full">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 flex flex-col justify-between shadow-xs h-full">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800/">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100">
             Dossiers Prioritaires
           </span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300">
             {items.length}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+        <span className="text-[11px] text-slate-400 dark:text-zinc-500 font-medium">
           Triage direct
         </span>
       </div>
@@ -77,10 +77,10 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
             <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
               <i className="fas fa-check text-xs" />
             </div>
-            <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+            <div className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
               Aucun incident bloquant
             </div>
-            <div className="text-[11px] text-slate-400 dark:text-slate-500 max-w-xs mt-0.5">
+            <div className="text-[11px] text-slate-400 dark:text-zinc-500 max-w-xs mt-0.5">
               Les remboursements, paiements et sessions utilisateurs sont sous contrôle opérationnel.
             </div>
           </div>
@@ -88,15 +88,15 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
           items.map((item) => (
             <div
               key={item.id}
-              className="py-2.5 px-1 flex items-center justify-between gap-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 rounded-lg transition-colors group"
+              className="py-2.5 px-1 flex items-center justify-between gap-3 hover:bg-slate-50/70 dark:hover:bg-zinc-800/ rounded-lg transition-colors group"
             >
               <div className="flex items-start gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
                   <i className={`${getTypeIcon(item.type)} text-xs`} />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                    <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
                       {item.title}
                     </span>
                     <span
@@ -107,10 +107,10 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
                       {item.severity === 'high' ? 'Critique' : item.severity === 'medium' ? 'Attention' : 'Info'}
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                     {item.subtitle}
                   </div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 admin-mono-tabular mt-0.5">
+                  <div className="text-[10px] text-slate-400 dark:text-zinc-500 admin-mono-tabular mt-0.5">
                     {item.timestamp}
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
 
               <Link
                 href={item.actionHref}
-                className="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 text-slate-700 dark:text-slate-200 transition-all border border-slate-200/80 dark:border-slate-700/80 no-underline"
+                className="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 text-slate-700 dark:text-zinc-200 transition-all border border-slate-200/80 dark:border-zinc-700/ no-underline"
               >
                 {item.actionLabel}
               </Link>
@@ -128,8 +128,8 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
       </div>
 
       {/* Footer */}
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-        <span className="text-slate-400 dark:text-slate-500">
+      <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-[11px]">
+        <span className="text-slate-400 dark:text-zinc-500">
           Résolution SLA &lt; 15 min recommandée
         </span>
         <Link

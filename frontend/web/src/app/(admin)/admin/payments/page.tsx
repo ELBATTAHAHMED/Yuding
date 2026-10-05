@@ -124,10 +124,10 @@ export default function AdminPaymentsPage() {
       header: 'PASSERELLE & MÉTHODE',
       render: (p: AdminPayment) => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+          <span className="text-[11px] px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
             {p.providerName}
           </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[130px]">
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate max-w-[130px]">
             {p.paymentMethodType || 'Standard'}
           </span>
         </div>
@@ -137,7 +137,7 @@ export default function AdminPaymentsPage() {
       key: 'providerTransactionId',
       header: 'TXID PROCESSEUR',
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px] inline-block">
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400 truncate max-w-[140px] inline-block">
           {p.providerTransactionId || '—'}
         </span>
       ),
@@ -148,10 +148,10 @@ export default function AdminPaymentsPage() {
       align: 'right' as const,
       render: (p: AdminPayment) => (
         <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
             {Number(p.amount).toFixed(2)} {p.currency}
           </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500">
             Débit Net
           </span>
         </div>
@@ -161,7 +161,7 @@ export default function AdminPaymentsPage() {
       key: 'createdAt',
       header: 'HORODATAGE',
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400">
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400">
           {new Date(p.createdAt).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'short',
@@ -199,7 +199,7 @@ export default function AdminPaymentsPage() {
             e.stopPropagation();
             setSelectedPayment(p);
           }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors shadow-2xs"
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
         >
           <i className="fas fa-receipt text-[10px] mr-1" />
           <span>Ticket</span>
@@ -213,10 +213,10 @@ export default function AdminPaymentsPage() {
       {/* Title & Actions Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
             Paiements &amp; Grand Livre
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Audit exhaustif des flux de trésorerie, règlements passerelles et traçabilité des processeurs
           </p>
         </div>
@@ -226,7 +226,7 @@ export default function AdminPaymentsPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={filteredPayments.length === 0}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/ text-slate-700 dark:text-zinc-300 shadow-2xs transition-colors disabled:opacity-50"
           >
             <i className="fas fa-file-csv text-[11px]" />
             <span>Exporter CSV</span>
@@ -284,7 +284,7 @@ export default function AdminPaymentsPage() {
       />
 
       {/* Payments Table inside Reference-style Rounded-2xl Card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
         <AdminTable
           columns={columns}
           data={paginatedPayments}
@@ -327,33 +327,33 @@ export default function AdminPaymentsPage() {
         {selectedPayment && (
           <div className="space-y-4">
             {/* Amount Banner */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-center shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-center shadow-2xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                 Montant Net Traité
               </span>
-              <div className="text-2xl font-black text-slate-900 dark:text-slate-100 admin-mono-tabular mt-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-zinc-100 admin-mono-tabular mt-1">
                 {Number(selectedPayment.amount).toFixed(2)} {selectedPayment.currency}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Passerelle : <strong className="text-slate-800 dark:text-slate-200">{selectedPayment.providerName}</strong>
+              <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                Passerelle : <strong className="text-slate-800 dark:text-zinc-200">{selectedPayment.providerName}</strong>
               </div>
             </div>
 
             {/* Processor Details Grid */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
                 Détails du Processeur
               </h4>
               <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
-                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">TXID Processeur</span>
-                  <span className="admin-mono-tabular font-semibold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800/ border border-slate-200/60 dark:border-zinc-800">
+                  <span className="block text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-semibold">TXID Processeur</span>
+                  <span className="admin-mono-tabular font-semibold text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
                     {selectedPayment.providerTransactionId || 'N/A'}
                   </span>
                 </div>
-                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
-                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Mode de Paiement</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800/ border border-slate-200/60 dark:border-zinc-800">
+                  <span className="block text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-semibold">Mode de Paiement</span>
+                  <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
                     {selectedPayment.paymentMethodType || 'Standard'}
                   </span>
                 </div>
@@ -361,11 +361,11 @@ export default function AdminPaymentsPage() {
             </div>
 
             {/* Link to Booking */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs">
               <div className="flex items-center justify-between text-xs">
                 <div>
-                  <span className="block text-slate-400 dark:text-slate-500 text-[11px]">Dossier Voyage Rattaché</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5 block admin-mono-tabular">
+                  <span className="block text-slate-400 dark:text-zinc-500 text-[11px]">Dossier Voyage Rattaché</span>
+                  <span className="font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block admin-mono-tabular">
                     {getBookingRef(selectedPayment.bookingId)}
                   </span>
                 </div>

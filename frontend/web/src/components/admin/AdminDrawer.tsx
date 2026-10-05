@@ -135,7 +135,7 @@ export function AdminDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-slate-200 dark:hover:bg-slate-800"
+              className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800"
               style={{ color: 'var(--admin-text-secondary)' }}
               title="Fermer (Échap)"
             >

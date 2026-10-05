@@ -213,18 +213,18 @@ export function AdminSidebar({
 
         {/* Device / Session Status Block (Like Macbook 2017 in Reference Dashboard) */}
         {!collapsed && (
-          <div className="px-3 py-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
-            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-2.5">
+          <div className="px-3 py-2 border-t border-slate-100 dark:border-zinc-800/ space-y-1.5">
+            <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-900/ border border-slate-200/60 dark:border-zinc-800/ flex items-center gap-2.5">
               <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0">
                 <i className="fas fa-desktop" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate leading-none">
+                <div className="text-[11px] font-bold text-slate-900 dark:text-zinc-100 truncate leading-none">
                   Console Opérateur
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                  <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate">
                     Passerelle :8888 Active
                   </span>
                 </div>
@@ -245,23 +245,23 @@ export function AdminSidebar({
           {/* Profile Dropdown Popover */}
           {profileMenuOpen && (
             <div
-              className="absolute bottom-full left-3 right-3 mb-2 p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-1 z-50 text-xs animate-fade-in"
+              className="absolute bottom-full left-3 right-3 mb-2 p-1.5 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl space-y-1 z-50 text-xs animate-fade-in"
               style={{
                 boxShadow: 'var(--admin-shadow-lg)',
               }}
             >
-              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80">
-                <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
+              <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-zinc-800/">
+                <div className="font-bold text-slate-900 dark:text-zinc-100 truncate">
                   {userFullName}
                 </div>
-                <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                <div className="text-[10px] text-slate-400 dark:text-zinc-500 truncate">
                   {user?.email || 'admin@yuding.ma'}
                 </div>
               </div>
 
               <Link
                 href="/account/profile"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline transition-colors"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 no-underline transition-colors"
                 onClick={() => setProfileMenuOpen(false)}
               >
                 <i className="fas fa-user-circle text-xs text-slate-400" />
@@ -272,7 +272,7 @@ export function AdminSidebar({
                 href="/hotels"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline transition-colors"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 no-underline transition-colors"
                 onClick={() => setProfileMenuOpen(false)}
               >
                 <i className="fas fa-globe text-xs text-emerald-500" />
@@ -281,14 +281,14 @@ export function AdminSidebar({
 
               <Link
                 href="/admin/settings"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline transition-colors"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 no-underline transition-colors"
                 onClick={() => setProfileMenuOpen(false)}
               >
                 <i className="fas fa-cog text-xs text-sky-500" />
                 <span>Paramètres système</span>
               </Link>
 
-              <div className="pt-1 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="pt-1 border-t border-slate-100 dark:border-zinc-800/">
                 <button
                   type="button"
                   onClick={() => {
@@ -308,7 +308,7 @@ export function AdminSidebar({
           <button
             type="button"
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-            className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors text-left"
+            className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800/ transition-colors text-left"
             title="Menu profil opérateur"
             aria-expanded={profileMenuOpen}
           >
@@ -322,10 +322,10 @@ export function AdminSidebar({
             />
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate leading-tight">
+                <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate leading-tight">
                   {userFullName}
                 </div>
-                <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                <div className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 truncate mt-0.5">
                   {roleName}
                 </div>
               </div>

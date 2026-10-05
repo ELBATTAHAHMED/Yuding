@@ -56,7 +56,7 @@ export function AdminTable<T>({
                     width: col.width,
                     textAlign: col.align || 'left',
                   }}
-                  className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 py-2.5 px-3 border-b border-slate-100 dark:border-slate-800/80 bg-transparent ${col.className || ''}`}
+                  className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 py-2.5 px-3 border-b border-slate-100 dark:border-zinc-800/ bg-transparent ${col.className || ''}`}
                 >
                   {col.header}
                 </th>
@@ -70,7 +70,7 @@ export function AdminTable<T>({
                 <tr key={`skeleton-${rIdx}`}>
                   {columns.map((col, cIdx) => (
                     <td key={`skeleton-cell-${cIdx}`}>
-                      <div className="h-4 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-3/4" />
+                      <div className="h-4 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse w-3/4" />
                     </td>
                   ))}
                 </tr>

@@ -74,21 +74,21 @@ export function AdminOverviewChart({
   const growthPercent = totalPrev > 0 ? Math.round(((totalCurrent - totalPrev) / totalPrev) * 100) : 0;
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
       {/* Chart Topbar with Metric Switcher and Period Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800/">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Flux en Temps Réel
             </span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
               +{growthPercent}% vs S-1
             </span>
           </div>
-          <div className="text-xl font-black text-slate-900 dark:text-slate-100 admin-mono-tabular mt-0.5">
+          <div className="text-xl font-black text-slate-900 dark:text-zinc-100 admin-mono-tabular mt-0.5">
             {isRevenue ? `${totalCurrent.toLocaleString('fr-FR')} MAD` : `${totalCurrent} dossiers`}
-            <span className="text-xs font-medium text-slate-400 dark:text-slate-500 ml-2">
+            <span className="text-xs font-medium text-slate-400 dark:text-zinc-500 ml-2">
               volume consolidé
             </span>
           </div>
@@ -96,14 +96,14 @@ export function AdminOverviewChart({
 
         <div className="flex items-center gap-2">
           {/* Metric Toggle */}
-          <div className="inline-flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold">
+          <div className="inline-flex p-0.5 bg-slate-100 dark:bg-zinc-800 rounded-xl border border-slate-200/60 dark:border-zinc-700/ text-xs font-semibold">
             <button
               type="button"
               onClick={() => setMetric('revenue')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 isRevenue
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-xs'
+                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
               }`}
             >
               Volume MAD
@@ -113,8 +113,8 @@ export function AdminOverviewChart({
               onClick={() => setMetric('volume')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 !isRevenue
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-xs'
+                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
               }`}
             >
               Réservations
@@ -122,12 +122,12 @@ export function AdminOverviewChart({
           </div>
 
           {/* Timeframe switch */}
-          <div className="hidden sm:inline-flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          <div className="hidden sm:inline-flex p-0.5 bg-slate-100 dark:bg-zinc-800 rounded-xl border border-slate-200/60 dark:border-zinc-700/ text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
             <button
               type="button"
               onClick={() => setTimeframe('7d')}
               className={`px-2.5 py-1 rounded-lg ${
-                timeframe === '7d' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-bold' : ''
+                timeframe === '7d' ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-xs font-bold' : ''
               }`}
             >
               7J
@@ -136,7 +136,7 @@ export function AdminOverviewChart({
               type="button"
               onClick={() => setTimeframe('30d')}
               className={`px-2.5 py-1 rounded-lg ${
-                timeframe === '30d' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-bold' : ''
+                timeframe === '30d' ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-xs font-bold' : ''
               }`}
             >
               30J
@@ -148,7 +148,7 @@ export function AdminOverviewChart({
       {/* SVG Multi-Bar Comparison Chart Area (Inspired by Real-Time Sale in Reference) */}
       <div className="relative pt-4">
         {isLoading ? (
-          <div className="w-full h-48 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-400">
+          <div className="w-full h-48 rounded-xl bg-slate-100 dark:bg-zinc-800 animate-pulse flex items-center justify-center text-xs text-slate-400">
             Synchronisation des métriques en temps réel...
           </div>
         ) : (
@@ -289,19 +289,19 @@ export function AdminOverviewChart({
       </div>
 
       {/* Legend & Indicator */}
-      <div className="flex items-center justify-between text-[11px] pt-3 text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/80">
+      <div className="flex items-center justify-between text-[11px] pt-3 text-slate-400 dark:text-zinc-500 border-t border-slate-100 dark:border-zinc-800/">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 bg-slate-900 dark:bg-white rounded-xs" />
-            <span className="font-medium text-slate-600 dark:text-slate-400">Captures réelles</span>
+            <span className="font-medium text-slate-600 dark:text-zinc-400">Captures réelles</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 bg-[#A5C9FF] dark:bg-[#3B82F6] rounded-xs" />
-            <span className="font-medium text-slate-600 dark:text-slate-400">Cycle précédent</span>
+            <span className="font-medium text-slate-600 dark:text-zinc-400">Cycle précédent</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 bg-[#F6D0B5] dark:bg-[#F59E0B] rounded-xs" />
-            <span className="font-medium text-slate-600 dark:text-slate-400">Moyenne projetée</span>
+            <span className="font-medium text-slate-600 dark:text-zinc-400">Moyenne projetée</span>
           </div>
         </div>
         <span className="hidden sm:inline admin-mono-tabular">

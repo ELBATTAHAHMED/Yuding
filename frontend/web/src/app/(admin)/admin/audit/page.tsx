@@ -30,7 +30,7 @@ export default function AdminAuditPage() {
       header: 'ID',
       width: '60px',
       render: (l: AdminAuditAction) => (
-        <span className="admin-mono-tabular text-xs text-slate-400 dark:text-slate-500">
+        <span className="admin-mono-tabular text-xs text-slate-400 dark:text-zinc-500">
           #{l.id}
         </span>
       ),
@@ -48,7 +48,7 @@ export default function AdminAuditPage() {
       key: 'targetService',
       header: 'SERVICE CIBLE',
       render: (l: AdminAuditAction) => (
-        <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+        <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
           {l.targetService}
         </span>
       ),
@@ -57,7 +57,7 @@ export default function AdminAuditPage() {
       key: 'targetEntityType',
       header: 'ENTITÉ',
       render: (l: AdminAuditAction) => (
-        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+        <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
           {l.targetEntityType}
         </span>
       ),
@@ -66,7 +66,7 @@ export default function AdminAuditPage() {
       key: 'adminUserId',
       header: 'OPÉRATEUR',
       render: (l: AdminAuditAction) => (
-        <span className="admin-mono-tabular text-xs text-slate-400 dark:text-slate-500">
+        <span className="admin-mono-tabular text-xs text-slate-400 dark:text-zinc-500">
           {l.adminUserId.substring(0, 8)}...
         </span>
       ),
@@ -75,7 +75,7 @@ export default function AdminAuditPage() {
       key: 'reason',
       header: 'MOTIF DE L’INTERVENTION',
       render: (l: AdminAuditAction) => (
-        <span className="text-xs truncate max-w-[200px] inline-block text-slate-600 dark:text-slate-400">
+        <span className="text-xs truncate max-w-[200px] inline-block text-slate-600 dark:text-zinc-400">
           {l.reason || 'Action administrative standard'}
         </span>
       ),
@@ -84,7 +84,7 @@ export default function AdminAuditPage() {
       key: 'createdAt',
       header: 'HORODATAGE',
       render: (l: AdminAuditAction) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-slate-400">
+        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400">
           {new Date(l.createdAt).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: 'short',
@@ -105,7 +105,7 @@ export default function AdminAuditPage() {
             e.stopPropagation();
             setSelectedLog(l);
           }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors shadow-2xs"
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
         >
           <i className="fas fa-file-code text-[10px] mr-1" />
           <span>Payload</span>
@@ -119,10 +119,10 @@ export default function AdminAuditPage() {
       {/* Title & Actions Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
             Journal d&apos;Audit des Actions Administratives
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Registre immuable en écriture seule des interventions de sécurité et d&apos;administration (audit.admin_actions)
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function AdminAuditPage() {
       />
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1 shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-1 shadow-xs overflow-hidden">
         <AdminTable
           columns={columns}
           data={filtered}
@@ -168,23 +168,23 @@ export default function AdminAuditPage() {
       >
         {selectedLog && (
           <div className="space-y-4 text-xs">
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-2.5 shadow-2xs">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5 shadow-2xs">
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-slate-500">Service Cible :</span>
-                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedLog.targetService}</span>
+                <span className="text-slate-400 dark:text-zinc-500">Service Cible :</span>
+                <span className="font-mono font-semibold text-slate-800 dark:text-zinc-200">{selectedLog.targetService}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-slate-500">Type d&apos;Entité :</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedLog.targetEntityType}</span>
+                <span className="text-slate-400 dark:text-zinc-500">Type d&apos;Entité :</span>
+                <span className="font-semibold text-slate-800 dark:text-zinc-200">{selectedLog.targetEntityType}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-slate-500">Opérateur UUID :</span>
-                <span className="font-mono text-slate-800 dark:text-slate-200">{selectedLog.adminUserId}</span>
+                <span className="text-slate-400 dark:text-zinc-500">Opérateur UUID :</span>
+                <span className="font-mono text-slate-800 dark:text-zinc-200">{selectedLog.adminUserId}</span>
               </div>
               {selectedLog.reason && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span className="block text-slate-400 dark:text-slate-500 mb-0.5">Motif déclaré :</span>
-                  <p className="font-medium text-slate-700 dark:text-slate-300 m-0">{selectedLog.reason}</p>
+                <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
+                  <span className="block text-slate-400 dark:text-zinc-500 mb-0.5">Motif déclaré :</span>
+                  <p className="font-medium text-slate-700 dark:text-zinc-300 m-0">{selectedLog.reason}</p>
                 </div>
               )}
             </div>

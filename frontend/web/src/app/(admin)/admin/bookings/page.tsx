@@ -110,10 +110,10 @@ export default function AdminBookingsPage() {
                   <i className={`fas ${copiedId === b.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[10px]`} />
                 </button>
               </div>
-              <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate max-w-xs sm:max-w-md">
+              <div className="font-semibold text-xs text-slate-900 dark:text-zinc-100 truncate max-w-xs sm:max-w-md">
                 {travel.title}
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs sm:max-w-md">
+              <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-xs sm:max-w-md">
                 {travel.subtitle}
               </div>
             </div>
@@ -128,10 +128,10 @@ export default function AdminBookingsPage() {
         const travel = parseTravelContext(b);
         return (
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
               {travel.dates}
             </span>
-            <span className="text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
               {new Date(b.createdAt).toLocaleDateString('fr-FR')} • {travel.badge}
             </span>
           </div>
@@ -154,10 +154,10 @@ export default function AdminBookingsPage() {
               size="sm"
             />
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">
+              <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate max-w-[140px]">
                 {name}
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[140px]">
+              <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate max-w-[140px]">
                 {user?.email || b.userId.slice(0, 8)}
               </span>
             </div>
@@ -169,7 +169,7 @@ export default function AdminBookingsPage() {
       key: 'provider',
       header: 'FOURNISSEUR',
       render: (b: AdminBooking) => (
-        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
           {b.provider || 'DIRECT'}
         </span>
       ),
@@ -180,10 +180,10 @@ export default function AdminBookingsPage() {
       align: 'right' as const,
       render: (b: AdminBooking) => (
         <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
             {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
           </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500">
             Tarif serveur
           </span>
         </div>
@@ -223,10 +223,10 @@ export default function AdminBookingsPage() {
       {/* Title & Stats Ribbon */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
             Réservations &amp; Dossiers Voyage
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Supervision autoritaire du cycle de vie des réservations multi-verticales et traçabilité des prestataires
           </p>
         </div>
@@ -236,7 +236,7 @@ export default function AdminBookingsPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={filteredBookings.length === 0}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/ text-slate-700 dark:text-zinc-300 shadow-2xs transition-colors disabled:opacity-50"
           >
             <i className="fas fa-file-csv text-[11px]" />
             <span>Exporter CSV</span>
@@ -297,7 +297,7 @@ export default function AdminBookingsPage() {
       />
 
       {/* Bookings Table inside Reference-style Rounded-2xl Card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
         <AdminTable
           columns={columns}
           data={paginatedBookings}
@@ -340,7 +340,7 @@ export default function AdminBookingsPage() {
         {selectedBooking && selectedTravel && (
           <div className="space-y-5">
             {/* Travel Hero Header with Real Image or Semantic Route */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xs">
               {selectedTravel.imageUrl && (
                 <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
                   <img
@@ -368,10 +368,10 @@ export default function AdminBookingsPage() {
                   <div className="flex items-center gap-3">
                     <BookingVisual booking={selectedBooking} size="lg" />
                     <div>
-                      <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 m-0 leading-tight">
+                      <h3 className="text-base font-extrabold text-slate-900 dark:text-zinc-100 m-0 leading-tight">
                         {selectedTravel.title}
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 m-0 mt-0.5">
                         {selectedTravel.subtitle}
                       </p>
                     </div>
@@ -383,12 +383,12 @@ export default function AdminBookingsPage() {
                   {selectedTravel.details.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs"
+                      className="p-2.5 rounded-lg border border-slate-200/70 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-800/ text-xs"
                     >
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                         {item.label}
                       </span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+                      <span className="font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 block truncate">
                         {item.value}
                       </span>
                     </div>
@@ -398,29 +398,29 @@ export default function AdminBookingsPage() {
             </div>
 
             {/* Financial & Settlement Breakdown */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0 flex items-center gap-2">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0 flex items-center gap-2">
                 <i className="fas fa-coins text-emerald-600 dark:text-emerald-400 text-xs" />
                 <span>Règlement Financier &amp; Facturation</span>
               </h4>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-slate-400 dark:text-slate-500 block text-[11px]">Tarif Total Garanti</span>
-                  <span className="admin-mono-tabular font-black text-base text-slate-900 dark:text-slate-100">
+                  <span className="text-slate-400 dark:text-zinc-500 block text-[11px]">Tarif Total Garanti</span>
+                  <span className="admin-mono-tabular font-black text-base text-slate-900 dark:text-zinc-100">
                     {selectedBooking.amount != null ? `${Number(selectedBooking.amount).toFixed(2)} ${selectedBooking.currency || 'MAD'}` : '—'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 dark:text-slate-500 block text-[11px]">Passerelle / Fournisseur</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="text-slate-400 dark:text-zinc-500 block text-[11px]">Passerelle / Fournisseur</span>
+                  <span className="font-semibold text-slate-700 dark:text-zinc-300">
                     {selectedBooking.provider || 'Régie Directe Yuding'}
                   </span>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Grand Livre des Paiements :</span>
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-zinc-400">Grand Livre des Paiements :</span>
                 <Link
                   href={`/admin/payments?search=${encodeURIComponent(selectedBooking.bookingReference)}`}
                   className="font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 no-underline"
@@ -432,8 +432,8 @@ export default function AdminBookingsPage() {
             </div>
 
             {/* Traveler Profile Card */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-2xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0 flex items-center gap-2">
+            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0 flex items-center gap-2">
                 <i className="fas fa-user-circle text-slate-400 text-xs" />
                 <span>Identité du Client</span>
               </h4>
@@ -447,20 +447,20 @@ export default function AdminBookingsPage() {
                   size="md"
                 />
                 <div className="min-w-0">
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                  <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
                     {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : `Utilisateur #${selectedBooking.userId.slice(0, 8)}`}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                     {selectedUser?.email || selectedBooking.userId}
                   </div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 admin-mono-tabular">
+                  <div className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5 admin-mono-tabular">
                     ID autoritaire : {selectedBooking.userId}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Gouvernance du compte :</span>
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-zinc-400">Gouvernance du compte :</span>
                 <Link
                   href={`/admin/users?search=${encodeURIComponent(selectedBooking.userId)}`}
                   className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 no-underline"

@@ -33,7 +33,7 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="md:hidden w-8 h-8 rounded-xl flex items-center justify-center border text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+            className="md:hidden w-8 h-8 rounded-xl flex items-center justify-center border text-slate-500 hover:text-slate-900 dark:hover:text-zinc-100"
             style={{
               borderColor: 'var(--admin-border)',
               backgroundColor: 'var(--admin-surface-muted)',
@@ -48,16 +48,16 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
         <nav aria-label="Fil d'ariane" className="flex items-center gap-2 text-xs">
           <Link
             href="/admin"
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium no-underline transition-colors"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 font-medium no-underline transition-colors"
           >
             Yuding Ops
           </Link>
           <span className="text-slate-300 dark:text-slate-600 select-none">/</span>
-          <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold hidden sm:inline">
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-semibold hidden sm:inline">
             {currentItem.category}
           </span>
           <span className="text-slate-300 dark:text-slate-600 select-none hidden sm:inline">/</span>
-          <span className="font-bold text-slate-900 dark:text-slate-100">
+          <span className="font-bold text-slate-900 dark:text-zinc-100">
             {currentItem.label}
           </span>
         </nav>
@@ -76,7 +76,7 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
         {/* Notification Bell matching Reference Dashboard */}
         <button
           type="button"
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors relative"
           title="Notifications opérationnelles"
           aria-label="Notifications"
         >
@@ -84,7 +84,7 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
           <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
         </button>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
 
         <div className="flex items-center">
           <DarkModeToggle />

@@ -85,15 +85,15 @@ export default function AdminProvidersAndTelemetryPage() {
       {/* Title & Top Strip */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
             Santé, Passerelle &amp; Télémétrie Système
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Console d&apos;observabilité unifiée : Microservices Spring Boot, Infrastructure, Routage API Gateway et Moteur IA
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-slate-700 dark:text-zinc-300 shadow-2xs">
           <span
             className="w-2 h-2 rounded-full"
             style={{
@@ -105,14 +105,14 @@ export default function AdminProvidersAndTelemetryPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('HEALTH')}
           className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
             activeTab === 'HEALTH'
-              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'bg-white dark:bg-zinc-900 border-slate-300 dark:border-zinc-700 font-bold text-slate-900 dark:text-zinc-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
           }`}
         >
           <i className="fas fa-server text-emerald-500 text-xs" />
@@ -124,8 +124,8 @@ export default function AdminProvidersAndTelemetryPage() {
           onClick={() => setActiveTab('GATEWAY')}
           className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
             activeTab === 'GATEWAY'
-              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'bg-white dark:bg-zinc-900 border-slate-300 dark:border-zinc-700 font-bold text-slate-900 dark:text-zinc-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
           }`}
         >
           <i className="fas fa-network-wired text-sky-500 text-xs" />
@@ -137,8 +137,8 @@ export default function AdminProvidersAndTelemetryPage() {
           onClick={() => setActiveTab('AI')}
           className={`inline-flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg border transition-all ${
             activeTab === 'AI'
-              ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 shadow-2xs'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              ? 'bg-white dark:bg-zinc-900 border-slate-300 dark:border-zinc-700 font-bold text-slate-900 dark:text-zinc-100 shadow-2xs'
+              : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
           }`}
         >
           <i className="fas fa-robot text-purple-500 text-xs" />
@@ -172,22 +172,22 @@ export default function AdminProvidersAndTelemetryPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {isLoading ? (
-              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 h-36 animate-pulse" />)
+              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-concentric-card bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-5 h-36 animate-pulse" />)
             ) : (
               filteredProviders.map((p) => {
                 const isUp = p.status === 'UP';
                 return (
                   <div
                     key={p.name}
-                    className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-xs"
+                    className="admin-concentric-card bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-xs"
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="font-bold text-xs truncate text-slate-900 dark:text-slate-100">
+                          <div className="font-bold text-xs truncate text-slate-900 dark:text-zinc-100">
                             {p.name}
                           </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded inline-block mt-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded inline-block mt-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400">
                             {p.type}
                           </span>
                         </div>
@@ -197,13 +197,13 @@ export default function AdminProvidersAndTelemetryPage() {
                       </div>
 
                       {p.details && (
-                        <p className="text-xs leading-relaxed line-clamp-2 text-slate-500 dark:text-slate-400 m-0">
+                        <p className="text-xs leading-relaxed line-clamp-2 text-slate-500 dark:text-zinc-400 m-0">
                           {p.details}
                         </p>
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+                    <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
                       <span>{p.port ? `Port :${p.port}` : 'API Externe'}</span>
                       <span>{new Date(p.lastChecked).toLocaleTimeString('fr-FR')}</span>
                     </div>
@@ -225,7 +225,7 @@ export default function AdminProvidersAndTelemetryPage() {
             filters={[]}
           />
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1 shadow-xs overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-1 shadow-xs overflow-hidden">
             <AdminTable
               columns={[
                 {
@@ -245,7 +245,7 @@ export default function AdminProvidersAndTelemetryPage() {
                   key: 'path',
                   header: 'ROUTE GATEWAY (PORT 8888)',
                   render: (r: RouteSpec) => (
-                    <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+                    <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
                       {r.path}
                     </span>
                   ),
@@ -254,7 +254,7 @@ export default function AdminProvidersAndTelemetryPage() {
                   key: 'service',
                   header: 'MICROSERVICE CIBLE',
                   render: (r: RouteSpec) => (
-                    <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
                       {r.service}
                     </span>
                   ),
@@ -272,7 +272,7 @@ export default function AdminProvidersAndTelemetryPage() {
                   key: 'authRequired',
                   header: 'SÉCURITÉ & AUTH',
                   render: (r: RouteSpec) => (
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-zinc-400">
                       {r.authRequired}
                     </span>
                   ),
@@ -327,7 +327,7 @@ export default function AdminProvidersAndTelemetryPage() {
             filters={[]}
           />
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1 shadow-xs overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-1 shadow-xs overflow-hidden">
             <AdminTable
               columns={[
                 {
@@ -344,7 +344,7 @@ export default function AdminProvidersAndTelemetryPage() {
                   header: 'APPELS ENREGISTRÉS',
                   align: 'center' as const,
                   render: (t: ToolTelemetry) => (
-                    <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+                    <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
                       {t.count}
                     </span>
                   ),
@@ -362,7 +362,7 @@ export default function AdminProvidersAndTelemetryPage() {
                   key: 'role',
                   header: 'RÔLE FONCTIONNEL DANS L’ÉCOSYSTÈME',
                   render: (t: ToolTelemetry) => (
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <span className="text-xs font-medium text-slate-600 dark:text-zinc-400">
                       {t.role}
                     </span>
                   ),

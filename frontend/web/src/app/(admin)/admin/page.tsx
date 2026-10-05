@@ -92,7 +92,7 @@ export default function AdminOverviewPage() {
               <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400 block">
                 {b.bookingReference}
               </span>
-              <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate block max-w-[190px]">
+              <span className="font-semibold text-xs text-slate-900 dark:text-zinc-100 truncate block max-w-[190px]">
                 {travel.title}
               </span>
             </div>
@@ -107,10 +107,10 @@ export default function AdminOverviewPage() {
         const travel = parseTravelContext(b);
         return (
           <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
               {travel.dates}
             </span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
+            <span className="text-[10px] text-slate-400 dark:text-zinc-500 admin-mono-tabular">
               {travel.badge} • ID {b.id.slice(0, 8)}
             </span>
           </div>
@@ -131,7 +131,7 @@ export default function AdminOverviewPage() {
       header: 'MONTANT',
       align: 'right' as const,
       render: (b: AdminBooking) => (
-        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
           {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
         </span>
       ),
@@ -147,7 +147,7 @@ export default function AdminOverviewPage() {
           <span className="admin-mono-tabular font-bold text-xs text-sky-600 dark:text-sky-400">
             {p.paymentReference}
           </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500 admin-mono-tabular">
             {p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
           </span>
         </div>
@@ -157,7 +157,7 @@ export default function AdminOverviewPage() {
       key: 'providerName',
       header: 'PASSERELLE',
       render: (p: AdminPayment) => (
-        <span className="text-[11px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+        <span className="text-[11px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
           {p.providerName}
         </span>
       ),
@@ -176,7 +176,7 @@ export default function AdminOverviewPage() {
       header: 'MONTANT',
       align: 'right' as const,
       render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
           {Number(p.amount).toFixed(2)} {p.currency}
         </span>
       ),
@@ -189,20 +189,20 @@ export default function AdminOverviewPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100 font-sans">
               Console des Opérations
             </h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold admin-mono-tabular">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-semibold admin-mono-tabular">
               v2.0
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
             Supervision autoritaire en direct : flux transactionnels, dossiers voyage et santé de l&apos;architecture
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 shadow-xs">
             <span
               className="w-2 h-2 rounded-full"
               style={{
@@ -288,11 +288,11 @@ export default function AdminOverviewPage() {
       {/* Row 3: Dual Live Activity Tables (Dossiers Voyage & Flux Financiers) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent Travel Dossiers */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
+        <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800/">
             <div className="flex items-center gap-2">
               <i className="fas fa-ticket-alt text-xs text-emerald-600 dark:text-emerald-400" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
                 Derniers Dossiers Voyage
               </h2>
             </div>
@@ -315,11 +315,11 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Recent Payment Flows */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
+        <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800/">
             <div className="flex items-center gap-2">
               <i className="fas fa-credit-card text-xs text-blue-600 dark:text-blue-400" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
                 Flux Financiers &amp; Grand Livre
               </h2>
             </div>
@@ -343,11 +343,11 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Row 4: Ecosystem Health & Microservices Topology Strip */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xs">
+        <div className="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-100 dark:border-zinc-800/">
           <div className="flex items-center gap-2">
             <i className="fas fa-server text-xs text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
               Topologie de l&apos;Écosystème Yuding V2
             </h2>
           </div>
@@ -363,10 +363,10 @@ export default function AdminOverviewPage() {
           {providerHealth.slice(0, 6).map((prov) => (
             <div
               key={prov.name}
-              className="p-3 rounded-xl border flex flex-col justify-between bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/60"
+              className="p-3 rounded-xl border flex flex-col justify-between bg-slate-50/70 dark:bg-zinc-800/ border-slate-200/80 dark:border-zinc-700/"
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate">
+                <span className="text-[11px] font-bold text-slate-900 dark:text-zinc-100 truncate">
                   {prov.name}
                 </span>
                 <span
@@ -376,7 +376,7 @@ export default function AdminOverviewPage() {
                   }}
                 />
               </div>
-              <div className="mt-2 text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+              <div className="mt-2 text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
                 {prov.port ? `Port :${prov.port}` : 'Passerelle / API'}
               </div>
             </div>
