@@ -116,7 +116,7 @@ export default function AdminSettingsPage() {
           {serverPolicies.map((p, idx) => (
             <div
               key={idx}
-              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-2 shadow-2xs"
+              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-2 shadow-xs"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
@@ -150,7 +150,7 @@ export default function AdminSettingsPage() {
           </h2>
         </div>
 
-        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
           {toggles.map((t) => {
             const isChecked = Boolean(settings[t.key]);
             return (
@@ -185,7 +185,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Quota Setting */}
-      <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 m-0">
             Plafond de Débit Global (Rate Limit)

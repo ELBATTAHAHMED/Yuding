@@ -28,48 +28,53 @@ export function AdminStatCard({
   onClick,
   trend,
 }: AdminStatCardProps) {
-  // Variant styles mapped cleanly to tokens and semantic roles
+  // Variant styles mapped cleanly to tokens and semantic roles inspired by Reference Dashboard
   const getVariantStyles = (v: StatCardVariant) => {
     switch (v) {
       case 'cool':
         return {
-          cardClass: 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/60 dark:border-emerald-800/40',
-          iconWrapper: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400',
-          labelColor: 'text-emerald-800 dark:text-emerald-300',
-          valueColor: 'text-emerald-950 dark:text-emerald-100',
-          badgeColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-900/30',
+          cardClass: 'bg-[#EAF3FF] dark:bg-[#0C1E38] border-[#CCE2FF] dark:border-blue-900/40 shadow-xs',
+          iconWrapper: 'bg-blue-600 text-white shadow-xs',
+          labelColor: 'text-blue-900 dark:text-blue-200 font-semibold',
+          valueColor: 'text-slate-900 dark:text-white',
+          badgeColor: 'text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/60 font-bold',
+          sparklineColor: '#2563EB',
         };
       case 'warm':
         return {
-          cardClass: 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40',
-          iconWrapper: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
-          labelColor: 'text-amber-800 dark:text-amber-300',
-          valueColor: 'text-amber-950 dark:text-amber-100',
-          badgeColor: 'text-amber-600 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-900/30',
+          cardClass: 'bg-[#FFF0E5] dark:bg-[#261A10] border-[#FFDBC2] dark:border-amber-900/40 shadow-xs',
+          iconWrapper: 'bg-amber-600 text-white shadow-xs',
+          labelColor: 'text-amber-900 dark:text-amber-200 font-semibold',
+          valueColor: 'text-slate-900 dark:text-white',
+          badgeColor: 'text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/60 font-bold',
+          sparklineColor: '#D97706',
         };
       case 'dark':
         return {
-          cardClass: 'bg-slate-900 text-white border-slate-800 shadow-md dark:bg-slate-950 dark:border-slate-800',
+          cardClass: 'bg-[#121826] text-white border-[#1E2738] shadow-md dark:bg-[#070B12] dark:border-slate-800',
           iconWrapper: 'bg-slate-800 text-emerald-400',
-          labelColor: 'text-slate-300',
+          labelColor: 'text-slate-300 font-medium',
           valueColor: 'text-white',
-          badgeColor: 'text-emerald-300 bg-emerald-950/80 border border-emerald-800/50',
+          badgeColor: 'text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 font-bold',
+          sparklineColor: '#00D4AA',
         };
       case 'incident':
         return {
-          cardClass: 'bg-rose-50/60 dark:bg-rose-950/25 border-rose-200/70 dark:border-rose-900/50',
-          iconWrapper: 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400',
-          labelColor: 'text-rose-800 dark:text-rose-300',
-          valueColor: 'text-rose-950 dark:text-rose-100',
-          badgeColor: 'text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/40',
+          cardClass: 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-900/50 shadow-xs',
+          iconWrapper: 'bg-rose-600 text-white shadow-xs',
+          labelColor: 'text-rose-900 dark:text-rose-200 font-semibold',
+          valueColor: 'text-slate-900 dark:text-rose-100',
+          badgeColor: 'text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/50 font-bold',
+          sparklineColor: '#E11D48',
         };
       default:
         return {
-          cardClass: 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-2xs',
-          iconWrapper: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300',
-          labelColor: 'text-slate-500 dark:text-slate-400',
+          cardClass: 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs',
+          iconWrapper: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+          labelColor: 'text-slate-500 dark:text-slate-400 font-medium',
           valueColor: 'text-slate-900 dark:text-slate-100',
-          badgeColor: 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800',
+          badgeColor: 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 font-medium',
+          sparklineColor: '#64748B',
         };
     }
   };
@@ -79,29 +84,31 @@ export function AdminStatCard({
   return (
     <div
       onClick={onClick}
-      className={`admin-concentric-card p-4 rounded-xl border flex flex-col justify-between transition-all duration-150 ${styles.cardClass} ${
+      className={`p-4 rounded-2xl border flex flex-col justify-between transition-all duration-200 ${styles.cardClass} ${
         onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-sm' : ''
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className={`text-[11px] font-bold tracking-wider uppercase truncate ${styles.labelColor}`}>
-          {label}
-        </span>
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${styles.iconWrapper}`}>
-          <i className={`${icon} text-xs`} />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${styles.iconWrapper}`}>
+            <i className={`${icon} text-xs`} />
+          </div>
+          <span className={`text-xs truncate ${styles.labelColor}`}>
+            {label}
+          </span>
         </div>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3.5">
         {isLoading ? (
-          <div className="h-8 w-28 rounded bg-slate-200/70 dark:bg-slate-800 animate-pulse my-0.5" />
+          <div className="h-8 w-28 rounded-lg bg-slate-200/70 dark:bg-slate-800 animate-pulse my-0.5" />
         ) : (
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline justify-between gap-2">
             <span className={`text-2xl font-black admin-mono-tabular tracking-tight leading-none ${styles.valueColor}`}>
               {value}
             </span>
             {trend && (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${styles.badgeColor}`}>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full ${styles.badgeColor} shrink-0`}>
                 {trend.value}
               </span>
             )}
@@ -109,7 +116,7 @@ export function AdminStatCard({
         )}
 
         {subtext && (
-          <div className="text-[11px] font-medium mt-1.5 text-slate-500 dark:text-slate-400 truncate">
+          <div className="text-[11px] font-medium mt-2 text-slate-500 dark:text-slate-400 truncate opacity-85">
             {subtext}
           </div>
         )}

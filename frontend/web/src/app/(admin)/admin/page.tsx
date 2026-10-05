@@ -184,20 +184,25 @@ export default function AdminOverviewPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      {/* Page Title & Operational Context Bar */}
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Page Title & Operational Context Bar with Reference-style Heading */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            Console des Opérations
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">
+              Console des Opérations
+            </h1>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold admin-mono-tabular">
+              v2.0
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Supervision autoritaire en direct : flux transactionnels, dossiers voyage et santé de l&apos;architecture
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs">
             <span
               className="w-2 h-2 rounded-full"
               style={{
@@ -212,16 +217,16 @@ export default function AdminOverviewPage() {
           <button
             type="button"
             onClick={handleRefreshAll}
-            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 transition-colors shadow-xs"
           >
-            <i className="fas fa-sync text-[11px]" />
+            <i className="fas fa-sync text-[10px]" />
             <span>Actualiser</span>
           </button>
         </div>
       </div>
 
-      {/* Row 1: Four-Card Intentional Pulse Layout (Cool, Warm, Dark/Brand, Attention) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {/* Row 1: KPI Cards Grid with Reference Hierarchy (Soft Blue, Soft Peach, Bold Dark) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard
           label="Dossiers Réservations"
           value={stats?.totalReservations ?? 0}
@@ -249,8 +254,9 @@ export default function AdminOverviewPage() {
           value={stats?.totalPayments ?? 0}
           subtext="Passerelles PayPal & Sandbox"
           icon="fas fa-credit-card"
-          variant="default"
+          variant="warm"
           isLoading={loadingStats}
+          trend={{ value: '+8%', isPositive: true }}
         />
         <AdminStatCard
           label="Incidents & Remboursements"
@@ -261,17 +267,17 @@ export default function AdminOverviewPage() {
               : 'Flux Phase 51 vérifié'
           }
           icon="fas fa-exclamation-circle"
-          variant={attentionItems.length > 0 ? 'incident' : 'warm'}
+          variant={attentionItems.length > 0 ? 'incident' : 'default'}
           isLoading={loadingStats || loadingCancellations || loadingUsers}
         />
       </div>
 
-      {/* Row 2: Operational Activity Chart + Dense Attention Panel (À traiter) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        <div className="lg:col-span-7">
+      {/* Row 2: Operational Activity Chart + Dense Attention Panel (Reference composition: Left Chart, Right Panel) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <div className="lg:col-span-8">
           <AdminOverviewChart isLoading={loadingStats} />
         </div>
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-4">
           <AdminAttentionList
             items={attentionItems}
             isLoading={loadingBookings || loadingPayments || loadingCancellations}
@@ -280,10 +286,10 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Row 3: Dual Live Activity Tables (Dossiers Voyage & Flux Financiers) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent Travel Dossiers */}
-        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-2xs">
-          <div className="flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center gap-2">
               <i className="fas fa-ticket-alt text-xs text-emerald-600 dark:text-emerald-400" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
@@ -309,17 +315,17 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Recent Payment Flows */}
-        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-2xs">
-          <div className="flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center gap-2">
-              <i className="fas fa-credit-card text-xs text-sky-600 dark:text-sky-400" />
+              <i className="fas fa-credit-card text-xs text-blue-600 dark:text-blue-400" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
                 Flux Financiers &amp; Grand Livre
               </h2>
             </div>
             <Link
               href="/admin/payments"
-              className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline no-underline flex items-center gap-1"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline no-underline flex items-center gap-1"
             >
               <span>Grand Livre complet</span>
               <i className="fas fa-arrow-right text-[10px]" />
@@ -337,8 +343,8 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Row 4: Ecosystem Health & Microservices Topology Strip */}
-      <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-2xs">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+        <div className="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-100 dark:border-slate-800/80">
           <div className="flex items-center gap-2">
             <i className="fas fa-server text-xs text-emerald-600 dark:text-emerald-400" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 m-0">
@@ -353,11 +359,11 @@ export default function AdminOverviewPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {providerHealth.slice(0, 6).map((prov) => (
             <div
               key={prov.name}
-              className="p-2.5 rounded-lg border flex flex-col justify-between bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60"
+              className="p-3 rounded-xl border flex flex-col justify-between bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/60"
             >
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate">
@@ -370,7 +376,7 @@ export default function AdminOverviewPage() {
                   }}
                 />
               </div>
-              <div className="mt-1.5 text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
+              <div className="mt-2 text-[10px] admin-mono-tabular text-slate-400 dark:text-slate-500">
                 {prov.port ? `Port :${prov.port}` : 'Passerelle / API'}
               </div>
             </div>

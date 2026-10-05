@@ -435,29 +435,31 @@ export default function AdminUsersPage() {
         ]}
       />
 
-      {/* Users Table */}
-      <AdminTable
-        columns={columns}
-        data={paginatedUsers}
-        keyExtractor={(u) => u.id}
-        isLoading={isLoading}
-        onRowClick={(u) => setSelectedUser(u)}
-        emptyMessage="Aucun utilisateur ne correspond aux filtres appliqués."
-        footer={
-          totalItems > 0 ? (
-            <AdminPagination
-              currentPage={currentPage}
-              totalItems={totalItems}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={(newSize) => {
-                setPageSize(newSize);
-                setCurrentPage(1);
-              }}
-            />
-          ) : null
-        }
-      />
+      {/* Users Table inside Reference-style Rounded-2xl Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <AdminTable
+          columns={columns}
+          data={paginatedUsers}
+          keyExtractor={(u) => u.id}
+          isLoading={isLoading}
+          onRowClick={(u) => setSelectedUser(u)}
+          emptyMessage="Aucun utilisateur ne correspond aux filtres appliqués."
+          footer={
+            totalItems > 0 ? (
+              <AdminPagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+              />
+            ) : null
+          }
+        />
+      </div>
 
       {/* User Inspection Drawer */}
       <AdminDrawer

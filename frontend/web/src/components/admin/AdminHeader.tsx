@@ -21,19 +21,19 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
 
   return (
     <header
-      className="h-14 px-4 sm:px-6 sticky top-0 z-20 flex items-center justify-between border-b backdrop-blur-md shrink-0"
+      className="h-16 px-6 lg:px-8 sticky top-0 z-20 flex items-center justify-between border-b backdrop-blur-md shrink-0"
       style={{
         backgroundColor: 'var(--admin-surface)',
         borderColor: 'var(--admin-border)',
       }}
     >
-      {/* Left: Mobile trigger & Compact Breadcrumbs */}
+      {/* Left: Mobile trigger & Refined Breadcrumbs */}
       <div className="flex items-center gap-3">
         {onToggleMobileMenu && (
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center border text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+            className="md:hidden w-8 h-8 rounded-xl flex items-center justify-center border text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
             style={{
               borderColor: 'var(--admin-border)',
               backgroundColor: 'var(--admin-surface-muted)',
@@ -45,45 +45,47 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
         )}
 
         {/* Breadcrumb Context */}
-        <nav aria-label="Fil d'ariane" className="flex items-center gap-1.5 text-xs">
+        <nav aria-label="Fil d'ariane" className="flex items-center gap-2 text-xs">
           <Link
             href="/admin"
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium no-underline transition-colors"
           >
-            Console
+            Yuding Ops
           </Link>
           <span className="text-slate-300 dark:text-slate-600 select-none">/</span>
           <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold hidden sm:inline">
             {currentItem.category}
           </span>
           <span className="text-slate-300 dark:text-slate-600 select-none hidden sm:inline">/</span>
-          <span className="font-semibold text-slate-900 dark:text-slate-100">
+          <span className="font-bold text-slate-900 dark:text-slate-100">
             {currentItem.label}
           </span>
         </nav>
       </div>
 
       {/* Center: Quiet Sandbox / Architecture Pill */}
-      <div className="hidden lg:flex items-center gap-2">
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+      <div className="hidden lg:flex items-center gap-2.5">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>PRODUCTION-READY (SANDBOX)</span>
         </div>
         <span className="text-[11px] text-slate-400 dark:text-slate-500 admin-mono-tabular">
-          PG16 · Gateway :8888 · Redis 7
+          Gateway :8888 · Redis 7 · PG16
         </span>
       </div>
 
-      {/* Right: Quick Operational Utilities & Theme Toggle */}
-      <div className="flex items-center gap-2.5">
-        <Link
-          href="/admin/providers"
-          className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors no-underline"
-          title="Consulter l'état des services et des passerelles"
+      {/* Right: Quick Notification Bell, Heartbeat & Theme Toggle */}
+      <div className="flex items-center gap-3">
+        {/* Notification Bell matching Reference Dashboard */}
+        <button
+          type="button"
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
+          title="Notifications opérationnelles"
+          aria-label="Notifications"
         >
-          <i className="fas fa-heartbeat text-[10px] text-emerald-500" />
-          <span>Système sain</span>
-        </Link>
+          <i className="far fa-bell text-xs" />
+          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+        </button>
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 

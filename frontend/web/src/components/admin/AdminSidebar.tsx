@@ -15,7 +15,7 @@ export interface NavItem {
 }
 
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  { href: '/admin', label: "Vue d'ensemble", icon: 'fas fa-chart-line', category: 'OPÉRATIONS' },
+  { href: '/admin', label: "Vue d'ensemble", icon: 'fas fa-th-large', category: 'OPÉRATIONS' },
   { href: '/admin/bookings', label: 'Réservations & Voyages', icon: 'fas fa-ticket-alt', category: 'OPÉRATIONS' },
   { href: '/admin/payments', label: 'Paiements & Ledger', icon: 'fas fa-credit-card', category: 'OPÉRATIONS' },
   { href: '/admin/refunds', label: 'Remboursements', icon: 'fas fa-undo-alt', category: 'OPÉRATIONS' },
@@ -25,9 +25,9 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
 
   { href: '/admin/providers', label: 'Santé & Télémétrie', icon: 'fas fa-server', category: 'SYSTÈME' },
 
-  { href: '/admin/users', label: 'Utilisateurs & RBAC', icon: 'fas fa-users-cog', category: 'GOUVERNANCE' },
+  { href: '/admin/users', label: 'Utilisateurs & RBAC', icon: 'fas fa-user-shield', category: 'GOUVERNANCE' },
   { href: '/admin/audit', label: "Journal d'Audit", icon: 'fas fa-shield-alt', category: 'GOUVERNANCE' },
-  { href: '/admin/settings', label: 'Politiques & Système', icon: 'fas fa-sliders-h', category: 'GOUVERNANCE' },
+  { href: '/admin/settings', label: 'Politiques & Système', icon: 'fas fa-cog', category: 'GOUVERNANCE' },
 ];
 
 interface AdminSidebarProps {
@@ -75,10 +75,10 @@ export function AdminSidebar({
 
   const userFullName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
-    : 'Opérateur Yuding';
+    : 'Ahmed EL BATTAH';
 
   const roleName = user?.roles?.includes('ROLE_ADMIN')
-    ? 'Administrateur'
+    ? 'Administrateur Principal'
     : user?.roles?.includes('ROLE_CONTENT_MANAGER')
     ? 'Gestionnaire Contenu'
     : 'Opérateur Support';
@@ -94,30 +94,26 @@ export function AdminSidebar({
         />
       )}
 
-      {/* Persistent Desktop Sidebar & Mobile Off-canvas Drawer */}
+      {/* Persistent Designed Product Rail */}
       <aside
         className={`admin-sidebar flex flex-col fixed md:sticky top-0 h-screen z-50 md:z-30 transition-all duration-200 select-none border-r shrink-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
         style={{
-          width: collapsed ? '68px' : '256px',
-          backgroundColor: 'var(--admin-surface)',
-          borderColor: 'var(--admin-border)',
+          width: collapsed ? '72px' : '260px',
+          backgroundColor: 'var(--admin-sidebar-bg)',
+          borderColor: 'var(--admin-sidebar-border)',
         }}
         aria-label="Navigation d'administration"
       >
-        {/* Brand Header */}
+        {/* Brand Header — Clean Wordmark like HereSafe in Reference */}
         <div
-          className="h-14 px-3 flex items-center border-b justify-between shrink-0"
-          style={{
-            borderColor: 'var(--admin-border)',
-            backgroundColor: 'var(--admin-surface)',
-          }}
+          className="h-16 px-4 flex items-center justify-between shrink-0"
         >
           {!collapsed ? (
             <Link href="/admin" className="flex items-center gap-2.5 no-underline group">
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-slate-900 shadow-xs shrink-0 transition-transform duration-150 group-hover:scale-105"
+                className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm text-slate-900 shadow-sm shrink-0 transition-transform duration-150 group-hover:scale-105"
                 style={{
                   background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
                 }}
@@ -125,22 +121,16 @@ export function AdminSidebar({
                 Y
               </div>
               <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-xs tracking-tight text-slate-900 dark:text-slate-100">
+                <div className="flex items-baseline gap-1">
+                  <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100 font-sans">
                     Yuding
                   </span>
-                  <span
-                    className="text-[9px] font-bold px-1 py-0.5 rounded uppercase tracking-wider leading-none"
-                    style={{
-                      backgroundColor: 'var(--admin-accent-subtle)',
-                      color: 'var(--admin-accent)',
-                    }}
-                  >
-                    OPS
+                  <span className="font-light text-slate-400 dark:text-slate-500 text-xs">
+                    Ops
                   </span>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500">
-                  Console V2
+                <span className="text-[9px] uppercase tracking-widest font-semibold text-emerald-600 dark:text-emerald-400">
+                  Console V2 · 8888
                 </span>
               </div>
             </Link>
@@ -148,7 +138,7 @@ export function AdminSidebar({
             <div className="w-full flex justify-center">
               <Link
                 href="/admin"
-                className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-slate-900 no-underline shadow-xs"
+                className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm text-slate-900 no-underline shadow-sm"
                 style={{
                   background: 'linear-gradient(135deg, #00D4AA 0%, #01796F 100%)',
                 }}
@@ -159,16 +149,12 @@ export function AdminSidebar({
             </div>
           )}
 
-          {/* Desktop collapse button */}
+          {/* Desktop collapse toggle */}
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="hidden md:flex w-6 h-6 rounded items-center justify-center border transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-            style={{
-              borderColor: 'var(--admin-border)',
-              backgroundColor: 'transparent',
-            }}
-            title={collapsed ? 'Déplier le menu' : 'Replier le menu'}
+            className="hidden md:flex w-6 h-6 rounded-md items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title={collapsed ? 'Déplier' : 'Replier'}
             aria-label="Basculer le panneau de navigation"
           >
             <i className={`fas fa-chevron-${collapsed ? 'right' : 'left'} text-[10px]`} />
@@ -185,14 +171,14 @@ export function AdminSidebar({
           </button>
         </div>
 
-        {/* Navigation Groups */}
-        <div className="flex-1 overflow-y-auto px-2 py-3 space-y-3.5 admin-custom-scrollbar">
+        {/* Navigation Groups with Refined Rhythm */}
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4 admin-custom-scrollbar">
           {categories.map((cat) => {
             const items = ADMIN_NAV_ITEMS.filter((i) => i.category === cat);
             return (
-              <div key={cat} className="space-y-0.5">
+              <div key={cat} className="space-y-1">
                 {!collapsed && (
-                  <div className="px-2 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 truncate">
+                  <div className="px-3 pb-1 text-[10px] font-bold tracking-widest uppercase text-slate-400/90 dark:text-slate-500 truncate">
                     {cat}
                   </div>
                 )}
@@ -202,26 +188,17 @@ export function AdminSidebar({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium no-underline transition-all duration-150 relative ${
+                      className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold no-underline transition-all duration-150 ${
                         isActive
-                          ? 'text-emerald-700 dark:text-emerald-300 font-semibold shadow-2xs'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/50'
+                          ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-800 dark:text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                       }`}
-                      style={{
-                        backgroundColor: isActive ? 'var(--admin-accent-subtle)' : undefined,
-                      }}
                       title={collapsed ? item.label : undefined}
                     >
-                      {isActive && (
-                        <span
-                          className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full"
-                          style={{ backgroundColor: 'var(--admin-accent)' }}
-                        />
-                      )}
                       <i
                         className={`${item.icon} text-xs w-4 text-center shrink-0 ${
                           isActive
-                            ? 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-emerald-400 dark:text-emerald-400'
                             : 'text-slate-400 dark:text-slate-500'
                         }`}
                       />
@@ -234,19 +211,41 @@ export function AdminSidebar({
           })}
         </div>
 
+        {/* Device / Session Status Block (Like Macbook 2017 in Reference Dashboard) */}
+        {!collapsed && (
+          <div className="px-3 py-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0">
+                <i className="fas fa-desktop" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate leading-none">
+                  Console Opérateur
+                </div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                    Passerelle :8888 Active
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Operator Session Footer with Action Popover */}
         <div
           ref={profileMenuRef}
-          className="p-2.5 border-t relative shrink-0"
+          className="p-3 border-t relative shrink-0"
           style={{
-            borderColor: 'var(--admin-border)',
-            backgroundColor: 'var(--admin-surface-muted)',
+            borderColor: 'var(--admin-sidebar-border)',
+            backgroundColor: 'var(--admin-sidebar-bg)',
           }}
         >
           {/* Profile Dropdown Popover */}
           {profileMenuOpen && (
             <div
-              className="absolute bottom-full left-2 right-2 mb-2 p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-1 z-50 text-xs animate-fade-in"
+              className="absolute bottom-full left-3 right-3 mb-2 p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-1 z-50 text-xs animate-fade-in"
               style={{
                 boxShadow: 'var(--admin-shadow-lg)',
               }}
@@ -256,7 +255,7 @@ export function AdminSidebar({
                   {userFullName}
                 </div>
                 <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                  {user?.email || 'operator@yuding.ma'}
+                  {user?.email || 'admin@yuding.ma'}
                 </div>
               </div>
 
@@ -285,7 +284,7 @@ export function AdminSidebar({
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline transition-colors"
                 onClick={() => setProfileMenuOpen(false)}
               >
-                <i className="fas fa-sliders-h text-xs text-sky-500" />
+                <i className="fas fa-cog text-xs text-sky-500" />
                 <span>Paramètres système</span>
               </Link>
 
@@ -296,39 +295,36 @@ export function AdminSidebar({
                     setProfileMenuOpen(false);
                     logout();
                   }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors font-medium text-left"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors font-semibold text-left"
                 >
                   <i className="fas fa-sign-out-alt text-xs" />
-                  <span>Déconnexion sécurisée</span>
+                  <span>Déconnexion</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Trigger Row */}
+          {/* Trigger Row with True Circular Avatar & Full Identity */}
           <button
             type="button"
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-            className="w-full flex items-center gap-2 p-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition-colors text-left"
+            className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors text-left"
             title="Menu profil opérateur"
             aria-expanded={profileMenuOpen}
           >
             <EntityAvatar
               name={userFullName}
               email={user?.email}
-              size="sm"
+              size="md"
               variant="operator"
             />
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate leading-tight">
                   {userFullName}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
-                    {roleName}
-                  </span>
+                <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                  {roleName}
                 </div>
               </div>
             )}
@@ -341,3 +337,4 @@ export function AdminSidebar({
     </>
   );
 }
+
