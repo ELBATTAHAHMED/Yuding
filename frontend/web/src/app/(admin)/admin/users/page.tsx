@@ -330,7 +330,7 @@ export default function AdminUsersPage() {
               <button
                 type="button"
                 onClick={() => handleOpenRoleModal(u)}
-                className="text-xs font-medium py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700/ transition-colors"
+                className="text-xs font-medium py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700 transition-colors"
                 title="Gérer les rôles RBAC"
               >
                 <i className="fas fa-user-shield text-[10px] mr-1" />
@@ -547,7 +547,7 @@ export default function AdminUsersPage() {
                   {userBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="p-2 rounded-lg bg-slate-50 dark:bg-zinc-800/ border border-slate-200/60 dark:border-zinc-800 flex items-center justify-between text-xs"
+                      className="p-2 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-800 flex items-center justify-between text-xs"
                     >
                       <div className="flex flex-col">
                         <span className="font-bold admin-mono-tabular text-slate-900 dark:text-zinc-100">

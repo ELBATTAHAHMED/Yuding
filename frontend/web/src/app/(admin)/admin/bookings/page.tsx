@@ -169,7 +169,7 @@ export default function AdminBookingsPage() {
       key: 'provider',
       header: 'FOURNISSEUR',
       render: (b: AdminBooking) => (
-        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
+        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
           {b.provider || 'DIRECT'}
         </span>
       ),
@@ -383,7 +383,7 @@ export default function AdminBookingsPage() {
                   {selectedTravel.details.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-lg border border-slate-200/70 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-800/ text-xs"
+                      className="p-2.5 rounded-lg border border-slate-200/70 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-800 text-xs"
                     >
                       <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                         {item.label}
@@ -419,7 +419,7 @@ export default function AdminBookingsPage() {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-xs">
                 <span className="text-slate-500 dark:text-zinc-400">Grand Livre des Paiements :</span>
                 <Link
                   href={`/admin/payments?search=${encodeURIComponent(selectedBooking.bookingReference)}`}
@@ -459,7 +459,7 @@ export default function AdminBookingsPage() {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-xs">
                 <span className="text-slate-500 dark:text-zinc-400">Gouvernance du compte :</span>
                 <Link
                   href={`/admin/users?search=${encodeURIComponent(selectedBooking.userId)}`}

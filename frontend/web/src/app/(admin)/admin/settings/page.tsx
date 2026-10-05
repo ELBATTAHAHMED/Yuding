@@ -130,7 +130,7 @@ export default function AdminSettingsPage() {
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/ flex items-center justify-between">
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
                   {p.status}
                 </span>

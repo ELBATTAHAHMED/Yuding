@@ -124,7 +124,7 @@ export default function AdminPaymentsPage() {
       header: 'PASSERELLE & MÉTHODE',
       render: (p: AdminPayment) => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/">
+          <span className="text-[11px] px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
             {p.providerName}
           </span>
           <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate max-w-[130px]">
@@ -199,7 +199,7 @@ export default function AdminPaymentsPage() {
             e.stopPropagation();
             setSelectedPayment(p);
           }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700/ transition-colors shadow-2xs"
+          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
         >
           <i className="fas fa-receipt text-[10px] mr-1" />
           <span>Ticket</span>
@@ -345,13 +345,13 @@ export default function AdminPaymentsPage() {
                 Détails du Processeur
               </h4>
               <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800/ border border-slate-200/60 dark:border-zinc-800">
+                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-800">
                   <span className="block text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-semibold">TXID Processeur</span>
                   <span className="admin-mono-tabular font-semibold text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
                     {selectedPayment.providerTransactionId || 'N/A'}
                   </span>
                 </div>
-                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800/ border border-slate-200/60 dark:border-zinc-800">
+                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-800">
                   <span className="block text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-semibold">Mode de Paiement</span>
                   <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
                     {selectedPayment.paymentMethodType || 'Standard'}
