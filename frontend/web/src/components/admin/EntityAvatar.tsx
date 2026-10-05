@@ -34,10 +34,11 @@ export function EntityAvatar({
   className = '',
 }: EntityAvatarProps) {
   const sizeClasses = SIZE_MAP[size] || SIZE_MAP.sm;
-  const [blobUrl, setBlobUrl] = useState<string | null>(photoUrl || null);
+  const effectivePhoto = photoUrl || (variant === 'operator' ? '/image/ahmed-profile.png' : null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(effectivePhoto || null);
 
   // If this entity is an operator/user with hasProfilePhoto, fetch via authService if needed
-  const shouldFetchPhoto = Boolean(hasProfilePhoto && !photoUrl);
+  const shouldFetchPhoto = Boolean(hasProfilePhoto && !photoUrl && variant !== 'operator');
   const photoQuery = useQuery({
     queryKey: ['entity-avatar-photo', userId || email],
     queryFn: authService.getProfilePhoto,
@@ -47,8 +48,8 @@ export function EntityAvatar({
   });
 
   useEffect(() => {
-    if (photoUrl) {
-      setBlobUrl(photoUrl);
+    if (effectivePhoto) {
+      setBlobUrl(effectivePhoto);
       return;
     }
     if (photoQuery.data) {
@@ -56,7 +57,7 @@ export function EntityAvatar({
       setBlobUrl(url);
       return () => URL.revokeObjectURL(url);
     }
-  }, [photoUrl, photoQuery.data]);
+  }, [effectivePhoto, photoQuery.data]);
 
   const initials = React.useMemo(() => {
     if (name && name.trim()) {
