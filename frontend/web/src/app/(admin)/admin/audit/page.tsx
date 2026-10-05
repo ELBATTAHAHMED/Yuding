@@ -147,14 +147,16 @@ export default function AdminAuditPage() {
       />
 
       {/* Table */}
-      <AdminTable
-        columns={columns}
-        data={filtered}
-        keyExtractor={(l) => String(l.id)}
-        isLoading={isLoading}
-        onRowClick={(l) => setSelectedLog(l)}
-        emptyMessage="Aucun événement d'audit enregistré."
-      />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1 shadow-xs overflow-hidden">
+        <AdminTable
+          columns={columns}
+          data={filtered}
+          keyExtractor={(l) => String(l.id)}
+          isLoading={isLoading}
+          onRowClick={(l) => setSelectedLog(l)}
+          emptyMessage="Aucun événement d'audit enregistré."
+        />
+      </div>
 
       {/* Drawer */}
       <AdminDrawer

@@ -40,17 +40,13 @@ export function AdminTable<T>({
 }: AdminTableProps<T>) {
   return (
     <div
-      className={`admin-card overflow-hidden ${className}`}
-      style={{
-        background: 'var(--admin-surface)',
-        borderColor: 'var(--admin-border)',
-      }}
+      className={`w-full overflow-hidden ${className}`}
     >
       <div
         className="overflow-x-auto admin-custom-scrollbar"
         style={{ maxHeight: maxHeight || undefined }}
       >
-        <table className="admin-table">
+        <table className="admin-table w-full">
           <thead>
             <tr>
               {columns.map((col) => (
@@ -60,7 +56,7 @@ export function AdminTable<T>({
                     width: col.width,
                     textAlign: col.align || 'left',
                   }}
-                  className={col.className}
+                  className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 py-2.5 px-3 border-b border-slate-100 dark:border-slate-800/80 bg-transparent ${col.className || ''}`}
                 >
                   {col.header}
                 </th>

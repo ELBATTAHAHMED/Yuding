@@ -172,14 +172,14 @@ export default function AdminProvidersAndTelemetryPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {isLoading ? (
-              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 h-36 animate-pulse" />)
+              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 h-36 animate-pulse" />)
             ) : (
               filteredProviders.map((p) => {
                 const isUp = p.status === 'UP';
                 return (
                   <div
                     key={p.name}
-                    className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-2xs"
+                    className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-xs"
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
@@ -225,62 +225,64 @@ export default function AdminProvidersAndTelemetryPage() {
             filters={[]}
           />
 
-          <AdminTable
-            columns={[
-              {
-                key: 'method',
-                header: 'MÉTHODE',
-                render: (r: RouteSpec) => (
-                  <span
-                    className={`text-[10px] font-black px-2 py-0.5 rounded ${
-                      r.method === 'POST' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20'
-                    }`}
-                  >
-                    {r.method}
-                  </span>
-                ),
-              },
-              {
-                key: 'path',
-                header: 'ROUTE GATEWAY (PORT 8888)',
-                render: (r: RouteSpec) => (
-                  <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
-                    {r.path}
-                  </span>
-                ),
-              },
-              {
-                key: 'service',
-                header: 'MICROSERVICE CIBLE',
-                render: (r: RouteSpec) => (
-                  <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    {r.service}
-                  </span>
-                ),
-              },
-              {
-                key: 'rateLimit',
-                header: 'QUOTA REDIS',
-                render: (r: RouteSpec) => (
-                  <span className="admin-mono-tabular text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    {r.rateLimit}
-                  </span>
-                ),
-              },
-              {
-                key: 'authRequired',
-                header: 'SÉCURITÉ & AUTH',
-                render: (r: RouteSpec) => (
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                    {r.authRequired}
-                  </span>
-                ),
-              },
-            ]}
-            data={filteredRoutes}
-            keyExtractor={(r) => r.path}
-            emptyMessage="Aucune route trouvée"
-          />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1 shadow-xs overflow-hidden">
+            <AdminTable
+              columns={[
+                {
+                  key: 'method',
+                  header: 'MÉTHODE',
+                  render: (r: RouteSpec) => (
+                    <span
+                      className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                        r.method === 'POST' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20'
+                      }`}
+                    >
+                      {r.method}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'path',
+                  header: 'ROUTE GATEWAY (PORT 8888)',
+                  render: (r: RouteSpec) => (
+                    <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+                      {r.path}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'service',
+                  header: 'MICROSERVICE CIBLE',
+                  render: (r: RouteSpec) => (
+                    <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      {r.service}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'rateLimit',
+                  header: 'QUOTA REDIS',
+                  render: (r: RouteSpec) => (
+                    <span className="admin-mono-tabular text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      {r.rateLimit}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'authRequired',
+                  header: 'SÉCURITÉ & AUTH',
+                  render: (r: RouteSpec) => (
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      {r.authRequired}
+                    </span>
+                  ),
+                },
+              ]}
+              data={filteredRoutes}
+              keyExtractor={(r) => r.path}
+              emptyMessage="Aucune route trouvée"
+            />
+          </div>
         </div>
       )}
 
@@ -325,50 +327,52 @@ export default function AdminProvidersAndTelemetryPage() {
             filters={[]}
           />
 
-          <AdminTable
-            columns={[
-              {
-                key: 'name',
-                header: 'NOM DU TOOL',
-                render: (t: ToolTelemetry) => (
-                  <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400">
-                    {t.name}()
-                  </span>
-                ),
-              },
-              {
-                key: 'count',
-                header: 'APPELS ENREGISTRÉS',
-                align: 'center' as const,
-                render: (t: ToolTelemetry) => (
-                  <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
-                    {t.count}
-                  </span>
-                ),
-              },
-              {
-                key: 'avgDuration',
-                header: 'LATENCE MOYENNE',
-                render: (t: ToolTelemetry) => (
-                  <span className="admin-mono-tabular text-xs text-sky-600 dark:text-sky-400 font-semibold">
-                    {t.avgDuration}
-                  </span>
-                ),
-              },
-              {
-                key: 'role',
-                header: 'RÔLE FONCTIONNEL DANS L’ÉCOSYSTÈME',
-                render: (t: ToolTelemetry) => (
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {t.role}
-                  </span>
-                ),
-              },
-            ]}
-            data={filteredTools}
-            keyExtractor={(t) => t.name}
-            emptyMessage="Aucun outil trouvé"
-          />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-1 shadow-xs overflow-hidden">
+            <AdminTable
+              columns={[
+                {
+                  key: 'name',
+                  header: 'NOM DU TOOL',
+                  render: (t: ToolTelemetry) => (
+                    <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                      {t.name}()
+                    </span>
+                  ),
+                },
+                {
+                  key: 'count',
+                  header: 'APPELS ENREGISTRÉS',
+                  align: 'center' as const,
+                  render: (t: ToolTelemetry) => (
+                    <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-slate-100">
+                      {t.count}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'avgDuration',
+                  header: 'LATENCE MOYENNE',
+                  render: (t: ToolTelemetry) => (
+                    <span className="admin-mono-tabular text-xs text-sky-600 dark:text-sky-400 font-semibold">
+                      {t.avgDuration}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'role',
+                  header: 'RÔLE FONCTIONNEL DANS L’ÉCOSYSTÈME',
+                  render: (t: ToolTelemetry) => (
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {t.role}
+                    </span>
+                  ),
+                },
+              ]}
+              data={filteredTools}
+              keyExtractor={(t) => t.name}
+              emptyMessage="Aucun outil trouvé"
+            />
+          </div>
         </div>
       )}
     </div>

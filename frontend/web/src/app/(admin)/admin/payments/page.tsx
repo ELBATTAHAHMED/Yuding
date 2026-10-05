@@ -283,29 +283,31 @@ export default function AdminPaymentsPage() {
         ]}
       />
 
-      {/* Payments Table */}
-      <AdminTable
-        columns={columns}
-        data={paginatedPayments}
-        keyExtractor={(p) => p.id}
-        isLoading={isLoading}
-        onRowClick={(p) => setSelectedPayment(p)}
-        emptyMessage="Aucune transaction de paiement ne correspond à ces critères."
-        footer={
-          totalItems > 0 ? (
-            <AdminPagination
-              currentPage={currentPage}
-              totalItems={totalItems}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={(newSize) => {
-                setPageSize(newSize);
-                setCurrentPage(1);
-              }}
-            />
-          ) : null
-        }
-      />
+      {/* Payments Table inside Reference-style Rounded-2xl Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <AdminTable
+          columns={columns}
+          data={paginatedPayments}
+          keyExtractor={(p) => p.id}
+          isLoading={isLoading}
+          onRowClick={(p) => setSelectedPayment(p)}
+          emptyMessage="Aucune transaction de paiement ne correspond à ces critères."
+          footer={
+            totalItems > 0 ? (
+              <AdminPagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+              />
+            ) : null
+          }
+        />
+      </div>
 
       {/* Payment Inspection Drawer */}
       <AdminDrawer

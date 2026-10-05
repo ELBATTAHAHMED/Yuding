@@ -290,29 +290,31 @@ export default function AdminBookingsPage() {
         ]}
       />
 
-      {/* Bookings Table */}
-      <AdminTable
-        columns={columns}
-        data={paginatedBookings}
-        keyExtractor={(b) => b.id}
-        isLoading={isLoading}
-        onRowClick={(b) => setSelectedBooking(b)}
-        emptyMessage="Aucune réservation ne correspond aux critères sélectionnés."
-        footer={
-          totalItems > 0 ? (
-            <AdminPagination
-              currentPage={currentPage}
-              totalItems={totalItems}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={(newSize) => {
-                setPageSize(newSize);
-                setCurrentPage(1);
-              }}
-            />
-          ) : null
-        }
-      />
+      {/* Bookings Table inside Reference-style Rounded-2xl Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <AdminTable
+          columns={columns}
+          data={paginatedBookings}
+          keyExtractor={(b) => b.id}
+          isLoading={isLoading}
+          onRowClick={(b) => setSelectedBooking(b)}
+          emptyMessage="Aucune réservation ne correspond aux critères sélectionnés."
+          footer={
+            totalItems > 0 ? (
+              <AdminPagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+              />
+            ) : null
+          }
+        />
+      </div>
 
       {/* Slide-over Inspection Drawer with Rich Travel Details */}
       <AdminDrawer

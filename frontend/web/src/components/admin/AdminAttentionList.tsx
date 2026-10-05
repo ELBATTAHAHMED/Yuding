@@ -49,15 +49,15 @@ export function AdminAttentionList({ items, isLoading = false }: AdminAttentionL
   };
 
   return (
-    <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-2xs h-full">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xs h-full">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
-            Dossiers à Traiter en Priorité
+            Dossiers Prioritaires
           </span>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300">
             {items.length}
           </span>
         </div>

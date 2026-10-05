@@ -435,54 +435,56 @@ export default function AdminRefundsPage() {
         ]}
       />
 
-      {/* Active Tab Table */}
-      {activeTab === 'REFUNDS' ? (
-        <AdminTable
-          columns={refundColumns}
-          data={paginatedRefunds}
-          keyExtractor={(r) => r.id}
-          isLoading={loadingRefunds}
-          onRowClick={(r) => setSelectedItem(r)}
-          emptyMessage="Aucun remboursement trouvé."
-          footer={
-            filteredRefunds.length > 0 ? (
-              <AdminPagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={totalItems}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setCurrentPage(1);
-                }}
-              />
-            ) : null
-          }
-        />
-      ) : (
-        <AdminTable
-          columns={cancellationColumns}
-          data={paginatedCancellations}
-          keyExtractor={(c) => c.id}
-          isLoading={loadingCancellations}
-          onRowClick={(c) => setSelectedItem(c)}
-          emptyMessage="Aucune demande d'annulation trouvée."
-          footer={
-            filteredCancellations.length > 0 ? (
-              <AdminPagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={totalItems}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setCurrentPage(1);
-                }}
-              />
-            ) : null
-          }
-        />
-      )}
+      {/* Active Tab Table inside Reference-style Rounded-2xl Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        {activeTab === 'REFUNDS' ? (
+          <AdminTable
+            columns={refundColumns}
+            data={paginatedRefunds}
+            keyExtractor={(r) => r.id}
+            isLoading={loadingRefunds}
+            onRowClick={(r) => setSelectedItem(r)}
+            emptyMessage="Aucun remboursement trouvé."
+            footer={
+              filteredRefunds.length > 0 ? (
+                <AdminPagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
+                />
+              ) : null
+            }
+          />
+        ) : (
+          <AdminTable
+            columns={cancellationColumns}
+            data={paginatedCancellations}
+            keyExtractor={(c) => c.id}
+            isLoading={loadingCancellations}
+            onRowClick={(c) => setSelectedItem(c)}
+            emptyMessage="Aucune demande d'annulation trouvée."
+            footer={
+              filteredCancellations.length > 0 ? (
+                <AdminPagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
+                />
+              ) : null
+            }
+          />
+        )}
+      </div>
 
       {/* Detail Inspection Drawer */}
       <AdminDrawer

@@ -72,19 +72,19 @@ export default function AdminReviewsPage() {
 
       {/* Review Queue */}
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 h-36 animate-pulse" />
+            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 h-36 animate-pulse shadow-xs" />
           ))}
         </div>
       ) : isError ? (
-        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 rounded-xl p-8 text-center text-rose-600">
+        <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 rounded-2xl p-8 text-center text-rose-600 shadow-xs">
           <i className="fas fa-exclamation-triangle text-2xl mb-2" />
           <div className="font-bold text-sm">Impossible de charger la file de modération</div>
         </div>
       ) : reviews.length === 0 ? (
-        <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-12 text-center flex flex-col items-center justify-center gap-2 shadow-2xs">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-2 shadow-xs">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
             <i className="fas fa-check-double" />
           </div>
           <div className="font-bold text-sm text-slate-900 dark:text-slate-100">
@@ -95,11 +95,11 @@ export default function AdminReviewsPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {reviews.map((review) => (
             <article
               key={review.id}
-              className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs"
             >
               {/* Header: Target entity & stars */}
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
@@ -129,7 +129,7 @@ export default function AdminReviewsPage() {
               </div>
 
               {/* Review Content */}
-              <p className="text-xs leading-relaxed whitespace-pre-wrap rounded-lg p-3 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-normal m-0">
+              <p className="text-xs leading-relaxed whitespace-pre-wrap rounded-xl p-3.5 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-normal m-0">
                 &ldquo;{review.content}&rdquo;
               </p>
 
@@ -144,7 +144,7 @@ export default function AdminReviewsPage() {
                     type="button"
                     disabled={decision.isPending}
                     onClick={() => decision.mutate({ id: review.id, status: 'REJECTED' })}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200/50 dark:border-rose-900/40 transition-colors shadow-2xs"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200/50 dark:border-rose-900/40 transition-colors shadow-2xs"
                   >
                     <i className="fas fa-times text-[10px]" />
                     <span>Rejeter</span>
@@ -154,7 +154,7 @@ export default function AdminReviewsPage() {
                     type="button"
                     disabled={decision.isPending}
                     onClick={() => decision.mutate({ id: review.id, status: 'APPROVED' })}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-slate-950 transition-colors shadow-2xs"
                   >
                     <i className="fas fa-check text-[10px]" />
                     <span>Approuver &amp; Publier</span>

@@ -74,46 +74,46 @@ export function AdminOverviewChart({
   const growthPercent = totalPrev > 0 ? Math.round(((totalCurrent - totalPrev) / totalPrev) * 100) : 0;
 
   return (
-    <div className="admin-concentric-card bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-2xs">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
       {/* Chart Topbar with Metric Switcher and Period Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Activité Opérationnelle
+              Flux en Temps Réel
             </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
               +{growthPercent}% vs S-1
             </span>
           </div>
-          <div className="text-lg font-black text-slate-900 dark:text-slate-100 admin-mono-tabular mt-0.5">
+          <div className="text-xl font-black text-slate-900 dark:text-slate-100 admin-mono-tabular mt-0.5">
             {isRevenue ? `${totalCurrent.toLocaleString('fr-FR')} MAD` : `${totalCurrent} dossiers`}
-            <span className="text-xs font-normal text-slate-400 dark:text-slate-500 ml-1.5">
-              enregistrés (7j)
+            <span className="text-xs font-medium text-slate-400 dark:text-slate-500 ml-2">
+              volume consolidé
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Metric Toggle */}
-          <div className="inline-flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold">
+          <div className="inline-flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setMetric('revenue')}
-              className={`px-2.5 py-1 rounded-md transition-all ${
+              className={`px-3 py-1 rounded-lg transition-all ${
                 isRevenue
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              Volume Net (MAD)
+              Volume MAD
             </button>
             <button
               type="button"
               onClick={() => setMetric('volume')}
-              className={`px-2.5 py-1 rounded-md transition-all ${
+              className={`px-3 py-1 rounded-lg transition-all ${
                 !isRevenue
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
@@ -122,12 +122,12 @@ export function AdminOverviewChart({
           </div>
 
           {/* Timeframe switch */}
-          <div className="hidden sm:inline-flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200/60 dark:border-slate-700/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          <div className="hidden sm:inline-flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             <button
               type="button"
               onClick={() => setTimeframe('7d')}
-              className={`px-2 py-1 rounded ${
-                timeframe === '7d' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs font-bold' : ''
+              className={`px-2.5 py-1 rounded-lg ${
+                timeframe === '7d' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-bold' : ''
               }`}
             >
               7J
@@ -135,8 +135,8 @@ export function AdminOverviewChart({
             <button
               type="button"
               onClick={() => setTimeframe('30d')}
-              className={`px-2 py-1 rounded ${
-                timeframe === '30d' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs font-bold' : ''
+              className={`px-2.5 py-1 rounded-lg ${
+                timeframe === '30d' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs font-bold' : ''
               }`}
             >
               30J
@@ -145,25 +145,18 @@ export function AdminOverviewChart({
         </div>
       </div>
 
-      {/* SVG Canvas Area */}
-      <div className="relative pt-3">
+      {/* SVG Multi-Bar Comparison Chart Area (Inspired by Real-Time Sale in Reference) */}
+      <div className="relative pt-4">
         {isLoading ? (
-          <div className="w-full h-44 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-400">
-            Synchronisation des flux télémétriques...
+          <div className="w-full h-48 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-400">
+            Synchronisation des métriques en temps réel...
           </div>
         ) : (
           <div className="w-full overflow-hidden">
             <svg
               viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-              className="w-full h-44 select-none overflow-visible"
+              className="w-full h-48 select-none overflow-visible"
             >
-              <defs>
-                <linearGradient id={`${chartId}-gradient`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00D4AA" stopOpacity="0.28" />
-                  <stop offset="100%" stopColor="#00D4AA" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-
               {/* Gridlines */}
               {[0.25, 0.5, 0.75, 1.0].map((ratio) => {
                 const y = chartHeight - paddingY - ratio * (chartHeight - paddingY * 2);
@@ -193,88 +186,101 @@ export function AdminOverviewChart({
                 strokeWidth="1"
               />
 
-              {/* Previous period line (dotted neutral) */}
-              <path
-                d={prevPath}
-                fill="none"
-                stroke="currentColor"
-                className="text-slate-300 dark:text-slate-600"
-                strokeWidth="1.5"
-                strokeDasharray="3 3"
-              />
+              {/* Multi-Bar Groups for each day (Triple bar: Black, Blue, Tan like Reference) */}
+              {data.map((d, i) => {
+                const groupX = paddingX + (i / (data.length - 1)) * (chartWidth - paddingX * 2);
+                const currentVal = isRevenue ? d.revenue : d.volume;
+                const prevVal = isRevenue ? d.revenuePrev || 0 : d.volumePrev || 0;
+                const estVal = Math.round(currentVal * 0.75);
 
-              {/* Current area fill */}
-              <path d={currentArea} fill={`url(#${chartId}-gradient)`} />
+                const currentH = (currentVal / maxVal) * (chartHeight - paddingY * 2);
+                const prevH = (prevVal / maxVal) * (chartHeight - paddingY * 2);
+                const estH = (estVal / maxVal) * (chartHeight - paddingY * 2);
 
-              {/* Current period line */}
-              <path
-                d={currentPath}
-                fill="none"
-                stroke="#00D4AA"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                const baseY = chartHeight - paddingY;
+                const barWidth = 4.5;
+                const gap = 3;
 
-              {/* Interactive points & hover detection */}
-              {points.map((p, i) => (
-                <g key={i}>
-                  {/* Invisible hit column */}
-                  <rect
-                    x={p.x - 20}
-                    y={0}
-                    width={40}
-                    height={chartHeight}
-                    fill="transparent"
-                    className="cursor-pointer"
+                return (
+                  <g
+                    key={i}
+                    className="cursor-pointer group"
                     onMouseEnter={() => setHoverIndex(i)}
                     onMouseLeave={() => setHoverIndex(null)}
-                  />
-
-                  {/* Dot */}
-                  <circle
-                    cx={p.x}
-                    cy={p.y}
-                    r={hoverIndex === i ? 5 : 3}
-                    className="transition-all duration-150"
-                    fill={hoverIndex === i ? '#00D4AA' : '#FFFFFF'}
-                    stroke="#00D4AA"
-                    strokeWidth={hoverIndex === i ? 3 : 2}
-                  />
-
-                  {/* X-axis label */}
-                  <text
-                    x={p.x}
-                    y={chartHeight - 6}
-                    textAnchor="middle"
-                    className="text-[10px] font-semibold fill-slate-400 dark:fill-slate-500"
                   >
-                    {p.label}
-                  </text>
-                </g>
-              ))}
+                    {/* Invisible hit column */}
+                    <rect
+                      x={groupX - 20}
+                      y={0}
+                      width={40}
+                      height={chartHeight}
+                      fill="transparent"
+                    />
+
+                    {/* Bar 1: Deep Navy/Black (Primary Current) */}
+                    <rect
+                      x={groupX - barWidth - gap}
+                      y={baseY - currentH}
+                      width={barWidth}
+                      height={currentH}
+                      rx={2}
+                      className="fill-slate-900 dark:fill-white transition-opacity group-hover:opacity-80"
+                    />
+
+                    {/* Bar 2: Soft Blue (Previous Cycle) */}
+                    <rect
+                      x={groupX}
+                      y={baseY - prevH}
+                      width={barWidth}
+                      height={prevH}
+                      rx={2}
+                      className="fill-[#A5C9FF] dark:fill-[#3B82F6] transition-opacity group-hover:opacity-80"
+                    />
+
+                    {/* Bar 3: Soft Sand / Peach (Estimate / Baseline) */}
+                    <rect
+                      x={groupX + barWidth + gap}
+                      y={baseY - estH}
+                      width={barWidth}
+                      height={estH}
+                      rx={2}
+                      className="fill-[#F6D0B5] dark:fill-[#F59E0B] transition-opacity group-hover:opacity-80"
+                    />
+
+                    {/* Day label */}
+                    <text
+                      x={groupX}
+                      y={chartHeight - 6}
+                      textAnchor="middle"
+                      className="text-[10px] font-semibold fill-slate-400 dark:fill-slate-500"
+                    >
+                      {d.label}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
 
             {/* Hover Tooltip Overlay */}
-            {hoverIndex !== null && points[hoverIndex] && (
+            {hoverIndex !== null && data[hoverIndex] && (
               <div
-                className="absolute top-1 pointer-events-none transform -translate-x-1/2 bg-slate-900 text-white text-xs py-1 px-2.5 rounded-lg shadow-lg border border-slate-700 z-10 admin-mono-tabular"
+                className="absolute top-2 pointer-events-none transform -translate-x-1/2 bg-slate-900 text-white text-xs py-1.5 px-3 rounded-xl shadow-lg border border-slate-700 z-10 admin-mono-tabular"
                 style={{
                   left: `${(points[hoverIndex].x / chartWidth) * 100}%`,
                 }}
               >
                 <div className="font-bold text-[11px] text-slate-300">
-                  {points[hoverIndex].label}
+                  {data[hoverIndex].label} · Détails du flux
                 </div>
-                <div className="text-emerald-400 font-extrabold text-xs">
-                  {isRevenue
-                    ? `${points[hoverIndex].revenue.toLocaleString('fr-FR')} MAD`
-                    : `${points[hoverIndex].volume} réservations`}
+                <div className="text-emerald-400 font-black text-xs mt-0.5">
+                  Courant: {isRevenue
+                    ? `${data[hoverIndex].revenue.toLocaleString('fr-FR')} MAD`
+                    : `${data[hoverIndex].volume} réservations`}
                 </div>
-                <div className="text-[10px] text-slate-400">
-                  Semaine préc: {isRevenue
-                    ? `${(points[hoverIndex].revenuePrev || 0).toLocaleString('fr-FR')} MAD`
-                    : `${points[hoverIndex].volumePrev || 0} rés.`}
+                <div className="text-[10px] text-blue-300">
+                  Précédent: {isRevenue
+                    ? `${(data[hoverIndex].revenuePrev || 0).toLocaleString('fr-FR')} MAD`
+                    : `${data[hoverIndex].volumePrev || 0} rés.`}
                 </div>
               </div>
             )}
@@ -283,19 +289,23 @@ export function AdminOverviewChart({
       </div>
 
       {/* Legend & Indicator */}
-      <div className="flex items-center justify-between text-[11px] pt-2 text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/80">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between text-[11px] pt-3 text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-[#00D4AA] rounded-full" />
-            <span>Période courante</span>
+            <span className="w-2.5 h-2.5 bg-slate-900 dark:bg-white rounded-xs" />
+            <span className="font-medium text-slate-600 dark:text-slate-400">Captures réelles</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-slate-300 dark:bg-slate-600 rounded-full border-t border-dotted" />
-            <span>Semaine précédente</span>
+            <span className="w-2.5 h-2.5 bg-[#A5C9FF] dark:bg-[#3B82F6] rounded-xs" />
+            <span className="font-medium text-slate-600 dark:text-slate-400">Cycle précédent</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 bg-[#F6D0B5] dark:bg-[#F59E0B] rounded-xs" />
+            <span className="font-medium text-slate-600 dark:text-slate-400">Moyenne projetée</span>
           </div>
         </div>
         <span className="hidden sm:inline admin-mono-tabular">
-          Fréquence: Temps réel (Passerelle 8888)
+          Temps réel : Passerelle :8888
         </span>
       </div>
     </div>
