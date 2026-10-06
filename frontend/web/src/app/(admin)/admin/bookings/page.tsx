@@ -3,476 +3,228 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAdminBookings, useAdminUsers } from '@/hooks/queries/useAdminQueries';
-import { AdminBooking } from '@/types/admin.types';
-import { AdminTable } from '@/components/admin/AdminTable';
-import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
-import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
-import { AdminDrawer } from '@/components/admin/AdminDrawer';
-import { AdminPagination } from '@/components/admin/AdminPagination';
-import { BookingVisual } from '@/components/admin/BookingVisual';
-import { EntityAvatar } from '@/components/admin/EntityAvatar';
 import { parseTravelContext } from '@/lib/admin-travel';
-import { exportToCsv } from '@/lib/admin-csv';
+import { AdminBooking } from '@/types/admin.types';
 
 export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [productFilter, setProductFilter] = useState('ALL');
   const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const { data: bookings = [], isLoading, refetch, isRefetching } = useAdminBookings({
-    limit: 200,
-    status: statusFilter,
-    productType: productFilter,
-  });
-
+  const { data: bookings = [], isLoading } = useAdminBookings({ limit: 100 });
   const { data: users = [] } = useAdminUsers();
 
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
-  };
-
-  const getUser = (userId: string) => users.find((u) => u.id === userId);
-
-  const filteredBookings = bookings.filter((b) => {
+  const filtered = bookings.filter((b) => {
+    if (statusFilter !== 'ALL' && b.status !== statusFilter) return false;
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
     const travel = parseTravelContext(b);
     return (
       b.bookingReference.toLowerCase().includes(term) ||
       b.userId.toLowerCase().includes(term) ||
-      (b.provider && b.provider.toLowerCase().includes(term)) ||
-      travel.title.toLowerCase().includes(term) ||
-      travel.subtitle.toLowerCase().includes(term)
+      travel.title.toLowerCase().includes(term)
     );
   });
 
-  // Paginated Slice
-  const totalItems = filteredBookings.length;
-  const paginatedBookings = filteredBookings.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  const handleExportCsv = () => {
-    const rows = filteredBookings.map((b) => {
-      const travel = parseTravelContext(b);
-      return {
-        Reference: b.bookingReference,
-        Type: b.productType,
-        Title: travel.title,
-        Dates: travel.dates,
-        Status: b.status,
-        Amount: b.amount ?? 0,
-        Currency: b.currency || 'MAD',
-        Provider: b.provider || 'DIRECT',
-        UserId: b.userId,
-        CreatedAt: b.createdAt,
-      };
-    });
-    exportToCsv('reservations_yuding', rows);
-  };
-
   const selectedTravel = selectedBooking ? parseTravelContext(selectedBooking) : null;
-  const selectedUser = selectedBooking ? getUser(selectedBooking.userId) : null;
-
-  const columns = [
-    {
-      key: 'bookingReference',
-      header: 'DOSSIER & VOYAGE',
-      render: (b: AdminBooking) => {
-        const travel = parseTravelContext(b);
-        return (
-          <div className="flex items-center gap-3 py-1">
-            <BookingVisual booking={b} size="md" />
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400">
-                  {b.bookingReference}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopy(b.bookingReference, b.id);
-                  }}
-                  className="opacity-40 hover:opacity-100 transition-opacity p-0.5"
-                  title="Copier la référence"
-                >
-                  <i className={`fas ${copiedId === b.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[10px]`} />
-                </button>
-              </div>
-              <div className="font-semibold text-xs text-slate-900 dark:text-zinc-100 truncate max-w-xs sm:max-w-md">
-                {travel.title}
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-xs sm:max-w-md">
-                {travel.subtitle}
-              </div>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'productType',
-      header: 'DATES / PÉRIODE',
-      render: (b: AdminBooking) => {
-        const travel = parseTravelContext(b);
-        return (
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-              {travel.dates}
-            </span>
-            <span className="text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
-              {new Date(b.createdAt).toLocaleDateString('fr-FR')} • {travel.badge}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'userId',
-      header: 'CLIENT VOYAGEUR',
-      render: (b: AdminBooking) => {
-        const user = getUser(b.userId);
-        const name = user ? `${user.firstName} ${user.lastName}`.trim() : `Voyageur (${b.userId.slice(0, 6)})`;
-        return (
-          <div className="flex items-center gap-2 py-0.5">
-            <EntityAvatar
-              name={name}
-              email={user?.email}
-              userId={b.userId}
-              hasProfilePhoto={true}
-              size="sm"
-            />
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate max-w-[140px]">
-                {name}
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate max-w-[140px]">
-                {user?.email || b.userId.slice(0, 8)}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'provider',
-      header: 'FOURNISSEUR',
-      render: (b: AdminBooking) => (
-        <span className="text-[11px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
-          {b.provider || 'DIRECT'}
-        </span>
-      ),
-    },
-    {
-      key: 'amount',
-      header: 'MONTANT TTC',
-      align: 'right' as const,
-      render: (b: AdminBooking) => (
-        <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
-            {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-zinc-500">
-            Tarif serveur
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'STATUT',
-      render: (b: AdminBooking) => (
-        <AdminBadge variant={getStatusBadgeVariant(b.status)} size="sm">
-          {b.status}
-        </AdminBadge>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'DOSSIER',
-      align: 'right' as const,
-      render: (b: AdminBooking) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedBooking(b);
-          }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
-        >
-          <i className="fas fa-search-plus text-[10px] mr-1" />
-          <span>Examiner</span>
-        </button>
-      ),
-    },
-  ];
+  const selectedUser = selectedBooking ? users.find((u) => u.id === selectedBooking.userId) : null;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
-      {/* Title & Stats Ribbon */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="max-w-[1400px] mx-auto space-y-8">
+      {/* 1. Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E5E7EB] dark:border-[#1E232D]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
-            Réservations &amp; Dossiers Voyage
+          <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] dark:text-white m-0">
+            Dossiers de Réservation
           </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-            Supervision autoritaire du cycle de vie des réservations multi-verticales et traçabilité des prestataires
+          <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-1 m-0">
+            Supervision opérationnelle des réservations de séjours, vols, transports et excursions.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            disabled={filteredBookings.length === 0}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/ text-slate-700 dark:text-zinc-300 shadow-2xs transition-colors disabled:opacity-50"
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Filtrer par référence ou destination..."
+            className="text-xs px-3 py-2 rounded-lg bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] text-[#0F172A] dark:text-white outline-none w-64"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs px-3 py-2 rounded-lg bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] text-[#0F172A] dark:text-white outline-none font-semibold cursor-pointer"
           >
-            <i className="fas fa-file-csv text-[11px]" />
-            <span>Exporter CSV</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 transition-colors shadow-2xs"
-          >
-            <i className={`fas fa-sync text-[11px] ${isRefetching ? 'animate-spin' : ''}`} />
-            <span>Actualiser</span>
-          </button>
+            <option value="ALL">Tous les statuts</option>
+            <option value="CONFIRMED">Confirmé / Payé</option>
+            <option value="PENDING">En attente</option>
+            <option value="CANCELLED">Annulé</option>
+          </select>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <AdminFilterBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par référence, client, destination..."
-        filters={[
-          {
-            key: 'status',
-            label: 'Statut',
-            value: statusFilter,
-            onChange: (v) => {
-              setStatusFilter(v);
-              setCurrentPage(1);
-            },
-            options: [
-              { value: 'ALL', label: 'Tous les statuts' },
-              { value: 'CONFIRMED', label: 'Confirmé' },
-              { value: 'PENDING', label: 'En attente' },
-              { value: 'CANCELLED', label: 'Annulé' },
-              { value: 'FAILED', label: 'Échoué' },
-            ],
-          },
-          {
-            key: 'product',
-            label: 'Prestation',
-            value: productFilter,
-            onChange: (v) => {
-              setProductFilter(v);
-              setCurrentPage(1);
-            },
-            options: [
-              { value: 'ALL', label: 'Toutes prestations' },
-              { value: 'HOTEL', label: 'Hôtels' },
-              { value: 'FLIGHT', label: 'Vols' },
-              { value: 'ACTIVITY', label: 'Activités' },
-              { value: 'TRANSFER', label: 'Transferts' },
-              { value: 'TRAIN', label: 'Trains ONCF' },
-            ],
-          },
-        ]}
-      />
-
-      {/* Bookings Table inside Reference-style Rounded-2xl Card */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
-        <AdminTable
-          columns={columns}
-          data={paginatedBookings}
-          keyExtractor={(b) => b.id}
-          isLoading={isLoading}
-          onRowClick={(b) => setSelectedBooking(b)}
-          emptyMessage="Aucune réservation ne correspond aux critères sélectionnés."
-          footer={
-            totalItems > 0 ? (
-              <AdminPagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setCurrentPage(1);
-                }}
-              />
-            ) : null
-          }
-        />
-      </div>
-
-      {/* Slide-over Inspection Drawer with Rich Travel Details */}
-      <AdminDrawer
-        isOpen={Boolean(selectedBooking)}
-        onClose={() => setSelectedBooking(null)}
-        title={selectedBooking ? selectedBooking.bookingReference : ''}
-        subtitle={selectedTravel ? `${selectedTravel.badge} • ${selectedTravel.title}` : 'Dossier voyage'}
-        badge={
-          selectedBooking && (
-            <AdminBadge variant={getStatusBadgeVariant(selectedBooking.status)} size="sm">
-              {selectedBooking.status}
-            </AdminBadge>
-          )
-        }
-        rawJson={selectedBooking}
-      >
-        {selectedBooking && selectedTravel && (
-          <div className="space-y-5">
-            {/* Travel Hero Header with Real Image or Semantic Route */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xs">
-              {selectedTravel.imageUrl && (
-                <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
-                  <img
-                    src={selectedTravel.imageUrl}
-                    alt={selectedTravel.title}
-                    className="w-full h-full object-cover opacity-90"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-3 left-4 right-4">
-                    <span
-                      className="text-[10px] font-bold px-2 py-0.5 rounded text-white uppercase tracking-wider shadow-sm"
-                      style={{ backgroundColor: selectedTravel.badgeColor }}
-                    >
-                      {selectedTravel.badge}
-                    </span>
-                    <h3 className="text-base font-black text-white mt-1 leading-tight drop-shadow-xs">
-                      {selectedTravel.title}
-                    </h3>
-                  </div>
-                </div>
-              )}
-
-              <div className="p-4 space-y-3">
-                {!selectedTravel.imageUrl && (
-                  <div className="flex items-center gap-3">
-                    <BookingVisual booking={selectedBooking} size="lg" />
-                    <div>
-                      <h3 className="text-base font-extrabold text-slate-900 dark:text-zinc-100 m-0 leading-tight">
-                        {selectedTravel.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400 m-0 mt-0.5">
-                        {selectedTravel.subtitle}
-                      </p>
-                    </div>
-                  </div>
+      {/* 2. Split Workspace Layout: Master Table on Left, Live Dossier Inspector on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left: Master Booking Registry Table (7 or 12 cols depending on selection) */}
+        <div className={`${selectedBooking ? 'lg:col-span-7' : 'lg:col-span-12'} transition-all`}>
+          <div className="bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] rounded-xl overflow-hidden">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[#F1F3F5] dark:border-[#1A1F28] bg-[#FAFAFB] dark:bg-[#0E1116] text-[#64748B] dark:text-[#94A3B8] font-bold text-[10px] tracking-wider uppercase">
+                  <th className="py-3 px-4">Dossier</th>
+                  <th className="py-3 px-4">Prestation</th>
+                  <th className="py-3 px-4">Dates</th>
+                  <th className="py-3 px-4 text-right">Tarif</th>
+                  <th className="py-3 px-4 text-center">Statut</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F1F3F5] dark:divide-[#1A1F28]">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-[#94A3B8]">
+                      Chargement des réservations...
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-[#94A3B8]">
+                      Aucune réservation trouvée.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((b) => {
+                    const travel = parseTravelContext(b);
+                    const isSelected = selectedBooking?.id === b.id;
+                    return (
+                      <tr
+                        key={b.id}
+                        onClick={() => setSelectedBooking(isSelected ? null : b)}
+                        className={`cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-[#F1F5F9] dark:bg-[#1E232D]'
+                            : 'hover:bg-[#FAFAFB] dark:hover:bg-[#161B22]'
+                        }`}
+                      >
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A] dark:text-white">
+                          {b.bookingReference}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-[#0F172A] dark:text-white truncate max-w-[200px]">
+                            {travel.title}
+                          </div>
+                          <div className="text-[10px] text-[#94A3B8] truncate max-w-[200px]">
+                            {travel.subtitle}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-[#475569] dark:text-[#94A3B8] whitespace-nowrap">
+                          {travel.dates}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-[#0F172A] dark:text-white whitespace-nowrap">
+                          {b.amount ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
+                              b.status === 'CONFIRMED' || b.status === 'PAID'
+                                ? 'bg-[#ECFDF5] text-[#047857] dark:bg-[#064E3B]/40 dark:text-[#34D399]'
+                                : 'bg-[#FEF2F2] text-[#B91C1C] dark:bg-[#7F1D1D]/30 dark:text-[#F87171]'
+                            }`}
+                          >
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-                {/* Specific Travel Details Grid */}
-                <div className="grid grid-cols-2 gap-2.5 pt-1">
-                  {selectedTravel.details.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 rounded-lg border border-slate-200/70 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-800 text-xs"
-                    >
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                        {item.label}
-                      </span>
-                      <span className="font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 block truncate">
-                        {item.value}
-                      </span>
-                    </div>
-                  ))}
+        {/* Right: Rich Contextual Travel Dossier Inspector (5 cols) */}
+        {selectedBooking && selectedTravel && (
+          <div className="lg:col-span-5 bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] rounded-xl p-6 space-y-6 sticky top-24 shadow-sm animate-fade-in">
+            <div className="flex items-start justify-between pb-4 border-b border-[#F1F3F5] dark:border-[#1A1F28]">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] block">
+                  Dossier Opérateur
+                </span>
+                <h3 className="text-lg font-bold font-mono text-[#0F172A] dark:text-white m-0 mt-0.5">
+                  {selectedBooking.bookingReference}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBooking(null)}
+                className="text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white p-1"
+              >
+                <i className="fas fa-times text-xs" />
+              </button>
+            </div>
+
+            {/* Travel Experience Context */}
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+                Prestation Voyage
+              </div>
+              <div className="p-4 rounded-lg bg-[#FAFAFB] dark:bg-[#161B22] border border-[#F1F3F5] dark:border-[#1E232D] space-y-1">
+                <div className="font-bold text-sm text-[#0F172A] dark:text-white">
+                  {selectedTravel.title}
+                </div>
+                <div className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                  {selectedTravel.subtitle}
+                </div>
+                <div className="text-xs text-[#0F172A] dark:text-white font-medium pt-1">
+                  Période : {selectedTravel.dates}
                 </div>
               </div>
             </div>
 
-            {/* Financial & Settlement Breakdown */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0 flex items-center gap-2">
-                <i className="fas fa-coins text-emerald-600 dark:text-emerald-400 text-xs" />
-                <span>Règlement Financier &amp; Facturation</span>
-              </h4>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="text-slate-400 dark:text-zinc-500 block text-[11px]">Tarif Total Garanti</span>
-                  <span className="admin-mono-tabular font-black text-base text-slate-900 dark:text-zinc-100">
-                    {selectedBooking.amount != null ? `${Number(selectedBooking.amount).toFixed(2)} ${selectedBooking.currency || 'MAD'}` : '—'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 dark:text-zinc-500 block text-[11px]">Passerelle / Fournisseur</span>
-                  <span className="font-semibold text-slate-700 dark:text-zinc-300">
-                    {selectedBooking.provider || 'Régie Directe Yuding'}
-                  </span>
-                </div>
+            {/* Financial Ledger Binding */}
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+                Règlement Financier
               </div>
-
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-zinc-400">Grand Livre des Paiements :</span>
+              <div className="p-4 rounded-lg bg-[#FAFAFB] dark:bg-[#161B22] border border-[#F1F3F5] dark:border-[#1E232D] flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-[#94A3B8]">Total Débité</div>
+                  <div className="text-base font-extrabold font-mono text-[#0F172A] dark:text-white">
+                    {selectedBooking.amount ? `${Number(selectedBooking.amount).toFixed(2)} ${selectedBooking.currency || 'MAD'}` : '—'}
+                  </div>
+                </div>
                 <Link
                   href={`/admin/payments?search=${encodeURIComponent(selectedBooking.bookingReference)}`}
-                  className="font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 no-underline"
+                  className="text-xs font-bold text-[#00D4AA] hover:underline no-underline"
                 >
-                  <span>Voir la transaction associée</span>
-                  <i className="fas fa-arrow-right text-[10px]" />
+                  Voir dans le Grand Livre →
                 </Link>
               </div>
             </div>
 
-            {/* Traveler Profile Card */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0 flex items-center gap-2">
-                <i className="fas fa-user-circle text-slate-400 text-xs" />
-                <span>Identité du Client</span>
-              </h4>
-
-              <div className="flex items-center gap-3">
-                <EntityAvatar
-                  name={selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'Client'}
-                  email={selectedUser?.email}
-                  userId={selectedBooking.userId}
-                  hasProfilePhoto={true}
-                  size="md"
-                />
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
-                    {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : `Utilisateur #${selectedBooking.userId.slice(0, 8)}`}
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
-                    {selectedUser?.email || selectedBooking.userId}
-                  </div>
-                  <div className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5 admin-mono-tabular">
-                    ID autoritaire : {selectedBooking.userId}
-                  </div>
-                </div>
+            {/* Traveler Profile */}
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+                Client Voyageur
               </div>
-
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-zinc-400">Gouvernance du compte :</span>
+              <div className="p-4 rounded-lg bg-[#FAFAFB] dark:bg-[#161B22] border border-[#F1F3F5] dark:border-[#1E232D] space-y-1">
+                <div className="font-bold text-xs text-[#0F172A] dark:text-white">
+                  {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : selectedBooking.userId}
+                </div>
+                <div className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                  {selectedUser?.email || 'Email non renseigné'}
+                </div>
                 <Link
                   href={`/admin/users?search=${encodeURIComponent(selectedBooking.userId)}`}
-                  className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 no-underline"
+                  className="text-xs font-semibold text-[#00D4AA] hover:underline no-underline inline-block pt-1"
                 >
-                  <span>Gérer l&apos;utilisateur RBAC</span>
-                  <i className="fas fa-arrow-right text-[10px]" />
+                  Fiche identité complète →
                 </Link>
               </div>
             </div>
           </div>
         )}
-      </AdminDrawer>
+      </div>
     </div>
   );
 }

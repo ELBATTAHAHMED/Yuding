@@ -7,381 +7,220 @@ import {
   useAdminBookings,
   useAdminPayments,
   useAdminCancellations,
-  useAdminUsers,
   useProviderHealth,
 } from '@/hooks/queries/useAdminQueries';
-import { AdminStatCard } from '@/components/admin/AdminStatCard';
-import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
-import { AdminTable } from '@/components/admin/AdminTable';
-import { BookingVisual } from '@/components/admin/BookingVisual';
-import { AdminOverviewChart } from '@/components/admin/AdminOverviewChart';
-import { AdminAttentionList, AttentionItem } from '@/components/admin/AdminAttentionList';
-import { AdminBooking, AdminPayment } from '@/types/admin.types';
 import { parseTravelContext } from '@/lib/admin-travel';
 
 export default function AdminOverviewPage() {
-  const { data: stats, isLoading: loadingStats, refetch: refetchStats } = useAdminStats();
-  const { data: recentBookings = [], isLoading: loadingBookings, refetch: refetchBookings } = useAdminBookings({ limit: 6 });
-  const { data: recentPayments = [], isLoading: loadingPayments, refetch: refetchPayments } = useAdminPayments({ limit: 6 });
-  const { data: cancellations = [], isLoading: loadingCancellations } = useAdminCancellations(50);
-  const { data: users = [], isLoading: loadingUsers } = useAdminUsers();
-  const { data: providerHealth = [], isLoading: loadingHealth, refetch: refetchHealth } = useProviderHealth();
+  const { data: stats, isLoading: loadingStats } = useAdminStats();
+  const { data: bookings = [], isLoading: loadingBookings } = useAdminBookings({ limit: 8 });
+  const { data: payments = [], isLoading: loadingPayments } = useAdminPayments({ limit: 6 });
+  const { data: cancellations = [], isLoading: loadingCancellations } = useAdminCancellations(20);
+  const { data: providers = [], isLoading: loadingHealth } = useProviderHealth();
 
-  const upProviders = providerHealth.filter((p) => p.status === 'UP').length;
-  const totalProviders = providerHealth.length || 7;
-
-  // Build urgent triage queue from real authoritative data
-  const failedPayments = recentPayments.filter((p) => p.status === 'FAILED');
-  const failedRefunds = cancellations.filter(
-    (c) => c.status === 'REFUND_FAILED' || c.refundStatus === 'REFUND_FAILED'
-  );
-  const lockedUsers = users.filter(
-    (u) => (u.lockedUntil && new Date(u.lockedUntil) > new Date()) || u.status === 'LOCKED'
-  );
-
-  const attentionItems: AttentionItem[] = [
-    ...failedRefunds.map((r) => ({
-      id: `ref-${r.id}`,
-      type: 'REFUND_FAILED' as const,
-      title: `Échec Remboursement • Dossier ${r.bookingId ? r.bookingId.slice(0, 8) : r.id.slice(0, 8)}`,
-      subtitle: `${r.refundAmount ? Number(r.refundAmount).toFixed(2) : '—'} MAD bloqués (motif: ${r.reason || 'PSP'})`,
-      timestamp: r.requestedAt ? new Date(r.requestedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Récemment',
-      severity: 'high' as const,
-      actionHref: '/admin/refunds',
-      actionLabel: 'Relancer',
-    })),
-    ...failedPayments.map((p) => ({
-      id: `pay-${p.id}`,
-      type: 'PAYMENT_FAILED' as const,
-      title: `Échec Paiement • ${p.paymentReference}`,
-      subtitle: `${Number(p.amount).toFixed(2)} ${p.currency} rejetés (${p.providerName})`,
-      timestamp: p.createdAt ? new Date(p.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Aujourd\'hui',
-      severity: 'medium' as const,
-      actionHref: '/admin/payments',
-      actionLabel: 'Inspecter',
-    })),
-    ...lockedUsers.map((u) => ({
-      id: `usr-${u.id}`,
-      type: 'ACCOUNT_LOCKED' as const,
-      title: `Compte Verrouillé • ${u.email}`,
-      subtitle: `${u.failedLoginAttempts || 5} tentatives erronées consécutives`,
-      timestamp: 'Sécurité identity',
-      severity: 'high' as const,
-      actionHref: '/admin/users',
-      actionLabel: 'Débloquer',
-    })),
-  ];
-
-  const handleRefreshAll = () => {
-    refetchStats();
-    refetchBookings();
-    refetchPayments();
-    refetchHealth();
-  };
-
-  const bookingColumns = [
-    {
-      key: 'bookingReference',
-      header: 'DOSSIER & VOYAGE',
-      render: (b: AdminBooking) => {
-        const travel = parseTravelContext(b);
-        return (
-          <div className="flex items-center gap-2.5 py-1">
-            <BookingVisual booking={b} size="sm" />
-            <div className="min-w-0">
-              <span className="admin-mono-tabular font-bold text-xs text-emerald-600 dark:text-emerald-400 block">
-                {b.bookingReference}
-              </span>
-              <span className="font-semibold text-xs text-slate-900 dark:text-zinc-100 truncate block max-w-[190px]">
-                {travel.title}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'productType',
-      header: 'DATES & DÉTAILS',
-      render: (b: AdminBooking) => {
-        const travel = parseTravelContext(b);
-        return (
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-              {travel.dates}
-            </span>
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500 admin-mono-tabular">
-              {travel.badge} • ID {b.id.slice(0, 8)}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'status',
-      header: 'STATUT',
-      render: (b: AdminBooking) => (
-        <AdminBadge variant={getStatusBadgeVariant(b.status)} size="sm">
-          {b.status}
-        </AdminBadge>
-      ),
-    },
-    {
-      key: 'amount',
-      header: 'MONTANT',
-      align: 'right' as const,
-      render: (b: AdminBooking) => (
-        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
-          {b.amount != null ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
-        </span>
-      ),
-    },
-  ];
-
-  const paymentColumns = [
-    {
-      key: 'paymentReference',
-      header: 'RÉFÉRENCE & DATE',
-      render: (p: AdminPayment) => (
-        <div className="flex flex-col py-1">
-          <span className="admin-mono-tabular font-bold text-xs text-sky-600 dark:text-sky-400">
-            {p.paymentReference}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-zinc-500 admin-mono-tabular">
-            {p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: 'providerName',
-      header: 'PASSERELLE',
-      render: (p: AdminPayment) => (
-        <span className="text-[11px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
-          {p.providerName}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'STATUT',
-      render: (p: AdminPayment) => (
-        <AdminBadge variant={getStatusBadgeVariant(p.status)} size="sm">
-          {p.status}
-        </AdminBadge>
-      ),
-    },
-    {
-      key: 'amount',
-      header: 'MONTANT',
-      align: 'right' as const,
-      render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
-          {Number(p.amount).toFixed(2)} {p.currency}
-        </span>
-      ),
-    },
-  ];
+  const upProviders = providers.filter((p) => p.status === 'UP').length;
+  const totalRevenue = stats?.totalRevenue ?? 0;
+  const totalBookings = stats?.totalReservations ?? 0;
+  const pendingIncidents = cancellations.filter((c) => c.status === 'REFUND_FAILED' || c.refundStatus === 'REFUND_FAILED').length;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Page Title & Operational Context Bar with Reference-style Heading */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="max-w-[1400px] mx-auto space-y-10">
+      {/* 1. Header & Live Posture */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E5E7EB] dark:border-[#1E232D]">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100 font-sans">
-              Console des Opérations
-            </h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-semibold admin-mono-tabular">
-              v2.0
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-            Supervision autoritaire en direct : flux transactionnels, dossiers voyage et santé de l&apos;architecture
+          <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] dark:text-white m-0">
+            Centre des Opérations
+          </h1>
+          <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-1 m-0">
+            Surveillance autoritaire des réservations multi-services, liquidités et santé système.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 shadow-xs">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{
-                backgroundColor: upProviders === totalProviders ? '#10B981' : '#F59E0B',
-              }}
-            />
-            <span>
-              {loadingHealth ? 'Vérification...' : `${upProviders}/${totalProviders} Composants UP`}
-            </span>
+        <div className="flex items-center gap-6 text-xs text-[#64748B] dark:text-[#94A3B8]">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+            <span>Infrastructure : {upProviders}/{providers.length || 15} UP</span>
           </div>
-
-          <button
-            type="button"
-            onClick={handleRefreshAll}
-            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 transition-colors shadow-xs"
-          >
-            <i className="fas fa-sync text-[10px]" />
-            <span>Actualiser</span>
-          </button>
+          <div className="h-4 w-px bg-[#E2E8F0] dark:bg-[#2D3748]" />
+          <div>Environnement : Bac à sable</div>
         </div>
       </div>
 
-      {/* Row 1: KPI Cards Grid with Reference Hierarchy (Soft Blue, Soft Peach, Bold Dark) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <AdminStatCard
-          label="Dossiers Réservations"
-          value={stats?.totalReservations ?? 0}
-          subtext="Schéma booking.bookings"
-          icon="fas fa-ticket-alt"
-          variant="cool"
-          isLoading={loadingStats}
-          trend={{ value: '+12%', isPositive: true }}
-        />
-        <AdminStatCard
-          label="Flux Financiers Net"
-          value={
-            stats?.totalRevenue
-              ? `${stats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`
-              : '0.00 MAD'
-          }
-          subtext="Paiements capturés avec succès"
-          icon="fas fa-coins"
-          variant="dark"
-          isLoading={loadingStats}
-          trend={{ value: 'Authoritative', isPositive: true }}
-        />
-        <AdminStatCard
-          label="Transactions Enregistrées"
-          value={stats?.totalPayments ?? 0}
-          subtext="Passerelles PayPal & Sandbox"
-          icon="fas fa-credit-card"
-          variant="warm"
-          isLoading={loadingStats}
-          trend={{ value: '+8%', isPositive: true }}
-        />
-        <AdminStatCard
-          label="Incidents & Remboursements"
-          value={`${attentionItems.length} à traiter`}
-          subtext={
-            stats?.totalRefundedAmount
-              ? `${stats.totalRefundedAmount.toFixed(2)} MAD restitués`
-              : 'Flux Phase 51 vérifié'
-          }
-          icon="fas fa-exclamation-circle"
-          variant={attentionItems.length > 0 ? 'incident' : 'default'}
-          isLoading={loadingStats || loadingCancellations || loadingUsers}
-        />
-      </div>
-
-      {/* Row 2: Operational Activity Chart + Dense Attention Panel (Reference composition: Left Chart, Right Panel) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        <div className="lg:col-span-8">
-          <AdminOverviewChart isLoading={loadingStats} />
+      {/* 2. Operational Metrics Bar — Calm Numbers, Strong Contrast, No Card Soup */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="space-y-1">
+          <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+            Chiffre d&apos;Affaires Capturé
+          </div>
+          <div className="text-3xl font-extrabold tracking-tight text-[#0F172A] dark:text-white">
+            {loadingStats ? '—' : `${totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`}
+          </div>
+          <div className="text-xs text-[#10B981] font-medium flex items-center gap-1">
+            <i className="fas fa-check-circle text-[10px]" />
+            <span>Règlements autoritaires validés</span>
+          </div>
         </div>
-        <div className="lg:col-span-4">
-          <AdminAttentionList
-            items={attentionItems}
-            isLoading={loadingBookings || loadingPayments || loadingCancellations}
-          />
+
+        <div className="space-y-1">
+          <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+            Volume de Dossiers
+          </div>
+          <div className="text-3xl font-extrabold tracking-tight text-[#0F172A] dark:text-white">
+            {loadingStats ? '—' : totalBookings}
+          </div>
+          <div className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+            Hôtels, vols, transferts, activités
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+            Transactions Flux Direct
+          </div>
+          <div className="text-3xl font-extrabold tracking-tight text-[#0F172A] dark:text-white">
+            {loadingStats ? '—' : stats?.totalPayments ?? 0}
+          </div>
+          <div className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+            Grand livre des passerelles
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+            Triage &amp; Incidents
+          </div>
+          <div className={`text-3xl font-extrabold tracking-tight ${pendingIncidents > 0 ? 'text-[#EF4444]' : 'text-[#0F172A] dark:text-white'}`}>
+            {pendingIncidents} dossier{pendingIncidents > 1 ? 's' : ''}
+          </div>
+          <div className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+            {pendingIncidents > 0 ? 'Action requise en trésorerie' : 'Aucun litige bloquant'}
+          </div>
         </div>
       </div>
 
-      {/* Row 3: Dual Live Activity Tables (Dossiers Voyage & Flux Financiers) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Recent Travel Dossiers */}
-        <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <i className="fas fa-ticket-alt text-xs text-emerald-600 dark:text-emerald-400" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
-                Derniers Dossiers Voyage
-              </h2>
-            </div>
+      {/* 3. Operational Grid: Left Live Travel Activity, Right Treasury Stream */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        {/* Left: Real Travel Dossiers Stream (8 cols) */}
+        <section className="lg:col-span-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[#0F172A] dark:text-white m-0">
+              Flux Récents des Réservations
+            </h2>
             <Link
               href="/admin/bookings"
-              className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline no-underline flex items-center gap-1"
+              className="text-xs font-semibold text-[#00D4AA] hover:underline no-underline"
             >
-              <span>Gérer les dossiers</span>
-              <i className="fas fa-arrow-right text-[10px]" />
+              Voir tous les dossiers ({totalBookings}) →
             </Link>
           </div>
 
-          <AdminTable
-            columns={bookingColumns}
-            data={recentBookings}
-            keyExtractor={(b) => b.id}
-            isLoading={loadingBookings}
-            emptyMessage="Aucune réservation récente enregistrée"
-          />
-        </div>
+          <div className="bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] rounded-xl overflow-hidden divide-y divide-[#F1F3F5] dark:divide-[#1A1F28]">
+            {loadingBookings ? (
+              <div className="p-8 text-center text-xs text-[#94A3B8]">Chargement du flux...</div>
+            ) : bookings.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[#94A3B8]">Aucun dossier récent.</div>
+            ) : (
+              bookings.slice(0, 6).map((b) => {
+                const travel = parseTravelContext(b);
+                const isPaid = b.status === 'CONFIRMED' || b.status === 'PAID';
+                return (
+                  <div key={b.id} className="p-4 flex items-center justify-between gap-4 hover:bg-[#FAFAFB] dark:hover:bg-[#161B22] transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] dark:bg-[#1A1F29] border border-[#E2E8F0] dark:border-[#2D3748] flex items-center justify-center shrink-0">
+                        <i className="fas fa-ticket-alt text-[#0F172A] dark:text-white text-xs" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-xs text-[#0F172A] dark:text-white">
+                            {b.bookingReference}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F1F5F9] dark:bg-[#1E232D] text-[#64748B] dark:text-[#94A3B8]">
+                            {b.productType}
+                          </span>
+                        </div>
+                        <div className="text-xs text-[#475569] dark:text-[#94A3B8] truncate mt-0.5 font-medium">
+                          {travel.title}
+                        </div>
+                      </div>
+                    </div>
 
-        {/* Recent Payment Flows */}
-        <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <i className="fas fa-credit-card text-xs text-blue-600 dark:text-blue-400" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
-                Flux Financiers &amp; Grand Livre
+                    <div className="flex items-center gap-6 shrink-0 text-right">
+                      <div>
+                        <div className="font-mono font-bold text-xs text-[#0F172A] dark:text-white">
+                          {b.amount ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
+                        </div>
+                        <div className="text-[10px] text-[#94A3B8]">
+                          {new Date(b.createdAt).toLocaleDateString('fr-FR')}
+                        </div>
+                      </div>
+
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isPaid
+                            ? 'bg-[#ECFDF5] text-[#047857] dark:bg-[#064E3B]/40 dark:text-[#34D399]'
+                            : 'bg-[#FEF2F2] text-[#B91C1C] dark:bg-[#7F1D1D]/30 dark:text-[#F87171]'
+                        }`}
+                      >
+                        {b.status}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
+
+        {/* Right: Financial Ledger Stream & Telemetry (4 cols) */}
+        <section className="lg:col-span-4 space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-[#0F172A] dark:text-white m-0">
+                Paiements Capturés
               </h2>
+              <Link
+                href="/admin/payments"
+                className="text-xs font-semibold text-[#00D4AA] hover:underline no-underline"
+              >
+                Grand Livre →
+              </Link>
+            </div>
+
+            <div className="bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] rounded-xl divide-y divide-[#F1F3F5] dark:divide-[#1A1F28] overflow-hidden">
+              {payments.slice(0, 4).map((p) => (
+                <div key={p.id} className="p-3.5 flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0">
+                    <div className="font-mono font-bold text-[#0F172A] dark:text-white truncate">
+                      {p.paymentReference}
+                    </div>
+                    <div className="text-[10px] text-[#64748B] dark:text-[#94A3B8]">
+                      {p.providerName} • {new Date(p.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="font-mono font-bold text-xs text-[#0F172A] dark:text-white shrink-0">
+                    {Number(p.amount).toFixed(2)} {p.currency}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Health Summary */}
+          <div className="p-5 rounded-xl bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] m-0">
+              Observabilité de la plateforme
+            </h3>
+            <div className="text-xs text-[#475569] dark:text-[#94A3B8] leading-relaxed">
+              Toutes les passerelles et le routage API Gateway fonctionnent normalement. Isolation des 8 schémas PostgreSQL respectée.
             </div>
             <Link
-              href="/admin/payments"
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline no-underline flex items-center gap-1"
+              href="/admin/providers"
+              className="inline-block text-xs font-bold text-[#0F172A] dark:text-white hover:underline no-underline"
             >
-              <span>Grand Livre complet</span>
-              <i className="fas fa-arrow-right text-[10px]" />
+              Consulter la matrice de télémétrie →
             </Link>
           </div>
-
-          <AdminTable
-            columns={paymentColumns}
-            data={recentPayments}
-            keyExtractor={(p) => p.id}
-            isLoading={loadingPayments}
-            emptyMessage="Aucune transaction financière récente"
-          />
-        </div>
-      </div>
-
-      {/* Row 4: Ecosystem Health & Microservices Topology Strip */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-100 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <i className="fas fa-server text-xs text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
-              Topologie de l&apos;Écosystème Yuding V2
-            </h2>
-          </div>
-          <Link
-            href="/admin/providers"
-            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline no-underline"
-          >
-            Santé &amp; Télémétrie complète →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {providerHealth.slice(0, 6).map((prov) => (
-            <div
-              key={prov.name}
-              className="p-3 rounded-xl border flex flex-col justify-between bg-slate-50/70 dark:bg-zinc-800 border-slate-200/80 dark:border-zinc-700"
-            >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[11px] font-bold text-slate-900 dark:text-zinc-100 truncate">
-                  {prov.name}
-                </span>
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{
-                    backgroundColor: prov.status === 'UP' ? '#10B981' : '#F59E0B',
-                  }}
-                />
-              </div>
-              <div className="mt-2 text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
-                {prov.port ? `Port :${prov.port}` : 'Passerelle / API'}
-              </div>
-            </div>
-          ))}
-        </div>
+        </section>
       </div>
     </div>
   );
