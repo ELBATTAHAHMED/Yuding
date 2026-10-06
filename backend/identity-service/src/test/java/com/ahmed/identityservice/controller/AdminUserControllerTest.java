@@ -58,7 +58,7 @@ class AdminUserControllerTest {
                 targetUserId, "target@example.com", "Target", "User",
                 "+1234567890", "US", UserStatus.ACTIVE, true, 0,
                 null, Instant.now(), Set.of("ROLE_USER"),
-                Instant.now(), Instant.now()
+                Instant.now(), Instant.now(), false
         );
     }
 
@@ -111,7 +111,7 @@ class AdminUserControllerTest {
                 targetUserId, "target@example.com", "Target", "User",
                 "+1234567890", "US", UserStatus.ACTIVE, true, 0,
                 null, Instant.now(), Set.of("ROLE_USER", "ROLE_ADMIN"),
-                Instant.now(), Instant.now()
+                Instant.now(), Instant.now(), true
         );
         when(adminUserService.updateUserRoles(eq(adminUserId), eq(targetUserId), any())).thenReturn(updated);
 

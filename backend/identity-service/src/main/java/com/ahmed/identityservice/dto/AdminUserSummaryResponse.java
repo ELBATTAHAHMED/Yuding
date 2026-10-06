@@ -23,7 +23,8 @@ public record AdminUserSummaryResponse(
         Instant lastLoginAt,
         Set<String> roles,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        boolean hasProfilePhoto
 ) {
     public static AdminUserSummaryResponse from(User user) {
         Set<String> roleNames = user.getRoles().stream()
@@ -44,7 +45,8 @@ public record AdminUserSummaryResponse(
                 user.getLastLoginAt(),
                 roleNames,
                 user.getCreatedAt(),
-                user.getUpdatedAt()
+                user.getUpdatedAt(),
+                user.getProfileImageKey() != null
         );
     }
 }

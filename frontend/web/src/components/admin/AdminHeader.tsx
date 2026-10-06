@@ -3,9 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/features/auth/useAuth';
 import { DarkModeToggle } from '@/components/common/DarkModeToggle';
-import { EntityAvatar } from './EntityAvatar';
 import { ADMIN_NAV_ITEMS } from './AdminSidebar';
 
 interface AdminHeaderProps {
@@ -14,19 +12,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
 
-  const userFullName = user?.firstName
-    ? `${user.firstName} ${user.lastName || ''}`.trim()
-    : 'Ahmed Elbattah';
-
-  const roleName = user?.roles?.includes('ROLE_ADMIN')
-    ? 'Administrateur'
-    : user?.roles?.includes('ROLE_CONTENT_MANAGER')
-    ? 'Gestionnaire Contenu'
-    : 'Opérateur Support';
-
-  // Find current nav item label & category
   const currentItem = ADMIN_NAV_ITEMS.find((item) => item.href === pathname) || {
     label: pathname.replace('/admin/', '').replace('/admin', "Vue d'ensemble"),
     category: 'OPÉRATIONS',
@@ -40,94 +26,53 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
         borderColor: 'var(--admin-border)',
       }}
     >
-      {/* Left: Mobile trigger & Refined Breadcrumbs */}
+      {/* Left: Mobile trigger & Breadcrumb Context */}
       <div className="flex items-center gap-3">
         {onToggleMobileMenu && (
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="md:hidden w-8 h-8 rounded-xl flex items-center justify-center border text-slate-500 hover:text-slate-900 dark:hover:text-zinc-100"
+            className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center border text-[#64748B] hover:text-[#0F172A] dark:hover:text-white"
             style={{
               borderColor: 'var(--admin-border)',
               backgroundColor: 'var(--admin-surface-muted)',
             }}
-            aria-label="Menu de navigation"
+            aria-label="Menu"
           >
             <i className="fas fa-bars text-xs" />
           </button>
         )}
 
-        {/* Breadcrumb Context */}
         <nav aria-label="Fil d'ariane" className="flex items-center gap-2 text-xs">
           <Link
             href="/admin"
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 font-medium no-underline transition-colors"
+            className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white font-medium no-underline transition-colors"
           >
-            Yuding Ops
+            Console
           </Link>
-          <span className="text-slate-300 dark:text-slate-600 select-none">/</span>
-          <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-semibold hidden sm:inline">
+          <span className="text-[#CBD5E1] dark:text-[#475569] select-none">/</span>
+          <span className="text-[11px] uppercase tracking-wider text-[#94A3B8] dark:text-[#64748B] font-bold hidden sm:inline">
             {currentItem.category}
           </span>
-          <span className="text-slate-300 dark:text-slate-600 select-none hidden sm:inline">/</span>
-          <span className="font-bold text-slate-900 dark:text-zinc-100">
+          <span className="text-[#CBD5E1] dark:text-[#475569] select-none hidden sm:inline">/</span>
+          <span className="font-bold text-[#0F172A] dark:text-white">
             {currentItem.label}
           </span>
         </nav>
       </div>
 
       {/* Center: Quiet Sandbox / Environment Indicator */}
-      <div className="hidden lg:flex items-center gap-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Environnement Sandbox Opérationnel</span>
+      <div className="hidden sm:flex items-center gap-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#ECFDF5] dark:bg-[#064E3B]/30 text-[#047857] dark:text-[#34D399] border border-[#A7F3D0] dark:border-[#059669]/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+          <span>Environnement Opérationnel</span>
         </div>
       </div>
 
-      {/* Right: Quick Notification Bell, Theme Toggle & Operator Profile (Reference Design) */}
+      {/* Right: Theme Toggle & Quick Action */}
       <div className="flex items-center gap-3">
-        {/* Notification Bell matching Reference Dashboard */}
-        <button
-          type="button"
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors relative"
-          title="Notifications opérationnelles"
-          aria-label="Notifications"
-        >
-          <i className="far fa-bell text-xs" />
-          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
-        </button>
-
-        <div className="flex items-center">
-          <DarkModeToggle />
-        </div>
-
-        <div className="h-5 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
-
-        {/* Top-Right Operator Identity Block (Like Reference Mykola Ledenov / CEO Niled) */}
-        <Link
-          href="/account/profile"
-          className="hidden sm:flex items-center gap-2.5 pl-1.5 pr-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors no-underline group"
-          title="Consulter mon profil"
-        >
-          <EntityAvatar
-            name={userFullName}
-            email={user?.email}
-            userId={user?.id}
-            hasProfilePhoto={user?.hasProfilePhoto}
-            size="sm"
-            variant="operator"
-          />
-          <div className="flex flex-col text-left leading-none">
-            <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-              {userFullName}
-            </span>
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">
-              {roleName}
-            </span>
-          </div>
-        </Link>
+        <DarkModeToggle />
       </div>
     </header>
   );
 }
-

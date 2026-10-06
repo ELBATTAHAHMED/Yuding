@@ -12,6 +12,7 @@ export interface AdminUserSummary {
   roles: string[];
   createdAt: string;
   lastLoginAt?: string;
+  hasProfilePhoto?: boolean;
 }
 
 export interface AdminStats {
