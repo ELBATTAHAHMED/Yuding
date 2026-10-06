@@ -3,383 +3,160 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAdminPayments, useAdminBookings } from '@/hooks/queries/useAdminQueries';
-import { AdminPayment } from '@/types/admin.types';
-import { AdminTable } from '@/components/admin/AdminTable';
-import { AdminFilterBar } from '@/components/admin/AdminFilterBar';
-import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
-import { AdminDrawer } from '@/components/admin/AdminDrawer';
-import { AdminPagination } from '@/components/admin/AdminPagination';
-import { exportToCsv } from '@/lib/admin-csv';
 
 export default function AdminPaymentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [providerFilter, setProviderFilter] = useState('ALL');
-  const [selectedPayment, setSelectedPayment] = useState<AdminPayment | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const { data: payments = [], isLoading, refetch, isRefetching } = useAdminPayments({
-    limit: 200,
-    status: statusFilter,
-  });
-
-  const { data: bookings = [] } = useAdminBookings({ limit: 500 });
-
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
-  };
+  const { data: payments = [], isLoading } = useAdminPayments({ limit: 100 });
+  const { data: bookings = [] } = useAdminBookings({ limit: 200 });
 
   const getBookingRef = (bookingId: string) => {
     const booking = bookings.find((b) => b.id === bookingId);
-    return booking ? booking.bookingReference : bookingId.substring(0, 8) + '...';
+    return booking ? booking.bookingReference : bookingId.substring(0, 8);
   };
 
-  const filteredPayments = payments.filter((p) => {
-    if (providerFilter !== 'ALL' && p.providerName !== providerFilter) return false;
+  const filtered = payments.filter((p) => {
+    if (statusFilter !== 'ALL' && p.status !== statusFilter) return false;
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
     const bRef = getBookingRef(p.bookingId).toLowerCase();
     return (
       p.paymentReference.toLowerCase().includes(term) ||
       bRef.includes(term) ||
-      p.bookingId.toLowerCase().includes(term) ||
-      (p.providerTransactionId && p.providerTransactionId.toLowerCase().includes(term)) ||
-      (p.providerName && p.providerName.toLowerCase().includes(term)) ||
-      (p.errorMessage && p.errorMessage.toLowerCase().includes(term))
+      p.providerName.toLowerCase().includes(term)
     );
   });
 
-  const totalItems = filteredPayments.length;
-  const paginatedPayments = filteredPayments.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  const handleExportCsv = () => {
-    const rows = filteredPayments.map((p) => ({
-      Reference: p.paymentReference,
-      BookingId: p.bookingId,
-      BookingRef: getBookingRef(p.bookingId),
-      Provider: p.providerName,
-      TransactionId: p.providerTransactionId || '',
-      Amount: p.amount,
-      Currency: p.currency,
-      Status: p.status,
-      Method: p.paymentMethodType || '',
-      Error: p.errorMessage || '',
-      CreatedAt: p.createdAt,
-    }));
-    exportToCsv('grand_livre_paiements_yuding', rows);
-  };
-
-  const columns = [
-    {
-      key: 'paymentReference',
-      header: 'RÉFÉRENCE TRANSACTION',
-      render: (p: AdminPayment) => (
-        <div className="flex items-center gap-1.5 py-1">
-          <span className="admin-mono-tabular font-bold text-xs text-sky-600 dark:text-sky-400">
-            {p.paymentReference}
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCopy(p.paymentReference, p.id);
-            }}
-            className="opacity-40 hover:opacity-100 transition-opacity p-0.5"
-            title="Copier la référence de paiement"
-          >
-            <i className={`fas ${copiedId === p.id ? 'fa-check text-emerald-500' : 'fa-copy'} text-[10px]`} />
-          </button>
-        </div>
-      ),
-    },
-    {
-      key: 'bookingId',
-      header: 'DOSSIER RÉSERVATION',
-      render: (p: AdminPayment) => {
-        const bRef = getBookingRef(p.bookingId);
-        return (
-          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <Link
-              href={`/admin/bookings?search=${encodeURIComponent(p.bookingId)}`}
-              className="admin-mono-tabular font-semibold text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5 no-underline"
-            >
-              <span>{bRef}</span>
-              <i className="fas fa-external-link-alt text-[9px] opacity-60" />
-            </Link>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'providerName',
-      header: 'PASSERELLE & MÉTHODE',
-      render: (p: AdminPayment) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] px-2 py-0.5 rounded font-semibold w-fit uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
-            {p.providerName}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate max-w-[130px]">
-            {p.paymentMethodType || 'Standard'}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: 'providerTransactionId',
-      header: 'TXID PROCESSEUR',
-      render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400 truncate max-w-[140px] inline-block">
-          {p.providerTransactionId || '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'amount',
-      header: 'MONTANT CAPTURÉ',
-      align: 'right' as const,
-      render: (p: AdminPayment) => (
-        <div className="flex flex-col items-end">
-          <span className="admin-mono-tabular font-bold text-xs text-slate-900 dark:text-zinc-100">
-            {Number(p.amount).toFixed(2)} {p.currency}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-zinc-500">
-            Débit Net
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: 'createdAt',
-      header: 'HORODATAGE',
-      render: (p: AdminPayment) => (
-        <span className="admin-mono-tabular text-xs text-slate-500 dark:text-zinc-400">
-          {new Date(p.createdAt).toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'STATUT',
-      render: (p: AdminPayment) => (
-        <div className="flex flex-col gap-1 items-start">
-          <AdminBadge variant={getStatusBadgeVariant(p.status)} size="sm">
-            {p.status}
-          </AdminBadge>
-          {p.errorMessage && (
-            <span className="text-[10px] text-rose-500 font-semibold truncate max-w-[130px]" title={p.errorMessage}>
-              <i className="fas fa-exclamation-triangle mr-1" />
-              {p.errorMessage}
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'ACTIONS',
-      align: 'right' as const,
-      render: (p: AdminPayment) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedPayment(p);
-          }}
-          className="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
-        >
-          <i className="fas fa-receipt text-[10px] mr-1" />
-          <span>Ticket</span>
-        </button>
-      ),
-    },
-  ];
+  const totalCaptured = payments
+    .filter((p) => p.status === 'SUCCEEDED' || p.status === 'CAPTURED')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
-      {/* Title & Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="max-w-[1400px] mx-auto space-y-8">
+      {/* 1. Header & Live Ledger Status */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E5E7EB] dark:border-[#1E232D]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
-            Paiements &amp; Grand Livre
+          <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] dark:text-white m-0">
+            Grand Livre des Flux Financiers
           </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-            Audit exhaustif des flux de trésorerie, règlements passerelles et traçabilité des processeurs
+          <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-1 m-0">
+            Traçabilité autoritaire de la trésorerie : règlements passerelles, devises et statuts d&apos;encaissement.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            disabled={filteredPayments.length === 0}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/ text-slate-700 dark:text-zinc-300 shadow-2xs transition-colors disabled:opacity-50"
-          >
-            <i className="fas fa-file-csv text-[11px]" />
-            <span>Exporter CSV</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40 transition-colors shadow-2xs"
-          >
-            <i className={`fas fa-sync text-[11px] ${isRefetching ? 'animate-spin' : ''}`} />
-            <span>Actualiser</span>
-          </button>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-[#94A3B8]">
+              Volume Capturé Total
+            </div>
+            <div className="text-xl font-mono font-extrabold text-[#0F172A] dark:text-white">
+              {totalCaptured.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <AdminFilterBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par référence, TXID, dossier ou passerelle..."
-        filters={[
-          {
-            key: 'status',
-            label: 'Statut',
-            value: statusFilter,
-            onChange: (v) => {
-              setStatusFilter(v);
-              setCurrentPage(1);
-            },
-            options: [
-              { value: 'ALL', label: 'Tous les statuts' },
-              { value: 'COMPLETED', label: 'Confirmé / Réussi' },
-              { value: 'PENDING', label: 'En attente' },
-              { value: 'FAILED', label: 'Échoué' },
-            ],
-          },
-          {
-            key: 'provider',
-            label: 'Passerelle',
-            value: providerFilter,
-            onChange: (v) => {
-              setProviderFilter(v);
-              setCurrentPage(1);
-            },
-            options: [
-              { value: 'ALL', label: 'Toutes les passerelles' },
-              { value: 'PAYPAL', label: 'PayPal Gateway' },
-              { value: 'MOCK', label: 'Sandbox / Mock' },
-              { value: 'STRIPE', label: 'Stripe' },
-            ],
-          },
-        ]}
-      />
-
-      {/* Payments Table inside Reference-style Rounded-2xl Card */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
-        <AdminTable
-          columns={columns}
-          data={paginatedPayments}
-          keyExtractor={(p) => p.id}
-          isLoading={isLoading}
-          onRowClick={(p) => setSelectedPayment(p)}
-          emptyMessage="Aucune transaction de paiement ne correspond à ces critères."
-          footer={
-            totalItems > 0 ? (
-              <AdminPagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setCurrentPage(1);
-                }}
-              />
-            ) : null
-          }
-        />
+      {/* 2. Compact Control Bar */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Filtrer par transaction, dossier..."
+            className="text-xs px-3 py-2 rounded-lg bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] text-[#0F172A] dark:text-white outline-none w-64"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs px-3 py-2 rounded-lg bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] text-[#0F172A] dark:text-white outline-none font-semibold cursor-pointer"
+          >
+            <option value="ALL">Tous les statuts</option>
+            <option value="SUCCEEDED">Réussi (SUCCEEDED)</option>
+            <option value="FAILED">Échoué (FAILED)</option>
+            <option value="REFUNDED">Remboursé (REFUNDED)</option>
+          </select>
+        </div>
       </div>
 
-      {/* Payment Inspection Drawer */}
-      <AdminDrawer
-        isOpen={Boolean(selectedPayment)}
-        onClose={() => setSelectedPayment(null)}
-        title={selectedPayment ? selectedPayment.paymentReference : ''}
-        subtitle="Récépissé de transaction bancaire"
-        badge={
-          selectedPayment && (
-            <AdminBadge variant={getStatusBadgeVariant(selectedPayment.status)} size="sm">
-              {selectedPayment.status}
-            </AdminBadge>
-          )
-        }
-        rawJson={selectedPayment}
-      >
-        {selectedPayment && (
-          <div className="space-y-4">
-            {/* Amount Banner */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-center shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                Montant Net Traité
-              </span>
-              <div className="text-2xl font-black text-slate-900 dark:text-zinc-100 admin-mono-tabular mt-1">
-                {Number(selectedPayment.amount).toFixed(2)} {selectedPayment.currency}
-              </div>
-              <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-                Passerelle : <strong className="text-slate-800 dark:text-zinc-200">{selectedPayment.providerName}</strong>
-              </div>
-            </div>
-
-            {/* Processor Details Grid */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-2xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-100 m-0">
-                Détails du Processeur
-              </h4>
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-800">
-                  <span className="block text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-semibold">TXID Processeur</span>
-                  <span className="admin-mono-tabular font-semibold text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
-                    {selectedPayment.providerTransactionId || 'N/A'}
-                  </span>
-                </div>
-                <div className="p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-800">
-                  <span className="block text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-semibold">Mode de Paiement</span>
-                  <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate block mt-0.5">
-                    {selectedPayment.paymentMethodType || 'Standard'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Link to Booking */}
-            <div className="rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs">
-              <div className="flex items-center justify-between text-xs">
-                <div>
-                  <span className="block text-slate-400 dark:text-zinc-500 text-[11px]">Dossier Voyage Rattaché</span>
-                  <span className="font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block admin-mono-tabular">
-                    {getBookingRef(selectedPayment.bookingId)}
-                  </span>
-                </div>
-                <Link
-                  href={`/admin/bookings?search=${encodeURIComponent(selectedPayment.bookingId)}`}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border border-emerald-200/60 dark:border-emerald-800/40 hover:underline no-underline"
-                >
-                  Ouvrir le dossier →
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </AdminDrawer>
+      {/* 3. Streamlined Ledger Table */}
+      <div className="bg-white dark:bg-[#12151B] border border-[#E5E7EB] dark:border-[#1E232D] rounded-xl overflow-hidden">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="border-b border-[#F1F3F5] dark:border-[#1A1F28] bg-[#FAFAFB] dark:bg-[#0E1116] text-[#64748B] dark:text-[#94A3B8] font-bold text-[10px] tracking-wider uppercase">
+              <th className="py-3 px-4">Référence</th>
+              <th className="py-3 px-4">Dossier Associé</th>
+              <th className="py-3 px-4">Passerelle</th>
+              <th className="py-3 px-4">Date &amp; Heure</th>
+              <th className="py-3 px-4 text-right">Montant</th>
+              <th className="py-3 px-4 text-center">État</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#F1F3F5] dark:divide-[#1A1F28]">
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-[#94A3B8]">
+                  Chargement des transactions...
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-[#94A3B8]">
+                  Aucun mouvement financier trouvé.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((p) => {
+                const bRef = getBookingRef(p.bookingId);
+                const isSuccess = p.status === 'SUCCEEDED' || p.status === 'CAPTURED';
+                return (
+                  <tr key={p.id} className="hover:bg-[#FAFAFB] dark:hover:bg-[#161B22] transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#0F172A] dark:text-white">
+                      {p.paymentReference}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Link
+                        href={`/admin/bookings?search=${encodeURIComponent(p.bookingId)}`}
+                        className="font-mono font-semibold text-[#00D4AA] hover:underline no-underline"
+                      >
+                        {bRef}
+                      </Link>
+                    </td>
+                    <td className="py-3.5 px-4 text-[#475569] dark:text-[#94A3B8]">
+                      {p.providerName}
+                    </td>
+                    <td className="py-3.5 px-4 text-[#64748B] dark:text-[#94A3B8]">
+                      {new Date(p.createdAt).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td className="py-3.5 px-4 text-right font-mono font-bold text-[#0F172A] dark:text-white">
+                      {Number(p.amount).toFixed(2)} {p.currency}
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
+                          isSuccess
+                            ? 'bg-[#ECFDF5] text-[#047857] dark:bg-[#064E3B]/40 dark:text-[#34D399]'
+                            : p.status === 'REFUNDED'
+                            ? 'bg-[#EFF6FF] text-[#1D4ED8] dark:bg-[#1E3A8A]/40 dark:text-[#60A5FA]'
+                            : 'bg-[#FEF2F2] text-[#B91C1C] dark:bg-[#7F1D1D]/30 dark:text-[#F87171]'
+                        }`}
+                      >
+                        {p.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

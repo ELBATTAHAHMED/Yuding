@@ -42,9 +42,9 @@ export function AdminFilterBar({
 }: AdminFilterBarProps) {
   return (
     <div
-      className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-4 mb-5 flex flex-wrap items-center justify-between gap-3 shadow-xs"
+      className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-xl p-2.5 mb-3.5 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs"
     >
-      <div className="flex flex-1 flex-wrap items-center gap-3 min-w-[280px]">
+      <div className="flex flex-1 flex-wrap items-center gap-2.5 min-w-[280px]">
         {/* Search input matching Reference Q Search */}
         <div className="relative flex-1 min-w-[220px]">
           <i
@@ -55,13 +55,13 @@ export function AdminFilterBar({
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full text-xs pl-9 pr-8 py-2.5 rounded-xl outline-none transition-all duration-150 bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-slate-800"
+            className="w-full text-xs pl-8 pr-7 py-2 rounded-lg outline-none transition-all duration-150 bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-slate-400 focus:bg-white dark:focus:bg-zinc-800"
           />
           {searchTerm && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200"
               title="Effacer la recherche"
             >
               <i className="fas fa-times" />
@@ -75,7 +75,7 @@ export function AdminFilterBar({
             <select
               value={f.value}
               onChange={(e) => f.onChange(e.target.value)}
-              className="text-xs px-3 py-2.5 rounded-xl outline-none cursor-pointer font-semibold transition-colors bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 focus:border-slate-900 dark:focus:border-slate-400"
+              className="text-xs px-2.5 py-2 rounded-lg outline-none cursor-pointer font-semibold transition-colors bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 focus:border-slate-900 dark:focus:border-slate-400"
             >
               {f.options.map((opt) => (
                 <option
