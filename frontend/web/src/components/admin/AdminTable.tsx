@@ -21,7 +21,6 @@ interface AdminTableProps<T> {
   emptyIcon?: string;
   onRowClick?: (item: T) => void;
   className?: string;
-  maxHeight?: string;
   footer?: React.ReactNode;
 }
 
@@ -30,22 +29,18 @@ export function AdminTable<T>({
   data,
   keyExtractor,
   isLoading = false,
-  emptyMessage = 'Aucune donnée trouvée',
-  emptySubtext = 'Aucun élément ne correspond aux filtres actuels',
+  emptyMessage = 'Aucune donnée disponible',
+  emptySubtext = 'Aucun élément ne correspond aux filtres appliqués',
   emptyIcon = 'fas fa-inbox',
   onRowClick,
   className = '',
-  maxHeight,
   footer,
 }: AdminTableProps<T>) {
   return (
     <div
-      className={`w-full overflow-hidden ${className}`}
+      className={`admin-card overflow-hidden ${className}`}
     >
-      <div
-        className="overflow-x-auto admin-custom-scrollbar"
-        style={{ maxHeight: maxHeight || undefined }}
-      >
+      <div className="overflow-x-auto admin-custom-scrollbar">
         <table className="admin-table w-full">
           <thead>
             <tr>
@@ -56,7 +51,7 @@ export function AdminTable<T>({
                     width: col.width,
                     textAlign: col.align || 'left',
                   }}
-                  className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 py-2.5 px-3 border-b border-slate-100 dark:border-zinc-800 bg-transparent ${col.className || ''}`}
+                  className={col.className || ''}
                 >
                   {col.header}
                 </th>
@@ -65,12 +60,11 @@ export function AdminTable<T>({
           </thead>
           <tbody>
             {isLoading ? (
-              // 5 skeleton rows
               Array.from({ length: 5 }).map((_, rIdx) => (
                 <tr key={`skeleton-${rIdx}`}>
                   {columns.map((col, cIdx) => (
                     <td key={`skeleton-cell-${cIdx}`}>
-                      <div className="h-4 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse w-3/4" />
+                      <div className="h-4 rounded bg-[#E2E8F0] dark:bg-[#1E2430] animate-pulse w-3/4" />
                     </td>
                   ))}
                 </tr>
@@ -80,7 +74,7 @@ export function AdminTable<T>({
                 <td colSpan={columns.length} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-lg"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm"
                       style={{
                         backgroundColor: 'var(--admin-surface-muted)',
                         color: 'var(--admin-text-muted)',
@@ -89,13 +83,13 @@ export function AdminTable<T>({
                       <i className={emptyIcon} />
                     </div>
                     <div
-                      className="font-semibold text-sm"
+                      className="font-bold text-xs"
                       style={{ color: 'var(--admin-text-primary)' }}
                     >
                       {emptyMessage}
                     </div>
                     <div
-                      className="text-xs"
+                      className="text-[11px]"
                       style={{ color: 'var(--admin-text-muted)' }}
                     >
                       {emptySubtext}
@@ -134,7 +128,7 @@ export function AdminTable<T>({
           </tbody>
         </table>
       </div>
-      {footer && <div className="border-t border-inherit">{footer}</div>}
+      {footer && <div className="border-t border-[var(--admin-border)]">{footer}</div>}
     </div>
   );
 }

@@ -34,7 +34,7 @@ export function EntityAvatar({
   className = '',
 }: EntityAvatarProps) {
   const sizeClasses = SIZE_MAP[size] || SIZE_MAP.sm;
-  const effectivePhoto = photoUrl || (variant === 'operator' ? '/image/ahmed-profile.png' : null);
+  const effectivePhoto = photoUrl || null;
   const [blobUrl, setBlobUrl] = useState<string | null>(effectivePhoto || null);
 
   // If this entity is an operator/user with hasProfilePhoto, fetch via authService if needed

@@ -50,6 +50,11 @@ public class AdminUserService {
         Set<String> oldRoles = user.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
         Set<Role> newRoles = new HashSet<>();
 
+        // Prevent self-demotion from ROLE_ADMIN
+        if (adminId.equals(targetUserId) && oldRoles.contains("ROLE_ADMIN") && !request.roles().contains("ROLE_ADMIN")) {
+            throw new IllegalArgumentException("Un administrateur ne peut pas retirer son propre rôle ROLE_ADMIN.");
+        }
+
         for (String roleName : request.roles()) {
             Role role = roleRepository.findByName(roleName)
                     .orElseGet(() -> roleRepository.save(Role.builder()
@@ -127,6 +132,10 @@ public class AdminUserService {
 
     @Transactional
     public MessageResponse deleteUser(UUID adminId, UUID targetUserId) {
+        if (adminId.equals(targetUserId)) {
+            throw new IllegalArgumentException("Un administrateur ne peut pas supprimer ou désactiver son propre compte.");
+        }
+
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + targetUserId));
 

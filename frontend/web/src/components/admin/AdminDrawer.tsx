@@ -24,7 +24,6 @@ export function AdminDrawer({
   const [activeTab, setActiveTab] = useState<'DETAILS' | 'JSON'>('DETAILS');
   const [copied, setCopied] = useState(false);
 
-  // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -35,7 +34,6 @@ export function AdminDrawer({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -60,36 +58,25 @@ export function AdminDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs admin-backdrop-enter"
         onClick={onClose}
       />
 
-      {/* Slide-over panel */}
+      {/* Slide-over Panel */}
       <div
-        className="admin-drawer-open relative z-10 w-full max-w-xl h-full flex flex-col shadow-2xl border-l"
-        style={{
-          backgroundColor: 'var(--admin-surface)',
-          borderColor: 'var(--admin-border)',
-          color: 'var(--admin-text-primary)',
-        }}
+        className="admin-drawer-open relative z-10 w-full max-w-xl h-full flex flex-col shadow-2xl border-l bg-white dark:bg-[#14171E] border-[#E2E8F0] dark:border-[#1E2430] text-[#0F172A] dark:text-white"
       >
-        {/* Drawer Header */}
-        <div
-          className="p-4 border-b flex items-center justify-between gap-3"
-          style={{
-            borderColor: 'var(--admin-border)',
-            backgroundColor: 'var(--admin-surface-muted)',
-          }}
-        >
+        {/* Header */}
+        <div className="p-5 border-b border-[#E2E8F0] dark:border-[#1E2430] bg-[#F8F9FA] dark:bg-[#1A1F28] flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold truncate m-0" style={{ color: 'var(--admin-text-primary)' }}>
+              <h2 className="text-base font-bold truncate m-0 text-[#0F172A] dark:text-white">
                 {title}
               </h2>
               {badge}
             </div>
             {subtitle && (
-              <p className="text-xs truncate mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
+              <p className="text-xs truncate mt-0.5 text-[#64748B] dark:text-[#94A3B8] m-0">
                 {subtitle}
               </p>
             )}
@@ -97,35 +84,26 @@ export function AdminDrawer({
 
           <div className="flex items-center gap-2">
             {rawJson && (
-              <div
-                className="inline-flex rounded-md p-0.5"
-                style={{
-                  backgroundColor: 'var(--admin-border)',
-                }}
-              >
+              <div className="inline-flex rounded-lg p-0.5 bg-[#E2E8F0] dark:bg-[#2D3748]">
                 <button
                   type="button"
                   onClick={() => setActiveTab('DETAILS')}
-                  className={`text-[0.7rem] font-bold px-2 py-1 rounded transition-colors ${
-                    activeTab === 'DETAILS' ? 'shadow-xs' : 'opacity-70'
+                  className={`text-[11px] font-bold px-2 py-1 rounded transition-colors ${
+                    activeTab === 'DETAILS'
+                      ? 'bg-white dark:bg-[#14171E] text-[#0F172A] dark:text-white shadow-xs'
+                      : 'text-[#64748B] dark:text-[#94A3B8]'
                   }`}
-                  style={{
-                    backgroundColor: activeTab === 'DETAILS' ? 'var(--admin-surface)' : 'transparent',
-                    color: activeTab === 'DETAILS' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
-                  }}
                 >
                   Détails
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('JSON')}
-                  className={`text-[0.7rem] font-bold px-2 py-1 rounded transition-colors ${
-                    activeTab === 'JSON' ? 'shadow-xs' : 'opacity-70'
+                  className={`text-[11px] font-bold px-2 py-1 rounded transition-colors ${
+                    activeTab === 'JSON'
+                      ? 'bg-white dark:bg-[#14171E] text-[#0F172A] dark:text-white shadow-xs'
+                      : 'text-[#64748B] dark:text-[#94A3B8]'
                   }`}
-                  style={{
-                    backgroundColor: activeTab === 'JSON' ? 'var(--admin-surface)' : 'transparent',
-                    color: activeTab === 'JSON' ? 'var(--admin-text-primary)' : 'var(--admin-text-muted)',
-                  }}
                 >
                   JSON
                 </button>
@@ -135,47 +113,34 @@ export function AdminDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800"
-              style={{ color: 'var(--admin-text-secondary)' }}
-              title="Fermer (Échap)"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white hover:bg-[#E2E8F0] dark:hover:bg-[#2D3748] transition-colors"
+              title="Fermer"
             >
               <i className="fas fa-times text-sm" />
             </button>
           </div>
         </div>
 
-        {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-5 admin-custom-scrollbar">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 admin-custom-scrollbar">
           {activeTab === 'DETAILS' ? (
             children
           ) : (
-            <div className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold" style={{ color: 'var(--admin-text-secondary)' }}>
-                  Payload brut du modèle
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                  Structure JSON brute
                 </span>
                 <button
                   type="button"
                   onClick={handleCopyJson}
-                  className="admin-btn text-[0.7rem] py-1 px-2"
-                  style={{
-                    backgroundColor: 'var(--admin-surface-muted)',
-                    border: '1px solid var(--admin-border)',
-                    color: 'var(--admin-text-secondary)',
-                  }}
+                  className="admin-btn text-[11px] py-1 px-2.5 bg-[#F8F9FA] dark:bg-[#1A1F28] border border-[#E2E8F0] dark:border-[#2D3748] text-[#0F172A] dark:text-white"
                 >
                   <i className={`fas ${copied ? 'fa-check text-emerald-500' : 'fa-copy'}`} />
                   <span>{copied ? 'Copié !' : 'Copier'}</span>
                 </button>
               </div>
-              <pre
-                className="p-3 rounded-md text-xs admin-mono-tabular overflow-x-auto max-h-[70vh] border"
-                style={{
-                  backgroundColor: 'var(--admin-code-bg)',
-                  borderColor: 'var(--admin-border)',
-                  color: 'var(--admin-code-text)',
-                }}
-              >
+              <pre className="p-4 rounded-xl text-xs admin-mono-tabular overflow-x-auto max-h-[70vh] border border-[#E2E8F0] dark:border-[#2D3748] bg-[#F8F9FA] dark:bg-[#0B0D11] text-[#0F172A] dark:text-[#F8FAFC]">
                 {JSON.stringify(rawJson, null, 2)}
               </pre>
             </div>
