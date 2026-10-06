@@ -170,47 +170,76 @@ export default function AdminProvidersAndTelemetryPage() {
             ]}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {isLoading ? (
-              [1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="admin-concentric-card bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-5 h-36 animate-pulse" />)
-            ) : (
-              filteredProviders.map((p) => {
-                const isUp = p.status === 'UP';
-                return (
-                  <div
-                    key={p.name}
-                    className="admin-concentric-card bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 transition-all duration-150 hover:-translate-y-0.5 shadow-xs"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
+          {/* Consolidated Telemetry Matrix */}
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden">
+            <AdminTable
+              isLoading={isLoading}
+              data={filteredProviders}
+              keyExtractor={(p) => p.name}
+              columns={[
+                {
+                  key: 'name',
+                  header: 'COMPOSANT / SERVICE',
+                  render: (p) => {
+                    const isUp = p.status === 'UP';
+                    return (
+                      <div className="flex items-center gap-3 py-1">
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                            isUp ? 'bg-emerald-500 shadow-xs' : 'bg-rose-500 animate-pulse'
+                          }`}
+                        />
                         <div className="min-w-0">
-                          <div className="font-bold text-xs truncate text-slate-900 dark:text-zinc-100">
+                          <span className="font-bold text-xs text-slate-900 dark:text-zinc-100 block">
                             {p.name}
-                          </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded inline-block mt-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400">
-                            {p.type}
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate block max-w-xs">
+                            {p.details || 'Microservice Spring Boot'}
                           </span>
                         </div>
-                        <AdminBadge variant={isUp ? 'success' : 'danger'} size="sm">
-                          {p.status}
-                        </AdminBadge>
                       </div>
-
-                      {p.details && (
-                        <p className="text-xs leading-relaxed line-clamp-2 text-slate-500 dark:text-zinc-400 m-0">
-                          {p.details}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-[10px] admin-mono-tabular text-slate-400 dark:text-zinc-500">
-                      <span>{p.port ? `Port :${p.port}` : 'API Externe'}</span>
-                      <span>{new Date(p.lastChecked).toLocaleTimeString('fr-FR')}</span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                    );
+                  },
+                },
+                {
+                  key: 'type',
+                  header: 'CATÉGORIE',
+                  render: (p) => (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700">
+                      {p.type}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'port',
+                  header: 'PORT / ACCÈS',
+                  render: (p) => (
+                    <span className="admin-mono-tabular text-xs font-semibold text-slate-600 dark:text-zinc-400">
+                      {p.port ? `Port :${p.port}` : 'API Distribuée'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'lastChecked',
+                  header: 'DERNIÈRE VÉRIFICATION',
+                  render: (p) => (
+                    <span className="admin-mono-tabular text-xs text-slate-400 dark:text-zinc-500">
+                      {new Date(p.lastChecked).toLocaleTimeString('fr-FR')}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'STATUT',
+                  align: 'right' as const,
+                  render: (p) => (
+                    <AdminBadge variant={p.status === 'UP' ? 'success' : 'danger'} size="sm">
+                      {p.status === 'UP' ? 'OPÉRATIONNEL' : 'DÉGRADÉ'}
+                    </AdminBadge>
+                  ),
+                },
+              ]}
+            />
           </div>
         </div>
       )}

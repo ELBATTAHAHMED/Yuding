@@ -16,18 +16,18 @@ export interface NavItem {
 
 export const ADMIN_NAV_ITEMS: NavItem[] = [
   { href: '/admin', label: "Vue d'ensemble", icon: 'fas fa-th-large', category: 'OPÉRATIONS' },
-  { href: '/admin/bookings', label: 'Réservations & Voyages', icon: 'fas fa-ticket-alt', category: 'OPÉRATIONS' },
-  { href: '/admin/payments', label: 'Paiements & Ledger', icon: 'fas fa-credit-card', category: 'OPÉRATIONS' },
+  { href: '/admin/bookings', label: 'Réservations', icon: 'fas fa-ticket-alt', category: 'OPÉRATIONS' },
+  { href: '/admin/payments', label: 'Paiements', icon: 'fas fa-credit-card', category: 'OPÉRATIONS' },
   { href: '/admin/refunds', label: 'Remboursements', icon: 'fas fa-undo-alt', category: 'OPÉRATIONS' },
 
-  { href: '/admin/reviews', label: 'Modération Avis', icon: 'fas fa-star', category: 'CONTENU' },
-  { href: '/admin/destinations', label: 'Destinations Maroc', icon: 'fas fa-map-marked-alt', category: 'CONTENU' },
+  { href: '/admin/reviews', label: 'Avis', icon: 'fas fa-star', category: 'CONTENU' },
+  { href: '/admin/destinations', label: 'Destinations', icon: 'fas fa-map-marked-alt', category: 'CONTENU' },
 
   { href: '/admin/providers', label: 'Santé & Télémétrie', icon: 'fas fa-server', category: 'SYSTÈME' },
 
-  { href: '/admin/users', label: 'Utilisateurs & RBAC', icon: 'fas fa-user-shield', category: 'GOUVERNANCE' },
-  { href: '/admin/audit', label: "Journal d'Audit", icon: 'fas fa-shield-alt', category: 'GOUVERNANCE' },
-  { href: '/admin/settings', label: 'Politiques & Système', icon: 'fas fa-cog', category: 'GOUVERNANCE' },
+  { href: '/admin/users', label: 'Utilisateurs', icon: 'fas fa-user-shield', category: 'GOUVERNANCE' },
+  { href: '/admin/audit', label: "Journal d'audit", icon: 'fas fa-shield-alt', category: 'GOUVERNANCE' },
+  { href: '/admin/settings', label: 'Paramètres', icon: 'fas fa-cog', category: 'GOUVERNANCE' },
 ];
 
 interface AdminSidebarProps {
@@ -75,10 +75,10 @@ export function AdminSidebar({
 
   const userFullName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
-    : 'Ahmed EL BATTAH';
+    : 'Ahmed Elbattah';
 
   const roleName = user?.roles?.includes('ROLE_ADMIN')
-    ? 'Administrateur Principal'
+    ? 'Administrateur'
     : user?.roles?.includes('ROLE_CONTENT_MANAGER')
     ? 'Gestionnaire Contenu'
     : 'Opérateur Support';
