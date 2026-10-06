@@ -18,13 +18,13 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
 
   const userFullName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
-    : 'Ahmed EL BATTAH';
+    : 'Ahmed Elbattah';
 
   const roleName = user?.roles?.includes('ROLE_ADMIN')
-    ? 'Admin Principal'
+    ? 'Administrateur'
     : user?.roles?.includes('ROLE_CONTENT_MANAGER')
-    ? 'Contenu'
-    : 'Opérateur';
+    ? 'Gestionnaire Contenu'
+    : 'Opérateur Support';
 
   // Find current nav item label & category
   const currentItem = ADMIN_NAV_ITEMS.find((item) => item.href === pathname) || {
