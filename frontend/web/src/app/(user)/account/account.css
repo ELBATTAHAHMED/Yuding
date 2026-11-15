@@ -46,23 +46,26 @@
   align-items: center;
   gap: 10px;
   flex: 0 0 auto;
-  padding: 13px 17px 15px;
-  border-bottom: 3px solid transparent;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
   color: var(--account-muted);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
 }
 
 .account-nav a:hover,
+.account-nav a:focus-visible,
 .account-nav a.active {
+  border-color: color-mix(in srgb, var(--account-green) 20%, transparent);
+  background: color-mix(in srgb, var(--account-green) 10%, transparent);
   color: var(--account-green);
-}
-
-.account-nav a.active {
-  border-bottom-color: var(--account-green);
 }
 
 .account-nav i {
@@ -90,20 +93,6 @@
 .profile-page {
   color: var(--account-ink);
 }
-
-[data-theme="dark"] .profile-page {
-  --account-ink: #e7f1ee;
-  --account-muted: #a9beb7;
-  --account-line: #36504a;
-  --account-card: #202e2a;
-}
-[data-theme="dark"] .profile-page .eyebrow { color: #78d5c4; }
-[data-theme="dark"] .profile-page .session-row { border-color: rgba(169, 190, 183, .2); }
-[data-theme="dark"] .profile-page .badge.verified { background: #183d35; color: #8de1d2; }
-[data-theme="dark"] .profile-page .outline-button,
-[data-theme="dark"] .profile-page .link-button,
-[data-theme="dark"] .profile-page .row-action { color: #8de1d2; }
-[data-theme="dark"] .profile-page .row-action.danger { color: #e79b9b; }
 
 .profile-hero,
 .account-page-header {
@@ -290,17 +279,6 @@
 .photo-menu-item.danger:focus-visible i { color: #a53e46; }
 .photo-menu-item.danger:focus-visible { box-shadow: inset 0 0 0 1px rgba(165, 62, 70, .42); }
 .photo-menu-item:disabled { cursor: not-allowed; opacity: .45; }
-[data-theme="dark"] .profile-page .photo-menu { border-color: rgba(169, 190, 183, .24); }
-[data-theme="dark"] .profile-page .photo-menu-item i { color: #78d5c4; }
-[data-theme="dark"] .profile-page .photo-menu-item + .photo-menu-item { border-top-color: rgba(169, 190, 183, .16); }
-[data-theme="dark"] .profile-page .photo-menu-item.danger,
-[data-theme="dark"] .profile-page .photo-menu-item.danger i { color: #d49a9a; }
-[data-theme="dark"] .profile-page .photo-menu-item:hover,
-[data-theme="dark"] .profile-page .photo-menu-item:focus-visible { background: rgba(120, 213, 196, .1); }
-[data-theme="dark"] .profile-page .photo-menu-item.danger:hover,
-[data-theme="dark"] .profile-page .photo-menu-item.danger:focus-visible { background: rgba(231, 155, 155, .1); color: #ffb2b2; }
-[data-theme="dark"] .profile-page .photo-menu-item.danger:hover i,
-[data-theme="dark"] .profile-page .photo-menu-item.danger:focus-visible i { color: #ffb2b2; }
 .identity-copy h2 { margin: 0; font-size: 23px; line-height: 1.25; }
 .identity-copy > p:not(.eyebrow) { margin: 4px 0 0; color: var(--account-muted); font-size: 14px; overflow-wrap: anywhere; }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
@@ -397,10 +375,6 @@
 .profile-page .session-row .session-revoke { color: #a75b5b; transition: color .18s ease, background-color .18s ease; }
 .profile-page .session-row .session-revoke:hover,
 .profile-page .session-row .session-revoke:focus-visible { color: #a52e37; background: rgba(165, 46, 55, .06); text-decoration: none; outline: none; border-radius: 5px; }
-[data-theme="dark"] .profile-page .session-row .session-current { color: #78d5c4; }
-[data-theme="dark"] .profile-page .session-row .session-revoke { color: #d99494; }
-[data-theme="dark"] .profile-page .session-row .session-revoke:hover,
-[data-theme="dark"] .profile-page .session-row .session-revoke:focus-visible { color: #ffb2b2; }
 .loading-line { padding: 15px 0; color: var(--account-muted); font-size: 13px; }
 
 /* Reservations and favorites */
@@ -511,9 +485,10 @@
   align-items: center;
   gap: 10px;
   flex: 0 0 auto;
-  padding: 13px 17px 15px;
-  border: none;
-  border-bottom: 3px solid transparent;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: transparent;
   color: var(--account-muted);
   font-family: inherit;
@@ -532,12 +507,11 @@
 .account-content button.library-tab-btn:hover,
 .account-content button.library-tab-btn:focus-visible,
 .account-content button.library-tab-btn.active {
+  border-color: color-mix(in srgb, var(--account-green) 20%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--account-green) 20%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--account-green) 10%, transparent);
   color: var(--account-green);
-  background: transparent;
-}
-
-.account-content button.library-tab-btn.active {
-  border-bottom-color: var(--account-green);
 }
 
 .library-tab-count {
@@ -647,9 +621,6 @@
 .booking-dialog-footer button { padding: 8px 15px; border: 1px solid #b9d6ce; border-radius: 7px; background: transparent; color: var(--document-teal); font-size: 12px; font-weight: 750; cursor: pointer; transition: background-color 160ms, border-color 160ms; }
 .booking-dialog-footer button:hover, .booking-dialog-footer button:focus-visible { border-color: var(--document-teal); background: rgba(8, 125, 112, .07); }
 .booking-dialog button:focus-visible { outline: 2px solid var(--document-teal); outline-offset: 2px; }
-[data-theme="dark"] .booking-dialog { --document-ink: #e7f1ee; --document-muted: #aec4bc; --document-line: #3b544d; --document-teal: #7bd8c5; background: #1d302a; }
-[data-theme="dark"] .booking-dialog-close:hover, [data-theme="dark"] .booking-dialog-close:focus-visible, [data-theme="dark"] .booking-dialog-footer button:hover, [data-theme="dark"] .booking-dialog-footer button:focus-visible { background: rgba(123, 216, 197, .11); }
-[data-theme="dark"] .booking-dialog-footer button { border-color: #4d7468; }
 @media (max-width: 720px) {
   .booking-dialog-backdrop { padding: 10px; }
   .booking-dialog { max-height: calc(100dvh - 20px); }
@@ -753,77 +724,6 @@
   text-decoration: none;
 }
 .library-clear-action > i { font-size: 11px; }
-
-[data-theme="dark"] .library-tabs-nav {
-  border-bottom-color: var(--account-line, #36504a);
-}
-
-[data-theme="dark"] .library-tab-btn {
-  color: var(--account-muted, #a9beb7);
-}
-
-[data-theme="dark"] .account-content button.library-tab-btn:hover,
-[data-theme="dark"] .account-content button.library-tab-btn:focus-visible,
-[data-theme="dark"] .account-content button.library-tab-btn.active {
-  color: #78d5c4;
-  background: transparent;
-}
-
-[data-theme="dark"] .account-content button.library-tab-btn.active {
-  border-bottom-color: #78d5c4;
-}
-
-[data-theme="dark"] .library-tab-count {
-  background: rgba(120, 213, 196, 0.15);
-  color: #78d5c4;
-}
-
-[data-theme="dark"] .library-tab-btn.active .library-tab-count {
-  background: #78d5c4;
-  color: #062523;
-}
-
-[data-theme="dark"] .library-subfilters {
-  background: #0d1a17;
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="dark"] .library-subfilter-btn {
-  color: #94a3b8;
-}
-
-[data-theme="dark"] .account-content button.library-subfilter-btn:hover,
-[data-theme="dark"] .account-content button.library-subfilter-btn:focus-visible {
-  color: #f1f5f9;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-[data-theme="dark"] .account-content button.library-subfilter-btn.active {
-  background: #ffffff;
-  color: #17322f;
-  border-color: rgba(120, 213, 196, 0.15);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="dark"] .library-subfilter-btn .library-tab-count {
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-}
-
-[data-theme="dark"] .library-subfilter-btn.active .library-tab-count {
-  background: #087d70;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .library-clear-action {
-  color: #94a3b8;
-}
-[data-theme="dark"] .library-clear-action:hover, [data-theme="dark"] .library-clear-action:focus-visible {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.25);
-}
 
 .library-header-actions {
   display: flex;
@@ -1012,6 +912,9 @@
   gap: 8px;
   flex-shrink: 0;
 }
+.booking-item-actions { flex-wrap: wrap; justify-content: flex-end; }
+.booking-item-actions .booking-cancel-action { margin-left: 0; }
+.booking-item-actions > .btn-secondary-sm, .booking-item-actions > .btn-primary-sm, .booking-item-actions > .booking-cancel-action { box-sizing: border-box; min-height: 29px; }
 
 .btn-secondary-sm {
   padding: 8px 14px;
@@ -1076,16 +979,6 @@
   border-color: #fee2e2;
 }
 
-[data-theme="dark"] .btn-danger-ghost {
-  color: #64748b;
-}
-
-[data-theme="dark"] .btn-danger-ghost:hover {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
 .library-card-icon-placeholder {
   width: 100%;
   height: 100%;
@@ -1095,11 +988,6 @@
   background: linear-gradient(135deg, rgba(8, 125, 112, 0.08) 0%, rgba(8, 125, 112, 0.18) 100%);
   color: var(--account-green, #087d70);
   font-size: 44px;
-}
-
-[data-theme="dark"] .library-card-icon-placeholder {
-  background: linear-gradient(135deg, rgba(120, 213, 196, 0.08) 0%, rgba(120, 213, 196, 0.2) 100%);
-  color: #78d5c4;
 }
 
 /* ==========================================================================
@@ -1183,74 +1071,23 @@
   font-size: 15px;
   flex-shrink: 0;
 }
-
-[data-theme="dark"] .booking-status-badge.confirmed {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-[data-theme="dark"] .booking-status-badge.paid {
-  background: rgba(20, 184, 166, 0.15);
-  color: #2dd4bf;
-  border-color: rgba(20, 184, 166, 0.3);
-}
-
-[data-theme="dark"] .booking-status-badge.pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.3);
-}
-
-[data-theme="dark"] .booking-status-badge.draft {
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border-color: rgba(148, 163, 184, 0.3);
-}
-
-[data-theme="dark"] .booking-status-badge.failed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-[data-theme="dark"] .booking-status-badge.cancelled {
-  background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
-  border-color: rgba(148, 163, 184, 0.2);
-}
-
-[data-theme="dark"] .booking-status-badge.refunded {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border-color: rgba(168, 85, 247, 0.3);
-}
-
-[data-theme="dark"] .booking-ref-badge {
-  background: rgba(120, 213, 196, 0.12);
-  color: #78d5c4;
-  border-color: rgba(120, 213, 196, 0.25);
-}
-
-[data-theme="dark"] .booking-type-icon {
-  background: rgba(120, 213, 196, 0.12);
-  color: #78d5c4;
-}
 .booking-cancellation-badge { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid #cfdedb; border-radius: 5px; color: #28665d; font-size: 11px; font-weight: 700; }
 .booking-cancellation-history { margin-top: 18px; padding-top: 16px; border-top: 1px solid #dbe5e3; }
 .booking-cancellation-history h4 { margin: 0 0 10px; font-size: 14px; color: #193b35; }
-.booking-cancel-action { display: inline-flex; align-items: center; gap: 7px; min-height: 31px; padding: 6px 10px; border: 1px solid #e4d6d4; border-radius: 6px; background: #fff; color: #8f4441; font-size: 12px; font-weight: 650; cursor: pointer; transition: background-color .16s ease, border-color .16s ease; }
+.booking-cancel-action { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #e4d6d4; border-radius: 8px; background: #fff; color: #8f4441; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color .16s ease, border-color .16s ease; }
+.account-content .booking-item-actions button.booking-cancel-action { font-size: 12px; font-weight: 600; }
 .booking-cancel-action:hover { background: #fcf4f3; border-color: #cfaeaa; }
 .booking-cancel-action:focus-visible { outline: 2px solid #9e514d; outline-offset: 2px; }
 .cancellation-overlay { position: fixed; inset: 0; z-index: 20000; display: grid; place-items: center; padding: 18px; background: rgba(24, 34, 39, .2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
 .cancellation-dialog { width: min(100%, 520px); max-height: calc(100dvh - 36px); display: flex; flex-direction: column; overflow: hidden; background: #fff; color: #1c3530; border: 1px solid #d8e4e1; border-radius: 13px; box-shadow: 0 22px 60px rgba(19, 35, 39, .19); }
-.cancellation-dialog-head { display: flex; align-items: flex-start; gap: 15px; padding: 25px 28px 21px; border-bottom: 1px solid #e4ebea; }
-.cancellation-dialog-icon { flex: 0 0 38px; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; background: #f9eded; color: #a8504a; font-size: 16px; }
-.cancellation-dialog-heading { flex: 1; min-width: 0; }
-.cancellation-kicker { display: block; margin: 1px 0 5px; color: #63807a; font-size: 10px; font-weight: 750; letter-spacing: .09em; }
-.cancellation-dialog-head h2 { margin: 0; color: #1b3430; font-size: 22px; line-height: 1.2; font-weight: 750; }
-.cancellation-dialog-head p { margin: 8px 0 0; color: #67807a; font-size: 13px; line-height: 1.45; }
-.cancellation-close { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; margin: -3px -5px 0 0; border: 0; border-radius: 6px; background: transparent; color: #68817b; font-size: 15px; cursor: pointer; }
+.cancellation-dialog-head { display: flex; flex-direction: column; align-items: stretch; padding: 20px 28px 21px; border-bottom: 1px solid #e4ebea; text-align: left; }
+.cancellation-dialog-head-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.cancellation-dialog-icon { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border-radius: 9px; background: #f9eded; color: #a8504a; font-size: 14px; }
+.cancellation-dialog-heading { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.cancellation-kicker { display: block; margin: 0; color: #63807a; font-size: 10px; font-weight: 750; letter-spacing: .09em; }
+.cancellation-dialog-head h2 { margin: 0; color: #1b3430; font-size: 20px; line-height: 1.2; font-weight: 750; }
+.cancellation-dialog-head p { margin: 5px 0 0 45px; color: #67807a; font-size: 12px; line-height: 1.45; }
+.cancellation-close { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: #68817b; font-size: 15px; cursor: pointer; }
 .cancellation-close:hover { background: #edf3f1; color: #244c44; }
 .cancellation-dialog-body { min-height: 0; overflow-y: auto; padding: 22px 28px 24px; color: #4e6a64; font-size: 13px; line-height: 1.55; }
 .cancellation-dialog-body p { margin: 0; }
@@ -1288,17 +1125,524 @@
 .cancellation-back:hover { background: #f2f7f5; }
 .cancellation-dialog button:disabled { opacity: .55; cursor: wait; }
 .cancellation-dialog button:focus-visible { outline: 2px solid #087d70; outline-offset: 2px; }
-.cancellation-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 28px 20px; border-top: 1px solid #e4ebea; }
-@media (max-width: 560px) { .cancellation-dialog-head, .cancellation-dialog-body { padding-left: 18px; padding-right: 18px; } .cancellation-dialog-actions { padding: 14px 18px 18px; flex-direction: column-reverse; } .cancellation-dialog-actions button { width: 100%; } .cancellation-refund-card strong { font-size: 17px; } }
-[data-theme="dark"] .booking-cancel-action { border-color: #694b4b; background: #1d302a; color: #efa7a0; }
-[data-theme="dark"] .booking-cancel-action:hover { background: #362d2b; }
-[data-theme="dark"] .cancellation-dialog { border-color: #40554f; background: #1d302a; color: #e7f1ee; }
-[data-theme="dark"] .cancellation-dialog-head, [data-theme="dark"] .cancellation-dialog-actions, [data-theme="dark"] .cancellation-policy-card { border-color: #3b544d; }
-[data-theme="dark"] .cancellation-dialog-head h2, [data-theme="dark"] .cancellation-policy-reason, [data-theme="dark"] .cancellation-reason-label, [data-theme="dark"] .cancellation-result { color: #e7f1ee; }
-[data-theme="dark"] .cancellation-dialog-head p, [data-theme="dark"] .cancellation-dialog-body, [data-theme="dark"] .cancellation-kicker, [data-theme="dark"] .cancellation-policy-note { color: #aec4bc; }
-[data-theme="dark"] .cancellation-dialog-icon { background: #3a2a2a; color: #efa7a0; }
-[data-theme="dark"] .cancellation-refund-card { border-color: #3b6259; background: #213a33; color: #b9e3da; }
-[data-theme="dark"] .cancellation-refund-card strong, [data-theme="dark"] .cancellation-result-amount strong { color: #8ce0d2; }
-[data-theme="dark"] .cancellation-policy-alert { border-color: #655c48; background: #302f29; color: #e0d1ad; }
-[data-theme="dark"] .cancellation-reason textarea, [data-theme="dark"] .cancellation-back { border-color: #48635a; background: #213a33; color: #e7f1ee; }
-[data-theme="dark"] .cancellation-close, [data-theme="dark"] .cancellation-deadline { color: #aec4bc; }
+.cancellation-dialog-actions { display: flex; justify-content: center; gap: 10px; padding: 16px 28px 20px; border-top: 1px solid #e4ebea; }
+@media (max-width: 560px) { .cancellation-dialog-head, .cancellation-dialog-body { padding-left: 18px; padding-right: 18px; } .cancellation-dialog-head p { margin-left: 0; } .cancellation-dialog-actions { padding: 14px 18px 18px; flex-direction: column-reverse; } .cancellation-dialog-actions button { width: 100%; } .cancellation-refund-card strong { font-size: 17px; } .booking-item-actions .booking-cancel-action { margin-left: 0; } }
+
+@media (max-width: 760px) {
+}
+@media (prefers-reduced-motion: reduce) {
+}
+
+/* Account navigation: one shared geometry, with a quieter hover than the selected item. */
+.account-nav,
+.library-tabs-nav {
+  gap: 10px;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+.account-nav::-webkit-scrollbar,
+.library-tabs-nav::-webkit-scrollbar { display: none; }
+.account-nav a,
+.account-content button.library-tab-btn,
+.library-tabs-nav .library-tab-btn {
+  min-height: 50px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.account-nav a:not(.active):is(:hover, :focus-visible),
+.account-content button.library-tab-btn:not(.active):is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--account-green) 18%, var(--account-line));
+  background: color-mix(in srgb, var(--account-green) 6%, transparent);
+  color: var(--account-green);
+  transform: translateY(-1px);
+}
+.account-nav a.active,
+.account-content button.library-tab-btn.active {
+  border-color: color-mix(in srgb, var(--account-green) 32%, var(--account-line));
+  background: color-mix(in srgb, var(--account-green) 12%, var(--account-card));
+  color: var(--account-green);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--account-green) 14%, transparent);
+}
+.account-nav a.active:hover,
+.account-content button.library-tab-btn.active:hover { transform: none; }
+
+.library-subfilters {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--account-line) 42%, var(--account-card));
+  border-color: color-mix(in srgb, var(--account-line) 78%, transparent);
+  box-shadow: none;
+}
+.account-content button.library-subfilter-btn {
+  min-height: 36px;
+  height: auto;
+  padding: 8px 13px;
+  border-radius: 8px;
+  color: var(--account-muted);
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.account-content button.library-subfilter-btn:not(.active):is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--account-green) 18%, transparent);
+  background: color-mix(in srgb, var(--account-card) 84%, var(--account-green));
+  color: var(--account-green);
+  transform: translateY(-1px);
+}
+.account-content button.library-subfilter-btn.active {
+  border-color: color-mix(in srgb, var(--account-green) 18%, var(--account-line));
+  background: var(--account-card);
+  color: var(--account-green);
+  box-shadow: 0 1px 4px rgba(15, 55, 49, .1);
+}
+
+.user-account-shell .library-card-favorite-control {
+  border-radius: 10px !important;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease !important;
+}
+.user-account-shell .library-card-favorite-control:not([aria-pressed="true"]):is(:hover, :focus-visible) {
+  border-color: #e4a1b3 !important;
+  background: #fff5f7 !important;
+  color: #c94f71 !important;
+  transform: translateY(-1px);
+}
+.user-account-shell .library-card-favorite-control[aria-pressed="true"] {
+  border-color: #efb4c4 !important;
+  background: #fff0f4 !important;
+  color: #c94f71 !important;
+}
+.user-account-shell .library-card-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible) {
+  border-color: #d9829a !important;
+  background: #ffe6ed !important;
+  color: #b63f63 !important;
+  transform: translateY(-1px);
+}
+
+/* Light and dark keep the exact same selected geometry; only these colors change. */
+.user-account-shell {
+  --account-selection-bg: #e5f3f0;
+  --account-selection-border: #b9ddd5;
+  --account-selection-ink: #087d70;
+  --account-selection-shadow: rgba(8, 125, 112, .14);
+  --account-hover-bg: #f2f8f6;
+  --account-hover-border: #d4e7e2;
+  --account-hover-ink: #087d70;
+}
+
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn).active,
+.user-account-shell .library-subfilters .library-subfilter-btn.active {
+  border: 1px solid var(--account-selection-border) !important;
+  border-radius: 10px !important;
+  background: var(--account-selection-bg) !important;
+  color: var(--account-selection-ink) !important;
+  box-shadow: 0 1px 0 var(--account-selection-shadow) !important;
+}
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn):not(.active):is(:hover, :focus-visible),
+.user-account-shell .library-subfilters .library-subfilter-btn:not(.active):is(:hover, :focus-visible) {
+  border: 1px solid var(--account-hover-border) !important;
+  border-radius: 10px !important;
+  background: var(--account-hover-bg) !important;
+  color: var(--account-hover-ink) !important;
+  transform: translateY(-1px);
+}
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn).active:hover,
+.user-account-shell .library-subfilters .library-subfilter-btn.active:hover { transform: none; }
+
+.user-account-shell .library-card-favorite-control {
+  border-radius: 10px !important;
+  box-shadow: 0 3px 12px rgba(25, 54, 48, .08) !important;
+}
+.user-account-shell .library-card-favorite-control[aria-pressed="true"] {
+  border: 1px solid #efb4c4 !important;
+  background: #fff0f4 !important;
+  color: #c94f71 !important;
+}
+.user-account-shell .library-card-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible) {
+  border-color: #d9829a !important;
+  background: #ffe6ed !important;
+  color: #b63f63 !important;
+  transform: translateY(-1px);
+}
+
+/* Account dark palette
+   The account keeps the light-mode geometry exactly as authored above. Dark mode
+   only swaps surfaces, text, borders, and semantic colors. */
+html.dark .user-account-shell,
+html[data-theme="dark"] .user-account-shell,
+[data-theme="dark"] .user-account-shell {
+  --account-page: #111b1a;
+  --account-card: #172825;
+  --account-card-bg: #172825;
+  --account-bg-subtle: #1e3531;
+  --account-text: #edf7f3;
+  --account-ink: #edf7f3;
+  --account-muted: #a6beb6;
+  --account-line: #35504a;
+  --account-border: #35504a;
+  --account-green: #61d7be;
+  --account-selection-bg: rgba(97, 215, 190, .16);
+  --account-selection-border: rgba(97, 215, 190, .42);
+  --account-selection-ink: #e9fff8;
+  --account-selection-shadow: rgba(97, 215, 190, .12);
+  --account-hover-bg: rgba(97, 215, 190, .10);
+  --account-hover-border: rgba(97, 215, 190, .28);
+  --account-hover-ink: #e9fff8;
+  --document-ink: #edf7f3;
+  --document-muted: #a6beb6;
+  --document-line: #35504a;
+  --document-teal: #61d7be;
+  color-scheme: dark;
+  background-color: var(--account-page) !important;
+  color: var(--account-ink) !important;
+}
+
+html.dark body:has(.user-account-shell),
+html[data-theme="dark"] body:has(.user-account-shell),
+body[data-theme="dark"]:has(.user-account-shell) {
+  background-color: #111b1a !important;
+  color: #edf7f3 !important;
+}
+
+html.dark .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .account-empty-page, .account-reviews-page),
+html[data-theme="dark"] .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .account-empty-page, .account-reviews-page),
+[data-theme="dark"] .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .account-empty-page, .account-reviews-page) {
+  background-color: var(--account-page) !important;
+  color: var(--account-ink) !important;
+}
+
+html.dark .user-account-shell :is(.header.yuding-header, .header.yuding-header .header-top, .yuding-footer--home, .yuding-footer__bottom--home),
+html[data-theme="dark"] .user-account-shell :is(.header.yuding-header, .header.yuding-header .header-top, .yuding-footer--home, .yuding-footer__bottom--home),
+[data-theme="dark"] .user-account-shell :is(.header.yuding-header, .header.yuding-header .header-top, .yuding-footer--home, .yuding-footer__bottom--home) {
+  background-color: var(--account-page) !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-ink) !important;
+}
+
+html.dark .user-account-shell :is(.account-nav, .library-tabs-nav),
+html[data-theme="dark"] .user-account-shell :is(.account-nav, .library-tabs-nav),
+[data-theme="dark"] .user-account-shell :is(.account-nav, .library-tabs-nav) {
+  border-bottom-color: var(--account-line) !important;
+  background-color: transparent;
+}
+
+html.dark .user-account-shell :is(h1, h2, h3, h4, h5, .identity-copy h2, .identity-aside strong, .details-grid strong, .traveler-info strong, .account-empty-copy h2, .account-review-row h3, .library-card-title, .library-item-title, .library-price-amount),
+html[data-theme="dark"] .user-account-shell :is(h1, h2, h3, h4, h5, .identity-copy h2, .identity-aside strong, .details-grid strong, .traveler-info strong, .account-empty-copy h2, .account-review-row h3, .library-card-title, .library-item-title, .library-price-amount),
+[data-theme="dark"] .user-account-shell :is(h1, h2, h3, h4, h5, .identity-copy h2, .identity-aside strong, .details-grid strong, .traveler-info strong, .account-empty-copy h2, .account-review-row h3, .library-card-title, .library-item-title, .library-price-amount) {
+  color: var(--account-ink) !important;
+}
+
+html.dark .user-account-shell :is(.hero-copy, .section-copy, .account-page-header > div > p:last-child, .identity-copy > p:not(.eyebrow), .identity-aside, .details-grid span, .traveler-info span, .session-row span, .account-empty-copy p:last-child, .account-help-row span, .account-review-section-intro, .account-review-prompt, .account-review-meta, .account-review-muted, .library-card-subtitle, .library-item-details, .library-price-note, .loading-line),
+html[data-theme="dark"] .user-account-shell :is(.hero-copy, .section-copy, .account-page-header > div > p:last-child, .identity-copy > p:not(.eyebrow), .identity-aside, .details-grid span, .traveler-info span, .session-row span, .account-empty-copy p:last-child, .account-help-row span, .account-review-section-intro, .account-review-prompt, .account-review-meta, .account-review-muted, .library-card-subtitle, .library-item-details, .library-price-note, .loading-line),
+[data-theme="dark"] .user-account-shell :is(.hero-copy, .section-copy, .account-page-header > div > p:last-child, .identity-copy > p:not(.eyebrow), .identity-aside, .details-grid span, .traveler-info span, .session-row span, .account-empty-copy p:last-child, .account-help-row span, .account-review-section-intro, .account-review-prompt, .account-review-meta, .account-review-muted, .library-card-subtitle, .library-item-details, .library-price-note, .loading-line) {
+  color: var(--account-muted) !important;
+}
+
+html.dark .user-account-shell :is(.eyebrow, .account-kicker, .account-review-category, .account-help-row a, .account-review-section-head a, .profile-page .text-button, .profile-page .link-button, .profile-page .row-action, .session-row .session-current, .booking-dialog-kicker, .booking-dialog-message > i, .cancellation-policy-label),
+html[data-theme="dark"] .user-account-shell :is(.eyebrow, .account-kicker, .account-review-category, .account-help-row a, .account-review-section-head a, .profile-page .text-button, .profile-page .link-button, .profile-page .row-action, .session-row .session-current, .booking-dialog-kicker, .booking-dialog-message > i, .cancellation-policy-label),
+[data-theme="dark"] .user-account-shell :is(.eyebrow, .account-kicker, .account-review-category, .account-help-row a, .account-review-section-head a, .profile-page .text-button, .profile-page .link-button, .profile-page .row-action, .session-row .session-current, .booking-dialog-kicker, .booking-dialog-message > i, .cancellation-policy-label) {
+  color: var(--account-green) !important;
+}
+html.dark .user-account-shell .rdlg-kicker,
+html[data-theme="dark"] .user-account-shell .rdlg-kicker,
+[data-theme="dark"] .user-account-shell .rdlg-kicker {
+  color: var(--account-green) !important;
+}
+
+html.dark .user-account-shell :is(.profile-hero, .account-page-header, .identity-strip, .profile-section, .account-empty-panel, .account-review-platform, .account-review-pending, .account-review-history, .library-card, .library-list-item, .account-review-row, .session-row, .photo-menu),
+html[data-theme="dark"] .user-account-shell :is(.profile-hero, .account-page-header, .identity-strip, .profile-section, .account-empty-panel, .account-review-platform, .account-review-pending, .account-review-history, .library-card, .library-list-item, .account-review-row, .session-row, .photo-menu),
+[data-theme="dark"] .user-account-shell :is(.profile-hero, .account-page-header, .identity-strip, .profile-section, .account-empty-panel, .account-review-platform, .account-review-pending, .account-review-history, .library-card, .library-list-item, .account-review-row, .session-row, .photo-menu) {
+  border-color: var(--account-line) !important;
+  background-color: var(--account-card) !important;
+}
+
+html.dark .user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn),
+html[data-theme="dark"] .user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn),
+[data-theme="dark"] .user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--account-muted) !important;
+}
+html.dark .user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn):is(:hover, :focus-visible, .active),
+html[data-theme="dark"] .user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn):is(:hover, :focus-visible, .active),
+[data-theme="dark"] .user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn):is(:hover, :focus-visible, .active) {
+  background-color: var(--account-selection-bg) !important;
+  border-color: var(--account-selection-border) !important;
+  color: var(--account-selection-ink) !important;
+}
+html.dark .user-account-shell .library-subfilters,
+html[data-theme="dark"] .user-account-shell .library-subfilters,
+[data-theme="dark"] .user-account-shell .library-subfilters {
+  background-color: var(--account-bg-subtle) !important;
+  border-color: var(--account-line) !important;
+}
+
+html.dark .user-account-shell :is(.account-header-mark, .account-empty-icon, .traveler-avatar, .booking-type-icon, .library-card-icon-placeholder, .photo-menu-item:hover, .photo-menu-item:focus-visible),
+html[data-theme="dark"] .user-account-shell :is(.account-header-mark, .account-empty-icon, .traveler-avatar, .booking-type-icon, .library-card-icon-placeholder, .photo-menu-item:hover, .photo-menu-item:focus-visible),
+[data-theme="dark"] .user-account-shell :is(.account-header-mark, .account-empty-icon, .traveler-avatar, .booking-type-icon, .library-card-icon-placeholder, .photo-menu-item:hover, .photo-menu-item:focus-visible) {
+  background-color: var(--account-bg-subtle) !important;
+  color: var(--account-green) !important;
+}
+html.dark .user-account-shell .library-card-icon-placeholder,
+html[data-theme="dark"] .user-account-shell .library-card-icon-placeholder,
+[data-theme="dark"] .user-account-shell .library-card-icon-placeholder {
+  background: linear-gradient(135deg, rgba(97, 215, 190, .08), rgba(97, 215, 190, .20)) !important;
+}
+html.dark .user-account-shell :is(.account-header-mark.favorite, .account-empty-icon.favorite),
+html[data-theme="dark"] .user-account-shell :is(.account-header-mark.favorite, .account-empty-icon.favorite),
+[data-theme="dark"] .user-account-shell :is(.account-header-mark.favorite, .account-empty-icon.favorite) {
+  background-color: rgba(240, 166, 190, .14) !important;
+  color: #f0a6be !important;
+}
+
+html.dark .user-account-shell .profile-photo,
+html[data-theme="dark"] .user-account-shell .profile-photo,
+[data-theme="dark"] .user-account-shell .profile-photo {
+  background-color: var(--account-green) !important;
+  color: #10211e !important;
+  box-shadow: 0 0 0 5px var(--account-card) !important;
+}
+html.dark .user-account-shell .photo-frame,
+html[data-theme="dark"] .user-account-shell .photo-frame,
+[data-theme="dark"] .user-account-shell .photo-frame {
+  box-shadow: 0 0 0 4px var(--account-card) !important;
+}
+html.dark .user-account-shell :is(.photo-menu, .photo-menu-item + .photo-menu-item),
+html[data-theme="dark"] .user-account-shell :is(.photo-menu, .photo-menu-item + .photo-menu-item),
+[data-theme="dark"] .user-account-shell :is(.photo-menu, .photo-menu-item + .photo-menu-item) {
+  border-color: var(--account-line) !important;
+}
+html.dark .user-account-shell .photo-menu-item,
+html[data-theme="dark"] .user-account-shell .photo-menu-item,
+[data-theme="dark"] .user-account-shell .photo-menu-item {
+  color: var(--account-ink) !important;
+}
+html.dark .user-account-shell :is(.photo-menu-item.danger, .row-action.danger, .session-revoke, .btn-danger-ghost, .booking-cancel-action, .cancellation-error, .rdlg-delete),
+html[data-theme="dark"] .user-account-shell :is(.photo-menu-item.danger, .row-action.danger, .session-revoke, .btn-danger-ghost, .booking-cancel-action, .cancellation-error, .rdlg-delete),
+[data-theme="dark"] .user-account-shell :is(.photo-menu-item.danger, .row-action.danger, .session-revoke, .btn-danger-ghost, .booking-cancel-action, .cancellation-error, .rdlg-delete) {
+  color: #f0a6a6 !important;
+}
+
+html.dark .user-account-shell :is(input, select, textarea, .rdlg-textarea),
+html[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea),
+[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea) {
+  background-color: #142421 !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-ink) !important;
+  caret-color: var(--account-green);
+}
+html.dark .user-account-shell :is(input, select, textarea, .rdlg-textarea)::placeholder,
+html[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea)::placeholder,
+[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea)::placeholder {
+  color: #7f9c93 !important;
+}
+
+html.dark .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later),
+html[data-theme="dark"] .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later),
+[data-theme="dark"] .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later) {
+  background-color: transparent !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-ink) !important;
+}
+html.dark .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later):is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later):is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later):is(:hover, :focus-visible) {
+  background-color: var(--account-hover-bg) !important;
+  border-color: var(--account-hover-border) !important;
+  color: var(--account-hover-ink) !important;
+}
+html.dark .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish),
+html[data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish),
+[data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish) {
+  background-color: var(--account-green) !important;
+  border-color: var(--account-green) !important;
+  color: #10211e !important;
+}
+html.dark .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish):is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish):is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish):is(:hover, :focus-visible) {
+  background-color: #7ce8d0 !important;
+  border-color: #7ce8d0 !important;
+  color: #10211e !important;
+}
+
+html.dark .user-account-shell :is(.badge.verified, .booking-status-badge.confirmed, .booking-status-badge.paid, .booking-ref-badge),
+html[data-theme="dark"] .user-account-shell :is(.badge.verified, .booking-status-badge.confirmed, .booking-status-badge.paid, .booking-ref-badge),
+[data-theme="dark"] .user-account-shell :is(.badge.verified, .booking-status-badge.confirmed, .booking-status-badge.paid, .booking-ref-badge) {
+  background-color: rgba(97, 215, 190, .14) !important;
+  border-color: rgba(97, 215, 190, .38) !important;
+  color: #8eecd7 !important;
+}
+html.dark .user-account-shell :is(.badge.pending, .booking-status-badge.pending),
+html[data-theme="dark"] .user-account-shell :is(.badge.pending, .booking-status-badge.pending),
+[data-theme="dark"] .user-account-shell :is(.badge.pending, .booking-status-badge.pending) {
+  background-color: rgba(245, 205, 120, .14) !important;
+  border-color: rgba(245, 205, 120, .40) !important;
+  color: #f5cd78 !important;
+}
+html.dark .user-account-shell :is(.booking-status-badge.draft, .booking-status-badge.cancelled),
+html[data-theme="dark"] .user-account-shell :is(.booking-status-badge.draft, .booking-status-badge.cancelled),
+[data-theme="dark"] .user-account-shell :is(.booking-status-badge.draft, .booking-status-badge.cancelled) {
+  background-color: rgba(166, 190, 182, .13) !important;
+  border-color: rgba(166, 190, 182, .34) !important;
+  color: #c4d7d0 !important;
+}
+html.dark .user-account-shell :is(.booking-status-badge.failed, .cancellation-result-icon.is-error),
+html[data-theme="dark"] .user-account-shell :is(.booking-status-badge.failed, .cancellation-result-icon.is-error),
+[data-theme="dark"] .user-account-shell :is(.booking-status-badge.failed, .cancellation-result-icon.is-error) {
+  background-color: rgba(240, 166, 166, .14) !important;
+  border-color: rgba(240, 166, 166, .38) !important;
+  color: #f0a6a6 !important;
+}
+html.dark .user-account-shell .booking-status-badge.refunded,
+html[data-theme="dark"] .user-account-shell .booking-status-badge.refunded,
+[data-theme="dark"] .user-account-shell .booking-status-badge.refunded {
+  background-color: rgba(207, 181, 255, .14) !important;
+  border-color: rgba(207, 181, 255, .38) !important;
+  color: #cfb5ff !important;
+}
+
+html.dark .user-account-shell :is(.library-card-img-wrap, .library-card-fav-btn),
+html[data-theme="dark"] .user-account-shell :is(.library-card-img-wrap, .library-card-fav-btn),
+[data-theme="dark"] .user-account-shell :is(.library-card-img-wrap, .library-card-fav-btn) {
+  background-color: var(--account-bg-subtle) !important;
+}
+html.dark .user-account-shell :is(.library-card-body > div[style], .library-item-main > span[style]),
+html[data-theme="dark"] .user-account-shell :is(.library-card-body > div[style], .library-item-main > span[style]),
+[data-theme="dark"] .user-account-shell :is(.library-card-body > div[style], .library-item-main > span[style]) {
+  background-color: var(--account-bg-subtle) !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-muted) !important;
+}
+html.dark .user-account-shell .library-badge-expired,
+html[data-theme="dark"] .user-account-shell .library-badge-expired,
+[data-theme="dark"] .user-account-shell .library-badge-expired {
+  background-color: rgba(240, 166, 166, .14) !important;
+  border-color: rgba(240, 166, 166, .36) !important;
+  color: #f0a6a6 !important;
+}
+html.dark .user-account-shell .library-card-favorite-control,
+html[data-theme="dark"] .user-account-shell .library-card-favorite-control,
+[data-theme="dark"] .user-account-shell .library-card-favorite-control {
+  background-color: var(--account-card) !important;
+  border-color: var(--account-line) !important;
+  color: #f0a6be !important;
+}
+html.dark .user-account-shell .library-card-favorite-control:is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell .library-card-favorite-control:is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell .library-card-favorite-control:is(:hover, :focus-visible) {
+  background-color: rgba(240, 166, 190, .14) !important;
+  border-color: rgba(240, 166, 190, .42) !important;
+  color: #f7b8ca !important;
+}
+
+html.dark .user-account-shell :is(.booking-dialog, .cancellation-dialog, .rdlg-modal),
+html[data-theme="dark"] .user-account-shell :is(.booking-dialog, .cancellation-dialog, .rdlg-modal),
+[data-theme="dark"] .user-account-shell :is(.booking-dialog, .cancellation-dialog, .rdlg-modal) {
+  background-color: var(--account-card) !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-ink) !important;
+}
+html.dark .user-account-shell .rdlg-modal,
+html[data-theme="dark"] .user-account-shell .rdlg-modal,
+[data-theme="dark"] .user-account-shell .rdlg-modal {
+  box-shadow: 0 24px 72px rgba(0, 0, 0, .42) !important;
+}
+html.dark .user-account-shell :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop),
+html[data-theme="dark"] .user-account-shell :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop),
+[data-theme="dark"] .user-account-shell :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop) {
+  background-color: rgba(5, 12, 11, .70) !important;
+}
+html.dark .user-account-shell :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer),
+html[data-theme="dark"] .user-account-shell :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer),
+[data-theme="dark"] .user-account-shell :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer) {
+  border-color: var(--account-line) !important;
+}
+html.dark .user-account-shell :is(.booking-dialog-heading h2, .booking-dialog-header h2, .booking-dialog-header p strong, .booking-dossier-hero h3, .booking-dossier-columns h4, .cancellation-dialog-head h2, .cancellation-policy-reason, .cancellation-reason-label, .cancellation-result, .rdlg-title, .rdlg-field-label, .rdlg-textarea-label),
+html[data-theme="dark"] .user-account-shell :is(.booking-dialog-heading h2, .booking-dialog-header h2, .booking-dialog-header p strong, .booking-dossier-hero h3, .booking-dossier-columns h4, .cancellation-dialog-head h2, .cancellation-policy-reason, .cancellation-reason-label, .cancellation-result, .rdlg-title, .rdlg-field-label, .rdlg-textarea-label),
+[data-theme="dark"] .user-account-shell :is(.booking-dialog-heading h2, .booking-dialog-header h2, .booking-dialog-header p strong, .booking-dossier-hero h3, .booking-dialog-header h2, .cancellation-dialog-head h2, .cancellation-policy-reason, .cancellation-reason-label, .cancellation-result, .rdlg-title, .rdlg-field-label, .rdlg-textarea-label) {
+  color: var(--account-ink) !important;
+}
+html.dark .user-account-shell :is(.booking-dialog-header p, .booking-dialog-message, .booking-dialog-body, .booking-dialog-kicker span, .cancellation-dialog-head p, .cancellation-dialog-body, .cancellation-kicker, .cancellation-policy-note, .cancellation-deadline, .rdlg-subtitle, .rdlg-helper, .rdlg-char-count, .rdlg-author-name),
+html[data-theme="dark"] .user-account-shell :is(.booking-dialog-header p, .booking-dialog-message, .booking-dialog-body, .booking-dialog-kicker span, .cancellation-dialog-head p, .cancellation-dialog-body, .cancellation-kicker, .cancellation-policy-note, .cancellation-deadline, .rdlg-subtitle, .rdlg-helper, .rdlg-char-count, .rdlg-author-name),
+[data-theme="dark"] .user-account-shell :is(.booking-dialog-header p, .booking-dialog-message, .booking-dialog-body, .booking-dialog-kicker span, .cancellation-dialog-head p, .cancellation-dialog-body, .booking-dialog-kicker span, .cancellation-kicker, .cancellation-policy-note, .cancellation-deadline, .rdlg-subtitle, .rdlg-helper, .rdlg-char-count, .rdlg-author-name) {
+  color: var(--account-muted) !important;
+}
+html.dark .user-account-shell .rdlg-textarea-label span,
+html[data-theme="dark"] .user-account-shell .rdlg-textarea-label span,
+[data-theme="dark"] .user-account-shell .rdlg-textarea-label span {
+  color: var(--account-muted) !important;
+}
+html.dark .user-account-shell :is(.booking-dialog-error, .rdlg-error),
+html[data-theme="dark"] .user-account-shell :is(.booking-dialog-error, .rdlg-error),
+[data-theme="dark"] .user-account-shell :is(.booking-dialog-error, .rdlg-error) {
+  color: #f0a6a6 !important;
+}
+html.dark .user-account-shell .rdlg-status,
+html[data-theme="dark"] .user-account-shell .rdlg-status,
+[data-theme="dark"] .user-account-shell .rdlg-status {
+  background-color: rgba(97, 215, 190, .13) !important;
+  color: #8eecd7 !important;
+}
+html.dark .user-account-shell .rdlg-author-avatar,
+html[data-theme="dark"] .user-account-shell .rdlg-author-avatar,
+[data-theme="dark"] .user-account-shell .rdlg-author-avatar {
+  background-color: var(--account-bg-subtle) !important;
+  color: var(--account-green) !important;
+}
+html.dark .user-account-shell .rdlg-star,
+html[data-theme="dark"] .user-account-shell .rdlg-star,
+[data-theme="dark"] .user-account-shell .rdlg-star {
+  color: #5d746d !important;
+}
+html.dark .user-account-shell .rdlg-star--on,
+html[data-theme="dark"] .user-account-shell .rdlg-star--on,
+[data-theme="dark"] .user-account-shell .rdlg-star--on {
+  color: #f2c86b !important;
+}
+html.dark .user-account-shell .rdlg-star-label,
+html[data-theme="dark"] .user-account-shell .rdlg-star-label,
+[data-theme="dark"] .user-account-shell .rdlg-star-label {
+  color: #f2c86b !important;
+}
+html.dark .user-account-shell .rdlg-body,
+html[data-theme="dark"] .user-account-shell .rdlg-body,
+[data-theme="dark"] .user-account-shell .rdlg-body {
+  scrollbar-color: var(--account-line) transparent;
+}
+html.dark .user-account-shell .rdlg-body::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .user-account-shell .rdlg-body::-webkit-scrollbar-thumb,
+[data-theme="dark"] .user-account-shell .rdlg-body::-webkit-scrollbar-thumb {
+  background-color: var(--account-line);
+}
+
+html.dark .user-account-shell :is(.cancellation-dialog-icon, .cancellation-refund-card, .cancellation-policy-alert, .cancellation-result-icon),
+html[data-theme="dark"] .user-account-shell :is(.cancellation-dialog-icon, .cancellation-refund-card, .cancellation-policy-alert, .cancellation-result-icon),
+[data-theme="dark"] .user-account-shell :is(.cancellation-dialog-icon, .cancellation-refund-card, .cancellation-policy-alert, .cancellation-result-icon) {
+  background-color: var(--account-bg-subtle) !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-muted) !important;
+}
+html.dark .user-account-shell :is(.cancellation-refund-card strong, .cancellation-result-amount strong),
+html[data-theme="dark"] .user-account-shell :is(.cancellation-refund-card strong, .cancellation-result-amount strong),
+[data-theme="dark"] .user-account-shell :is(.cancellation-refund-card strong, .cancellation-result-amount strong) {
+  color: var(--account-green) !important;
+}
+html.dark .user-account-shell :is(.cancellation-reason textarea, .cancellation-back, .rdlg-textarea),
+html[data-theme="dark"] .user-account-shell :is(.cancellation-reason textarea, .cancellation-back, .rdlg-textarea),
+[data-theme="dark"] .user-account-shell :is(.cancellation-reason textarea, .cancellation-back, .rdlg-textarea) {
+  background-color: #142421 !important;
+  border-color: var(--account-line) !important;
+  color: var(--account-ink) !important;
+}
+html.dark .user-account-shell :is(.cancellation-dialog button:focus-visible, .rdlg-close),
+html[data-theme="dark"] .user-account-shell :is(.cancellation-dialog button:focus-visible, .rdlg-close),
+[data-theme="dark"] .user-account-shell :is(.cancellation-dialog button:focus-visible, .rdlg-close) {
+  color: var(--account-muted) !important;
+}
+html.dark .user-account-shell .rdlg-close:hover,
+html[data-theme="dark"] .user-account-shell .rdlg-close:hover,
+[data-theme="dark"] .user-account-shell .rdlg-close:hover {
+  background-color: var(--account-hover-bg) !important;
+  color: var(--account-ink) !important;
+}

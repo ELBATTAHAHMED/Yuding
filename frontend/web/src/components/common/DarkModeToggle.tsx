@@ -6,7 +6,7 @@ export const DarkModeToggle: React.FC<{ onThemeChange?: (dark: boolean) => void 
   const [isDark, setIsDark] = useState<boolean>(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = document.documentElement.dataset.theme || localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
 
@@ -18,6 +18,7 @@ export const DarkModeToggle: React.FC<{ onThemeChange?: (dark: boolean) => void 
     const html = document.documentElement;
     const theme = dark ? 'dark' : 'light';
     html.setAttribute('data-theme', theme);
+    document.cookie = `yuding_theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
     document.body.setAttribute('data-theme', theme);
     if (dark) {
       html.classList.add('dark');
@@ -31,6 +32,7 @@ export const DarkModeToggle: React.FC<{ onThemeChange?: (dark: boolean) => void 
     setIsDark(nextDark);
     applyTheme(nextDark);
     localStorage.setItem('theme', nextDark ? 'dark' : 'light');
+    document.cookie = `yuding_theme=${nextDark ? 'dark' : 'light'}; Path=/; Max-Age=31536000; SameSite=Lax`;
     onThemeChange?.(nextDark);
   };
 

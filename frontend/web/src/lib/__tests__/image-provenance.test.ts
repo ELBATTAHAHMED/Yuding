@@ -2,7 +2,48 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { imageService } from '../../services/image.service.ts';
 import { queryKeys } from '../query-keys.ts';
+import { parseTravelContext } from '../admin-travel.ts';
+import { displayFeaturedText } from '../featured-destinations.ts';
+import type { AdminBooking } from '../../types/admin.types.ts';
 import type { ImageAsset, ImageSourceType, ImageRole, DestinationImagesResponse } from '../../types/image.types.ts';
+
+describe('Featured destination display', () => {
+  it('repairs known corrupted seed text without changing edited content', () => {
+    assert.equal(displayFeaturedText('Le d??tour devient le voyage.'), 'Le détour devient le voyage.');
+    assert.equal(displayFeaturedText('Mon texte personnalisé'), 'Mon texte personnalisé');
+  });
+});
+
+describe('Admin booking image selection', () => {
+  const booking = (selectedDetails: Record<string, unknown>) => ({
+    productType: 'HOTEL', selectedDetails,
+  }) as AdminBooking;
+
+  it('prefers the main image over a gallery thumbnail', () => {
+    const result = parseTravelContext(booking({ imageUrl: '/main.jpg', galleryUrls: ['/thumbnail.jpg'] }));
+    assert.equal(result.imageUrl, '/main.jpg');
+  });
+
+  it('uses the main image when the gallery is empty and falls back to the gallery', () => {
+    assert.equal(parseTravelContext(booking({ galleryUrls: [], heroImageUrl: '/hero.jpg' })).imageUrl, '/hero.jpg');
+    assert.equal(parseTravelContext(booking({ galleryUrls: ['/gallery.jpg'] })).imageUrl, '/gallery.jpg');
+  });
+
+  it('de-prioritizes thumbnail paths and upgrades Cupid provider thumbnail URLs', () => {
+    const result = parseTravelContext(booking({
+      galleryUrls: [
+        'https://static.cupid.travel/hotels/thumbnail/97213963.jpg',
+        'https://static.cupid.travel/hotels/97213963.jpg',
+      ],
+    }));
+    assert.equal(result.imageUrl, 'https://static.cupid.travel/hotels/97213963.jpg');
+
+    const singleThumb = parseTravelContext(booking({
+      imageUrl: 'https://static.cupid.travel/hotels/thumbnail/12345.jpg',
+    }));
+    assert.equal(singleThumb.imageUrl, 'https://static.cupid.travel/hotels/12345.jpg');
+  });
+});
 
 function createMockResponse(body: any, status = 200): Response {
   const bodyText = typeof body === 'string' ? body : JSON.stringify(body);

@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,6 +91,21 @@ class PaymentServiceTest {
                 paymentReferenceGenerator,
                 pricingReadinessPolicy
         );
+    }
+
+    @Test
+    @DisplayName("Expired pending booking cannot initiate or reuse a payment order")
+    void shouldRejectExpiredPendingPaymentBeforePricingOrProviderCalls() {
+        Instant now = Instant.now();
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, bookingRef, now.minusSeconds(7200), now.minusSeconds(60));
+        booking.transitionTo(BookingStatus.PENDING_PAYMENT, now.minusSeconds(3600));
+        when(bookingRepository.findByBookingReference(bookingRef)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> paymentService.initiatePaymentOrder(
+                bookingRef, null, null, userId.toString(), List.of("ROLE_USER")))
+                .isInstanceOf(BookingConflictException.class)
+                .hasMessageContaining("BOOKING_EXPIRED");
+        verifyNoInteractions(serverPricingQuoteRepository, offerRevalidationRepository, paymentRepository, providerRegistry);
     }
 
     @Test

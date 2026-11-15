@@ -35,6 +35,46 @@ public class CancellationService {
     private final PaymentProviderRegistry paymentProviders;
     private final BookingNotificationDispatcher notifications;
     private final PlatformTransactionManager transactionManager;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    /** Claim once, use the original provider idempotency key, then persist the actual PSP outcome. */
+    public CancellationStatusDto retryRefund(UUID id, UUID operator) {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        PaymentRefundCommand command = tx.execute(ignored -> {
+            CancellationRequest request = requestRepository.lockById(id)
+                    .orElseThrow(() -> new BookingNotFoundException("Annulation introuvable"));
+            if ("PROCESSING".equals(request.getRefundStatus()) || "REFUNDED".equals(request.getRefundStatus())) return null;
+            if (!"REFUND_FAILED".equals(request.getRefundStatus()))
+                throw new BookingConflictException("Ce remboursement ne peut pas être relancé.");
+            RefundRecord refund = refundRepository.findByBookingId(request.getBookingId()).orElseThrow();
+            Payment payment = paymentRepository.findById(refund.getPaymentId()).orElseThrow();
+            if (!"mock".equalsIgnoreCase(payment.getProviderName()) && !"paypal-sandbox".equalsIgnoreCase(payment.getProviderName()))
+                throw new BookingConflictException("Seuls les fournisseurs sandbox sont autorisés.");
+            request.setRefundStatus("PROCESSING");
+            requestRepository.saveAndFlush(request);
+            jdbc.update("INSERT INTO booking.refund_retry_actions(cancellation_id,operator_id,outcome) VALUES (?,?,'REQUESTED')", id, operator);
+            return PaymentRefundCommand.builder().captureId(payment.getProviderTransactionId())
+                    .paymentReference(payment.getPaymentReference()).amount(refund.getAmount()).currency(refund.getCurrency())
+                    .reason("Yuding demo refund retry").providerRequestId(refund.getRefundReference()).build();
+        });
+        if (command != null) {
+            CancellationRequest request = requestRepository.findById(id).orElseThrow();
+            RefundRecord refund = refundRepository.findByBookingId(request.getBookingId()).orElseThrow();
+            Payment payment = paymentRepository.findById(refund.getPaymentId()).orElseThrow();
+            PaymentRefundResult result;
+            try { result = paymentProviders.getProvider(payment.getProviderName()).refundPayment(command); }
+            catch (Exception ex) { result = PaymentRefundResult.failure("Le remboursement sandbox a échoué."); }
+            PaymentRefundResult outcome = result;
+            tx.executeWithoutResult(ignored -> {
+                finishRefund(id, outcome);
+                jdbc.update("INSERT INTO booking.refund_retry_actions(cancellation_id,operator_id,outcome) VALUES (?,?,?)",
+                        id, operator, requestRepository.findById(id).orElseThrow().getRefundStatus());
+            });
+        }
+        CancellationRequest request = requestRepository.findById(id).orElseThrow();
+        Booking booking = bookingRepository.findById(request.getBookingId()).orElseThrow();
+        return CancellationStatusDto.from(booking.getBookingReference(), booking.getStatus().name(), request);
+    }
 
     public CancellationPolicyDto policy(String reference, UUID userId, boolean privileged) {
         Booking booking = bookingService.getBookingByReference(reference, userId, privileged);

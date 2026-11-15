@@ -73,13 +73,17 @@ public class ReviewController {
     }
 
     @GetMapping("/moderation")
-    @PreAuthorize("hasAnyRole('ADMIN','SUPPORT')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPPORT','CONTENT_MANAGER')")
     public List<Review> pending() { return reviews.pending(); }
 
+    public record ModerationInput(String rejectionReason) { }
+
     @PutMapping("/moderation/{id}/{decision}")
-    @PreAuthorize("hasAnyRole('ADMIN','SUPPORT')")
-    public ResponseEntity<Void> moderate(@PathVariable UUID id, @PathVariable String decision) {
-        reviews.moderate(id, decision);
+    @PreAuthorize("hasAnyRole('ADMIN','SUPPORT','CONTENT_MANAGER')")
+    public ResponseEntity<Void> moderate(@PathVariable UUID id, @PathVariable String decision,
+                                        @AuthenticationPrincipal Jwt jwt,
+                                        @RequestBody(required = false) ModerationInput input) {
+        reviews.moderate(id, decision, UUID.fromString(jwt.getSubject()), input == null ? null : input.rejectionReason());
         return ResponseEntity.noContent().build();
     }
 }

@@ -10,10 +10,11 @@ import type { Airport } from '@/types/travel.types';
  * to prevent repeated network calls or provider credit waste.
  * Filtering and suggestions are performed locally in the browser.
  */
-export function useAirportsQuery() {
+export function useAirportsQuery(enabled = true) {
   return useQuery<Airport[]>({
     queryKey: queryKeys.travel.airports(),
     queryFn: () => travelService.getAirports(),
+    enabled,
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
     gcTime: 1000 * 60 * 60 * 24,
   });

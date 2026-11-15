@@ -47,7 +47,7 @@ public class AuditService {
                     targetEntityId,
                     reason,
                     metadataJson != null ? metadataJson : "{}",
-                    Instant.now()
+                    Timestamp.from(Instant.now())
             );
         } catch (Exception e) {
             log.warn("Failed to persist admin action into audit.admin_actions: {}", e.getMessage());
@@ -76,7 +76,7 @@ public class AuditService {
                     failureReason,
                     riskScore,
                     sessionId,
-                    Instant.now()
+                    Timestamp.from(Instant.now())
             );
         } catch (Exception e) {
             log.warn("Failed to persist security event into audit.security_events: {}", e.getMessage());

@@ -58,13 +58,15 @@ export function CancellationDialog({ reference, onClose }: { reference: string; 
     }}>
       <div className="cancellation-dialog" role="dialog" aria-modal="true" aria-labelledby="cancellation-title">
         <header className="cancellation-dialog-head">
-          <span className="cancellation-dialog-icon" aria-hidden="true"><i className="fas fa-calendar-xmark" /></span>
-          <div className="cancellation-dialog-heading">
+          <div className="cancellation-dialog-head-top">
             <span className="cancellation-kicker">RÉSERVATION · {reference}</span>
-            <h2 id="cancellation-title">Annuler ce voyage&nbsp;?</h2>
-            <p>Vérifiez les conditions de votre dossier avant de confirmer.</p>
+            <button type="button" className="cancellation-close" onClick={onClose} disabled={mutation.isPending} aria-label="Fermer"><i className="fas fa-xmark" aria-hidden="true" /></button>
           </div>
-          <button type="button" className="cancellation-close" onClick={onClose} disabled={mutation.isPending} aria-label="Fermer"><i className="fas fa-xmark" aria-hidden="true" /></button>
+          <div className="cancellation-dialog-heading">
+            <span className="cancellation-dialog-icon" aria-hidden="true"><i className="fas fa-calendar-xmark" /></span>
+            <h2 id="cancellation-title">Annuler ce voyage&nbsp;?</h2>
+          </div>
+          <p>Vérifiez les conditions de votre dossier avant de confirmer.</p>
         </header>
         {result ? (
           <div className="cancellation-dialog-body" role="status">

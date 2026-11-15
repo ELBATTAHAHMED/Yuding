@@ -1,192 +1,415 @@
-'use client';
+"use client";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { adminReviews, AdminReview } from "@/services/admin-reviews.service";
+import { adminService } from "@/services/admin.service";
+import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminBadge, adminStatusLabel, getStatusBadgeVariant } from "@/components/admin/AdminBadge";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { AdminDrawer } from "@/components/admin/AdminDrawer";
+import { UserPhotoAvatar } from "@/components/admin/UserPhotoAvatar";
+import {
+  PageHeading,
+  FilterToolbar,
+  useAdminUrl,
+  Section,
+  Fields,
+  ErrorState,
+  Empty,
+  ConfirmDialog,
+  formatDate,
+  fullName,
+} from "@/components/admin/OperationsUI";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { reviewService } from '@/services/review.service';
-import { AdminBadge } from '@/components/admin/AdminBadge';
+const rejectionReasons = {
+  SPAM: "Spam",
+  PROFANITY: "Langage inapproprié",
+  ABUSIVE: "Contenu abusif",
+  UNVERIFIED_EXPERIENCE: "Expérience non vérifiable",
+  IRRELEVANT: "Hors sujet",
+  OTHER: "Autre",
+};
 
-export default function AdminReviewsPage() {
-  const queryClient = useQueryClient();
-  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
-
-  const { data: reviews = [], isLoading } = useQuery({
-    queryKey: ['reviews', 'moderation'],
-    queryFn: reviewService.pending,
+function Reviewer({ review }: { review: AdminReview }) {
+  const u = useQuery({
+    queryKey: ["admin", "user", review.userId],
+    queryFn: () => adminService.getUser(review.userId),
+    enabled: !!review.userId,
   });
-
-  const selectedReview = reviews.find((r) => r.id === selectedReviewId) || reviews[0] || null;
-
-  const moderateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'APPROVED' | 'REJECTED' }) =>
-      reviewService.moderate(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reviews'] });
-      setSelectedReviewId(null);
+  return (
+    <div className="ops-person">
+      <UserPhotoAvatar
+        user={u.data || { firstName: review.displayName || "" }}
+        size="sm"
+      />
+      <div>
+        <strong>
+          {u.data
+            ? fullName(u.data)
+            : review.displayName || "Identité non disponible"}
+        </strong>
+        <small>
+          {review.verifiedBooking
+            ? "Voyage vérifié"
+            : "Expérience non liée à un voyage"}
+        </small>
+      </div>
+    </div>
+  );
+}
+export default function AdminReviewsPage() {
+  const url = useAdminUrl();
+  const client = useQueryClient();
+  const [decision, setDecision] = useState<"APPROVED" | "REJECTED" | null>(
+    null,
+  );
+  const [reason, setReason] = useState("OTHER");
+  const [feedback, setFeedback] = useState("");
+  useEffect(() => {
+    if (!feedback) return;
+    const timeoutId = window.setTimeout(() => setFeedback(""), 4200);
+    return () => window.clearTimeout(timeoutId);
+  }, [feedback]);
+  const filters = {
+    ...url.filters,
+    type: url.get("type"),
+    userId: url.get("userId"),
+    bookingId: url.get("bookingId"),
+    sort: url.get("sort"),
+    status: url.get("status", "PENDING_MODERATION"),
+  };
+  const query = useQuery({
+    queryKey: ["admin", "reviews", filters],
+    queryFn: () => adminReviews.page(filters),
+  });
+  const selected = query.data?.content.find((r) => r.id === url.get("review"));
+  const detail = useQuery({
+    queryKey: ["admin", "review-detail", url.get("review")],
+    queryFn: () => adminReviews.detail(url.get("review")),
+    enabled: !!url.get("review"),
+  });
+  const r = selected || detail.data;
+  const history = useQuery({
+    queryKey: ["admin", "review-history", r?.id],
+    queryFn: () => adminReviews.history(r!.id),
+    enabled: !!r,
+  });
+  const mutation = useMutation({
+    mutationFn: () => adminReviews.moderate(r!.id, decision!, reason),
+    onSuccess: async () => {
+      const message =
+        decision === "REJECTED" && r?.status === "APPROVED"
+          ? "Avis retiré de l’affichage public."
+          : decision === "APPROVED" && r?.status === "REJECTED"
+            ? "Avis publié à nouveau."
+            : decision === "APPROVED"
+              ? "Avis approuvé et publié."
+              : "Avis rejeté et retiré de l’affichage public.";
+      setDecision(null);
+      setFeedback(message);
+      await client.invalidateQueries({ queryKey: ["admin"] });
     },
   });
-
+  const isWithdrawal = decision === "REJECTED" && r?.status === "APPROVED";
   return (
-    <div className="space-y-6">
-      {/* 1. Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E2E8F0] dark:border-[#1E2430]">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] dark:text-white m-0">
-            Modération des Avis Voyageurs
-          </h1>
-          <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-1 m-0">
-            Arbitrage éditorial du contenu client, prévention des abus et validation d&apos;authenticité des séjours.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <AdminBadge variant={reviews.length > 0 ? 'warning' : 'success'} size="md">
-            {reviews.length} avis en attente d&apos;examen
-          </AdminBadge>
-        </div>
-      </div>
-
-      {/* 2. Workspace Content */}
-      {isLoading ? (
-        <div className="p-12 text-center text-xs text-[#94A3B8]">
-          Chargement de la file de modération...
-        </div>
-      ) : reviews.length === 0 ? (
-        /* Compact, integrated high-quality empty state (NO giant white box!) */
-        <div className="p-8 rounded-xl border border-[#E2E8F0] dark:border-[#1E2430] bg-white dark:bg-[#14171E] flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] dark:bg-[#064E3B]/40 text-[#10B981] flex items-center justify-center shrink-0">
-              <i className="fas fa-check-circle text-base" />
-            </div>
-            <div>
-              <div className="font-bold text-sm text-[#0F172A] dark:text-white">
-                File de modération à jour
-              </div>
-              <div className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
-                Tous les avis déposés sur les établissements et séjours ont été arbitrés par l&apos;équipe éditoriale.
-              </div>
-            </div>
-          </div>
-
-          <div className="text-xs font-semibold text-[#0D9488] dark:text-[#00D4AA] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            <span>Flux temps réel synchronisé</span>
-          </div>
-        </div>
-      ) : (
-        /* Rich moderation queue + preview panel */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Moderation Queue */}
-          <div className="lg:col-span-5 space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8]">
-              Avis en Attente d&apos;Arbitrage ({reviews.length})
-            </div>
-
-            <div className="space-y-2">
-              {reviews.map((r) => {
-                const isSelected = selectedReview?.id === r.id;
-                return (
-                  <div
-                    key={r.id}
-                    onClick={() => setSelectedReviewId(r.id)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-white dark:bg-[#14171E] border-[#0F172A] dark:border-white shadow-xs'
-                        : 'bg-white dark:bg-[#14171E] border-[#E2E8F0] dark:border-[#1E2430] hover:border-[#CBD5E1]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-bold text-[#0F172A] dark:text-white truncate">
-                        {r.entityName || r.entityReference}
-                      </span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                        <i className="fas fa-star text-[10px]" />
-                        <span>{r.rating}/5</span>
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#64748B] dark:text-[#94A3B8] line-clamp-2 m-0 leading-relaxed italic">
-                      &ldquo;{r.content}&rdquo;
-                    </p>
-                    <div className="mt-2 text-[10px] text-[#94A3B8] font-mono">
-                      Type : {r.entityType}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Selected Review Decision Panel */}
-          {selectedReview && (
-            <div className="lg:col-span-7 admin-card p-6 space-y-6 sticky top-24 shadow-sm animate-fade-in">
-              <div className="flex items-start justify-between pb-4 border-b border-[#E2E8F0] dark:border-[#1E2430]">
-                <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#94A3B8] block">
-                    Examen de l&apos;Avis #{selectedReview.id.slice(0, 8)}
-                  </span>
-                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white m-0 mt-1">
-                    {selectedReview.entityName || selectedReview.entityReference}
-                  </h3>
-                  <div className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
-                    Catégorie : {selectedReview.entityType} • Référence cible : {selectedReview.entityReference}
-                  </div>
-                  {selectedReview.bookingReference && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        <i className="fas fa-check-circle text-[9px]" />
-                        <span>Séjour vérifié</span>
-                      </span>
-                      <Link
-                        href={`/admin/bookings?search=${encodeURIComponent(selectedReview.bookingReference)}`}
-                        className="text-xs font-mono font-bold text-[#0D9488] dark:text-[#00D4AA] hover:underline"
-                      >
-                        Dossier {selectedReview.bookingReference} →
-                      </Link>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 font-bold text-xs">
-                  <i className="fas fa-star text-[10px]" />
-                  <span>{selectedReview.rating} sur 5</span>
-                </div>
-              </div>
-
-              {/* Review Text */}
-              <div className="p-5 rounded-xl bg-[#F8F9FA] dark:bg-[#1A1F28] border border-[#E2E8F0] dark:border-[#2D3748] space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] block">
-                  Commentaire Soumis
-                </span>
-                <p className="text-sm text-[#0F172A] dark:text-white leading-relaxed italic m-0">
-                  &ldquo;{selectedReview.content}&rdquo;
-                </p>
-              </div>
-
-              {/* Moderator Decision Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E2E8F0] dark:border-[#1E2430]">
-                <button
-                  type="button"
-                  onClick={() => moderateMutation.mutate({ id: selectedReview.id, status: 'REJECTED' })}
-                  disabled={moderateMutation.isPending}
-                  className="admin-btn bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/70 dark:border-rose-900/40"
-                >
-                  <i className="fas fa-times text-xs" />
-                  <span>Rejeter l&apos;Avis</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moderateMutation.mutate({ id: selectedReview.id, status: 'APPROVED' })}
-                  disabled={moderateMutation.isPending}
-                  className="admin-btn bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-white dark:text-[#0F172A]"
-                >
-                  <i className="fas fa-check text-xs" />
-                  <span>Approuver &amp; Publier</span>
-                </button>
-              </div>
-            </div>
-          )}
+    <>
+      <PageHeading
+        title="Modération des Avis"
+      >
+        <span className="ops-muted">
+          {query.data?.totalElements ?? "—"} avis {filters.status === "PENDING_MODERATION" ? "dans la file d’attente" : "affichés"}
+        </span>
+      </PageHeading>
+      {feedback && (
+        <div className="ops-feedback ops-toast" role="status">
+          <span>{feedback}</span>
+          <button
+            type="button"
+            className="ops-toast__dismiss"
+            onClick={() => setFeedback("")}
+            aria-label="Fermer la notification"
+          >
+            <i className="fas fa-xmark" aria-hidden="true" />
+          </button>
         </div>
       )}
-    </div>
+      <FilterToolbar
+        url={url}
+        refresh={() => query.refetch()}
+        busy={query.isFetching}
+        filters={[
+          {
+            key: "status",
+            label: "État",
+            defaultValue: "PENDING_MODERATION",
+            allValue: "ALL",
+            options: [
+              { value: "PENDING_MODERATION", label: "À examiner" },
+              { value: "APPROVED", label: "Approuvés" },
+              { value: "REJECTED", label: "Rejetés" },
+            ],
+          },
+          {
+            key: "type",
+            label: "Cible",
+            options: [
+              "ACCOMMODATION",
+              "FLIGHT",
+              "ACTIVITY",
+              "TRANSFER",
+              "TRAIN",
+              "PLATFORM",
+              "EXPERIENCE",
+            ].map((value) => ({ value, label: adminStatusLabel(value) })),
+          },
+        ]}
+      />
+      <AdminTable
+        data={query.data?.content || []}
+        keyExtractor={(r) => r.id}
+        isLoading={query.isLoading}
+        error={query.error}
+        retry={() => query.refetch()}
+        onRowClick={(r) => url.set({ review: r.id }, true)}
+        columns={[
+          {
+            key: "reviewer",
+            sortable: false,
+            header: "Voyageur",
+            render: (r) => <Reviewer review={r} />,
+          },
+          {
+            key: "rating",
+            sortable: false,
+            header: "Note",
+            render: (r) => <span className="ops-numeric">{r.rating} / 5</span>,
+          },
+          {
+            key: "target",
+            sortable: false,
+            header: "Cible du témoignage",
+            render: (r) => (
+              <div className="ops-cell">
+                <strong>{r.entityName || adminStatusLabel(r.entityType)}</strong>
+                <small>
+                  {adminStatusLabel(r.entityType)} · {r.content.slice(0, 70)}
+                  {r.content.length > 70 ? "…" : ""}
+                </small>
+              </div>
+            ),
+          },
+          {
+            key: "status",
+            sortable: false,
+            header: "État",
+            render: (r) => (
+              <AdminBadge variant={getStatusBadgeVariant(r.status)}>{adminStatusLabel(r.status)}</AdminBadge>
+            ),
+          },
+          {
+            key: "date",
+            header: "Reçu",
+            className: "ops-secondary-col",
+            render: (r) => formatDate(r.createdAt),
+          },
+        ]}
+        sortKey="date"
+        sortDirection={
+          url.get("sort", "date.asc").endsWith(".desc") ? "desc" : "asc"
+        }
+        onSort={(key) => {
+          if (key === "date")
+            url.set({
+              sort:
+                url.get("sort", "date.asc") === "date.asc"
+                  ? "date.desc"
+                  : "date.asc",
+              page: null,
+            });
+        }}
+        footer={
+          <AdminPagination
+            currentPage={url.page + 1}
+            pageSize={url.size}
+            totalItems={query.data?.totalElements || 0}
+            onPageChange={(p) => url.set({ page: p - 1 })}
+            onPageSizeChange={(size) => url.set({ size, page: null })}
+          />
+        }
+      />
+      <AdminDrawer
+        isOpen={!!url.get("review")}
+        onClose={() => url.set({ review: null }, true)}
+        title={r?.entityName || "Avis voyageur"}
+        subtitle={r ? formatDate(r.createdAt) : "Modération"}
+        badge={
+          r && (
+            <AdminBadge variant={getStatusBadgeVariant(r.status)}>
+              {adminStatusLabel(r.status)}
+            </AdminBadge>
+          )
+        }
+        rawJson={r}
+      >
+        <ErrorState error={detail.error} />
+        {r && (
+          <>
+            <Section title="Témoignage">
+              <div style={{ paddingTop: 18 }}>
+                <Reviewer review={r} />
+              </div>
+              <Fields
+                items={[
+                  ["Note", r.rating + " / 5"],
+                  ["Expérience vérifiée", r.verifiedBooking ? "Oui" : "Non"],
+                ]}
+              />
+              <p className="ops-review-content">{r.content}</p>
+            </Section>
+            <Section title="Contexte du voyage">
+              <Fields
+                items={[
+                  ["Cible", r.entityName || r.entityType],
+                  ["Fournisseur", r.provider],
+                  [
+                    "Dossier",
+                    r.bookingReference ? (
+                      <Link
+                        href={`/admin/bookings?booking=${r.bookingReference}`}
+                      >
+                        {r.bookingReference}
+                      </Link>
+                    ) : (
+                      "Aucun dossier lié"
+                    ),
+                  ],
+                  [
+                    "Voyageur",
+                    r.userId ? (
+                      <Link href={`/admin/users?id=${r.userId}`}>
+                        Ouvrir le compte
+                      </Link>
+                    ) : (
+                      "Non renseigné"
+                    ),
+                  ],
+                ]}
+              />
+            </Section>
+            <Section title="Historique de modération">
+              <ErrorState error={history.error} />
+              {history.data?.map((h, i) => (
+                <Fields
+                  key={i}
+                  items={[
+                    ["Décision", adminStatusLabel(h.decision)],
+                    ["Motif", h.rejectionReason],
+                    ["Date", formatDate(h.createdAt)],
+                    [
+                      "Opérateur",
+                      <Link href={`/admin/users?id=${h.operatorId}`}>
+                        Compte opérateur
+                      </Link>,
+                    ],
+                  ]}
+                />
+              ))}
+              {history.data?.length === 0 && (
+                <Empty>Aucune décision enregistrée dans cet historique.</Empty>
+              )}
+            </Section>
+            {["PENDING_MODERATION", "APPROVED", "REJECTED"].includes(r.status) && (
+              <Section
+                title={
+                  r.status === "APPROVED"
+                    ? "Visibilité publique"
+                    : r.status === "REJECTED"
+                      ? "Publication"
+                      : "Décision"
+                }
+              >
+                {r.status === "APPROVED" && (
+                  <p className="ops-review-visibility-copy">
+                    Cet avis est visible sur Yuding. Vous pouvez le retirer de
+                    l’affichage à tout moment.
+                  </p>
+                )}
+                {r.status === "REJECTED" && (
+                  <p className="ops-review-visibility-copy">
+                    Cet avis n’est pas visible publiquement. Sa republication
+                    sera enregistrée dans l’historique.
+                  </p>
+                )}
+                {r.status !== "REJECTED" && (
+                <label className="ops-filter" style={{ paddingTop: 16 }}>
+                  <span>
+                    {r.status === "APPROVED"
+                      ? "Motif du retrait"
+                      : "Motif de rejet"}
+                  </span>
+                  <select
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  >
+                    {Object.entries(rejectionReasons).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                )}
+                <div className="ops-actions" style={{ paddingTop: 16 }}>
+                  {r.status !== "APPROVED" && (
+                    <button
+                      className="ops-btn ops-primary"
+                      onClick={() => {
+                        mutation.reset();
+                        setDecision("APPROVED");
+                      }}
+                    >
+                      {r.status === "REJECTED" ? "Publier à nouveau" : "Approuver"}
+                    </button>
+                  )}
+                  {r.status !== "REJECTED" && (
+                    <button
+                      className="ops-btn ops-danger"
+                      onClick={() => {
+                        mutation.reset();
+                        setDecision("REJECTED");
+                      }}
+                    >
+                      {r.status === "APPROVED" ? "Retirer de l’affichage" : "Rejeter"}
+                    </button>
+                  )}
+                </div>
+              </Section>
+            )}
+          </>
+        )}
+      </AdminDrawer>
+      <ConfirmDialog
+        open={!!decision}
+        title={
+          decision === "APPROVED"
+            ? r?.status === "REJECTED"
+              ? "Publier à nouveau cet avis ?"
+              : "Publier cet avis ?"
+            : isWithdrawal
+              ? "Retirer cet avis de l’affichage ?"
+              : "Rejeter cet avis ?"
+        }
+        description={
+          isWithdrawal
+            ? "L’avis ne sera plus visible publiquement. Cette action et son motif seront conservés dans l’historique."
+            : "La décision et l’opérateur seront conservés dans l’historique de modération."
+        }
+        pending={mutation.isPending}
+        error={mutation.error}
+        onClose={() => setDecision(null)}
+        onConfirm={() => mutation.mutate()}
+      />
+    </>
   );
 }

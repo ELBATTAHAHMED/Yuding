@@ -146,7 +146,8 @@ public class TravelSearchService {
                 offers = provider.searchActivities(query);
             }
             applyActivityConversions(offers);
-            registerActivityOffers(offers);
+            offers.forEach(offer -> offer.setTravelers(query.getTravelers()));
+            registerActivityOffers(offers, query.getTravelers());
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -176,7 +177,8 @@ public class TravelSearchService {
                 offers = provider.searchTransfers(query);
             }
             applyTransferConversions(offers);
-            registerTransferOffers(offers);
+            offers.forEach(offer -> offer.setPassengers(query.getPassengers()));
+            registerTransferOffers(offers, query.getPassengers());
             return SearchResponse.success(searchId, offers);
         } catch (TravelProviderException e) {
             if (isCleanUnavailable(e)) {
@@ -360,7 +362,7 @@ public class TravelSearchService {
         }
     }
 
-    public void registerActivityOffers(List<ActivityOfferDto> offers) {
+    public void registerActivityOffers(List<ActivityOfferDto> offers, int travelers) {
         if (offers == null || offers.isEmpty()) return;
         for (ActivityOfferDto activity : offers) {
             String ref = activity.getSelectionRef();
@@ -376,8 +378,10 @@ public class TravelSearchService {
                 details.put("durationHours", activity.getDurationHours());
                 details.put("category", activity.getCategory());
                 details.put("description", activity.getDescription());
+                details.put("imageUrl", activity.getImageUrl());
                 details.put("country", activity.getCountry());
                 details.put("source", activity.getSource());
+                details.put("travelers", travelers);
 
                 ResolvedOfferDto resolved = buildResolvedDto(
                         ref, "ACTIVITY", activity.getProvider(), activity.getOfferId(),
@@ -387,7 +391,7 @@ public class TravelSearchService {
         }
     }
 
-    public void registerTransferOffers(List<TransferOfferDto> offers) {
+    public void registerTransferOffers(List<TransferOfferDto> offers, int passengers) {
         if (offers == null || offers.isEmpty()) return;
         for (TransferOfferDto transfer : offers) {
             String ref = transfer.getSelectionRef();
@@ -404,6 +408,7 @@ public class TravelSearchService {
                 details.put("transferType", transfer.getTransferType());
                 details.put("vehicleModel", transfer.getVehicleModel());
                 details.put("capacity", transfer.getCapacity());
+                details.put("passengers", passengers);
 
                 ResolvedOfferDto resolved = buildResolvedDto(
                         ref, "TRANSFER", transfer.getProvider(), transfer.getOfferId(),

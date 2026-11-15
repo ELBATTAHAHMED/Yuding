@@ -65,7 +65,17 @@ public class ServerPricingFactory {
                     productType, provider, pricingStatus);
         } else {
             pricingStatus = PricingStatus.PRICED;
-            totalAmount = revalidation.getCurrentProviderAmount().setScale(2, RoundingMode.HALF_UP);
+            BigDecimal providerAmount = revalidation.getCurrentProviderAmount();
+            if ("ACTIVITY".equals(productType)) {
+                Object travelerValue = snapshot.getSelectedDetails() != null
+                        ? snapshot.getSelectedDetails().get("travelers") : null;
+                int travelers = travelerValue instanceof Number number ? number.intValue() : 1;
+                if (travelers < 1 || travelers > 50) {
+                    throw new BookingConflictException("Invalid activity traveler count in offer snapshot");
+                }
+                providerAmount = providerAmount.multiply(BigDecimal.valueOf(travelers));
+            }
+            totalAmount = providerAmount.setScale(2, RoundingMode.HALF_UP);
             currency = normalizeCurrency(revalidation.getCurrentProviderCurrency());
 
             // Attempt truthful breakdown extraction if provider supplied reconciled components

@@ -28,8 +28,13 @@ public class ReviewService {
                          OffsetDateTime createdAt, OffsetDateTime updatedAt, String bookingReference) { }
     public record PublicReview(int rating, String content, String displayName, OffsetDateTime createdAt) { }
     public record PublicReviews(Double averageRating, long reviewCount, List<PublicReview> reviews) { }
-    public record FeaturedReview(int rating, String content, String displayName, String entityName,
-                                 String entityType, OffsetDateTime createdAt, boolean verifiedBooking) { }
+    public record FeaturedReview(UUID userId, int rating, String content, String displayName, String entityName,
+                                 String entityType, OffsetDateTime createdAt, boolean verifiedBooking) {
+        public FeaturedReview(int rating, String content, String displayName, String entityName,
+                              String entityType, OffsetDateTime createdAt, boolean verifiedBooking) {
+            this(null, rating, content, displayName, entityName, entityType, createdAt, verifiedBooking);
+        }
+    }
     public record ReviewInput(int rating, String content, String publicDisplayName) {
         public ReviewInput(int rating, String content) { this(rating, content, null); }
     }
@@ -96,6 +101,12 @@ public class ReviewService {
         if (!target.eligible()) throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce voyage n'est pas encore éligible à un avis.");
         Validated value = ReviewContentPolicy.validate(input);
         String publicName = publicDisplayName(input.publicDisplayName());
+        if (publicName == null && jwt != null) {
+            String jwtName = jwt.getClaimAsString("name");
+            if (jwtName != null && !jwtName.isBlank()) {
+                publicName = jwtName.strip();
+            }
+        }
         preventRepeatedContent(userId, value.content(), null);
         String title = target.entityName() == null ? null
                 : target.entityName().substring(0, Math.min(150, target.entityName().length()));
@@ -160,6 +171,12 @@ public class ReviewService {
         limiter.record(userId);
         Validated value = ReviewContentPolicy.validate(input);
         String publicName = publicDisplayName(input.publicDisplayName());
+        if (publicName == null && jwt != null) {
+            String jwtName = jwt.getClaimAsString("name");
+            if (jwtName != null && !jwtName.isBlank()) {
+                publicName = jwtName.strip();
+            }
+        }
         preventRepeatedContent(userId, value.content(), null);
         try {
             UUID id = jdbc.queryForObject("""
@@ -176,7 +193,7 @@ public class ReviewService {
     /** A bounded, public editorial feed of approved travel and platform reviews. */
     public List<FeaturedReview> featuredReviews() {
         return jdbc.query("""
-                select rating, content, coalesce(nullif(public_display_name, ''),
+                select user_id, rating, content, coalesce(nullif(public_display_name, ''),
                        case when item_type = 'PLATFORM' then 'Utilisateur Yuding' else 'Voyageur vérifié' end),
                        coalesce(nullif(title, ''), 'Voyage Yuding'), item_type, created_at, is_verified_purchase
                 from engagement.reviews
@@ -184,9 +201,9 @@ public class ReviewService {
                   ((is_verified_purchase = true and item_type in ('ACCOMMODATION', 'ACTIVITY', 'FLIGHT', 'TRANSFER', 'TRAIN'))
                     or item_type = 'PLATFORM')
                 order by created_at desc, id desc limit 12
-                """, (rs, row) -> new FeaturedReview(rs.getInt(1), rs.getString(2),
-                rs.getString(3), rs.getString(4), rs.getString(5),
-                rs.getObject(6, OffsetDateTime.class), rs.getBoolean(7)));
+                """, (rs, row) -> new FeaturedReview(rs.getObject(1, UUID.class), rs.getInt(2), rs.getString(3),
+                rs.getString(4), rs.getString(5), rs.getString(6),
+                rs.getObject(7, OffsetDateTime.class), rs.getBoolean(8)));
     }
 
     private String publicDisplayName(String input) {
@@ -199,11 +216,27 @@ public class ReviewService {
 
     @Transactional
     public void moderate(UUID id, String status) {
-        if (!List.of("APPROVED", "REJECTED").contains(status))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Statut invalide.");
-        int updated = jdbc.update("update engagement.reviews set status = ?, updated_at = now() where id = ? and status = 'PENDING_MODERATION'",
+        String sourceStatuses = switch (status) {
+            // A rejected review can be published again after a new moderation decision.
+            case "APPROVED" -> "('PENDING_MODERATION', 'REJECTED')";
+            // Removing an already-published review must immediately remove it from public feeds.
+            case "REJECTED" -> "('PENDING_MODERATION', 'APPROVED')";
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Statut invalide.");
+        };
+        int updated = jdbc.update("update engagement.reviews set status = ?, updated_at = now() where id = ? and status in " + sourceStatuses,
                 status, id);
-        if (updated == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Avis en attente introuvable.");
+        if (updated == 0) throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Cet avis ne peut plus recevoir cette décision.");
+    }
+
+    @Transactional
+    public void moderate(UUID id, String status, UUID operator, String rejectionReason) {
+        String reason = "REJECTED".equals(status) ? (rejectionReason == null ? "OTHER" : rejectionReason) : null;
+        if (reason != null && !List.of("SPAM","PROFANITY","ABUSIVE","UNVERIFIED_EXPERIENCE","IRRELEVANT","OTHER").contains(reason))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Motif invalide.");
+        moderate(id, status);
+        jdbc.update("INSERT INTO engagement.review_moderation_actions(review_id,operator_id,decision,rejection_reason) VALUES (?,?,?,?)",
+                id, operator, status, reason);
     }
 
     public List<Review> pending() {

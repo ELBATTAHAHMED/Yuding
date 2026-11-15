@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { bookingService } from '@/services/booking.service';
+import { ApiError } from '@/lib/api-client';
 import {
   BookingPricingResponseDto,
   BookingProductType,
@@ -23,6 +24,7 @@ export interface UseBookingFlowReturn {
   isProcessing: boolean;
   statusMessage: string | null;
   error: string | null;
+  isRetryable: boolean;
   bookingReference: string | null;
   revalidationData: BookingRevalidationResponseDto | null;
   pricingData: BookingPricingResponseDto | null;
@@ -30,6 +32,7 @@ export interface UseBookingFlowReturn {
   startBookingFlow: (params: {
     productType: BookingProductType;
     selectionRef?: string;
+    draftReference?: string;
   }) => Promise<void>;
   handleAcceptPriceChange: () => Promise<void>;
   handleCancelPriceChange: () => void;
@@ -41,21 +44,25 @@ export function useBookingFlow(): UseBookingFlowReturn {
   const [stage, setStage] = useState<BookingFlowStage>('idle');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isRetryable, setIsRetryable] = useState(false);
   const [bookingReference, setBookingReference] = useState<string | null>(null);
   const [revalidationData, setRevalidationData] = useState<BookingRevalidationResponseDto | null>(null);
   const [pricingData, setPricingData] = useState<BookingPricingResponseDto | null>(null);
   const [isPriceChangeModalOpen, setIsPriceChangeModalOpen] = useState(false);
   const idempotencyKeyRef = useRef<string | null>(null);
+  const idempotencySelectionRef = useRef<string | null>(null);
 
   const resetFlow = useCallback(() => {
     setStage('idle');
     setStatusMessage(null);
     setError(null);
+    setIsRetryable(false);
     setBookingReference(null);
     setRevalidationData(null);
     setPricingData(null);
     setIsPriceChangeModalOpen(false);
     idempotencyKeyRef.current = null;
+    idempotencySelectionRef.current = null;
   }, []);
 
   /**
@@ -107,11 +114,14 @@ export function useBookingFlow(): UseBookingFlowReturn {
     async ({
       productType,
       selectionRef,
+      draftReference,
     }: {
       productType: BookingProductType;
       selectionRef?: string;
+      draftReference?: string;
     }) => {
       setError(null);
+      setIsRetryable(false);
       setRevalidationData(null);
       setPricingData(null);
       setIsPriceChangeModalOpen(false);
@@ -121,23 +131,37 @@ export function useBookingFlow(): UseBookingFlowReturn {
         setStage('creating_draft');
         setStatusMessage('Création du dossier de réservation...');
 
-        if (!idempotencyKeyRef.current) {
-          idempotencyKeyRef.current =
-            typeof crypto !== 'undefined' && crypto.randomUUID
-              ? crypto.randomUUID()
-              : `idemp-bk-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        }
+        const existingReference = draftReference?.trim();
+        const booking = existingReference
+          ? await bookingService.getBookingByReference(existingReference)
+          : await (async () => {
+              const normalizedSelectionRef = selectionRef?.trim() || null;
+              if (idempotencySelectionRef.current !== normalizedSelectionRef) {
+                idempotencyKeyRef.current = null;
+                idempotencySelectionRef.current = normalizedSelectionRef;
+              }
+              if (!idempotencyKeyRef.current) {
+                idempotencyKeyRef.current =
+                  typeof crypto !== 'undefined' && crypto.randomUUID
+                    ? crypto.randomUUID()
+                    : `idemp-bk-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+              }
+              return bookingService.createDraftBooking(
+                { productType, selectionRef: selectionRef?.trim() || undefined },
+                idempotencyKeyRef.current
+              );
+            })();
 
-        const booking = await bookingService.createDraftBooking(
-          {
-            productType,
-            selectionRef: selectionRef?.trim() ? selectionRef.trim() : undefined,
-          },
-          idempotencyKeyRef.current
-        );
+        if (booking.status !== 'DRAFT' || booking.productType !== productType || !booking.offerSnapshot) {
+          throw new Error('Ce dossier ne peut plus être repris depuis la réservation. Consultez votre dossier ou choisissez une nouvelle offre.');
+        }
 
         const reference = booking.bookingReference;
         setBookingReference(reference);
+        if (selectionRef && typeof window !== 'undefined') {
+          try { sessionStorage.setItem(`yuding_booking_draft_${selectionRef}`, reference); }
+          catch { /* The booking remains available via its reference. */ }
+        }
 
         // Step 2: Phase 36 live provider revalidation
         setStage('revalidating');
@@ -178,9 +202,18 @@ export function useBookingFlow(): UseBookingFlowReturn {
         await proceedToPricingAndPayment(reference);
       } catch (err: any) {
         setStage('error');
-        const msg =
-          err?.message ||
-          'Une erreur est survenue lors de la validation du dossier de réservation.';
+        const transientProviderFailure = err instanceof ApiError &&
+          (err.status === 503 || err.status === 504 || err.isTimeout || err.isNetwork);
+        setIsRetryable(transientProviderFailure);
+        const msg = transientProviderFailure
+          ? 'Le fournisseur ne répond pas pour le moment. Votre dossier est conservé ; réessayez la vérification dans un instant.'
+          : err instanceof ApiError && err.status === 404
+          ? draftReference
+            ? 'Ce dossier n’est plus disponible. Retrouvez vos réservations ou choisissez une nouvelle offre.'
+            : 'Cette offre a expiré. Relancez la recherche pour choisir une offre disponible.'
+          : err instanceof ApiError && err.status >= 500
+            ? 'Le dossier n’a pas pu être vérifié. Veuillez réessayer dans un instant.'
+            : err?.message || 'Une erreur est survenue lors de la validation du dossier de réservation.';
         setError(msg);
       }
     },
@@ -227,6 +260,7 @@ export function useBookingFlow(): UseBookingFlowReturn {
     isProcessing,
     statusMessage,
     error,
+    isRetryable,
     bookingReference,
     revalidationData,
     pricingData,

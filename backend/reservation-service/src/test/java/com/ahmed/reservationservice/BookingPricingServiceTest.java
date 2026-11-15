@@ -135,6 +135,27 @@ class BookingPricingServiceTest {
     }
 
     @Test
+    @DisplayName("Activity pricing multiplies the revalidated per-person fare by the searched traveler count")
+    void testActivityPricingForMultipleTravelers() {
+        Booking booking = createBooking(ProductType.ACTIVITY, BookingStatus.DRAFT);
+        OfferSnapshot snapshot = createSnapshot(ProductType.ACTIVITY, "HBX", new BigDecimal("21.43"), "EUR", Map.of("travelers", 2));
+        OfferRevalidation reval = createRevalidation("AVAILABLE", "UNCHANGED", new BigDecimal("21.43"), "EUR", Instant.now().plusSeconds(300), null);
+        reval.setProductType("ACTIVITY");
+        reval.setProvider("HBX");
+
+        when(bookingRepository.findByBookingReference(bookingRef)).thenReturn(Optional.of(booking));
+        when(offerSnapshotRepository.findByBookingId(bookingUuid)).thenReturn(Optional.of(snapshot));
+        when(offerRevalidationRepository.findTopByBookingIdOrderByRevalidatedAtDesc(bookingUuid)).thenReturn(Optional.of(reval));
+        when(serverPricingQuoteRepository.findByRevalidationId(revalUuid)).thenReturn(Optional.empty());
+        when(serverPricingQuoteRepository.save(any(ServerPricingQuote.class))).thenAnswer(i -> i.getArgument(0));
+
+        BookingPricingResponseDto response = pricingService.createAuthoritativePricing(bookingRef, userUuid.toString(), List.of("ROLE_USER"));
+
+        assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("42.86"));
+        assertThat(response.isCanProceedToPayment()).isTrue();
+    }
+
+    @Test
     @DisplayName("Hotel pricing: Changed price with user acknowledgment uses CURRENT revalidated price")
     void testHotelChangedPriceAcknowledged() {
         Booking booking = createBooking(ProductType.HOTEL, BookingStatus.DRAFT);

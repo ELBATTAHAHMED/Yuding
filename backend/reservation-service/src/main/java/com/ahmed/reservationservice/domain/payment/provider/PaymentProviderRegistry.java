@@ -75,7 +75,9 @@ public class PaymentProviderRegistry {
         if (paymentMode == null || paymentMode.isBlank() || "PAYPAL".equalsIgnoreCase(paymentMode) || "PAYPAL_SANDBOX".equalsIgnoreCase(paymentMode)) {
             return getActiveProvider();
         }
-        if ("DEMO_CARD".equalsIgnoreCase(paymentMode) || "MOCK".equalsIgnoreCase(paymentMode)) {
+        if ("DEMO_CARD".equalsIgnoreCase(paymentMode)
+                || "DEMO_CARD_FAILURE".equalsIgnoreCase(paymentMode)
+                || "MOCK".equalsIgnoreCase(paymentMode)) {
             PaymentProvider mockProvider = providers.get(MockPaymentProvider.PROVIDER_NAME);
             if (mockProvider != null) {
                 return mockProvider;

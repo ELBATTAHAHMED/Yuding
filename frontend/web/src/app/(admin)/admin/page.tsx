@@ -1,424 +1,254 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import {
-  useAdminStats,
-  useAdminBookings,
-  useAdminPayments,
-  useAdminCancellations,
-  useAdminUsers,
-} from '@/hooks/queries/useAdminQueries';
-import { useQuery } from '@tanstack/react-query';
-import { reviewService } from '@/services/review.service';
-import { parseTravelContext } from '@/lib/admin-travel';
-import { AdminStatCard } from '@/components/admin/AdminStatCard';
-import { AdminOverviewChart } from '@/components/admin/AdminOverviewChart';
-import { AdminBadge, getStatusBadgeVariant } from '@/components/admin/AdminBadge';
-import { BookingVisual } from '@/components/admin/BookingVisual';
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { adminService } from "@/services/admin.service";
+import { adminReviews } from "@/services/admin-reviews.service";
+import { parseTravelContext } from "@/lib/admin-travel";
+import { Empty, ErrorState, Loading, money, formatDate } from "@/components/admin/OperationsUI";
+import { AdminBadge, adminStatusLabel, getStatusBadgeVariant } from "@/components/admin/AdminBadge";
+import { AdminIcon } from "@/components/admin/AdminIcon";
+import { OverviewCharts } from "@/components/admin/OverviewCharts";
+import { TravelImage } from "@/components/admin/EntityContext";
 
-export default function AdminOverviewPage() {
-  const { data: stats, isLoading: loadingStats } = useAdminStats();
-  const { data: bookings = [], isLoading: loadingBookings } = useAdminBookings({ limit: 10 });
-  const { data: payments = [], isLoading: loadingPayments } = useAdminPayments({ limit: 10 });
-  const { data: cancellations = [], isLoading: loadingCancellations } = useAdminCancellations(50);
-  const { data: users = [] } = useAdminUsers();
-  const { data: pendingReviews = [] } = useQuery({
-    queryKey: ['reviews', 'moderation'],
-    queryFn: reviewService.pending,
-  });
+const intlNumber = new Intl.NumberFormat("fr-FR");
 
-  const totalRevenue = stats?.totalRevenue ?? 0;
-  const totalBookings = stats?.totalReservations ?? 0;
+function CurrencyAmounts({
+  amounts,
+  available,
+  emptyLabel = "—",
+}: {
+  amounts?: Record<string, number>;
+  available: boolean;
+  emptyLabel?: string;
+}) {
+  if (!available) return <span className="dashboard-value-empty">—</span>;
+  if (!amounts) return <span className="dashboard-value-empty">{emptyLabel}</span>;
+  const entries = Object.entries(amounts).filter(([, val]) => val != null);
+  const positive = entries.filter(([, val]) => Number(val) > 0);
 
-  // Build real incidents queue sorted by operational severity
-  interface IncidentItem {
-    id: string;
-    severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
-    title: string;
-    description: string;
-    reason?: string | null;
-    timestamp: string;
-    actionLabel: string;
-    actionHref: string;
-    badgeLabel: string;
+  if (!positive.length) {
+    if (entries.length > 0) {
+      return (
+        <span className="dashboard-currency-list">
+          {entries.map(([curr, val]) => (
+            <span className="dashboard-currency" key={curr}>
+              {money(val, curr)}
+            </span>
+          ))}
+        </span>
+      );
+    }
+    return <span className="dashboard-value-empty">{emptyLabel}</span>;
   }
-
-  const incidents: IncidentItem[] = [];
-
-  // 1. CRITICAL: Failed Refunds requiring financial intervention
-  cancellations
-    .filter((c) => c.status === 'REFUND_FAILED' || c.refundStatus === 'REFUND_FAILED')
-    .forEach((c) => {
-      incidents.push({
-        id: `refund-failed-${c.id}`,
-        severity: 'CRITICAL',
-        title: `Échec Remboursement — Dossier #${c.bookingId.slice(0, 8)}`,
-        description: `Montant : ${Number(c.refundAmount || 0).toFixed(2)} ${c.currency || 'MAD'} bloqué auprès du PSP.`,
-        reason: c.reason || 'Erreur technique passerelle de remboursement',
-        timestamp: c.requestedAt,
-        actionLabel: 'Régulariser le remboursement',
-        actionHref: `/admin/refunds?cancellationId=${c.id}`,
-        badgeLabel: 'REMBOURSEMENT ÉCHOUÉ',
-      });
-    });
-
-  // 2. CRITICAL: Booking/Payment Drift (Payment SUCCEEDED but Booking not confirmed)
-  payments
-    .filter((p) => p.status === 'SUCCEEDED')
-    .forEach((p) => {
-      const relatedBooking = bookings.find((b) => b.id === p.bookingId);
-      if (relatedBooking && !['CONFIRMED', 'PAID', 'COMPLETED'].includes(relatedBooking.status)) {
-        incidents.push({
-          id: `drift-${p.id}`,
-          severity: 'CRITICAL',
-          title: `Drift Transaction / Dossier — PAY #${p.paymentReference}`,
-          description: `Paiement ${Number(p.amount).toFixed(2)} ${p.currency} SUCCEEDED alors que le dossier est ${relatedBooking.status}.`,
-          reason: 'Désynchronisation entre confirmation passerelle et état du dossier.',
-          timestamp: p.updatedAt,
-          actionLabel: 'Inspecter le dossier',
-          actionHref: `/admin/bookings?search=${encodeURIComponent(relatedBooking.bookingReference)}`,
-          badgeLabel: 'ANOMALIE DRIFT',
-        });
-      }
-    });
-
-  // 3. HIGH: Locked Accounts (lockedUntil > now or failedLoginAttempts >= 5)
-  const now = new Date();
-  users
-    .filter(
-      (u) =>
-        u.status === 'LOCKED' ||
-        (u.lockedUntil && new Date(u.lockedUntil) > now) ||
-        u.failedLoginAttempts >= 5
-    )
-    .forEach((u) => {
-      incidents.push({
-        id: `user-lock-${u.id}`,
-        severity: 'HIGH',
-        title: `Compte Client Verrouillé — ${u.firstName} ${u.lastName}`,
-        description: `Email : ${u.email} • ${u.failedLoginAttempts} tentatives infructueuses détectées.`,
-        reason: u.lockedUntil ? `Verrouillé jusqu'à ${new Date(u.lockedUntil).toLocaleTimeString('fr-FR')}` : 'Seuil de sécurité atteint',
-        timestamp: u.createdAt,
-        actionLabel: 'Déverrouiller le compte',
-        actionHref: `/admin/users?search=${encodeURIComponent(u.email)}`,
-        badgeLabel: 'COMPTE VERROUILLÉ',
-      });
-    });
-
-  // 4. MEDIUM: Pending Reviews awaiting editorial review
-  if (pendingReviews.length > 0) {
-    incidents.push({
-      id: 'reviews-pending-batch',
-      severity: 'MEDIUM',
-      title: `${pendingReviews.length} Avis Voyageurs en Attente de Modération`,
-      description: 'Nouveaux retours d’expérience clients nécessitant validation éditoriale avant publication.',
-      timestamp: pendingReviews[0]?.createdAt || new Date().toISOString(),
-      actionLabel: 'Examiner les avis',
-      actionHref: '/admin/reviews',
-      badgeLabel: 'MODÉRATION REQUISE',
-    });
-  }
-
-  // Sort incidents by operational priority: CRITICAL > HIGH > MEDIUM
-  const severityRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2 };
-  incidents.sort((a, b) => severityRank[a.severity] - severityRank[b.severity]);
 
   return (
-    <div className="space-y-8">
-      {/* 1. Page Header & Command Posture */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E2E8F0] dark:border-[#1E2430]">
+    <span className="dashboard-currency-list">
+      {positive.map(([currency, amount]) => (
+        <span className="dashboard-currency" key={currency}>
+          {money(amount, currency)}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+export default function AdminOverviewPage() {
+  const stats = useQuery({ queryKey: ["admin", "stats"], queryFn: adminService.getAdminStats });
+  const bookings = useQuery({
+    queryKey: ["admin", "bookings", "recent"],
+    queryFn: () => adminService.getBookings({ size: 5 }),
+  });
+  const payments = useQuery({
+    queryKey: ["admin", "payments", "recent"],
+    queryFn: () => adminService.getPayments({ size: 5 }),
+  });
+  const reviewQueue = useQuery({
+    queryKey: ["admin", "reviews", "overview-pending"],
+    queryFn: () => adminReviews.page({ status: "PENDING_MODERATION", size: 1 }),
+  });
+
+  const refreshing = stats.isFetching || bookings.isFetching || payments.isFetching || reviewQueue.isFetching;
+
+  const handleRefresh = () => {
+    stats.refetch();
+    bookings.refetch();
+    payments.refetch();
+    reviewQueue.refetch();
+  };
+
+  return (
+    <div className="ops-dashboard dashboard-home">
+      {/* 1. En haut : Titre « Vue d’ensemble » et actualisation discrète */}
+      <header className="dashboard-top-bar">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] dark:text-white m-0">
-            Centre des Opérations
-          </h1>
-          <p className="text-sm text-[#64748B] dark:text-[#94A3B8] mt-1 m-0">
-            Tour de contrôle des dossiers voyages, conciliation financière et triage des incidents prioritaires.
-          </p>
+          <h1 className="dashboard-main-title">Vue d’ensemble</h1>
         </div>
+        <button
+          type="button"
+          className="ops-btn ops-btn-secondary dashboard-refresh-btn"
+          disabled={refreshing}
+          onClick={handleRefresh}
+          aria-label="Actualiser les données du tableau de bord"
+        >
+          <AdminIcon name="refresh" className={refreshing ? "ops-spin" : ""} />
+          <span>Actualiser</span>
+        </button>
+      </header>
 
-        <div className="flex items-center gap-3 text-xs font-semibold">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ECFDF5] dark:bg-[#064E3B]/30 border border-[#A7F3D0] dark:border-[#059669]/30 text-[#047857] dark:text-[#34D399]">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-            <span>Environnement Opérationnel</span>
-          </div>
-          {incidents.length > 0 ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40">
-              <i className="fas fa-exclamation-triangle text-xs" />
-              <span>{incidents.length} incident{incidents.length > 1 ? 's' : ''} actif{incidents.length > 1 ? 's' : ''}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
-              <i className="fas fa-check-circle text-xs" />
-              <span>Aucun incident bloquant</span>
-            </div>
-          )}
+      <ErrorState error={stats.error} retry={() => stats.refetch()} />
+
+      {/* 2. KPI essentiels sur une ligne : dossiers enregistrés, paiements réussis, encaissements, remboursements */}
+      {stats.isLoading ? (
+        <div className="dashboard-kpi-loading" aria-label="Chargement des chiffres clés" role="status">
+          {[0, 1, 2, 3].map((item) => (
+            <div className="ops-skeleton" key={item} />
+          ))}
         </div>
-      </div>
-
-      {/* 2. Structured Operational Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <AdminStatCard
-          label="Chiffre d'Affaires Encaissé"
-          value={loadingStats ? '—' : `${totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`}
-          subtext="Règlements autoritaires validés"
-          icon="fas fa-wallet"
-          variant="cool"
-          isLoading={loadingStats}
-          trend={{ value: '+14.2%', isPositive: true }}
-        />
-
-        <AdminStatCard
-          label="Dossiers Voyage Actifs"
-          value={loadingStats ? '—' : totalBookings}
-          subtext="Hôtels, vols, activités, transferts"
-          icon="fas fa-compass"
-          variant="warm"
-          isLoading={loadingStats}
-        />
-
-        <AdminStatCard
-          label="Grand Livre Règlements"
-          value={loadingStats ? '—' : stats?.totalPayments ?? 0}
-          subtext="Transactions directes PSP"
-          icon="fas fa-credit-card"
-          variant="default"
-          isLoading={loadingStats}
-        />
-
-        <AdminStatCard
-          label="File de Triage"
-          value={`${incidents.length} dossier${incidents.length > 1 ? 's' : ''}`}
-          subtext={incidents.length > 0 ? 'Intervention support / trésorerie requise' : 'File d’attente dégagée'}
-          icon="fas fa-shield-alt"
-          variant={incidents.length > 0 ? 'incident' : 'dark'}
-          isLoading={loadingCancellations}
-        />
-      </div>
-
-      {/* 3. Section: Real Attention Queue (File d'Attente Prioritaire) */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-base font-bold text-[#0F172A] dark:text-white m-0">
-              Attention Requise
-            </h2>
-            <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-[#F1F5F9] dark:bg-[#1E2430] text-[#475569] dark:text-[#94A3B8]">
-              {incidents.length}
-            </span>
-          </div>
-          <span className="text-xs text-[#64748B] dark:text-[#94A3B8]">
-            Anomalies détectées en temps réel (échecs PSP, comptes bloqués, modération)
-          </span>
-        </div>
-
-        {incidents.length === 0 ? (
-          <div className="p-6 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center justify-between">
-            <div className="flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
-              <i className="fas fa-check-circle text-lg text-emerald-600 dark:text-emerald-400" />
-              <div>
-                <div className="font-bold text-sm">Tous les flux opérationnels sont fluides</div>
-                <div className="text-xs text-emerald-700 dark:text-emerald-400/80 mt-0.5">
-                  Aucun échec de remboursement, aucun compte verrouillé et aucun écart de paiement détecté.
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="admin-card divide-y divide-[#F1F3F5] dark:divide-[#1E2430] overflow-hidden">
-            {incidents.map((incident) => {
-              const isCritical = incident.severity === 'CRITICAL';
-              const isHigh = incident.severity === 'HIGH';
-              const badgeVariant = isCritical ? 'danger' : isHigh ? 'warning' : 'neutral';
-              const iconClass = isCritical
-                ? 'fa-exclamation-circle text-rose-500'
-                : isHigh
-                ? 'fa-lock text-amber-500'
-                : 'fa-comments text-sky-500';
-
-              return (
-                <div
-                  key={incident.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#F8F9FA] dark:hover:bg-[#1A1F28] transition-colors"
-                >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[#F1F5F9] dark:bg-[#1E2430] mt-0.5">
-                      <i className={`fas ${iconClass} text-sm`} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-xs text-[#0F172A] dark:text-white">
-                          {incident.title}
-                        </span>
-                        <AdminBadge variant={badgeVariant} size="sm">
-                          {incident.badgeLabel}
-                        </AdminBadge>
-                      </div>
-                      <div className="text-xs text-[#475569] dark:text-[#94A3B8] mt-1">
-                        {incident.description}
-                      </div>
-                      {incident.reason && (
-                        <div className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-mono mt-0.5">
-                          Motif : {incident.reason}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                    <span className="text-[11px] text-[#94A3B8] hidden md:inline">
-                      {new Date(incident.timestamp).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                    <Link
-                      href={incident.actionHref}
-                      className="admin-btn bg-[#0F172A] text-white hover:bg-slate-800 dark:bg-white dark:text-[#0F172A] dark:hover:bg-slate-100 text-xs py-1.5 px-3 no-underline inline-flex items-center gap-2"
-                    >
-                      <span>{incident.actionLabel}</span>
-                      <i className="fas fa-arrow-right text-[10px]" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* 4. Operational Trend Chart */}
-      <div>
-        <AdminOverviewChart isLoading={loadingStats} />
-      </div>
-
-      {/* 5. Split Activity Grid: Left Recent Travel Dossiers, Right Treasury Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left: Travel Dossiers Stream (8 cols) */}
-        <section className="lg:col-span-8 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#0F172A] dark:text-white m-0">
-              Flux Récent des Dossiers Voyage
-            </h2>
-            <Link
-              href="/admin/bookings"
-              className="text-xs font-bold text-[#0D9488] dark:text-[#00D4AA] hover:underline no-underline"
-            >
-              Tous les dossiers ({totalBookings}) →
-            </Link>
+      ) : (
+        <section className="dashboard-summary" aria-label="Chiffres clés">
+          <div className="dashboard-summary-item">
+            <span className="dashboard-summary-label">Dossiers enregistrés</span>
+            <strong className="dashboard-summary-value">
+              {stats.data ? intlNumber.format(stats.data.totalReservations) : "—"}
+            </strong>
+            <small className="dashboard-summary-sub">Toutes prestations</small>
           </div>
 
-          <div className="admin-card divide-y divide-[#F1F3F5] dark:divide-[#1E2430] overflow-hidden">
-            {loadingBookings ? (
-              <div className="p-8 text-center text-xs text-[#94A3B8]">Chargement du flux...</div>
-            ) : bookings.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[#94A3B8]">Aucun dossier récent.</div>
-            ) : (
-              bookings.slice(0, 6).map((b) => {
-                const travel = parseTravelContext(b);
-                return (
-                  <div
-                    key={b.id}
-                    className="p-4 flex items-center justify-between gap-4 hover:bg-[#F8F9FA] dark:hover:bg-[#1A1F28] transition-colors"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <BookingVisual booking={b} size="md" />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-xs text-[#0F172A] dark:text-white">
-                            {b.bookingReference}
-                          </span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#F1F5F9] dark:bg-[#1E2430] text-[#64748B] dark:text-[#94A3B8]">
-                            {b.productType}
-                          </span>
-                        </div>
-                        <div className="text-xs text-[#475569] dark:text-[#94A3B8] truncate mt-0.5 font-medium">
-                          {travel.title}
-                        </div>
-                      </div>
-                    </div>
+          <div className="dashboard-summary-item">
+            <span className="dashboard-summary-label">Paiements réussis</span>
+            <strong className="dashboard-summary-value">
+              {stats.data ? intlNumber.format(stats.data.paymentsByStatus?.SUCCEEDED ?? 0) : "—"}
+            </strong>
+            <small className="dashboard-summary-sub">Transactions encaissées</small>
+          </div>
 
-                    <div className="flex items-center gap-5 shrink-0 text-right">
-                      <div>
-                        <div className="font-mono font-bold text-xs text-[#0F172A] dark:text-white">
-                          {b.amount ? `${Number(b.amount).toFixed(2)} ${b.currency || 'MAD'}` : '—'}
-                        </div>
-                        <div className="text-[10px] text-[#94A3B8]">
-                          {new Date(b.createdAt).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
+          <div className="dashboard-summary-item dashboard-summary-money">
+            <span className="dashboard-summary-label">Encaissements réussis</span>
+            <strong className="dashboard-summary-value">
+              <CurrencyAmounts amounts={stats.data?.revenueByCurrency} available={!!stats.data} />
+            </strong>
+            <small className="dashboard-summary-sub">Par devise</small>
+          </div>
 
-                      <AdminBadge variant={getStatusBadgeVariant(b.status)} size="sm">
-                        {b.status}
-                      </AdminBadge>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+          <div className="dashboard-summary-item dashboard-summary-money">
+            <span className="dashboard-summary-label">Remboursements effectués</span>
+            <strong className="dashboard-summary-value">
+              <CurrencyAmounts amounts={stats.data?.refundedByCurrency} available={!!stats.data} />
+            </strong>
+            <small className="dashboard-summary-sub">Par devise</small>
           </div>
         </section>
+      )}
 
-        {/* Right: Captured Payments Stream (4 cols) */}
-        <section className="lg:col-span-4 space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-[#0F172A] dark:text-white m-0">
-                Paiements Capturés
-              </h2>
-              <Link
-                href="/admin/payments"
-                className="text-xs font-bold text-[#0D9488] dark:text-[#00D4AA] hover:underline no-underline"
-              >
-                Grand Livre →
-              </Link>
-            </div>
+      <section className="dashboard-priorities" aria-labelledby="dashboard-priorities-title">
+        <div className="dashboard-priorities-heading">
+          <div><h2 id="dashboard-priorities-title">À examiner</h2><p>Les points qui demandent votre attention</p></div>
+          <span className="dashboard-priorities-context">Suivi opérationnel</span>
+        </div>
+        <div className="dashboard-priorities-list">
+          <Link href="/admin/bookings?status=PENDING_PAYMENT" className="dashboard-priority-card">
+            <span className="dashboard-priority-icon"><AdminIcon name="finance" /></span>
+            <span className="dashboard-priority-copy"><strong>Paiements en attente</strong><small>{stats.data?.pendingPaymentsPastDue ? `${intlNumber.format(stats.data.pendingPaymentsPastDue)} échéance${stats.data.pendingPaymentsPastDue > 1 ? "s" : ""} dépassée${stats.data.pendingPaymentsPastDue > 1 ? "s" : ""} à vérifier` : "Suivre les dossiers à régler"}</small></span>
+            <span className="dashboard-priority-count">{stats.data?.bookingsByStatus ? intlNumber.format(stats.data.bookingsByStatus.PENDING_PAYMENT ?? 0) : "—"}</span><AdminIcon name="chevron" />
+          </Link>
+          <Link href="/admin/bookings?status=EXPIRED" className="dashboard-priority-card">
+            <span className="dashboard-priority-icon"><AdminIcon name="travel" /></span>
+            <span className="dashboard-priority-copy"><strong>Dossiers expirés</strong><small>Consulter les dossiers expirés</small></span>
+            <span className="dashboard-priority-count">{stats.data?.bookingsByStatus ? intlNumber.format(stats.data.bookingsByStatus.EXPIRED ?? 0) : "—"}</span><AdminIcon name="chevron" />
+          </Link>
+          <Link href="/admin/reviews?status=PENDING_MODERATION" className="dashboard-priority-card">
+            <span className="dashboard-priority-icon"><AdminIcon name="reviews" /></span>
+            <span className="dashboard-priority-copy"><strong>Avis à modérer</strong><small>Ouvrir la file d’attente</small></span>
+            <span className="dashboard-priority-count">{reviewQueue.data ? intlNumber.format(reviewQueue.data.totalElements) : "—"}</span><AdminIcon name="chevron" />
+          </Link>
+        </div>
+        {reviewQueue.isError && <p className="dashboard-priorities-error">Le nombre d’avis est indisponible. <button type="button" onClick={() => reviewQueue.refetch()}>Réessayer</button></p>}
+      </section>
 
-            <div className="admin-card divide-y divide-[#F1F3F5] dark:divide-[#1E2430] overflow-hidden">
-              {loadingPayments ? (
-                <div className="p-6 text-center text-xs text-[#94A3B8]">Chargement...</div>
-              ) : payments.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[#94A3B8]">Aucun paiement récent.</div>
-              ) : (
-                payments.slice(0, 5).map((p) => (
-                  <div key={p.id} className="p-3.5 flex items-center justify-between gap-3 text-xs">
-                    <div className="min-w-0">
-                      <div className="font-mono font-bold text-[#0F172A] dark:text-white truncate">
-                        {p.paymentReference}
-                      </div>
-                      <div className="text-[10px] text-[#64748B] dark:text-[#94A3B8] mt-0.5">
-                        {p.providerName} • {new Date(p.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                    <div className="font-mono font-bold text-xs text-[#0F172A] dark:text-white shrink-0">
-                      {Number(p.amount).toFixed(2)} {p.currency}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+      {/* 3. Graphiques côte à côte sur grand écran : Voyages par prestation et État des dossiers */}
+      {stats.isLoading ? (
+        <Loading />
+      ) : (
+        stats.data && (
+          <OverviewCharts
+            products={stats.data.bookingsByProduct}
+            statuses={stats.data.bookingsByStatus}
+          />
+        )
+      )}
 
-          {/* Quick Platform Observability Card */}
-          <div className="p-5 rounded-xl border border-[#E2E8F0] dark:border-[#1E2430] bg-white dark:bg-[#14171E] space-y-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] m-0">
-                Supervision Plateforme
-              </h3>
-              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+      {/* 4. Activité récente : Derniers dossiers et Derniers paiements */}
+      <div className="dashboard-registers">
+        <section className="dashboard-register">
+          <header>
+            <div>
+              <h2>Derniers dossiers</h2>
+              <p>Les voyages enregistrés récemment</p>
             </div>
-            <p className="text-xs text-[#475569] dark:text-[#94A3B8] leading-relaxed m-0">
-              Passerelle Spring Cloud Gateway :8888 active. 8 schémas relationnels PostgreSQL opérationnels.
-            </p>
-            <Link
-              href="/admin/providers"
-              className="inline-block text-xs font-bold text-[#0F172A] dark:text-white hover:underline no-underline pt-1"
-            >
-              Consulter la supervision →
+            <Link href="/admin/bookings">
+              Voir les dossiers <AdminIcon name="arrow" />
             </Link>
-          </div>
+          </header>
+          <ErrorState error={bookings.error} retry={() => bookings.refetch()} />
+          {bookings.isLoading ? (
+            <Loading />
+          ) : (
+            bookings.data?.content.map((booking) => {
+              const travel = parseTravelContext(booking);
+              return (
+                <Link className="dashboard-record" href={`/admin/bookings?booking=${booking.id}`} key={booking.id}>
+                  <span className="dashboard-record-icon">
+                    <TravelImage src={travel.imageUrl} type={booking.productType} />
+                  </span>
+                  <span className="dashboard-record-main">
+                    <strong>{travel.title}</strong>
+                    <small>{booking.bookingReference}</small>
+                  </span>
+                  <AdminBadge variant={getStatusBadgeVariant(booking.status)}>
+                    {adminStatusLabel(booking.status)}
+                  </AdminBadge>
+                </Link>
+              );
+            })
+          )}
+          {bookings.data?.totalElements === 0 && <Empty>Aucun dossier enregistré.</Empty>}
+        </section>
+
+        <section className="dashboard-register">
+          <header>
+            <div>
+              <h2>Derniers paiements</h2>
+              <p>Activité financière récente</p>
+            </div>
+            <Link href="/admin/finance">
+              Voir la trésorerie <AdminIcon name="arrow" />
+            </Link>
+          </header>
+          <ErrorState error={payments.error} retry={() => payments.refetch()} />
+          {payments.isLoading ? (
+            <Loading />
+          ) : (
+            payments.data?.content.map((payment) => (
+              <Link
+                className="dashboard-record dashboard-payment"
+                href={`/admin/finance?payment=${payment.id}`}
+                key={payment.id}
+              >
+                <span className="dashboard-record-main">
+                  <strong>{payment.paymentReference}</strong>
+                  <small>{formatDate(payment.createdAt)}</small>
+                </span>
+                <span className="dashboard-payment-value">
+                  <strong>{money(payment.amount, payment.currency)}</strong>
+                  <AdminBadge variant={getStatusBadgeVariant(payment.status)}>
+                    {adminStatusLabel(payment.status)}
+                  </AdminBadge>
+                </span>
+              </Link>
+            ))
+          )}
+          {payments.data?.totalElements === 0 && <Empty>Aucun paiement enregistré.</Empty>}
         </section>
       </div>
     </div>

@@ -96,6 +96,9 @@
 .checkout-notice p { margin: 3px 0 0; }
 .checkout-notice--error { border-color: #eebfc0; color: #a4353a; }
 .checkout-notice--error > i, .checkout-notice--error a { color: #a4353a; }
+.checkout-retry { display: inline-flex; align-items: center; gap: 7px; margin: 12px 16px 0 0; padding: 8px 12px; border: 1px solid #cbded9; border-radius: 7px; background: #fff; color: #087d70; font: inherit; font-weight: 700; cursor: pointer; }
+.checkout-retry:hover { background: #eef7f5; }
+.checkout-retry:focus-visible { outline: 2px solid #087d70; outline-offset: 2px; }
 .checkout-state { display: flex; align-items: flex-start; gap: 18px; padding: 30px 0; border-top: 1px solid var(--checkout-line); }
 .checkout-state > i { color: var(--checkout-teal); font-size: 22px; }
 .checkout-state h2 { margin: 0 0 5px; font-size: 20px; }
@@ -105,10 +108,8 @@
 .checkout-loading { display: flex; align-items: center; gap: 10px; color: var(--checkout-muted); }
 
 .checkout-grid--payment .checkout-primary { padding-right: 0; }
-.checkout-grid--payment { min-height: 840px; }
-.checkout-grid--payment .checkout-aside { position: static; }
-.checkout-payment__aside-content.is-pinned { position: fixed; z-index: 10; top: 124px; }
-.checkout-shell:has(.checkout-grid--payment) footer { position: relative; z-index: 11; }
+.checkout-grid--payment .checkout-aside { align-self: stretch; }
+.checkout-payment__aside-content { position: sticky; top: 124px; }
 .checkout-grid--payment .checkout-summary { position: static; }
 .checkout-payment__methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 30px; }
 .checkout-payment__methods button { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 13px 14px; border: 1px solid var(--checkout-line); border-radius: 9px; background: var(--checkout-surface); color: var(--checkout-ink); text-align: left; cursor: pointer; transition: border-color .17s ease, background .17s ease, box-shadow .17s ease; }
@@ -181,7 +182,7 @@
   .checkout-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .checkout-grid--payment { min-height: 0; }
   .checkout-summary { position: static; }
-  .checkout-grid--payment .checkout-aside { position: static; }
+  .checkout-payment__aside-content { position: static; }
 }
 
 @media (max-width: 600px) {

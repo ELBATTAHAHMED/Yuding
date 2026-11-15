@@ -24,6 +24,7 @@ public class TransferOfferDto {
     private LocalDate date;
     private LocalTime time;
     private Integer capacity;
+    private Integer passengers;
     private BigDecimal price;
     private String currency;
     private PriceConversionSnapshot priceConversion;

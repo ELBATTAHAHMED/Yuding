@@ -38,6 +38,7 @@ export const authService = {
     return apiClient.post<MessageResponse>('/api/account/me/verification/resend', {}, true);
   },
   async getProfilePhoto(): Promise<Blob> { return apiClient.getBlob('/api/account/me/photo', true); },
+  async getUserPhoto(userId: string): Promise<Blob> { return apiClient.getBlob(`/admin/users/${encodeURIComponent(userId)}/photo`, true); },
   async uploadProfilePhoto(file: File): Promise<UserProfile> {
     const data = new FormData(); data.append('file', file);
     return apiClient.postForm<UserProfile>('/api/account/me/photo', data, true);

@@ -18,22 +18,22 @@
   --shell-success: #087d70;
 }
 html.dark {
-  --shell-page: #171f22;
-  --shell-surface: #212b2d;
-  --shell-elevated: #293538;
-  --shell-text: #eaf1eb;
-  --shell-muted: #aebfb7;
-  --shell-border: #3d5050;
-  --shell-accent: #9bd7bf;
-  --shell-action: #087d70;
-  --shell-accent-soft: #30443e;
-  --shell-header: #171d22;
-  --shell-header-ink: #f1fcf7;
-  --shell-footer: #151c21;
-  --shell-input: #293538;
-  --shell-error: #f1a29d;
-  --shell-warning: #edc77e;
-  --shell-success: #9bd7bf;
+  --shell-page: #0e131a;
+  --shell-surface: #151c25;
+  --shell-elevated: #1b2530;
+  --shell-text: #f2f5f8;
+  --shell-muted: #a7b1bf;
+  --shell-border: #2d3947;
+  --shell-accent: #2dc6ae;
+  --shell-action: #0f8f7d;
+  --shell-accent-soft: #193d3a;
+  --shell-header: #111821;
+  --shell-header-ink: #f2f5f8;
+  --shell-footer: #0b1016;
+  --shell-input: #18212b;
+  --shell-error: #ffaaa8;
+  --shell-warning: #f0c675;
+  --shell-success: #5ed5bf;
 }
 
 .yuding-route-loading {
@@ -52,6 +52,59 @@ html.dark {
   margin-top: .6em;
   background: var(--shell-accent);
   border-radius: 2px;
+}
+
+/* Favorite controls use one calm interaction model across cards and detail views. */
+.yuding-favorite-control {
+  border: 1px solid var(--shell-border) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--shell-surface) 94%, transparent) !important;
+  color: var(--shell-muted) !important;
+  box-shadow: 0 3px 12px rgba(25, 54, 48, .08) !important;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease !important;
+}
+.yuding-favorite-control:not([aria-pressed="true"]):is(:hover, :focus-visible) {
+  border-color: #e4a1b3 !important;
+  background: #fff5f7 !important;
+  color: #c94f71 !important;
+  box-shadow: 0 5px 14px rgba(201, 79, 113, .16) !important;
+  transform: translateY(-1px);
+}
+.yuding-favorite-control[aria-pressed="true"] {
+  border-color: #efb4c4 !important;
+  background: #fff0f4 !important;
+  color: #c94f71 !important;
+}
+.yuding-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible) {
+  border-color: #d9829a !important;
+  background: #ffe6ed !important;
+  color: #b63f63 !important;
+  transform: translateY(-1px);
+}
+html.dark .yuding-favorite-control,
+[data-theme="dark"] .yuding-favorite-control {
+  border-color: #2d3947 !important;
+  background: #20242b !important;
+  color: #a7b1bf !important;
+  box-shadow: none !important;
+}
+html.dark .yuding-favorite-control:not([aria-pressed="true"]):is(:hover, :focus-visible),
+[data-theme="dark"] .yuding-favorite-control:not([aria-pressed="true"]):is(:hover, :focus-visible) {
+  border-color: #3c6d68 !important;
+  background: rgba(45, 198, 174, .12) !important;
+  color: #f6a0b7 !important;
+}
+html.dark .yuding-favorite-control[aria-pressed="true"],
+[data-theme="dark"] .yuding-favorite-control[aria-pressed="true"] {
+  border-color: rgba(251, 113, 133, .42) !important;
+  background: rgba(244, 63, 94, .14) !important;
+  color: #fb7185 !important;
+}
+html.dark .yuding-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible),
+[data-theme="dark"] .yuding-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible) {
+  border-color: #3c6d68 !important;
+  background: rgba(45, 198, 174, .12) !important;
+  color: #fda4af !important;
 }
 
 /* Existing page systems consume one semantic palette without changing their structure. */
@@ -106,7 +159,16 @@ html .checkout-shell.checkout-shell {
   min-height: 88px !important;
   padding: 0 !important;
 }
-.header.yuding-header.subpage-header .logo {
+.header.yuding-header.subpage-header .logo,
+.header.yuding-header .logo,
+.header.yuding-header .logo:hover,
+.header.yuding-header .logo:focus,
+.header.yuding-header .logo:focus-visible,
+.header.yuding-header .logo:active,
+.logo,
+.logo:hover,
+.logo:focus,
+.logo:active {
   position: relative;
   justify-self: start;
   width: 138px !important;
@@ -114,16 +176,32 @@ html .checkout-shell.checkout-shell {
   padding: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  outline: none !important;
+  border: none !important;
+  transform: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+  -webkit-touch-callout: none !important;
+}
+.logo::selection,
+.logo *::selection,
+.header .logo::selection,
+.header .logo *::selection {
+  background: transparent !important;
+  color: inherit !important;
 }
 .header.yuding-header.subpage-header .logo img {
   width: 138px !important;
   max-height: 60px !important;
   object-fit: contain !important;
 }
-.header.yuding-header.subpage-header .logo img.home-logo-light { display: none !important; }
-.header.yuding-header.subpage-header .logo img.home-logo-dark { display: block !important; }
-.dark .header.yuding-header.subpage-header .logo img.home-logo-light { display: block !important; }
-.dark .header.yuding-header.subpage-header .logo img.home-logo-dark { display: none !important; }
+.header.yuding-header.subpage-header .logo img.home-logo-light { display: block !important; }
+.header.yuding-header.subpage-header .logo img.home-logo-dark { display: none !important; }
+html.dark .header.yuding-header.subpage-header .logo img.home-logo-light,
+[data-theme="dark"] .header.yuding-header.subpage-header .logo img.home-logo-light { display: none !important; }
+html.dark .header.yuding-header.subpage-header .logo img.home-logo-dark,
+[data-theme="dark"] .header.yuding-header.subpage-header .logo img.home-logo-dark { display: block !important; }
 .header.yuding-header.subpage-header .yuding-navigation { justify-self:center; margin: 0 !important; gap: .2rem !important; }
 .header.yuding-header.subpage-header .nav-item {
   min-height: 42px;
@@ -212,11 +290,44 @@ html:not(.dark) .header.yuding-header.home-header.home-header--scrolled .nav-ite
 .yuding-footer--home :is(p,ul) { color: var(--shell-muted) !important; }
 .yuding-footer--home .yuding-footer__bottom--home { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding-top: 21px; border-top: 1px solid var(--shell-border); color: var(--shell-muted); font-size: .7rem; }
 .yuding-footer--home .yuding-footer__brand img { width: 155px; filter: none !important; }
-.dark .yuding-footer--home .yuding-footer__brand img { filter: invert(1) !important; }
+.yuding-footer--home .yuding-footer__brand .footer-logo-dark { display: none; }
+.dark .yuding-footer--home .yuding-footer__brand .footer-logo-light { display: none; }
+.dark .yuding-footer--home .yuding-footer__brand .footer-logo-dark { display: block; }
 .yuding-footer--home .yuding-footer__end-mark { color: var(--shell-accent); font-size: 1.6rem; font-weight: 700; }
 .yuding-footer--home a.yuding-footer__cta { background: #087d70; color: #fff !important; }
 .yuding-footer--home a:focus-visible,
 .header.yuding-header :is(a,button):focus-visible { outline: 2px solid var(--shell-accent) !important; outline-offset: 3px !important; }
+
+/* The footer is shared by public and account routes.  It stays deliberately
+   calm: the navigation is useful, but it must never compete with the account. */
+.user-account-shell .yuding-footer--home {
+  padding-top: clamp(38px, 5vw, 54px);
+  padding-bottom: 24px;
+}
+.user-account-shell .yuding-footer--home .yuding-footer__grid {
+  grid-template-columns: 1.2fr .76fr .88fr 1.18fr;
+  margin-bottom: 34px;
+}
+.user-account-shell .yuding-footer--home .yuding-footer__brand p {
+  max-width: 230px;
+}
+html.dark .user-account-shell .yuding-footer--home,
+[data-theme="dark"] .user-account-shell .yuding-footer--home {
+  background: #0b1016 !important;
+  border-top-color: #2d3947 !important;
+}
+html.dark .user-account-shell .yuding-footer--home :is(h4, a.yuding-footer__contact),
+[data-theme="dark"] .user-account-shell .yuding-footer--home :is(h4, a.yuding-footer__contact) {
+  color: #f2f5f8 !important;
+}
+html.dark .user-account-shell .yuding-footer--home :is(p, ul, .yuding-footer__bottom--home),
+[data-theme="dark"] .user-account-shell .yuding-footer--home :is(p, ul, .yuding-footer__bottom--home) {
+  color: #a7b1bf !important;
+}
+html.dark .user-account-shell .yuding-footer--home .yuding-footer__bottom--home,
+[data-theme="dark"] .user-account-shell .yuding-footer--home .yuding-footer__bottom--home {
+  border-top-color: #2d3947;
+}
 
 @media (max-width: 900px) {
   .header.yuding-header.subpage-header,
@@ -232,10 +343,20 @@ html:not(.dark) .header.yuding-header.home-header.home-header--scrolled .nav-ite
   .header.yuding-header.subpage-header .nav-item { justify-content: flex-start; min-height: 48px; }
   .header.yuding-header.subpage-header .yuding-menu-toggle { display: inline-flex !important; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
 }
+@media (max-width: 360px) {
+  .header.yuding-header.subpage-header .header-top { padding-inline: 12px !important; }
+  .header.yuding-header.subpage-header .logo { flex-basis: 84px !important; width: 84px !important; }
+  .header.yuding-header.subpage-header .logo img { width: 84px !important; }
+  .header.yuding-header.subpage-header .header-btns { gap: 4px !important; }
+  .header.yuding-header.subpage-header .btn-connexion span { display: none; }
+  .header.yuding-header.subpage-header .btn-connexion { width: 38px; padding: 0 !important; }
+}
 @media (max-width: 600px) {
   .yuding-footer--home .yuding-footer__grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px 20px; }
   .yuding-footer--home .yuding-footer__brand,.yuding-footer--home .yuding-footer__discover { grid-column: 1 / -1; }
   .yuding-footer--home .yuding-footer__bottom--home { display: flex; flex-wrap: wrap; gap: 8px 18px; }
   .yuding-footer__bottom--home .yuding-footer__end-mark { width: 100%; }
+  .user-account-shell .yuding-footer--home .yuding-footer__grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .user-account-shell .yuding-footer--home :is(.yuding-footer__brand,.yuding-footer__discover) { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) { .yuding-footer--home a,.header.yuding-header :is(a,button) { transition: none !important; } }

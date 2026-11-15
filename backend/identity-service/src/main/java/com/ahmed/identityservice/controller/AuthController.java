@@ -163,6 +163,12 @@ public class AuthController {
             HttpServletRequest httpRequest) {
 
         String token = cookieRefreshToken != null ? cookieRefreshToken : headerRefreshToken;
+        // An anonymous page load has no HttpOnly refresh cookie.  This is a normal
+        // session state, not an authentication failure: returning 204 keeps the
+        // silent session probe quiet while invalid or reused tokens still return 401.
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.noContent().build();
+        }
         String clientIp = extractClientIp(httpRequest);
         String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
         AuthResult result = authService.refresh(token, clientIp, userAgent);

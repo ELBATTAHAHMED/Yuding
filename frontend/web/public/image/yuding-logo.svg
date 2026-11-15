@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="156" viewBox="0 0 600 156" role="img" aria-labelledby="title desc" focusable="false">
+  <title id="title">Yuding</title>
+  <desc id="desc">Yuding travel logo with a clean aircraft, route swoosh and transparent background.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3D9A8"/>
+      <stop offset="0.52" stop-color="#D7A25D"/>
+      <stop offset="1" stop-color="#B9793A"/>
+    </linearGradient>
+    <linearGradient id="emerald" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#0B4D42"/>
+      <stop offset="1" stop-color="#167867"/>
+    </linearGradient>
+    <linearGradient id="cream" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF5DF"/>
+      <stop offset="1" stop-color="#E9C58C"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(8 8)" aria-hidden="true">
+    <!-- One gold route, with a restrained green wing accent kept separate. -->
+    <path d="M15 117C46 111 79 98 107 78C124 66 138 52 150 38" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M19 117C50 110 81 97 108 77C125 65 139 51 151 37" fill="none" stroke="#FFF0D2" stroke-width="1.7" stroke-linecap="round" opacity="0.82"/>
+    <path d="M25 48C45 50 61 55 75 62C83 66 90 71 96 76C84 70 71 65 57 61C43 57 32 52 25 48Z" fill="url(#emerald)"/>
+    <circle cx="15" cy="117" r="3.2" fill="#D7A25D"/>
+
+    <!-- Standard top-view aircraft silhouette, isolated for clarity. -->
+    <g transform="translate(125 10) rotate(-38 20 28)">
+      <path d="M20 4C22 4 24 6 24 9V20L43 30C46 32 45 36 42 35L24 30V45L31 52V56L20 52L9 56V52L16 45V30L-2 35C-5 36-6 32-3 30L16 20V9C16 6 18 4 20 4Z" fill="url(#gold)"/>
+      <path d="M20 9V47" fill="none" stroke="url(#cream)" stroke-width="1.5" stroke-linecap="round" opacity="0.78"/>
+    </g>
+  </g>
+
+  <rect x="190" y="28" width="2" height="100" rx="1" fill="#D0A05C"/>
+  <text x="220" y="102" fill="#123B35" font-family="Segoe UI Light, Segoe UI, Avenir Next, Avenir, Montserrat, Helvetica Neue, Arial, sans-serif" font-size="48" font-weight="300" letter-spacing="9" textLength="326" lengthAdjust="spacingAndGlyphs">YUDING</text>
+</svg>

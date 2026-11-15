@@ -525,9 +525,10 @@ html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.hom
 html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open)::before { background:#f8f8f1; opacity:1; }
 .header.yuding-header.home-header .logo { position:relative; }
 .header.yuding-header.home-header .logo :is(.home-logo-light,.home-logo-dark) { position:absolute !important; inset:0; transition:opacity .36s ease; }
-.header.yuding-header.home-header .logo .home-logo-dark { opacity:0; }
-html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .home-logo-light { opacity:0; }
-html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .home-logo-dark { opacity:1; }
+.header.yuding-header.home-header .logo .home-logo-light { opacity:0; }
+.header.yuding-header.home-header .logo .home-logo-dark { opacity:1; }
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .home-logo-light { opacity:1; }
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .home-logo-dark { opacity:0; }
 .header.yuding-header.home-header .nav-item { position:relative; border-radius:0 !important; transition:color .2s ease !important; }
 .header.yuding-header.home-header .nav-item::before { left:.7rem !important; right:.7rem !important; height:1px !important; transition:transform .25s cubic-bezier(.22,1,.36,1) !important; }
 .header.yuding-header.home-header .nav-item:hover,.header.yuding-header.home-header .nav-item.active { background:transparent !important; }

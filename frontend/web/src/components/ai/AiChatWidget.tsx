@@ -224,25 +224,35 @@ export const AiChatWidget: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     let header: HTMLElement | null = null;
     let observer: ResizeObserver | null = null;
+    let rafId: number | null = null;
+
     const syncHeaderBottom = () => {
-      const currentHeader = document.querySelector<HTMLElement>('.yuding-header, .auth-header');
-      if (currentHeader !== header) {
-        observer?.disconnect();
-        header = currentHeader;
-        if (header && typeof ResizeObserver !== 'undefined') {
-          observer = new ResizeObserver(syncHeaderBottom);
-          observer.observe(header);
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        const currentHeader = document.querySelector<HTMLElement>('.yuding-header, .auth-header');
+        if (currentHeader !== header) {
+          observer?.disconnect();
+          header = currentHeader;
+          if (header && typeof ResizeObserver !== 'undefined') {
+            observer = new ResizeObserver(syncHeaderBottom);
+            observer.observe(header);
+          }
         }
-      }
-      const bottom = Math.max(0, Math.ceil(header?.getBoundingClientRect().bottom ?? 0));
-      rootRef.current?.style.setProperty('--ai-header-bottom', `${bottom}px`);
+        const bottom = Math.max(0, Math.ceil(header?.getBoundingClientRect().bottom ?? 0));
+        rootRef.current?.style.setProperty('--ai-header-bottom', `${bottom}px`);
+      });
     };
+
     syncHeaderBottom();
     window.addEventListener('resize', syncHeaderBottom);
     window.addEventListener('scroll', syncHeaderBottom, { passive: true });
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       observer?.disconnect();
       window.removeEventListener('resize', syncHeaderBottom);
       window.removeEventListener('scroll', syncHeaderBottom);

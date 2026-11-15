@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="156" viewBox="0 0 600 156" role="img" aria-labelledby="title desc" focusable="false">
+  <title id="title">Yuding</title>
+  <desc id="desc">Yuding travel logo with a clean aircraft, route swoosh and transparent background.</desc>
+  <defs>
+    <linearGradient id="gold-inverse" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F9E0AA"/>
+      <stop offset="0.52" stop-color="#DDA960"/>
+      <stop offset="1" stop-color="#BC7E3B"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#75B69E"/>
+      <stop offset="1" stop-color="#C7E5D0"/>
+    </linearGradient>
+    <linearGradient id="cream-inverse" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF8E9"/>
+      <stop offset="1" stop-color="#F0D29C"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(8 8)" aria-hidden="true">
+    <path d="M15 117C46 111 79 98 107 78C124 66 138 52 150 38" fill="none" stroke="url(#gold-inverse)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M19 117C50 110 81 97 108 77C125 65 139 51 151 37" fill="none" stroke="#FFF1D6" stroke-width="1.7" stroke-linecap="round" opacity="0.84"/>
+    <path d="M25 48C45 50 61 55 75 62C83 66 90 71 96 76C84 70 71 65 57 61C43 57 32 52 25 48Z" fill="url(#mint)"/>
+    <circle cx="15" cy="117" r="3.2" fill="#DDA960"/>
+    <g transform="translate(125 10) rotate(-38 20 28)">
+      <path d="M20 4C22 4 24 6 24 9V20L43 30C46 32 45 36 42 35L24 30V45L31 52V56L20 52L9 56V52L16 45V30L-2 35C-5 36-6 32-3 30L16 20V9C16 6 18 4 20 4Z" fill="url(#gold-inverse)"/>
+      <path d="M20 9V47" fill="none" stroke="url(#cream-inverse)" stroke-width="1.5" stroke-linecap="round" opacity="0.82"/>
+    </g>
+  </g>
+
+  <rect x="190" y="28" width="2" height="100" rx="1" fill="#D0A05C"/>
+  <text x="220" y="102" fill="#F8F1E5" font-family="Segoe UI Light, Segoe UI, Avenir Next, Avenir, Montserrat, Helvetica Neue, Arial, sans-serif" font-size="48" font-weight="300" letter-spacing="9" textLength="326" lengthAdjust="spacingAndGlyphs">YUDING</text>
+</svg>

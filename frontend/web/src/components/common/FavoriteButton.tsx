@@ -110,7 +110,8 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
         disabled={isLoading}
         aria-label={label}
         title={label}
-        className={`inline-flex items-center justify-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#01796F] dark:focus:ring-[#02E0D5] ${
+        aria-pressed={isFavorited}
+        className={`yuding-favorite-control inline-flex items-center justify-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#01796F] dark:focus:ring-[#02E0D5] ${
           isFavorited
             ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40 shadow-sm'
             : 'bg-white/90 dark:bg-slate-800/90 text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur-sm'

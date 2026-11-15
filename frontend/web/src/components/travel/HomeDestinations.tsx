@@ -3,30 +3,48 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { useDestinationImages } from '@/hooks/queries/useDestinationImages';
-import type { ImageAsset } from '@/types/image.types';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-keys';
+import { imageService } from '@/services/image.service';
+import { displayFeaturedText } from '@/lib/featured-destinations';
 
-const chapters = [
-  { city: 'Dakhla', country: 'Morocco', countryLabel: 'Maroc', imageId: '30560213', line: 'Là où la terre laisse passer l’océan.', detail: 'Le vent, la lagune et des journées qui s’étirent sans programme.', href: '/hotels?destination=Dakhla&countryCode=MA', number: '01' },
-  { city: 'Lisbon', country: 'Portugal', countryLabel: 'Portugal', imageId: '26824153', line: 'Perdez une rue. Trouvez une autre lumière.', detail: 'Lisbonne se découvre à pied, colline après colline.', href: '/hotels?destination=Lisbon&countryCode=PT', number: '02' },
-  { city: 'Kyoto', country: 'Japan', countryLabel: 'Japon', imageId: '37943558', line: 'Le détour devient le voyage.', detail: 'À Kyoto, ralentir est souvent la plus belle façon d’avancer.', href: '/hotels?destination=Kyoto&countryCode=JP', number: '03' },
-] as const;
-
-function useChapterPhoto(city: string, country: string, preferredId: string, enabled: boolean): ImageAsset | undefined {
-  const { data } = useDestinationImages(enabled ? { city, country, limit: 8 } : null);
-  return data?.images.find(image => image.sourceAssetId === preferredId || image.id.includes(preferredId)) || data?.images[0];
+interface FeaturedDestination {
+  id: string;
+  city: string;
+  country: string;
+  countryLabel: string;
+  imageId?: string | null;
+  imageUrl?: string | null;
+  line: string;
+  detail: string;
+  targetUrl: string;
 }
+
+const safeImage = (url?: string | null) => url && !url.includes('\\') && (/^https?:\/\//i.test(url) || /^\/(?!\/)/.test(url)) ? url : undefined;
+const safeDestination = (url: string) => /^\/(?!\/)/.test(url) && !url.includes('\\') ? url : '/hotels';
+const cityName = (city: string) => city === 'Lisbon' ? 'Lisbonne' : city;
 
 export function HomeDestinations() {
   const section = useRef<HTMLElement>(null);
-  const [loadPhotos, setLoadPhotos] = useState(false);
-  const photos = [
-    useChapterPhoto('Dakhla', 'Morocco', chapters[0].imageId, loadPhotos),
-    useChapterPhoto('Lisbon', 'Portugal', chapters[1].imageId, loadPhotos),
-    useChapterPhoto('Kyoto', 'Japan', chapters[2].imageId, loadPhotos),
-  ];
-  const [active, setActive] = useState(0);
   const entries = useRef<(HTMLElement | null)[]>([]);
+  const [loadPhotos, setLoadPhotos] = useState(false);
+  const [active, setActive] = useState(0);
+  const destinations = useQuery({
+    queryKey: ['travel', 'featured-destinations'],
+    queryFn: () => apiClient.get<FeaturedDestination[]>('/travel/destinations/featured'),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const chapters = destinations.data ?? [];
+  const chapterKey = chapters.map(chapter => chapter.id).join('|');
+  const photos = useQueries({ queries: chapters.map((chapter) => ({
+    queryKey: queryKeys.travel.destinationImages(chapter.city, chapter.country, 8),
+    queryFn: () => imageService.getDestinationImages({ city: chapter.city, country: chapter.country, limit: 8 }),
+    enabled: loadPhotos && !safeImage(chapter.imageUrl),
+    staleTime: 30 * 60_000,
+    retry: 1,
+  })) });
 
   useEffect(() => {
     if (!section.current) return;
@@ -36,32 +54,49 @@ export function HomeDestinations() {
   }, []);
 
   useEffect(() => {
+    setActive(0);
+    entries.current.length = chapters.length;
+    const ratios = new Map<Element, number>();
+    let selected = 0;
     const observer = new IntersectionObserver((changes) => {
-      const inView = changes.filter(change => change.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (inView) setActive(Number((inView.target as HTMLElement).dataset.chapter));
+      changes.forEach(change => ratios.set(change.target, change.isIntersecting ? change.intersectionRatio : 0));
+      const current = entries.current[selected];
+      const currentRatio = current ? ratios.get(current) ?? 0 : 0;
+      const best = Array.from(ratios.entries()).reduce<[Element | null, number]>((result, entry) => entry[1] > result[1] ? entry : result, [null, 0]);
+      if (best[0] && best[1] > currentRatio + 0.05) {
+        const next = Number((best[0] as HTMLElement).dataset.chapter);
+        if (next !== selected) { selected = next; setActive(next); }
+      }
     }, { rootMargin: '-28% 0px -28% 0px', threshold: [0, .25, .5, .75] });
     entries.current.forEach(element => { if (element) observer.observe(element); });
     return () => observer.disconnect();
-  }, []);
+  }, [chapterKey, chapters.length]);
+
+  const selected = Math.min(active, Math.max(0, chapters.length - 1));
+  const imageFor = (chapter: FeaturedDestination, index: number) => {
+    const images = photos[index]?.data?.images;
+    return safeImage(chapter.imageUrl) || safeImage(images?.find(image => chapter.imageId && (image.sourceAssetId === chapter.imageId || image.id.includes(chapter.imageId)))?.url) || safeImage(images?.[0]?.url);
+  };
+  const indexLabel = (index: number) => String(index + 1).padStart(2, '0');
 
   return <section ref={section} className="home-v3__destinations home-journey" aria-labelledby="destinations-title">
-    <div className="home-v3__frame home-journey__heading"><span className="home-v3__chapter">03 / SUR LA ROUTE</span><h2 id="destinations-title">Et si vous suiviez<br /><em>l’envie du moment ?</em></h2><p>Trois horizons. Trois façons de se laisser surprendre.</p></div>
+    <div className="home-v3__frame home-journey__heading"><span className="home-v3__chapter">03 / SUR LA ROUTE</span><h2 id="destinations-title">Et si vous suiviez<br /><em>l’envie du moment ?</em></h2><p>Des horizons et autant de façons de se laisser surprendre.</p></div>
+    {destinations.isLoading ? <p className="home-v3__frame" role="status">Chargement des destinations…</p> : destinations.isError ? <p className="home-v3__frame" role="status">Les destinations sont momentanément indisponibles.</p> : chapters.length === 0 ? <p className="home-v3__frame">De nouvelles destinations arrivent bientôt.</p> :
     <div className="home-v3__frame home-journey__layout">
       <div className="home-journey__stage" aria-hidden="true">
-        {chapters.map((chapter, index) => <div key={chapter.city} className={`home-journey__photo${active === index ? ' is-active' : ''}`}>
-          {photos[index] && <Image src={photos[index]!.url} alt="" fill sizes="(max-width: 900px) 100vw, 55vw" />}
+        {chapters.map((chapter, index) => <div key={chapter.id} className={`home-journey__photo${selected === index ? ' is-active' : ''}`}>
+          {imageFor(chapter, index) && <Image src={imageFor(chapter, index)!} alt="" fill sizes="(max-width: 900px) 100vw, 55vw" />}
         </div>)}
-        <span className="home-journey__index">{chapters[active].number} <span>/ 03</span></span>
-        <span className="home-journey__place">{chapters[active].city === 'Lisbon' ? 'Lisbonne' : chapters[active].city}</span>
+        <span className="home-journey__index">{indexLabel(selected)} <span>/ {String(chapters.length).padStart(2, '0')}</span></span>
       </div>
       <div className="home-journey__chapters">
-        {chapters.map((chapter, index) => <article key={chapter.city} className={`home-journey__chapter${active === index ? ' is-active' : ''}`} data-chapter={index} ref={element => { entries.current[index] = element; }}>
-          <div className="home-journey__mobile-photo">{photos[index] && <Image src={photos[index]!.url} alt={photos[index]!.altText || `${chapter.city}, ${chapter.countryLabel}`} fill sizes="100vw" />}</div>
-          <span className="home-journey__eyebrow">{chapter.number} / {chapter.city === 'Lisbon' ? 'LISBONNE' : chapter.city.toUpperCase()} · {chapter.countryLabel.toUpperCase()}</span>
-          <h3>{chapter.line}</h3><p>{chapter.detail}</p>
-          <Link href={chapter.href}>Découvrir {chapter.city === 'Lisbon' ? 'Lisbonne' : chapter.city} <i className="fas fa-arrow-up-right" aria-hidden="true" /></Link>
+        {chapters.map((chapter, index) => <article key={chapter.id} className={`home-journey__chapter${selected === index ? ' is-active' : ''}`} data-chapter={index} ref={element => { entries.current[index] = element; }}>
+          <div className="home-journey__mobile-photo">{imageFor(chapter, index) && <Image src={imageFor(chapter, index)!} alt={`${cityName(chapter.city)}, ${chapter.countryLabel}`} fill sizes="100vw" />}</div>
+          <span className="home-journey__eyebrow">{indexLabel(index)} / {cityName(chapter.city).toUpperCase()} · {chapter.countryLabel.toUpperCase()}</span>
+          <h3>{displayFeaturedText(chapter.line)}</h3><p>{displayFeaturedText(chapter.detail)}</p>
+          <Link href={safeDestination(chapter.targetUrl)}>Découvrir {cityName(chapter.city)} <i className="fas fa-arrow-up-right" aria-hidden="true" /></Link>
         </article>)}
       </div>
-    </div>
+    </div>}
   </section>;
 }

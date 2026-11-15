@@ -81,10 +81,6 @@ public class HBXTravelProvider implements TravelProvider {
 
         String destCode = HBXActivitiesClient.resolveDestinationCode(query.getDestination());
         if (destCode == null || destCode.isBlank()) {
-            if (isCuratedMarket(null, query.getDestination())) {
-                log.info("HBXTravelProvider: Curated market '{}' has no direct HBX code; applying YUDING_CUSTOM fallback", query.getDestination());
-                return getCuratedMarrakechOffers(query);
-            }
             log.info("HBXTravelProvider: Destination '{}' is not covered by HBX activity catalog. Returning empty results gracefully.", query.getDestination());
             return Collections.emptyList();
         }
@@ -120,21 +116,12 @@ public class HBXTravelProvider implements TravelProvider {
             if (e.getErrorCode() == ProviderErrorCode.PROVIDER_REQUEST_INVALID) {
                 log.info("HBXTravelProvider: HBX does not support destination code '{}' ({}): {}. Returning empty list.",
                         destCode, query.getDestination(), e.getMessage());
-                if (isCuratedMarket(destCode, query.getDestination())) {
-                    return getCuratedMarrakechOffers(query);
-                }
                 return Collections.emptyList();
             }
             throw e;
         }
 
         List<ActivityOfferDto> normalized = normalizeActivities(response, query, destCode);
-
-        // Fallback policy: only supply curated YUDING_CUSTOM for specifically curated markets (e.g. Marrakech)
-        if (normalized.isEmpty() && isCuratedMarket(destCode, query.getDestination())) {
-            log.info("HBXTravelProvider: Zero HBX activities for curated market {}; applying YUDING_CUSTOM fallback with explicit provenance", query.getDestination());
-            return getCuratedMarrakechOffers(query);
-        }
 
         return normalized;
     }
@@ -311,69 +298,6 @@ public class HBXTravelProvider implements TravelProvider {
                 .trim();
     }
 
-    private boolean isCuratedMarket(String destCode, String queryDest) {
-        if ("RAK".equalsIgnoreCase(destCode)) return true;
-        if (queryDest != null) {
-            String q = queryDest.toUpperCase(Locale.ROOT);
-            return q.contains("MARRAK") || q.contains("AGAFAY");
-        }
-        return false;
-    }
-
-    private List<ActivityOfferDto> getCuratedMarrakechOffers(ActivitySearchQuery query) {
-        LocalDate date = query.getDate() != null ? query.getDate() : LocalDate.now().plusDays(3);
-        return List.of(
-                ActivityOfferDto.builder()
-                        .offerId("YUDING-CUSTOM-001")
-                        .provider("HBX")
-                        .source("YUDING_CUSTOM")
-                        .title("Excursion Désert d'Agafay & Coucher de Soleil")
-                        .destination("Marrakech")
-                        .country("Morocco")
-                        .date(date)
-                        .durationHours(5.0)
-                        .category("Aventure")
-                        .price(BigDecimal.valueOf(45.00))
-                        .currency("EUR")
-                        .imageUrl("/image/a1.jpg")
-                        .imageAsset(ImageAssetDto.builder()
-                                .id("yuding-custom-001")
-                                .url("/image/a1.jpg")
-                                .altText("Excursion Désert d'Agafay")
-                                .sourceType(ImageSourceType.YUDING_CURATED)
-                                .sourceProvider("YUDING")
-                                .role(ImageRole.ACTIVITY)
-                                .representsEntity(true)
-                                .build())
-                        .description("Expérience exclusive Yuding: Balade à dos de chameau dans le désert d'Agafay suivie d'un dîner sous tente berbère traditionnelle.")
-                        .build(),
-                ActivityOfferDto.builder()
-                        .offerId("YUDING-CUSTOM-002")
-                        .provider("HBX")
-                        .source("YUDING_CUSTOM")
-                        .title("Visite Guidée des Palais et Médina Historique")
-                        .destination("Marrakech")
-                        .country("Morocco")
-                        .date(date)
-                        .durationHours(4.0)
-                        .category("Culture")
-                        .price(BigDecimal.valueOf(30.00))
-                        .currency("EUR")
-                        .imageUrl("/image/a2.jpg")
-                        .imageAsset(ImageAssetDto.builder()
-                                .id("yuding-custom-002")
-                                .url("/image/a2.jpg")
-                                .altText("Visite Guidée des Palais et Médina Historique")
-                                .sourceType(ImageSourceType.YUDING_CURATED)
-                                .sourceProvider("YUDING")
-                                .role(ImageRole.ACTIVITY)
-                                .representsEntity(true)
-                                .build())
-                        .description("Parcours culturel avec guide agréé à travers les ruelles historiques, souks d'artisanat et monuments emblématiques.")
-                        .build()
-        );
-    }
-
     // ─── Transfers Implementation (Phase 25) ─────────────────────────────────────
 
     @Override
@@ -486,6 +410,7 @@ public class HBXTravelProvider implements TravelProvider {
                     .date(date)
                     .time(time)
                     .capacity(capacity)
+                    .passengers(query.getPassengers())
                     .price(price)
                     .currency(currency)
                     .build();

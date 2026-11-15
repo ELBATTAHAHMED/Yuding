@@ -32,10 +32,20 @@ if (typeof mod._resolveFilename === 'function') {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   // Keep common routes compiled while moving between travel sections in next dev.
   onDemandEntries: {
-    maxInactiveAge: 5 * 60 * 1000,
-    pagesBufferLength: 12,
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 30,
+  },
+  experimental: {
+    optimizePackageImports: [
+      '@tanstack/react-query',
+      'gsap',
+      '@gsap/react',
+      'lucide-react',
+      'date-fns',
+    ],
   },
   images: {
     unoptimized: true,
@@ -56,6 +66,10 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      {
+        source: '/api/account/:path*',
+        destination: `${process.env.GATEWAY_INTERNAL_URL || 'http://localhost:8888'}/api/account/:path*`,
+      },
       {
         // Public edge prefix /api/* rewritten to Gateway /*
         source: '/api/:path*',

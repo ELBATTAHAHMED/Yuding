@@ -32,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, className
         <Link href="/" className="flex items-center gap-2 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/image/logo1.png"
+            src="/image/yuding-logo-ai-inverse-green.png"
             alt="Yuding Admin"
             className={`max-h-8 transition-opacity ${collapsed ? 'hidden' : 'block'}`}
           />

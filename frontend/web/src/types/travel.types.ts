@@ -147,6 +147,8 @@ export interface ActivityOffer {
   country?: string;
   category: string;
   price: number;
+  travelers?: number;
+  date?: string;
   currency: string;
   priceConversion?: PriceConversionSnapshot;
   durationHours?: number;
@@ -172,6 +174,7 @@ export interface TransferOffer {
   currency: string;
   priceConversion?: PriceConversionSnapshot;
   capacity?: number;
+  passengers?: number;
 }
 
 // ==================== V2 SEARCH CONTRACT MODELS ====================

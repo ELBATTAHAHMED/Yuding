@@ -29,4 +29,6 @@ public class AdminCancellationDto {
     private Instant requestedAt;
     private Instant processedAt;
     private Instant refundedAt;
+    private boolean retryEligible;
+    private String failureMessage;
 }

@@ -130,7 +130,7 @@ export default function TransferDetailsPage() {
   const selRef = transfer.selectionRef || transfer.offerId || transfer.id || `trf-${transfer.price}`;
   const bookingUrl = `/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(
     transfer.offerId || transfer.id || `trf-${transfer.price}`
-  )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(transfer.vehicleModel || 'Transfert')}&price=${transfer.price}`;
+  )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(transfer.vehicleModel || 'Transfert')}&price=${transfer.price}&currency=${encodeURIComponent(transfer.currency || 'EUR')}&startDate=${transfer.date || ''}&travelers=${transfer.passengers || 1}`;
 
   const badges = [categoryInfo.label];
   if (transfer.capacity) badges.push(`${transfer.capacity} places`);

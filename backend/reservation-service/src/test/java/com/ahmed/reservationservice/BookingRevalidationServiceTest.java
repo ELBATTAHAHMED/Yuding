@@ -16,12 +16,15 @@ import com.ahmed.reservationservice.domain.repository.OfferSnapshotRepository;
 import com.ahmed.reservationservice.domain.service.BookingReadinessPolicy;
 import com.ahmed.reservationservice.domain.service.BookingRevalidationService;
 import com.ahmed.reservationservice.feign.TravelOfferResolverClient;
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -121,6 +124,26 @@ class BookingRevalidationServiceTest {
         assertTrue(response.isCanProceedToPricing());
         assertFalse(response.isRequiresPriceConfirmation());
         verify(offerRevalidationRepository, times(1)).save(any(OfferRevalidation.class));
+    }
+
+    @Test
+    @DisplayName("Provider timeout remains a retryable gateway timeout without persisting a quote")
+    void testProviderTimeoutDoesNotBecomeInternalError() {
+        Booking booking = Booking.builder().id(bookingId).bookingReference(bookingRef)
+                .userId(userUuid).status(BookingStatus.DRAFT).build();
+        OfferSnapshot snapshot = OfferSnapshot.builder().id(UUID.randomUUID()).booking(booking)
+                .provider("SCRAPPA").providerOfferId("flight-101").productType(ProductType.FLIGHT).build();
+        FeignException timeout = mock(FeignException.class);
+        when(timeout.status()).thenReturn(504);
+        when(bookingRepository.findByBookingReference(bookingRef)).thenReturn(Optional.of(booking));
+        when(offerSnapshotRepository.findByBookingId(bookingId)).thenReturn(Optional.of(snapshot));
+        when(travelOfferResolverClient.revalidateOffer(any())).thenThrow(timeout);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.revalidateBooking(bookingRef, userId, List.of("ROLE_USER")));
+
+        assertEquals(HttpStatus.GATEWAY_TIMEOUT, error.getStatusCode());
+        verify(offerRevalidationRepository, never()).save(any());
     }
 
     @Test

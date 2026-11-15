@@ -37,11 +37,11 @@ export function EntityAvatar({
   const effectivePhoto = photoUrl || null;
   const [blobUrl, setBlobUrl] = useState<string | null>(effectivePhoto || null);
 
-  // If this entity is an operator/user with hasProfilePhoto, fetch via authService if needed
-  const shouldFetchPhoto = Boolean(hasProfilePhoto && !photoUrl && variant !== 'operator');
+  // If this entity is an operator/user with hasProfilePhoto, fetch via authService
+  const shouldFetchPhoto = Boolean(hasProfilePhoto && !photoUrl);
   const photoQuery = useQuery({
     queryKey: ['entity-avatar-photo', userId || email],
-    queryFn: authService.getProfilePhoto,
+    queryFn: () => (userId ? authService.getUserPhoto(userId) : authService.getProfilePhoto()),
     enabled: shouldFetchPhoto,
     staleTime: 5 * 60_000,
     retry: false,

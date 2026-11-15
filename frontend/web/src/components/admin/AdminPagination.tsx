@@ -1,16 +1,4 @@
-'use client';
-
-import React from 'react';
-
-interface AdminPaginationProps {
-  currentPage: number;
-  pageSize: number;
-  totalItems: number;
-  onPageChange: (newPage: number) => void;
-  onPageSizeChange?: (newPageSize: number) => void;
-  pageSizeOptions?: number[];
-}
-
+"use client";
 export function AdminPagination({
   currentPage,
   pageSize,
@@ -18,89 +6,65 @@ export function AdminPagination({
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
-}: AdminPaginationProps) {
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(totalItems, currentPage * pageSize);
-
+}: {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
+}) {
+  const pages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const start = totalItems
+    ? Math.min((currentPage - 1) * pageSize + 1, totalItems)
+    : 0;
   return (
-    <div
-      className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t text-xs select-none bg-slate-50/60 dark:bg-zinc-900 border-slate-100 dark:border-zinc-800"
-    >
-      {/* Range Info & Page Size */}
-      <div className="flex items-center gap-3">
-        <span className="text-slate-500 dark:text-zinc-400">
-          Affichage de <strong className="text-slate-900 dark:text-zinc-100 admin-mono-tabular">{startItem}</strong> à{' '}
-          <strong className="text-slate-900 dark:text-zinc-100 admin-mono-tabular">{endItem}</strong> sur{' '}
-          <strong className="text-slate-900 dark:text-zinc-100 admin-mono-tabular">{totalItems}</strong> entrées
-        </span>
-
-        {onPageSizeChange && (
-          <div className="flex items-center gap-1.5 ml-2">
-            <span className="text-slate-400 dark:text-zinc-500">Par page :</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 outline-none"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* Page Navigation Buttons */}
-      <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => onPageChange(1)}
-          disabled={currentPage <= 1}
-          className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors"
-          title="Première page"
+    <nav className="ops-pagination" aria-label="Pagination">
+      <span>
+        {start}–{Math.min(currentPage * pageSize, totalItems)} sur {totalItems}
+      </span>
+      <label>
+        Par page{" "}
+        <select
+          aria-label="Résultats par page"
+          value={pageSize}
+          onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
         >
-          <i className="fas fa-angle-double-left text-[10px]" />
-        </button>
-
+          {pageSizeOptions.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+      </label>
+      <div>
         <button
-          type="button"
+          className="ops-btn"
+          disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage <= 1}
-          className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors flex items-center gap-1"
         >
-          <i className="fas fa-chevron-left text-[9px]" />
-          <span>Précédent</span>
+          Précédent
         </button>
-
-        <span
-          className="px-3 py-1 font-bold text-xs text-slate-900 dark:text-zinc-100 admin-mono-tabular"
-        >
-          Page {currentPage} / {totalPages}
-        </span>
-
+        {Array.from(
+          { length: Math.min(5, pages) },
+          (_, i) =>
+            Math.min(Math.max(1, currentPage - 2), Math.max(1, pages - 4)) + i,
+        ).map((p) => (
+          <button
+            className="ops-btn ops-page-number"
+            key={p}
+            aria-current={p === currentPage ? "page" : undefined}
+            onClick={() => onPageChange(p)}
+          >
+            {p}
+          </button>
+        ))}
         <button
-          type="button"
+          className="ops-btn"
+          disabled={currentPage >= pages}
           onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage >= totalPages}
-          className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors flex items-center gap-1"
         >
-          <span>Suivant</span>
-          <i className="fas fa-chevron-right text-[9px]" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onPageChange(totalPages)}
-          disabled={currentPage >= totalPages}
-          className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors"
-          title="Dernière page"
-        >
-          <i className="fas fa-angle-double-right text-[10px]" />
+          Suivant
         </button>
       </div>
-    </div>
+    </nav>
   );
 }

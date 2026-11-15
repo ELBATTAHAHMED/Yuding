@@ -6,7 +6,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="auth-layout-root" style={{ minHeight: '100vh', position: 'relative' }}>
+    <div className="auth-shell">
       {children}
     </div>
   );

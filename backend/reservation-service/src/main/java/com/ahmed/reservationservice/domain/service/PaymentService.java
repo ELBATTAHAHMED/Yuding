@@ -101,6 +101,13 @@ public class PaymentService {
         if (booking.getStatus().isTerminal() || booking.getStatus() == BookingStatus.CANCELLED) {
             throw new BookingConflictException("Booking " + bookingReference + " cannot be paid in status: " + booking.getStatus());
         }
+        // A pending booking may not have been read since its deadline. Do not
+        // create or reuse an order after that deadline; capture/webhook
+        // reconciliation remains independent for orders already submitted.
+        Instant now = Instant.now(clock);
+        if (booking.isExpired(now)) {
+            throw new BookingConflictException("BOOKING_EXPIRED: Booking " + bookingReference + " has expired. Please select a new offer.");
+        }
 
         // 3. Load latest ServerPricingQuote and OfferRevalidation
         ServerPricingQuote quote = serverPricingQuoteRepository.findTopByBookingIdOrderByPricedAtDesc(booking.getId())
@@ -114,7 +121,6 @@ public class PaymentService {
             throw new BookingConflictException("CANNOT_PAY_UNPRICED: Product cannot be paid because it does not have a positive monetary fare.");
         }
 
-        Instant now = Instant.now(clock);
         if (quote.isExpired(now) || (latestRevalidation.getValidUntil() != null && !now.isBefore(latestRevalidation.getValidUntil()))) {
             throw new BookingConflictException("PRICING_EXPIRED: The pricing quote or revalidation has expired. Please reprice the booking.");
         }
@@ -161,7 +167,13 @@ public class PaymentService {
 
         // 8. Generate unique payment reference (PAY-XXXXXXXX)
         String paymentReference = allocateUniquePaymentReference();
-        String providerRequestId = "ORD-" + paymentReference;
+        // Local test mode purposefully exercises the failure branch without
+        // accepting, storing, or forwarding any card data. It maps to the same
+        // mock provider and is never exposed as a customer payment option.
+        boolean simulateCaptureFailure = "DEMO_CARD_FAILURE".equalsIgnoreCase(paymentMode);
+        String providerRequestId = simulateCaptureFailure
+                ? "ORD-FAIL-" + paymentReference
+                : "ORD-" + paymentReference;
 
         // 9. Delegate to active PaymentProvider
         PaymentOrderCommand orderCommand = PaymentOrderCommand.builder()

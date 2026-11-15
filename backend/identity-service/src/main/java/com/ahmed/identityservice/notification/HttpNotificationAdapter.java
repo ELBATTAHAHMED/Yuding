@@ -4,13 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +31,12 @@ public class HttpNotificationAdapter implements NotificationPort {
     public HttpNotificationAdapter(
             @Value("${yuding.notification.service-url:http://localhost:8085}") String serviceUrl,
             @Value("${yuding.notification.frontend-base-url:http://localhost:3000}") String frontendBaseUrl) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(4));
         this.restClient = RestClient.builder()
                 .baseUrl(serviceUrl)
+                .requestFactory(requestFactory)
                 .build();
         this.frontendBaseUrl = frontendBaseUrl;
     }
@@ -42,7 +50,8 @@ public class HttpNotificationAdapter implements NotificationPort {
             payload.put("idempotencyKey", "VERIFY_ACCOUNT:" + sha256Hex(token));
             Map<String, Object> params = new HashMap<>();
             params.put("verificationLink", frontendBaseUrl + "/verify-email?token=" + token);
-            params.put("expiresInMinutes", 60);
+            params.put("expiresInMinutes", 24 * 60);
+            params.put("expiresInLabel", "24 heures");
             payload.put("parameters", params);
 
             restClient.post()
@@ -55,6 +64,9 @@ public class HttpNotificationAdapter implements NotificationPort {
         } catch (Exception ex) {
             log.warn("HttpNotificationAdapter: Failed to dispatch VERIFY_ACCOUNT notification for [{}]: {}",
                     maskEmail(email), ex.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Le service e-mail est momentanément indisponible. Réessayez dans quelques instants.");
         }
     }
 

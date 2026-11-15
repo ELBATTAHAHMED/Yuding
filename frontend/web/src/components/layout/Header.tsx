@@ -46,9 +46,9 @@ export const Header: React.FC<{ hideLogin?: boolean; onThemeChange?: (dark: bool
           <Link href="/" className="logo">
             {/* Both logo assets stay mounted so a theme switch never flashes the old color. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/image/logo1.png" alt="Yuding" className="home-logo-light" id="headerLogo" />
+            <img src="/image/yuding-logo-ai-light-green.png" alt="Yuding" className="home-logo-light" id="headerLogo" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/image/logodark.png" alt="" aria-hidden="true" className="home-logo-dark" />
+            <img src="/image/yuding-logo-ai-inverse-green.png" alt="" aria-hidden="true" className="home-logo-dark" />
           </Link>
 
           <nav className={`header-nav yuding-navigation ${menuOpen ? 'is-open' : ''}`} aria-label="Navigation principale">

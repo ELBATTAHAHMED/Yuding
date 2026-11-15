@@ -16,7 +16,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -57,18 +56,17 @@ public class SmtpEmailProvider implements EmailProvider {
             // Multipart alternative: text/plain + text/html
             helper.setText(textBody, htmlBody);
 
-            String messageId = "<" + UUID.randomUUID() + "@yuding.local>";
-            mimeMessage.setHeader("Message-ID", messageId);
-            mimeMessage.setHeader("X-Yuding-Reference", message.getNotificationReference());
+            // Let the SMTP provider create the canonical Message-ID. Forging a
+            // provider-domain Message-ID locally can reduce deliverability.
+            mimeMessage.setHeader("Auto-Submitted", "auto-generated");
 
             log.info("SmtpEmailProvider: Sending email [{}] to [{}] via SMTP host",
                     message.getNotificationReference(), maskEmail(recipient));
 
             mailSender.send(mimeMessage);
 
-            log.info("SmtpEmailProvider: Successfully dispatched [{}] messageId={}",
-                    message.getNotificationReference(), messageId);
-            return EmailSendResult.success(messageId);
+            log.info("SmtpEmailProvider: Successfully dispatched [{}]", message.getNotificationReference());
+            return EmailSendResult.success(message.getNotificationReference());
 
         } catch (MailAuthenticationException e) {
             log.error("SmtpEmailProvider: Authentication failure dispatching [{}]: {}",
@@ -93,4 +91,5 @@ public class SmtpEmailProvider implements EmailProvider {
         String prefix = email.substring(0, Math.min(2, atIdx));
         return prefix + "***" + email.substring(atIdx);
     }
+
 }

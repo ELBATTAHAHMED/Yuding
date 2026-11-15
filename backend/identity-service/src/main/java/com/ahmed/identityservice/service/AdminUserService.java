@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,11 +28,22 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final AuditService auditService;
+    private final ProfileService profileService;
+
+    private static int rolePriority(Set<String> roles) {
+        if (roles == null || roles.isEmpty()) return 99;
+        if (roles.contains("ROLE_ADMIN")) return 1;
+        if (roles.contains("ROLE_SUPPORT")) return 2;
+        if (roles.contains("ROLE_CONTENT_MANAGER")) return 3;
+        return 10;
+    }
 
     @Transactional(readOnly = true)
     public List<AdminUserSummaryResponse> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(AdminUserSummaryResponse::from)
+                .sorted(Comparator.comparingInt((AdminUserSummaryResponse u) -> rolePriority(u.roles()))
+                        .thenComparing(AdminUserSummaryResponse::createdAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
     }
 
@@ -42,8 +54,21 @@ public class AdminUserService {
         return AdminUserSummaryResponse.from(user);
     }
 
+    @Transactional(readOnly = true)
+    public byte[] getUserPhoto(UUID id) throws java.io.IOException {
+        return profileService.photo(id);
+    }
+
+    @Transactional(readOnly = true)
+    public String getUserPhotoKey(UUID id) {
+        return profileService.photoKey(id);
+    }
+
     @Transactional
     public AdminUserSummaryResponse updateUserRoles(UUID adminId, UUID targetUserId, UpdateUserRolesRequest request) {
+        if (!Set.of("ROLE_USER","ROLE_ADMIN","ROLE_SUPPORT","ROLE_CONTENT_MANAGER").containsAll(request.roles())) {
+            throw new IllegalArgumentException("Rôle inconnu.");
+        }
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + targetUserId));
 
@@ -67,8 +92,8 @@ public class AdminUserService {
         user.setRoles(newRoles);
         user = userRepository.save(user);
 
-        String metadataJson = String.format("{\"oldRoles\":%s,\"newRoles\":%s}",
-                oldRoles.toString(), request.roles().toString());
+        String metadataJson = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(
+                java.util.Map.of("oldRoles", oldRoles, "newRoles", request.roles())).toString();
 
         auditService.logAdminAction(
                 adminId,
@@ -85,8 +110,15 @@ public class AdminUserService {
 
     @Transactional
     public AdminUserSummaryResponse updateUserStatus(UUID adminId, UUID targetUserId, UpdateUserStatusRequest request) {
+        if (adminId.equals(targetUserId) && request.status() != UserStatus.ACTIVE) {
+            throw new IllegalArgumentException("Un administrateur ne peut pas désactiver son propre compte.");
+        }
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + targetUserId));
+
+        if (request.status() == UserStatus.DELETED) {
+            throw deletionUnavailable(user);
+        }
 
         UserStatus oldStatus = user.getStatus();
         user.setStatus(request.status());
@@ -139,20 +171,17 @@ public class AdminUserService {
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + targetUserId));
 
-        user.setStatus(UserStatus.DELETED);
-        userRepository.save(user);
+        throw deletionUnavailable(user);
+    }
 
-        auditService.logAdminAction(
-                adminId,
-                "USER_DELETE",
-                "identity-service",
-                "user",
-                targetUserId.toString(),
-                "User account deleted by admin",
-                "{}"
-        );
-
-        return new MessageResponse("User deleted successfully");
+    private org.springframework.web.server.ResponseStatusException deletionUnavailable(User user) {
+        if (user.getRoles().stream().anyMatch(role -> "ROLE_ADMIN".equals(role.getName()))) {
+            return new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, "Les comptes administrateurs ne peuvent pas être supprimés.");
+        }
+        return new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                "Suppression indisponible : la vérification des données liées n’est pas encore disponible.");
     }
 
     @Transactional(readOnly = true)

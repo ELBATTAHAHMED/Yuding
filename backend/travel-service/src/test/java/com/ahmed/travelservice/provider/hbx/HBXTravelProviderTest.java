@@ -101,8 +101,8 @@ class HBXTravelProviderTest {
     }
 
     @Test
-    @DisplayName("searchActivities supplies YUDING_CUSTOM fallback with explicit provenance when empty for Marrakech")
-    void searchActivities_emptyMorocco_returnsYudingCustomOffers() throws Exception {
+    @DisplayName("searchActivities returns an empty result when HBX has no activity")
+    void searchActivities_emptyResponse_returnsEmptyResult() throws Exception {
         HBXActivitySearchResponse emptyResponse = new HBXActivitySearchResponse();
         emptyResponse.setActivities(List.of());
 
@@ -115,14 +115,7 @@ class HBXTravelProviderTest {
 
         List<ActivityOfferDto> offers = provider.searchActivities(query);
 
-        assertThat(offers).isNotEmpty();
-        for (ActivityOfferDto dto : offers) {
-            assertThat(dto.getSource()).isEqualTo("YUDING_CUSTOM");
-            assertThat(dto.getProvider()).isEqualTo("HBX");
-            assertThat(dto.getPrice()).isNotNull();
-            assertThat(dto.getDestination()).isEqualTo("Marrakech");
-            assertThat(dto.getTitle()).doesNotContain("("); // No dynamic string interpolation
-        }
+        assertThat(offers).isEmpty();
     }
 
     @Test

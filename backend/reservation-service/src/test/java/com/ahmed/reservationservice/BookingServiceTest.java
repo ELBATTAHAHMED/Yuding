@@ -17,6 +17,7 @@ import com.ahmed.reservationservice.domain.service.BookingReferenceGenerator;
 import com.ahmed.reservationservice.domain.service.BookingService;
 import com.ahmed.reservationservice.domain.service.OfferSnapshotFactory;
 import com.ahmed.reservationservice.feign.TravelOfferResolverClient;
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -319,6 +320,26 @@ class BookingServiceTest {
         when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
         when(offerSnapshotRepository.existsByBookingId(booking.getId())).thenReturn(false);
         when(travelOfferResolverClient.resolveOfferSelection(selectionRef)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookingService.attachOfferSnapshot(ref, selectionRef, userId, false))
+                .isInstanceOf(BookingNotFoundException.class)
+                .hasMessageContaining("was not found or has expired");
+    }
+
+    @Test
+    @DisplayName("attachOfferSnapshot: maps Travel Service HTTP 404 to an expired offer error")
+    void attachOfferSnapshot_feignNotFound_throwsNotFound() {
+        UUID userId = UUID.randomUUID();
+        String ref = "YUD-K7M4P2Q8";
+        String selectionRef = "sel-expired-99";
+        Booking booking = Booking.createDraft(userId, ProductType.HOTEL, ref, fixedInstant, fixedInstant.plus(Duration.ofMinutes(30)));
+        when(bookingRepository.findByBookingReference(ref)).thenReturn(Optional.of(booking));
+        when(offerSnapshotRepository.existsByBookingId(booking.getId())).thenReturn(false);
+        when(travelOfferResolverClient.resolveOfferSelection(selectionRef))
+                .thenThrow(FeignException.errorStatus("resolveOfferSelection",
+                        feign.Response.builder().status(404).reason("Not Found")
+                                .request(feign.Request.create(feign.Request.HttpMethod.GET, "/internal/travel/offers/resolve/expired",
+                                        Map.of(), null, java.nio.charset.StandardCharsets.UTF_8, null)).build()));
 
         assertThatThrownBy(() -> bookingService.attachOfferSnapshot(ref, selectionRef, userId, false))
                 .isInstanceOf(BookingNotFoundException.class)

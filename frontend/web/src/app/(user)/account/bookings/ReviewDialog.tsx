@@ -99,6 +99,7 @@ export function ReviewDialog({
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<MyReview | null>(review);
   const isDeleted = saved?.status === 'DELETED';
+  const { user } = useAuth();
 
   // Keyboard: Escape closes
   useEffect(() => {
@@ -112,12 +113,13 @@ export function ReviewDialog({
     if (rating < 1) { setError('Choisissez une note de 1 à 5.'); return; }
     if (!saved && !platform && !reference) { setError('Cette réservation est introuvable.'); return; }
     setBusy(true);
+    const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || undefined;
     try {
       const result = saved
         ? await reviewService.edit(saved.id, rating, content)
         : platform
-          ? await reviewService.createPlatform(rating, content)
-          : await reviewService.create(reference!, rating, content);
+          ? await reviewService.createPlatform(rating, content, authorName)
+          : await reviewService.create(reference!, rating, content, authorName);
       setSaved(result);
       onChanged();
     } catch (cause) {

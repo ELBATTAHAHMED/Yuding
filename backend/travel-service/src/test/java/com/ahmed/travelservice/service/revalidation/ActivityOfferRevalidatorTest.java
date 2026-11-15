@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ActivityOfferRevalidatorTest {
@@ -65,6 +67,7 @@ class ActivityOfferRevalidatorTest {
                 .selectedDetails(Map.of(
                         "destination", "Marrakech",
                         "date", "2026-10-20",
+                        "travelers", 2,
                         "title", "Camel Ride in Palm Grove"
                 ))
                 .build();
@@ -74,5 +77,8 @@ class ActivityOfferRevalidatorTest {
         assertEquals(OfferAvailabilityStatus.AVAILABLE, result.getAvailabilityStatus());
         assertEquals(OfferPriceStatus.CHANGED, result.getPriceStatus());
         assertEquals(new BigDecimal("45.00"), result.getCurrentProviderAmount());
+        ArgumentCaptor<ActivitySearchQuery> search = ArgumentCaptor.forClass(ActivitySearchQuery.class);
+        verify(activityProvider).searchActivities(search.capture());
+        assertEquals(2, search.getValue().getTravelers());
     }
 }

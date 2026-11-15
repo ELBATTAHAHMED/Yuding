@@ -28,7 +28,7 @@ function BookingContent() {
   const currency = (searchParams.get('currency') || 'EUR').trim().toUpperCase();
 
   const [startDate, setStartDate] = useState(searchParams.get('startDate') || new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(searchParams.get('endDate') || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(searchParams.get('endDate') || (serviceType === 'HOTEL' ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : searchParams.get('startDate') || new Date().toISOString().split('T')[0]));
   const [quantity, setQuantity] = useState(Math.max(1, Number(searchParams.get('travelers')) || 1));
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
@@ -38,7 +38,7 @@ function BookingContent() {
   const [localError, setLocalError] = useState<string | null>(null);
 
   const {
-    isProcessing, statusMessage, error: flowError, revalidationData, pricingData,
+    isProcessing, statusMessage, error: flowError, isRetryable, revalidationData, pricingData,
     isPriceChangeModalOpen, startBookingFlow, handleAcceptPriceChange, handleCancelPriceChange,
   } = useBookingFlow();
 
@@ -46,20 +46,29 @@ function BookingContent() {
   const displayTotal = hasAuthoritativePrice
     ? `${pricingData.totalAmount} ${pricingData.currency || currency}`
     : isPriced && basePrice != null
-      ? `${(basePrice * (serviceType === 'HOTEL' ? 1 : quantity)).toFixed(2).replace(/\.00$/, '')} ${currency}`
+      ? `${(basePrice * (serviceType === 'HOTEL' || serviceType === 'TRANSFER' ? 1 : quantity)).toFixed(2).replace(/\.00$/, '')} ${currency}`
       : 'Tarif indisponible';
   const displayUnitPrice = isPriced && basePrice != null
     ? `${basePrice.toFixed(2).replace(/\.00$/, '')} ${currency}`
     : 'Tarif indisponible';
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const continueBooking = async () => {
     setLocalError(null);
     if (!isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
-    await startBookingFlow({ productType: serviceType, selectionRef: selectionRef || undefined });
+    let draftReference = searchParams.get('draftReference') || undefined;
+    if (!draftReference && selectionRef) {
+      try { draftReference = sessionStorage.getItem(`yuding_booking_draft_${selectionRef}`) || undefined; }
+      catch { /* A new draft can still be created from a live offer. */ }
+    }
+    await startBookingFlow({ productType: serviceType, selectionRef: selectionRef || undefined, draftReference });
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await continueBooking();
   };
 
   return (
@@ -76,7 +85,10 @@ function BookingContent() {
 
       {(flowError || localError) && <div className="checkout-notice checkout-notice--error" role="alert">
         <i className="fas fa-circle-exclamation" aria-hidden="true" />
-        <div><strong>Impossible de poursuivre</strong><p>{flowError || localError}</p><Link href="/">Retour aux recherches</Link></div>
+        <div><strong>Impossible de poursuivre</strong><p>{flowError || localError}</p>
+          {isRetryable && <button type="button" className="checkout-retry" onClick={continueBooking} disabled={isProcessing}><i className="fas fa-rotate-right" aria-hidden="true" /> Réessayer la vérification</button>}
+          <Link href="/">Retour aux recherches</Link>
+        </div>
       </div>}
       {isProcessing && statusMessage && <div className="checkout-notice" role="status"><i className="fas fa-spinner fa-spin" aria-hidden="true" />{statusMessage}</div>}
 
@@ -96,8 +108,8 @@ function BookingContent() {
             <div className="checkout-section__heading"><span>02</span><div><h2>Détails du voyage</h2><p>Retrouvez les informations de votre sélection.</p></div></div>
             <div className="checkout-fields checkout-fields--two">
               <label>Date de début<input type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
-              <label>Date de fin<input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></label>
-              <label>Nombre de personnes<input type="number" min="1" max="20" required value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} /></label>
+              {serviceType !== 'ACTIVITY' && serviceType !== 'TRANSFER' && serviceType !== 'TRAIN' && <label>Date de fin<input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></label>}
+              <label>Nombre de personnes<input type="number" min="1" max="20" required value={quantity} readOnly={serviceType === 'ACTIVITY' || serviceType === 'TRANSFER'} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} />{(serviceType === 'ACTIVITY' || serviceType === 'TRANSFER') && <small>Pour modifier ce nombre, relancez la recherche.</small>}</label>
             </div>
             <div className="checkout-fields"><label><span>Demandes particulières <small>(optionnel)</small></span><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Arrivée tardive, lit bébé, régime alimentaire..." /></label></div>
           </section>
@@ -116,7 +128,7 @@ function BookingContent() {
             <h2>Votre sélection</h2>
             <div className="checkout-summary__product"><span>{productLabels[serviceType] || serviceType}</span><h3>{serviceTitle}</h3></div>
             <dl className="checkout-summary__rows">
-              <div><dt>{serviceType === 'HOTEL' ? 'Prix indicatif du séjour' : 'Prix indicatif unitaire'}</dt><dd>{displayUnitPrice}</dd></div>
+              <div><dt>{serviceType === 'HOTEL' ? 'Prix indicatif du séjour' : serviceType === 'TRANSFER' ? 'Prix indicatif du véhicule' : 'Prix indicatif unitaire'}</dt><dd>{displayUnitPrice}</dd></div>
               <div><dt>Voyageurs</dt><dd>{quantity}</dd></div>
               <div><dt>Frais de dossier &amp; taxes</dt><dd>Inclus</dd></div>
             </dl>

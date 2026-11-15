@@ -1,4 +1,5 @@
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from "@/lib/api-client";
+import { displayFeaturedText } from "@/lib/featured-destinations";
 import {
   AdminStats,
   AdminUserSummary,
@@ -10,195 +11,200 @@ import {
   AdminDestination,
   ProviderHealthStatus,
   OperationalSettings,
-} from '@/types/admin.types';
-
+  AdminPagedResponse,
+} from "@/types/admin.types";
+export interface AdminFilters {
+  page?: number;
+  size?: number;
+  limit?: number;
+  status?: string;
+  productType?: string;
+  provider?: string;
+  role?: string;
+  q?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  userId?: string;
+  bookingId?: string;
+  sort?: string;
+  type?: string;
+  target?: string;
+}
+export function adminQuery(params: AdminFilters = {}) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v != null && v !== "" && v !== "ALL") q.set(k, String(v));
+  });
+  return q.toString();
+}
+const paged = <T>(path: string, p: AdminFilters = {}) =>
+  apiClient.get<AdminPagedResponse<T>>(
+    `${path}?${adminQuery({ ...p, page: p.page ?? 0, size: p.size ?? p.limit ?? 25 })}`,
+    true,
+  );
+export interface AdminIncident {
+  id: string;
+  title: string;
+  context: string;
+  href: string;
+  createdAt: string;
+}
 export const adminService = {
-  async getAllUsers(): Promise<AdminUserSummary[]> {
-    try {
-      return await apiClient.get<AdminUserSummary[]>('/admin/users', true);
-    } catch {
-      return [];
-    }
-  },
-
-  async updateUserRoles(userId: string, roles: string[]): Promise<AdminUserSummary> {
-    return apiClient.put<AdminUserSummary>(
-      `/admin/users/${userId}/roles`,
+  getAllUsers: () => apiClient.get<AdminUserSummary[]>("/admin/users", true),
+  getUsers: (p: AdminFilters = {}) =>
+    paged<AdminUserSummary>("/admin/users/page", p),
+  getUser: (id: string) =>
+    apiClient.get<AdminUserSummary>(
+      `/admin/users/${encodeURIComponent(id)}`,
+      true,
+    ),
+  updateUserRoles: (id: string, roles: string[]) =>
+    apiClient.put<AdminUserSummary>(
+      `/admin/users/${id}/roles`,
       { roles },
-      true
-    );
-  },
-
-  async updateUserStatus(userId: string, status: string): Promise<AdminUserSummary> {
-    return apiClient.put<AdminUserSummary>(
-      `/admin/users/${userId}/status`,
+      true,
+    ),
+  updateUserStatus: (id: string, status: string) =>
+    apiClient.put<AdminUserSummary>(
+      `/admin/users/${id}/status`,
       { status },
-      true
-    );
-  },
-
-  async unlockUser(userId: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(
-      `/admin/users/${userId}/unlock`,
+      true,
+    ),
+  unlockUser: (id: string) =>
+    apiClient.post<{ message: string }>(`/admin/users/${id}/unlock`, {}, true),
+  suspendUser: (id: string, reason?: string) =>
+    apiClient.put<AdminUserSummary>(
+      `/admin/users/${id}/status`,
+      { status: "SUSPENDED", reason },
+      true,
+    ),
+  reactivateUser: (id: string) =>
+    apiClient.put<AdminUserSummary>(
+      `/admin/users/${id}/status`,
+      { status: "ACTIVE" },
+      true,
+    ),
+  getAdminStats: () => apiClient.get<AdminStats>("/apir/admin/summary", true),
+  getBookings: (p: AdminFilters = {}) =>
+    paged<AdminBooking>("/apir/admin/dossiers", p),
+  getBooking: (id: string) =>
+    apiClient.get<AdminBooking>(
+      `/apir/admin/bookings/${encodeURIComponent(id)}`,
+      true,
+    ),
+  getPayments: (p: AdminFilters = {}) =>
+    paged<AdminPayment>("/apir/admin/ledger", p),
+  getPayment: (id: string) =>
+    apiClient.get<AdminPayment>(
+      `/apir/admin/payments/${encodeURIComponent(id)}`,
+      true,
+    ),
+  getRefunds: (p: AdminFilters | number = {}) =>
+    paged<AdminRefund>(
+      "/apir/admin/refund-ledger",
+      typeof p === "number" ? { size: p } : p,
+    ),
+  getRefund: (id: string) =>
+    apiClient.get<AdminRefund>(
+      `/apir/admin/refunds/${encodeURIComponent(id)}`,
+      true,
+    ),
+  getCancellations: (p: AdminFilters | number = {}) =>
+    paged<AdminCancellation>(
+      "/apir/admin/cancellation-ledger",
+      typeof p === "number" ? { size: p } : p,
+    ),
+  getCancellation: (id: string) =>
+    apiClient.get<AdminCancellation>(
+      `/apir/admin/cancellations/${encodeURIComponent(id)}`,
+      true,
+    ),
+  retryRefund: (id: string) =>
+    apiClient.post<unknown>(
+      `/apir/admin/cancellations/${id}/retry-refund`,
       {},
-      true
+      true,
+    ),
+  getAttention: () =>
+    apiClient.get<AdminIncident[]>("/apir/admin/attention", true),
+  getAuditLogs: (limit = 50) =>
+    apiClient.get<AdminAuditAction[]>(
+      `/admin/users/audit-logs?limit=${limit}`,
+      true,
+    ),
+  getAuditPage: (p: AdminFilters = {}) =>
+    paged<AdminAuditAction>("/admin/users/audit-page", p),
+  getAuditEvent: (id: string) =>
+    apiClient.get<AdminAuditAction>(
+      `/admin/users/audit-events/${encodeURIComponent(id)}`,
+      true,
+    ),
+  getDestinations: () =>
+    apiClient.get<AdminDestination[]>("/travel/destinations", true),
+
+  // Phase 53: Real Supervision, API Usage & AI Usage Telemetry
+  getSupervision: () =>
+    apiClient.get<import("@/types/admin.types").PlatformSupervisionResponse>(
+      "/apir/admin/supervision",
+      true,
+    ),
+  getApiUsage: () =>
+    apiClient.get<import("@/types/admin.types").ApiUsageResponse>(
+      "/apir/admin/api-usage",
+      true,
+    ),
+  getAiUsage: () =>
+    apiClient.get<import("@/types/admin.types").AiUsageResponse>(
+      "/api/ai/admin/usage",
+      true,
+    ),
+
+  // Phase 53: Real Settings via identity-service
+  getSettings: () =>
+    apiClient.get<import("@/types/admin.types").PlatformSettingItem[]>(
+      "/admin/settings",
+      true,
+    ),
+  updateSettings: (settings: Record<string, string>) =>
+    apiClient.put<import("@/types/admin.types").PlatformSettingItem[]>(
+      "/admin/settings",
+      { settings },
+      true,
+    ),
+
+  // Content management: featured destinations
+  getFeaturedDestinations: async () => {
+    type Destination = import("@/types/admin.types").FeaturedDestinationItem;
+    const items = await apiClient.get<(Destination & { line?: string; detail?: string })[]>(
+      "/travel/admin/content/destinations/featured",
+      true,
     );
+    return items.map((item) => ({ ...item, editorialTitle: displayFeaturedText(item.editorialTitle), editorialLine: displayFeaturedText(item.editorialLine ?? item.line), editorialDetail: displayFeaturedText(item.editorialDetail ?? item.detail) }));
   },
-
-  async getAdminStats(): Promise<AdminStats> {
-    try {
-      return await apiClient.get<AdminStats>('/apir/admin/stats', true);
-    } catch {
-      return {
-        totalReservations: 0,
-        totalPayments: 0,
-        totalRevenue: 0,
-        totalRefunds: 0,
-        totalRefundedAmount: 0,
-        totalCancellations: 0,
-      };
-    }
+  saveFeaturedDestination: (dest: Partial<import("@/types/admin.types").FeaturedDestinationItem>) =>
+    dest.id
+      ? apiClient.put<{ id: string; message: string }>(
+          `/travel/admin/content/destinations/featured/${dest.id}`,
+          dest,
+          true,
+        )
+      : apiClient.post<{ id: string; message: string }>(
+          "/travel/admin/content/destinations/featured",
+          dest,
+          true,
+        ),
+  archiveFeaturedDestination: (id: string) =>
+    apiClient.delete<void>(
+      `/travel/admin/content/destinations/featured/${encodeURIComponent(id)}`,
+      true,
+    ),
+  getProviderHealth: async (): Promise<ProviderHealthStatus[]> => {
+    throw new Error("Télémétrie temps réel non disponible.");
   },
-
-  async getBookings(limit: number = 50, status?: string, productType?: string): Promise<AdminBooking[]> {
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.set('limit', String(limit));
-      if (status && status !== 'ALL') queryParams.set('status', status);
-      if (productType && productType !== 'ALL') queryParams.set('productType', productType);
-      return await apiClient.get<AdminBooking[]>(`/apir/admin/bookings?${queryParams.toString()}`, true);
-    } catch {
-      return [];
-    }
+  getOperationalSettings: (): OperationalSettings => {
+    throw new Error("Configuration serveur indisponible.");
   },
-
-  async getPayments(limit: number = 50, status?: string): Promise<AdminPayment[]> {
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.set('limit', String(limit));
-      if (status && status !== 'ALL') queryParams.set('status', status);
-      return await apiClient.get<AdminPayment[]>(`/apir/admin/payments?${queryParams.toString()}`, true);
-    } catch {
-      return [];
-    }
-  },
-
-  async getRefunds(limit: number = 50): Promise<AdminRefund[]> {
-    try {
-      return await apiClient.get<AdminRefund[]>(`/apir/admin/refunds?limit=${limit}`, true);
-    } catch {
-      return [];
-    }
-  },
-
-  async getCancellations(limit: number = 50): Promise<AdminCancellation[]> {
-    try {
-      return await apiClient.get<AdminCancellation[]>(`/apir/admin/cancellations?limit=${limit}`, true);
-    } catch {
-      return [];
-    }
-  },
-
-  async retryRefund(cancellationId: string): Promise<AdminCancellation> {
-    return apiClient.post<AdminCancellation>(
-      `/apir/admin/cancellations/${cancellationId}/retry-refund`,
-      {},
-      true
-    );
-  },
-
-  async suspendUser(userId: string, reason?: string): Promise<AdminUserSummary> {
-    return apiClient.put<AdminUserSummary>(
-      `/admin/users/${userId}/status`,
-      { status: 'SUSPENDED', reason },
-      true
-    );
-  },
-
-  async reactivateUser(userId: string): Promise<AdminUserSummary> {
-    return apiClient.put<AdminUserSummary>(
-      `/admin/users/${userId}/status`,
-      { status: 'ACTIVE' },
-      true
-    );
-  },
-
-  async getAuditLogs(limit: number = 50): Promise<AdminAuditAction[]> {
-    try {
-      return await apiClient.get<AdminAuditAction[]>(`/admin/users/audit-logs?limit=${limit}`, true);
-    } catch {
-      return [];
-    }
-  },
-
-  async getDestinations(): Promise<AdminDestination[]> {
-    try {
-      // Direct call to travel destinations endpoint or fallback
-      const list = await apiClient.get<any[]>('/travel/destinations', true);
-      return list.map((d: any) => ({
-        id: d.id,
-        name: d.name,
-        slug: d.slug,
-        city: d.city,
-        countryCode: d.countryCode,
-        countryName: d.countryName,
-        description: d.description,
-        heroImageUrl: d.heroImageUrl,
-        isActive: d.isActive ?? true,
-      }));
-    } catch {
-      return [
-        { id: '5bca06be-487f-46dd-b486-e71a51822238', name: 'Marrakech Magique', slug: 'marrakech-magique', city: 'Marrakech', countryCode: 'MA', countryName: 'Maroc', isActive: true },
-        { id: 'ce5124bb-d912-4718-8619-c9f4e0c4819f', name: 'Dakhla Oasis & Lagune', slug: 'dakhla-lagune', city: 'Dakhla', countryCode: 'MA', countryName: 'Maroc', isActive: true },
-        { id: '52438d2d-f9af-47b3-8f26-f49193d98f0a', name: 'Chefchaouen la Perle Bleue', slug: 'chefchaouen-perle-bleue', city: 'Chefchaouen', countryCode: 'MA', countryName: 'Maroc', isActive: true },
-        { id: '67fd6fbd-3813-4bbb-8826-41121cd19b27', name: 'Essaouira la Cité du Vent', slug: 'essaouira-cite-du-vent', city: 'Essaouira', countryCode: 'MA', countryName: 'Maroc', isActive: true },
-      ];
-    }
-  },
-
-  async getProviderHealth(): Promise<ProviderHealthStatus[]> {
-    const now = new Date().toISOString();
-    return [
-      { name: 'GATEWAY-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8888, details: 'Spring Cloud Gateway - Central Entry Point', lastChecked: now },
-      { name: 'IDENTITY-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8081, details: 'Auth, RS256 Tokens, RBAC, Users', lastChecked: now },
-      { name: 'RESERVATION-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8084, details: 'Bookings, Pricing Engine, Payments, Cancellations', lastChecked: now },
-      { name: 'TRAVEL-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8082, details: 'Travel Aggregation & Search, Geo, Weather', lastChecked: now },
-      { name: 'COMMENTAIRE-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8090, details: 'Reviews, Ratings, Content Moderation', lastChecked: now },
-      { name: 'AI-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8072, details: 'Gemini, Groq, Semantic Vector RAG, Tool Calling', lastChecked: now },
-      { name: 'NOTIFICATION-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 8083, details: 'Email Alerts, Booking Confirmations', lastChecked: now },
-      { name: 'CONFIG-SERVICE', status: 'UP', type: 'MICROSERVICE', port: 9091, details: 'Spring Cloud Config Server', lastChecked: now },
-      { name: 'PostgreSQL Database (yuding)', status: 'UP', type: 'INFRASTRUCTURE', port: 5433, details: 'PostgreSQL 16.15 - 8 logical schemas', lastChecked: now },
-      { name: 'Redis Cache & Rate Limiter', status: 'UP', type: 'INFRASTRUCTURE', port: 6379, details: 'Redis 7.4.11 - Gateway RateLimiter & Sessions', lastChecked: now },
-      { name: 'Amadeus / Scrappa Flights', status: 'UP', type: 'TRAVEL_PROVIDER', details: 'Flight inventory live adapter', lastChecked: now },
-      { name: 'Nuitee Hotel API', status: 'UP', type: 'TRAVEL_PROVIDER', details: 'Hotel rooms & live rate engine', lastChecked: now },
-      { name: 'Hotelbeds (HBX) Activities', status: 'UP', type: 'TRAVEL_PROVIDER', details: 'Tours, Activities & Transfer inventory', lastChecked: now },
-      { name: 'PayPal Sandbox Gateway', status: 'UP', type: 'PAYMENT_GATEWAY', details: 'PayPal v2 REST Sandbox Checkout', lastChecked: now },
-      { name: 'Mock Payment Provider', status: 'UP', type: 'PAYMENT_GATEWAY', details: 'Local test payment engine (sandbox)', lastChecked: now },
-    ];
-  },
-
-  getOperationalSettings(): OperationalSettings {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('yuding_admin_settings');
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {}
-      }
-    }
-    return {
-      sandboxMode: true,
-      maintenanceMode: false,
-      autoReviewModeration: false,
-      mockPaymentAllowed: true,
-      redisCacheEnabled: true,
-      rateLimitPerMinute: 60,
-    };
-  },
-
-  saveOperationalSettings(settings: OperationalSettings): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('yuding_admin_settings', JSON.stringify(settings));
-    }
+  saveOperationalSettings: (_settings: OperationalSettings) => {
+    throw new Error("Configuration serveur indisponible.");
   },
 };

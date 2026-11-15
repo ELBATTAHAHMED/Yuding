@@ -115,12 +115,10 @@ export default function ActivityDetailsPage() {
       });
     }
 
-    // Source / Provenance
-    const isCustom = activity.source === 'YUDING_CUSTOM';
     items.push({
       icon: 'fas fa-shield-alt',
       title: 'Source de l\'activité',
-      description: isCustom ? 'Activité sélectionnée par Yuding' : `Partenaire ${activity.provider || 'HBX'}`,
+      description: `Partenaire ${activity.provider || 'HBX'}`,
       status: 'neutral',
     });
 
@@ -146,13 +144,12 @@ export default function ActivityDetailsPage() {
     );
   }
 
-  const isCustom = activity.source === 'YUDING_CUSTOM';
   const selRef = activity.selectionRef || activity.offerId || activity.id || activity.title;
   const bookingUrl = `/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(
     activity.offerId || activity.id || activity.title
-  )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(activity.title)}&price=${activity.price}`;
+  )}&selectionRef=${encodeURIComponent(selRef)}&serviceTitle=${encodeURIComponent(activity.title)}&price=${activity.price}&currency=${encodeURIComponent(activity.currency || 'EUR')}&startDate=${activity.date || ''}&travelers=${activity.travelers || 1}`;
 
-  const badges = [activity.category || 'Excursion', isCustom ? 'Yuding Sélect' : 'Partenaire HBX'];
+  const badges = [activity.category || 'Excursion', `Partenaire ${activity.provider || 'HBX'}`];
 
   return (
     <OfferDetailsShell
@@ -198,7 +195,7 @@ export default function ActivityDetailsPage() {
         title={activity.title}
         subtitle={`${activity.destination || activity.city || ''} ${activity.country ? `• ${activity.country}` : ''}`}
         icon="fas fa-hiking"
-        provider={activity.provider || (isCustom ? 'YUDING' : 'HBX')}
+        provider={activity.provider || 'HBX'}
         badges={badges}
       />
 

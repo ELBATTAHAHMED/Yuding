@@ -51,6 +51,14 @@ public class TransferOfferRevalidator implements OfferRevalidator {
         String timeStr = (String) details.get("time");
         String transferTypeStr = (String) details.get("transferType");
         String vehicleModel = (String) details.get("vehicleModel");
+        Object passengerValue = details.get("passengers");
+        int passengers = passengerValue instanceof Number number ? number.intValue() : 1;
+        if (passengers < 1 || passengers > 20) {
+            return InternalRevalidationResultDto.unavailable(
+                    request.getProductType(), request.getProvider(), request.getProviderOfferId(),
+                    "Invalid passenger count in transfer snapshot"
+            );
+        }
 
         LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : null;
         LocalTime time = timeStr != null ? LocalTime.parse(timeStr) : LocalTime.of(12, 0);
@@ -75,7 +83,7 @@ public class TransferOfferRevalidator implements OfferRevalidator {
                 .date(date)
                 .time(time)
                 .transferType(transferType)
-                .passengers(1)
+                .passengers(passengers)
                 .currency(request.getSnapshotProviderCurrency() != null ? request.getSnapshotProviderCurrency() : "EUR")
                 .build();
 

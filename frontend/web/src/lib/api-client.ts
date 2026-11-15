@@ -148,6 +148,13 @@ export class ApiClient {
           return null;
         }
 
+        // A 204 response means this browser has no refresh-cookie yet. This is
+        // expected on public pages and must not be treated as a JSON parse error.
+        if (res.status === 204) {
+          this.setAccessToken(null);
+          return null;
+        }
+
         const data = await res.json();
         const newToken = data.accessToken || null;
         this.setAccessToken(newToken);

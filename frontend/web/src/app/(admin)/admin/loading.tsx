@@ -1,3 +1,3 @@
-import { RouteLoading } from '@/components/layout/RouteLoading';
-
-export default RouteLoading;
+export default function AdminLoading() {
+  return null;
+}

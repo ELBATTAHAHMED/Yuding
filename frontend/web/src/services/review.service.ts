@@ -36,6 +36,7 @@ export interface PublicReviews {
   reviews: PublicReview[];
 }
 export interface FeaturedReview extends PublicReview {
+  userId?: string;
   entityName: string;
   entityType: ReviewTarget;
   verifiedBooking: boolean;

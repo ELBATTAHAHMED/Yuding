@@ -73,7 +73,6 @@
         radial-gradient(circle at 40% 40%, rgba(1, 121, 111, 0.08) 0%, transparent 50%);
     pointer-events: none;
     z-index: -1;
-    animation: float 20s ease-in-out infinite;
 }
 
 @keyframes float {
@@ -90,19 +89,12 @@
     text-decoration: none;
 }
 
-/* Amélioration globale des transitions */
-*, *::before, *::after {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Keep feedback on interactive controls without animating every layout change. */
+a, button, input, select, textarea {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 /* Amélioration des performances pour les animations */
-.destination .items .item,
-.gallery .items .item,
-.room .box,
-.btn-booking,
-.hebergement-result {
-    will-change: transform, opacity;
-}
 
 /* Classe pour les éléments qui entrent en vue */
 .animate-in {

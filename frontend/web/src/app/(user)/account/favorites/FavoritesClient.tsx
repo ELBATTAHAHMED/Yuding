@@ -435,6 +435,7 @@ export default function FavoritesClient() {
                               priceSnapshot={fav.priceSnapshot}
                               currencySnapshot={fav.currencySnapshot}
                               isInitiallyFavorited={true}
+                              className="library-card-favorite-control"
                               onToggle={(active: boolean) => {
                                 if (!active) handleRemoveFavorite(fav.publicReference);
                               }}

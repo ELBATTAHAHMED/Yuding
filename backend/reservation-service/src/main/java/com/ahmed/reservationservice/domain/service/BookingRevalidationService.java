@@ -15,10 +15,13 @@ import com.ahmed.reservationservice.domain.repository.BookingRepository;
 import com.ahmed.reservationservice.domain.repository.OfferRevalidationRepository;
 import com.ahmed.reservationservice.domain.repository.OfferSnapshotRepository;
 import com.ahmed.reservationservice.feign.TravelOfferResolverClient;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -70,7 +73,23 @@ public class BookingRevalidationService {
                 .build();
 
         // 5. Invoke live provider check via travel-service (search cache bypassed)
-        InternalRevalidationResultDto result = travelOfferResolverClient.revalidateOffer(internalRequest);
+        InternalRevalidationResultDto result;
+        try {
+            result = travelOfferResolverClient.revalidateOffer(internalRequest);
+        } catch (FeignException ex) {
+            // A provider outage must not turn a valid draft into an internal 500 or a payable quote.
+            log.warn("BookingRevalidation: Travel provider check failed for [{}] with status {}", bookingReference, ex.status());
+            if (ex.status() == 504) {
+                throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT,
+                        "Le fournisseur ne répond pas pour le moment. Réessayez la vérification de ce dossier.");
+            }
+            if (ex.status() == 404) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Cette offre n’est plus disponible. Choisissez une nouvelle offre.");
+            }
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "La vérification auprès du fournisseur est momentanément indisponible. Réessayez dans un instant.");
+        }
 
         // 6. Calculate validity window
         Instant revalidatedAt = result.getRevalidatedAt() != null ? result.getRevalidatedAt() : Instant.now(clock);

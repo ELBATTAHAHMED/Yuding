@@ -8,8 +8,16 @@
 .button:disabled { cursor: default; opacity: .4; }
 .active, .active:hover:not(:disabled) { background: #087d70; border-color: #087d70; color: white; }
 .ellipsis { padding: 0 2px; }
-:global([data-theme="dark"]) .pagination { border-color: #36504a; color: #a9beb7; }
-:global([data-theme="dark"]) .button { border-color: #36504a; color: #e7f1ee; }
-:global([data-theme="dark"]) .button:hover:not(:disabled), :global([data-theme="dark"]) .button:focus-visible { color: #78d5c4; border-color: #78d5c4; background: rgba(120, 213, 196, .1); }
-:global([data-theme="dark"]) .active, :global([data-theme="dark"]) .active:hover:not(:disabled) { background: #087d70; border-color: #087d70; color: white; }
+:global(html.dark) .pagination, :global([data-theme="dark"]) .pagination { border-color: #2d3947; color: #a7b1bf; }
+:global(html.dark) .button, :global([data-theme="dark"]) .button { border-color: #344150; color: #f2f5f8; }
+:global(html.dark) .button:hover:not(:disabled), :global(html.dark) .button:focus-visible, :global([data-theme="dark"]) .button:hover:not(:disabled), :global([data-theme="dark"]) .button:focus-visible { color: #7ee7d5; border-color: #2dc6ae; background: rgba(45, 198, 174, .1); }
+:global(html.dark) .active, :global(html.dark) .active:hover:not(:disabled), :global([data-theme="dark"]) .active, :global([data-theme="dark"]) .active:hover:not(:disabled) { background: #0d8274; border-color: #0d8274; color: white; }
 @media (max-width: 600px) { .pagination { justify-content: center; } .summary { width: 100%; text-align: center; } }
+
+/* Account pages share the Operations graphite tokens and flight interaction. */
+:global(html.dark) .pagination, :global([data-theme="dark"]) .pagination { border-top-color: #2b3038; color: #9aa1ad; }
+:global(html.dark) .button, :global([data-theme="dark"]) .button { border-color: #2b3038; background: transparent; color: #f1f3f7; }
+:global(html.dark) .button:hover:not(:disabled), :global(html.dark) .button:focus-visible,
+:global([data-theme="dark"]) .button:hover:not(:disabled), :global([data-theme="dark"]) .button:focus-visible { border-color: transparent; background: rgba(0, 212, 170, .18); color: #f1f3f7; }
+:global(html.dark) .active, :global(html.dark) .active:hover:not(:disabled),
+:global([data-theme="dark"]) .active, :global([data-theme="dark"]) .active:hover:not(:disabled) { border-color: transparent; background: rgba(0, 212, 170, .18); color: #f1f3f7; }

@@ -27,5 +27,6 @@ public class AdminBookingDto {
     private Instant updatedAt;
     private Instant statusChangedAt;
     private Instant expiresAt;
+    private boolean pastDue;
     private java.util.Map<String, Object> selectedDetails;
 }

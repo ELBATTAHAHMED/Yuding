@@ -150,9 +150,14 @@ public class BookingService {
         // Resolve trusted offer from Travel Service
         ResolvedOfferDto resolvedOffer = null;
         if (travelOfferResolverClient != null) {
-            resolvedOffer = travelOfferResolverClient.resolveOfferSelection(selectionRef)
-                    .orElseThrow(() -> new BookingNotFoundException(
-                            "Selected offer [" + selectionRef + "] was not found or has expired. Please select a fresh offer."));
+            try {
+                resolvedOffer = travelOfferResolverClient.resolveOfferSelection(selectionRef)
+                        .orElseThrow(() -> new BookingNotFoundException(
+                                "Selected offer was not found or has expired. Please select a fresh offer."));
+            } catch (feign.FeignException.NotFound ex) {
+                throw new BookingNotFoundException(
+                        "Selected offer was not found or has expired. Please select a fresh offer.");
+            }
         } else {
             throw new IllegalStateException("TravelOfferResolverClient is not configured to resolve offer selections");
         }

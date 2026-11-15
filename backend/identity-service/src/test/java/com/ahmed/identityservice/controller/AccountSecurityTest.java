@@ -5,6 +5,7 @@ import com.ahmed.identityservice.dto.ChangePasswordRequest;
 import com.ahmed.identityservice.dto.MessageResponse;
 import com.ahmed.identityservice.dto.SecurityEventResponse;
 import com.ahmed.identityservice.exception.EmailNotVerifiedException;
+import com.ahmed.identityservice.exception.InvalidTokenException;
 import com.ahmed.identityservice.exception.ResourceNotFoundException;
 import com.ahmed.identityservice.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,6 +85,19 @@ class AccountSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("All active sessions have been revoked successfully"))
                 .andExpect(header().exists("Set-Cookie"));
+    }
+
+    @Test
+    @DisplayName("POST /auth/refresh clears a revoked refresh cookie while returning 401")
+    void refresh_invalidToken_clearsCookie() throws Exception {
+        when(authService.refresh(eq("stale-refresh-token"), any(), any()))
+                .thenThrow(new InvalidTokenException("Invalid refresh token"));
+
+        mockMvc.perform(post("/auth/refresh")
+                        .cookie(new jakarta.servlet.http.Cookie("refresh_token", "stale-refresh-token")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=;")))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
     }
 
     @Test

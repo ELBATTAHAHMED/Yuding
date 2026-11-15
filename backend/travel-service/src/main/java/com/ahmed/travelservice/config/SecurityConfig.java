@@ -64,8 +64,8 @@ public class SecurityConfig {
                         // Internal service-to-service endpoints
                         .requestMatchers("/internal/**").permitAll()
 
-                        // Public travel search endpoints
-                        .requestMatchers(HttpMethod.GET, "/travel/airports", "/travel/trains/stations", "/travel/geo/**", "/travel/weather", "/travel/currency/**", "/travel/images/**").permitAll()
+                        // Public travel search & discovery endpoints
+                        .requestMatchers(HttpMethod.GET, "/travel/airports", "/travel/trains/stations", "/travel/geo/**", "/travel/weather", "/travel/currency/**", "/travel/images/**", "/travel/destinations/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/flights/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/hotels/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/travel/activities/search").permitAll()

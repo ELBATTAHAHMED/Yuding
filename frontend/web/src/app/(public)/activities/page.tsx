@@ -451,7 +451,6 @@ export default function ActivitiesPage() {
 
               <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {activityPages.pageItems.map((act) => {
-                  const isCustom = act.source === 'YUDING_CUSTOM';
                   const offerKey = act.id || act.offerId || act.title;
 
                   return (
@@ -467,11 +466,9 @@ export default function ActivitiesPage() {
                           className="h-full w-full object-cover"
                         />
                         <span
-                          className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm z-10 ${
-                            isCustom ? 'bg-amber-600' : 'bg-[#01796F]'
-                          }`}
+                          className="absolute left-3 top-3 rounded-full bg-[#01796F] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm z-10"
                         >
-                          {isCustom ? 'Yuding Sélect' : 'Partenaire HBX'}
+                          Partenaire HBX
                         </span>
                         <div className="absolute right-3 top-3 z-10">
                           <FavoriteButton
@@ -532,7 +529,7 @@ export default function ActivitiesPage() {
                               Détails
                             </Link>
                             <Link
-                              href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(act.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}`}
+                              href={`/booking?serviceType=ACTIVITY&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(act.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(act.title)}&price=${act.price}&currency=${encodeURIComponent(act.currency || 'EUR')}&startDate=${act.date || date}&travelers=${act.travelers || travelers}`}
                               className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                             >
                               Réserver

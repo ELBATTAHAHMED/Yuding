@@ -139,20 +139,11 @@ function LoginFormContent() {
     <>
       <Header hideLogin onThemeChange={setIsDark} />
 
-      {/* ==================== VIDEO BACKGROUND ==================== */}
-      <section className="home" id="home">
-        <video
-          src="/image/video1.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="video"
-        ></video>
-      </section>
+      <div className="auth-bg-media" aria-hidden="true" />
 
-      {/* ==================== 3D FLIP CONTAINER ==================== */}
-      <div className={`container auth-container ${isFlipped ? 'signup-mode' : 'login-mode'}`}>
+      {/* ==================== CENTERED AUTH CONTAINER ==================== */}
+      <div className="auth-layout-root">
+        <div className={`container auth-container ${isFlipped ? 'signup-mode' : 'login-mode'}`}>
         {/* Checkbox pour compatibilité CSS flip */}
         <input
           type="checkbox"
@@ -175,8 +166,8 @@ function LoginFormContent() {
               id="coverFrontImage"
             />
             <div className="text">
-              <span className="text-1">WELCOME TO<br /> YUDDING</span>
-              <span className="text-2">Let&apos;s get connected</span>
+              <span className="text-1">Bienvenue<br />chez Yuding</span>
+              <span className="text-2">Vos voyages, à votre rythme.</span>
             </div>
           </div>
           <div className="back">
@@ -188,8 +179,8 @@ function LoginFormContent() {
               id="coverBackImage"
             />
             <div className="text">
-              <span className="text-1">WELCOME TO<br />YUDDING</span>
-              <span className="text-2">Signup Now</span>
+              <span className="text-1">Créez votre<br />espace voyageur</span>
+              <span className="text-2">Préparez votre prochain départ.</span>
             </div>
           </div>
         </div>
@@ -199,7 +190,7 @@ function LoginFormContent() {
           <div className="form-content">
             {/* =========== LOGIN FORM =========== */}
             <div className="login-form">
-              <div className="title">{showForgotPassword ? 'Réinitialisation' : 'Login'}</div>
+              <div className="title">{showForgotPassword ? 'Réinitialisation' : 'Connexion'}</div>
               {showForgotPassword ? (
                 <form id="forgot-form" method="post" onSubmit={handleForgotPassword}>
                   <div className="input-boxes">
@@ -265,7 +256,7 @@ function LoginFormContent() {
                         type="email"
                         id="login-email"
                         name="email"
-                        placeholder="Enter your email"
+                        placeholder="Votre adresse e-mail"
                         autoComplete="email"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
@@ -278,7 +269,7 @@ function LoginFormContent() {
                         type="password"
                         id="login-password"
                         name="password"
-                        placeholder="Enter your password"
+                        placeholder="Votre mot de passe"
                         autoComplete="current-password"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
@@ -301,13 +292,13 @@ function LoginFormContent() {
                     <div className="button input-box">
                       <input
                         type="submit"
-                        value={loading ? 'Connexion en cours...' : 'Submit'}
+                        value={loading ? 'Connexion en cours…' : 'Se connecter'}
                         className="btn"
                         disabled={loading}
                       />
                     </div>
                     <div className="text sign-up-text">
-                      Don&apos;t have an account?{' '}
+                      Pas encore de compte&nbsp;?{' '}
                       <button
                         type="button"
                         className="auth-switch-link"
@@ -317,7 +308,7 @@ function LoginFormContent() {
                           setSuccessMessage(null);
                         }}
                       >
-                        Signup now
+                      Créer un compte
                       </button>
                     </div>
                   </div>
@@ -327,7 +318,7 @@ function LoginFormContent() {
 
             {/* =========== SIGNUP FORM =========== */}
             <div className="signup-form">
-              <div className="title">Signup</div>
+              <div className="title">Créer un compte</div>
               <form id="signup-form" method="post" onSubmit={handleSignup}>
                 <div className="input-boxes">
                   {errorMessage && isFlipped && (
@@ -399,7 +390,7 @@ function LoginFormContent() {
                     <input
                       type="password"
                       name="password"
-                      placeholder="Password (min. 8 caractères)"
+                      placeholder="Mot de passe (8 caractères min.)"
                       autoComplete="new-password"
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
@@ -413,7 +404,7 @@ function LoginFormContent() {
                     <input
                       type="password"
                       name="password_confirm"
-                      placeholder="Confirmer Password"
+                      placeholder="Confirmer le mot de passe"
                       autoComplete="new-password"
                       value={signupPasswordConfirm}
                       onChange={(e) => setSignupPasswordConfirm(e.target.value)}
@@ -425,12 +416,12 @@ function LoginFormContent() {
                   <div className="button input-box">
                     <input
                       type="submit"
-                      value={loading ? 'Inscription en cours...' : 'Submit'}
+                      value={loading ? 'Inscription en cours…' : 'Créer mon compte'}
                       disabled={loading}
                     />
                   </div>
                   <div className="text sign-up-text">
-                    Already have an account?{' '}
+                    Déjà un compte&nbsp;?{' '}
                     <button
                       type="button"
                       className="auth-switch-link"
@@ -440,7 +431,7 @@ function LoginFormContent() {
                         setSuccessMessage(null);
                       }}
                     >
-                      Login now
+                    Se connecter
                     </button>
                   </div>
                 </div>
@@ -453,6 +444,8 @@ function LoginFormContent() {
         {/* /forms */}
       </div>
       {/* /container */}
+      </div>
+      {/* /auth-layout-root */}
     </>
   );
 }

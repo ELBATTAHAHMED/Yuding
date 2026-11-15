@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/account")
+@RequestMapping({"/api/account", "/account"})
 @RequiredArgsConstructor
 public class ProfileController {
     private final ProfileService profileService;
@@ -32,6 +32,16 @@ public class ProfileController {
         String key = profileService.photoKey(userId(jwt));
         String contentType = key != null && key.endsWith(".png") ? "image/png" : key != null && key.endsWith(".webp") ? "image/webp" : "image/jpeg";
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).cacheControl(org.springframework.http.CacheControl.noCache()).body(profileService.photo(userId(jwt)));
+    }
+    @GetMapping("/users/{userId}/photo")
+    public ResponseEntity<byte[]> userPhoto(@PathVariable UUID userId) throws Exception {
+        String key = profileService.photoKey(userId);
+        if (key == null) return ResponseEntity.notFound().build();
+        String contentType = key.endsWith(".png") ? "image/png" : key.endsWith(".webp") ? "image/webp" : "image/jpeg";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .cacheControl(org.springframework.http.CacheControl.maxAge(1, java.util.concurrent.TimeUnit.HOURS))
+                .body(profileService.photo(userId));
     }
     @GetMapping("/travelers")
     public List<TravelerResponse> list(@AuthenticationPrincipal Jwt jwt) { return profileService.list(userId(jwt)); }

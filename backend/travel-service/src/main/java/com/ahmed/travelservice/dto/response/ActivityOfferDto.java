@@ -23,6 +23,7 @@ public class ActivityOfferDto {
     private Double durationHours;
     private String category;
     private BigDecimal price;
+    private Integer travelers;
     private String currency;
     private PriceConversionSnapshot priceConversion;
     private String imageUrl;

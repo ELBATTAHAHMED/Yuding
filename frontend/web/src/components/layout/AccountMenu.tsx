@@ -8,7 +8,7 @@ import { UserAvatar } from '@/components/common/UserAvatar';
 import styles from './AccountMenu.module.css';
 
 export function AccountMenu() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin, isSupport, isContentManager } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -64,6 +64,9 @@ export function AccountMenu() {
             <Link ref={firstLinkRef} href="/account/profile" onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-user" aria-hidden="true" /></span><span>Mon profil</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
             <Link href="/account/bookings" onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-suitcase" aria-hidden="true" /></span><span>Mes réservations</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
             <Link href="/account/profile#account-security" onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-cog" aria-hidden="true" /></span><span>Paramètres</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
+            {(isAdmin || isSupport || isContentManager) && (
+              <Link href={isAdmin || isSupport ? "/admin" : "/admin/content"} onClick={() => setOpen(false)}><span className={styles.linkIcon}><i className="fas fa-shield-alt" aria-hidden="true" /></span><span>Administration</span><i className={`fas fa-chevron-right ${styles.chevron}`} aria-hidden="true" /></Link>
+            )}
           </div>
           <button type="button" className={styles.logout} onClick={() => { setOpen(false); void logout(); }}>
             <span className={styles.logoutIcon}><i className="fas fa-sign-out-alt" aria-hidden="true" /></span>Se déconnecter

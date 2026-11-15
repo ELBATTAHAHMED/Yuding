@@ -63,6 +63,30 @@ class AdminUserControllerTest {
     }
 
     @Test
+    void absentPhotoReturns404WithoutCallingStorage() throws Exception {
+        when(adminUserService.getUserPhotoKey(targetUserId)).thenReturn(null);
+        mockMvc.perform(get("/admin/users/"+targetUserId+"/photo").with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isNotFound());
+        org.mockito.Mockito.verify(adminUserService,org.mockito.Mockito.never()).getUserPhoto(any());
+    }
+
+    @Test
+    void stalePhotoKeyReturns404RatherThan500() throws Exception {
+        when(adminUserService.getUserPhotoKey(targetUserId)).thenReturn("missing.png");
+        when(adminUserService.getUserPhoto(targetUserId)).thenThrow(new java.io.IOException("Missing file"));
+        mockMvc.perform(get("/admin/users/"+targetUserId+"/photo").with(jwt().authorities(new SimpleGrantedAuthority("ROLE_SUPPORT"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void storedPhotoIsReturnedWithPrivateCache() throws Exception {
+        when(adminUserService.getUserPhotoKey(targetUserId)).thenReturn("stored.png");
+        when(adminUserService.getUserPhoto(targetUserId)).thenReturn(new byte[]{1,2,3});
+        mockMvc.perform(get("/admin/users/"+targetUserId+"/photo").with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Cache-Control","max-age=300, private"));
+    }
+
+    @Test
     @DisplayName("Anonymous request to /admin/users is rejected with 401 Unauthorized")
     void anonymousAccess_rejectedWith401() throws Exception {
         mockMvc.perform(get("/admin/users"))

@@ -32,7 +32,10 @@ public class MockPaymentProvider implements PaymentProvider {
             return PaymentOrderResult.failure("Mock payment order creation simulated failure");
         }
 
-        String mockOrderId = "MOCK-ORDER-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        boolean shouldFailCapture = command.getProviderRequestId() != null
+                && command.getProviderRequestId().startsWith("ORD-FAIL-");
+        String mockOrderId = (shouldFailCapture ? "MOCK-ORDER-FAIL-" : "MOCK-ORDER-")
+                + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         String mockApprovalUrl = "https://mock.payment.yuding.local/checkout?orderId=" + mockOrderId;
         return PaymentOrderResult.success(mockOrderId, mockApprovalUrl, "mock-client-token-" + mockOrderId, "CREATED");
     }

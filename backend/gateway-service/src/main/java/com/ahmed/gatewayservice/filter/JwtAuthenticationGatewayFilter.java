@@ -80,10 +80,13 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
         String path = exchange.getRequest().getURI().getPath();
         boolean protectedReview = path.equals("/apic/reviews") || path.startsWith("/apic/reviews/")
                 && !path.startsWith("/apic/reviews/public/");
+        boolean protectedAdmin = path.startsWith("/admin/") || path.startsWith("/apir/admin/")
+                || path.startsWith("/ai/admin/") || path.startsWith("/api/ai/admin/");
+        boolean protectedContent = path.startsWith("/travel/admin/content");
 
         // Review writes and account reads require a token at the perimeter.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            if (protectedReview) return writeError(exchange, HttpStatus.UNAUTHORIZED, "Authentication required");
+            if (protectedReview || protectedAdmin || protectedContent) return writeError(exchange, HttpStatus.UNAUTHORIZED, "Authentication required");
             return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
         }
 
@@ -119,9 +122,24 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
             } else if (rolesClaim != null) {
                 rolesStr = rolesClaim.toString();
             }
-            if (path.startsWith("/apic/reviews/moderation")
-                    && Arrays.stream(rolesStr.split(",")).noneMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_SUPPORT"))) {
+            boolean hasAdmin = Arrays.stream(rolesStr.split(",")).anyMatch(r -> r.equals("ROLE_ADMIN"));
+            boolean hasSupport = Arrays.stream(rolesStr.split(",")).anyMatch(r -> r.equals("ROLE_SUPPORT"));
+            boolean hasContentManager = Arrays.stream(rolesStr.split(",")).anyMatch(r -> r.equals("ROLE_CONTENT_MANAGER"));
+
+            if (path.startsWith("/apic/reviews/moderation") && !(hasAdmin || hasSupport || hasContentManager)) {
                 return writeError(exchange, HttpStatus.FORBIDDEN, "Insufficient role privileges");
+            }
+            if (protectedContent && !(hasAdmin || hasContentManager)) {
+                return writeError(exchange, HttpStatus.FORBIDDEN, "Content management privileges required");
+            }
+            if (protectedAdmin && !(hasAdmin || hasSupport)) {
+                return writeError(exchange, HttpStatus.FORBIDDEN, "Insufficient role privileges");
+            }
+            boolean adminWrite = (protectedAdmin || protectedContent)
+                    && !exchange.getRequest().getMethod().equals(org.springframework.http.HttpMethod.GET)
+                    && !path.endsWith("/unlock");
+            if (adminWrite && !hasAdmin && !(protectedContent && hasContentManager)) {
+                return writeError(exchange, HttpStatus.FORBIDDEN, "Administrator role required");
             }
 
             // Step 2: Inject verified claims from validated JWT only

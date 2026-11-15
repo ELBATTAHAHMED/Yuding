@@ -554,7 +554,7 @@ export default function TransfersPage() {
                             Détails
                           </Link>
                           <Link
-                            href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(item.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}`}
+                            href={`/booking?serviceType=TRANSFER&serviceId=${encodeURIComponent(offerKey)}&selectionRef=${encodeURIComponent(item.selectionRef || offerKey)}&serviceTitle=${encodeURIComponent(item.vehicleModel || 'Transfert')}&price=${item.price}&currency=${encodeURIComponent(item.currency || 'EUR')}&startDate=${item.date || date}&travelers=${passengers}`}
                             className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#01796F] px-2 text-center text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#005f57]"
                           >
                             Réserver

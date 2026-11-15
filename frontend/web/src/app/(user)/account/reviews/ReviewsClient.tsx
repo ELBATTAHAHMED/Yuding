@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reviewService, type MyReview, type ReviewTarget } from '@/services/review.service';
 import { useMyBookings } from '@/hooks/queries/useBookingQueries';
+import { usePaginatedItems } from '@/hooks/usePaginatedItems';
+import { Pagination } from '@/components/ui/Pagination';
 import { ReviewDialog } from '../bookings/ReviewDialog';
 
 const targetLabels: Record<ReviewTarget, string> = {
@@ -31,7 +33,11 @@ export default function ReviewsClient() {
   });
   const bookings = useMyBookings({ enabled: reviews.isSuccess });
   const [selected, setSelected] = useState<MyReview | { reference: string; entityName: string } | 'platform' | null>(null);
-  const visibleReviews = reviews.data?.filter(review => review.status !== 'DELETED' && review.entityType !== 'PLATFORM') || [];
+  const visibleReviews = useMemo(
+    () => reviews.data?.filter(review => review.status !== 'DELETED' && review.entityType !== 'PLATFORM') || [],
+    [reviews.data],
+  );
+  const reviewPages = usePaginatedItems(visibleReviews, 6);
   const platformReview = platform.data || null;
   const candidates = useMemo(() => {
     const reviewed = new Set(reviews.data?.map(review => review.bookingReference).filter(Boolean));
@@ -51,6 +57,7 @@ export default function ReviewsClient() {
   })) });
   const pending = candidates.flatMap((booking, index) => eligibility[index]?.data?.eligible && existingByBooking[index]?.isSuccess && !existingByBooking[index].data
     ? [{ booking, target: eligibility[index].data! }] : []);
+  const pendingPages = usePaginatedItems(pending, 6);
   const pendingLoading = bookings.isPending || eligibility.some(query => query.isPending) || existingByBooking.some(query => query.isPending);
   const pendingError = bookings.isError || eligibility.some(query => query.isError) || existingByBooking.some(query => query.isError);
   const pendingSelection = selected && selected !== 'platform' && 'reference' in selected ? selected : null;
@@ -98,16 +105,24 @@ export default function ReviewsClient() {
           eligibility.forEach(query => { if (query.isError) query.refetch(); });
           existingByBooking.forEach(query => { if (query.isError) query.refetch(); });
         }}>Réessayer</button></div>}
-      {pending.map(({ booking, target }) => <article className="account-review-row" key={booking.bookingReference}>
-        <div className="account-review-row-main">
-          <span className="account-review-category">{target.entityType ? targetLabels[target.entityType] : booking.productType}</span>
-          <h3>{target.entityName || `${booking.productType} · ${booking.bookingReference}`}</h3>
-          <p className="account-review-prompt">Si vous le souhaitez, racontez-nous comment s’est passé ce voyage.</p>
-          <div className="account-review-meta"><span>Réservation {booking.bookingReference}</span></div>
-        </div>
-        <button type="button" className="btn-secondary-sm" onClick={() => setSelected({ reference: booking.bookingReference,
-          entityName: target.entityName || 'votre voyage' })}>Donner mon avis</button>
-      </article>)}
+      {pending.length > 0 && <div className="account-review-list">
+        {pendingPages.pageItems.map(({ booking, target }) => <article className="account-review-row" key={booking.bookingReference}>
+          <div className="account-review-row-main">
+            <span className="account-review-category">{target.entityType ? targetLabels[target.entityType] : booking.productType}</span>
+            <h3>{target.entityName || `${booking.productType} · ${booking.bookingReference}`}</h3>
+            <p className="account-review-prompt">Si vous le souhaitez, racontez-nous comment s’est passé ce voyage.</p>
+            <div className="account-review-meta"><span>Réservation {booking.bookingReference}</span></div>
+          </div>
+          <button type="button" className="btn-secondary-sm" onClick={() => setSelected({ reference: booking.bookingReference,
+            entityName: target.entityName || 'votre voyage' })}>Donner mon avis</button>
+        </article>)}
+      </div>}
+      {pending.length > 0 && <Pagination
+        page={pendingPages.page}
+        pageSize={pendingPages.pageSize}
+        totalItems={pending.length}
+        onPageChange={pendingPages.setPage}
+      />}
       {reviews.isSuccess && !pendingLoading && !pendingError && pending.length === 0 &&
         <p className="account-review-muted account-review-none">Aucun voyage à évaluer pour le moment.</p>}
     </section>
@@ -122,7 +137,7 @@ export default function ReviewsClient() {
         <i className="far fa-comment-dots" aria-hidden="true" />
         <div><h3>Pas encore d’avis de voyage</h3><p>Après votre voyage, une invitation apparaîtra sur la réservation concernée si elle peut être évaluée.</p></div>
       </div>}
-      {visibleReviews.length > 0 && <div className="account-review-list">{visibleReviews.map(review =>
+      {visibleReviews.length > 0 && <div className="account-review-list">{reviewPages.pageItems.map(review =>
         <article className="account-review-row" key={review.id}>
           <div className="account-review-row-main">
             <span className="account-review-category">{targetLabels[review.entityType] || 'Voyage'}</span>
@@ -136,6 +151,12 @@ export default function ReviewsClient() {
           <button type="button" className="btn-secondary-sm" onClick={() => setSelected(review)}>Voir / modifier</button>
         </article>
       )}</div>}
+      {visibleReviews.length > 0 && <Pagination
+        page={reviewPages.page}
+        pageSize={reviewPages.pageSize}
+        totalItems={visibleReviews.length}
+        onPageChange={reviewPages.setPage}
+      />}
     </section>
     {selected && <ReviewDialog key={selected === 'platform' ? 'platform' : pendingSelection?.reference || existingSelection?.id}
       platform={selected === 'platform'}

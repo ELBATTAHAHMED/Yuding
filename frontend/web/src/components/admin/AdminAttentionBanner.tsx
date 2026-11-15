@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { useAdminPayments, useAdminCancellations, useAdminUsers } from '@/hooks/queries/useAdminQueries';
 
 export function AdminAttentionBanner() {
-  const { data: payments = [] } = useAdminPayments({ limit: 100 });
-  const { data: cancellations = [] } = useAdminCancellations(100);
+  const { data: paymentsData } = useAdminPayments({ limit: 100 });
+  const { data: cancellationsData } = useAdminCancellations(100);
   const { data: users = [] } = useAdminUsers();
+
+  const payments = paymentsData?.content ?? (Array.isArray(paymentsData) ? paymentsData : []);
+  const cancellations = cancellationsData?.content ?? (Array.isArray(cancellationsData) ? cancellationsData : []);
 
   const failedPayments = payments.filter((p) => p.status === 'FAILED');
   const failedRefunds = cancellations.filter(

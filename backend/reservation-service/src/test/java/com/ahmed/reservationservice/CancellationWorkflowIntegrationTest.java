@@ -1,5 +1,6 @@
 package com.ahmed.reservationservice;
 
+import com.ahmed.reservationservice.domain.dto.CancellationPolicyDto;
 import com.ahmed.reservationservice.domain.dto.CancellationStatusDto;
 import com.ahmed.reservationservice.domain.exception.BookingOwnershipException;
 import com.ahmed.reservationservice.domain.exception.BookingConflictException;
@@ -41,6 +42,7 @@ class CancellationWorkflowIntegrationTest {
     @Autowired private OfferSnapshotRepository snapshots;
     @Autowired private CancellationRequestRepository requests;
     @Autowired private RefundRecordRepository refunds;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
     @MockBean private CancellationProvider provider;
     @MockBean private PaymentProviderRegistry paymentProviders;
     @MockBean private BookingNotificationDispatcher notifications;
@@ -63,11 +65,61 @@ class CancellationWorkflowIntegrationTest {
     void cleanup() {
         for (UUID id : bookingIds) {
             refunds.findByBookingId(id).ifPresent(refunds::delete);
-            requests.findByBookingId(id).ifPresent(requests::delete);
+            requests.findByBookingId(id).ifPresent(request -> {
+                jdbc.update("DELETE FROM booking.refund_retry_actions WHERE cancellation_id=?",request.getId());
+                requests.delete(request);
+            });
             snapshots.findByBookingId(id).ifPresent(snapshots::delete);
             payments.findByBookingIdOrderByCreatedAtDesc(id).forEach(payments::delete);
             bookings.deleteById(id);
         }
+    }
+
+    @Test
+    void retryUsesAuthoritativeProviderOutcomeAndOriginalIdempotencyKey() {
+        UUID owner=UUID.randomUUID(),operator=UUID.randomUUID();
+        Booking booking=paidBooking(owner,null);
+        PaymentProvider failing=mock(PaymentProvider.class);
+        when(failing.refundPayment(any())).thenReturn(PaymentRefundResult.failure("Sandbox failure"));
+        when(paymentProviders.getProvider("mock")).thenReturn(failing);
+        service.cancel(booking.getBookingReference(),"Test",owner,false);
+        var request=requests.findByBookingId(booking.getId()).orElseThrow();
+        var refund=refunds.findByBookingId(booking.getId()).orElseThrow();
+        service.retryRefund(request.getId(),operator);
+        assertThat(requests.findById(request.getId()).orElseThrow().getRefundStatus()).isEqualTo("REFUND_FAILED");
+        assertThat(bookings.findById(booking.getId()).orElseThrow().getStatus()).isEqualTo(BookingStatus.CANCELLED);
+        PaymentProvider succeeding=mock(PaymentProvider.class);
+        when(succeeding.refundPayment(any())).thenAnswer(call -> new MockPaymentProvider().refundPayment(call.getArgument(0)));
+        when(paymentProviders.getProvider("mock")).thenReturn(succeeding);
+        assertThat(service.retryRefund(request.getId(),operator).refundStatus()).isEqualTo("REFUNDED");
+        assertThat(service.retryRefund(request.getId(),operator).refundStatus()).isEqualTo("REFUNDED");
+        var command=org.mockito.ArgumentCaptor.forClass(PaymentRefundCommand.class);
+        verify(succeeding,times(1)).refundPayment(command.capture());
+        assertThat(command.getValue().getProviderRequestId()).isEqualTo(refund.getRefundReference());
+        assertThat(command.getValue().getAmount()).isEqualByComparingTo(refund.getAmount());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM booking.refund_retry_actions WHERE cancellation_id=? AND operator_id=?",Long.class,request.getId(),operator)).isEqualTo(4L);
+    }
+
+    @Test
+    void concurrentRefundRetriesClaimOnlyOneProviderCall() throws Exception {
+        UUID owner=UUID.randomUUID();Booking booking=paidBooking(owner,null);
+        PaymentProvider failing=mock(PaymentProvider.class);
+        when(failing.refundPayment(any())).thenReturn(PaymentRefundResult.failure("Test failure"));
+        when(paymentProviders.getProvider("mock")).thenReturn(failing);
+        service.cancel(booking.getBookingReference(),null,owner,false);
+        UUID requestId=requests.findByBookingId(booking.getId()).orElseThrow().getId();
+        CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);
+        PaymentProvider slow=mock(PaymentProvider.class);
+        when(slow.refundPayment(any())).thenAnswer(call->{entered.countDown();assertThat(release.await(10,TimeUnit.SECONDS)).isTrue();return new MockPaymentProvider().refundPayment(call.getArgument(0));});
+        when(paymentProviders.getProvider("mock")).thenReturn(slow);
+        ExecutorService pool=Executors.newSingleThreadExecutor();
+        try {
+            var first=pool.submit(()->service.retryRefund(requestId,UUID.randomUUID()));
+            assertThat(entered.await(10,TimeUnit.SECONDS)).isTrue();
+            assertThat(service.retryRefund(requestId,UUID.randomUUID()).refundStatus()).isEqualTo("PROCESSING");
+            release.countDown();assertThat(first.get(10,TimeUnit.SECONDS).refundStatus()).isEqualTo("REFUNDED");
+            verify(slow,times(1)).refundPayment(any());
+        } finally {release.countDown();pool.shutdownNow();}
     }
 
     @Test
@@ -85,6 +137,23 @@ class CancellationWorkflowIntegrationTest {
         verify(notifications, times(1)).dispatchBookingCancelled(any(), anyString());
         verify(notifications, times(1)).dispatchRefundCompleted(any(), any(), any(), any());
         assertThat(service.status(booking.getBookingReference(), owner, false)).isPresent();
+    }
+
+    @Test
+    void demoPaymentsRefundForFlightsActivitiesAndTransfers() {
+        UUID owner = UUID.randomUUID();
+        for (ProductType type : List.of(ProductType.FLIGHT, ProductType.ACTIVITY, ProductType.TRANSFER)) {
+            Booking booking = paidBooking(owner, type, Map.of("title", type.name()));
+            CancellationPolicyDto policy = service.policy(booking.getBookingReference(), owner, false);
+            assertThat(policy.cancellable()).as(type.name()).isTrue();
+            assertThat(policy.refundAmount()).as(type.name()).isEqualByComparingTo("85.00");
+
+            CancellationStatusDto result = service.cancel(booking.getBookingReference(), null, owner, false);
+            assertThat(result.bookingStatus()).as(type.name()).isEqualTo("REFUNDED");
+            assertThat(result.refundStatus()).as(type.name()).isEqualTo("REFUNDED");
+            assertThat(refunds.findByBookingId(booking.getId()).orElseThrow().getAmount())
+                    .as(type.name()).isEqualByComparingTo("85.00");
+        }
     }
 
     @Test
@@ -240,10 +309,16 @@ class CancellationWorkflowIntegrationTest {
     }
 
     private Booking paidBooking(UUID owner, Map<String, Object> details) {
-        Booking booking = draft(owner);
+        return paidBooking(owner, ProductType.HOTEL, details);
+    }
+
+    private Booking paidBooking(UUID owner, ProductType type, Map<String, Object> details) {
+        Booking booking = bookingService.createDraft(owner, type);
+        bookingIds.add(booking.getId());
         if (details != null) {
-            OfferSnapshot snapshot = OfferSnapshot.builder().booking(booking).productType(ProductType.HOTEL)
-                    .provider("NUITEE").providerOfferId("DEMO-RATE").selectedDetails(details)
+            OfferSnapshot snapshot = OfferSnapshot.builder().booking(booking).productType(type)
+                    .provider(type == ProductType.HOTEL ? "NUITEE" : "DEMO_PROVIDER")
+                    .providerOfferId("DEMO-RATE").selectedDetails(details)
                     .providerAmount(new BigDecimal("85.00")).providerCurrency("EUR")
                     .capturedAt(Instant.now()).snapshotExpiresAt(Instant.now().plusSeconds(3600))
                     .snapshotHash(UUID.randomUUID().toString().replace("-", "")

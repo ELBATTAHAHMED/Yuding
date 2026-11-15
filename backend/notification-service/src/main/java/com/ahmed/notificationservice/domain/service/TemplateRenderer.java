@@ -17,7 +17,7 @@ public class TemplateRenderer {
     public String resolveSubject(NotificationEventType eventType, Map<String, Object> parameters) {
         String bookingRef = (String) parameters.getOrDefault("bookingReference", "");
         return switch (eventType) {
-            case VERIFY_ACCOUNT -> "Vérification de votre compte Yuding";
+            case VERIFY_ACCOUNT -> "Confirmez votre adresse e-mail — Yuding";
             case RESET_PASSWORD -> "Réinitialisation de votre mot de passe Yuding";
             case PAYMENT_FAILED -> bookingRef.isBlank()
                     ? "Échec du paiement de votre réservation Yuding"

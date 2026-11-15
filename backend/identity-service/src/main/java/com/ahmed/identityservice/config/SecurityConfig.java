@@ -83,7 +83,9 @@ public class SecurityConfig {
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
                                 "/auth/jwks",
-                                "/auth/public-key"
+                                "/auth/public-key",
+                                "/api/account/users/*/photo",
+                                "/account/users/*/photo"
                         ).permitAll()
                         .requestMatchers(
                                 "/auth/me",

@@ -14,6 +14,7 @@ import {
   AdminDestination,
   ProviderHealthStatus,
   OperationalSettings,
+  AdminPagedResponse,
 } from '@/types/admin.types';
 
 export function useAdminUsers(options?: { enabled?: boolean }) {
@@ -32,31 +33,73 @@ export function useAdminStats(options?: { enabled?: boolean }) {
   });
 }
 
-export function useAdminBookings(filters?: { limit?: number; status?: string; productType?: string }) {
-  return useQuery<AdminBooking[]>({
-    queryKey: ['admin', 'bookings', filters?.limit, filters?.status, filters?.productType],
-    queryFn: () => adminService.getBookings(filters?.limit, filters?.status, filters?.productType),
+export function useAdminBookings(filters?: {
+  page?: number;
+  size?: number;
+  limit?: number;
+  status?: string;
+  productType?: string;
+  q?: string;
+  createdFrom?: string;
+  createdTo?: string;
+}) {
+  return useQuery<AdminPagedResponse<AdminBooking>>({
+    queryKey: [
+      'admin',
+      'bookings',
+      filters?.page,
+      filters?.size,
+      filters?.limit,
+      filters?.status,
+      filters?.productType,
+      filters?.q,
+      filters?.createdFrom,
+      filters?.createdTo,
+    ],
+    queryFn: () => adminService.getBookings(filters),
   });
 }
 
-export function useAdminPayments(filters?: { limit?: number; status?: string }) {
-  return useQuery<AdminPayment[]>({
-    queryKey: ['admin', 'payments', filters?.limit, filters?.status],
-    queryFn: () => adminService.getPayments(filters?.limit, filters?.status),
+export function useAdminPayments(filters?: {
+  page?: number;
+  size?: number;
+  limit?: number;
+  status?: string;
+  provider?: string;
+  q?: string;
+  createdFrom?: string;
+  createdTo?: string;
+}) {
+  return useQuery<AdminPagedResponse<AdminPayment>>({
+    queryKey: [
+      'admin',
+      'payments',
+      filters?.page,
+      filters?.size,
+      filters?.limit,
+      filters?.status,
+      filters?.provider,
+      filters?.q,
+      filters?.createdFrom,
+      filters?.createdTo,
+    ],
+    queryFn: () => adminService.getPayments(filters),
   });
 }
 
-export function useAdminRefunds(limit: number = 50) {
-  return useQuery<AdminRefund[]>({
-    queryKey: ['admin', 'refunds', limit],
-    queryFn: () => adminService.getRefunds(limit),
+export function useAdminRefunds(filters?: { page?: number; size?: number; limit?: number; q?: string } | number) {
+  const norm = typeof filters === 'number' ? { limit: filters } : filters;
+  return useQuery<AdminPagedResponse<AdminRefund>>({
+    queryKey: ['admin', 'refunds', norm?.page, norm?.size, norm?.limit, norm?.q],
+    queryFn: () => adminService.getRefunds(filters),
   });
 }
 
-export function useAdminCancellations(limit: number = 50) {
-  return useQuery<AdminCancellation[]>({
-    queryKey: ['admin', 'cancellations', limit],
-    queryFn: () => adminService.getCancellations(limit),
+export function useAdminCancellations(filters?: { page?: number; size?: number; limit?: number; q?: string } | number) {
+  const norm = typeof filters === 'number' ? { limit: filters } : filters;
+  return useQuery<AdminPagedResponse<AdminCancellation>>({
+    queryKey: ['admin', 'cancellations', norm?.page, norm?.size, norm?.limit, norm?.q],
+    queryFn: () => adminService.getCancellations(filters),
   });
 }
 
@@ -142,7 +185,7 @@ export function useReactivateUserMutation() {
 export function useRetryRefundMutation() {
   const queryClient = useQueryClient();
 
-  return useMutation<AdminCancellation, Error, string>({
+  return useMutation<unknown, Error, string>({
     mutationFn: (cancellationId: string) => adminService.retryRefund(cancellationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'cancellations'] });

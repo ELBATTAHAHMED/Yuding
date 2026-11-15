@@ -7,7 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +25,9 @@ import java.util.UUID;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @Value("${cookie.secure:false}")
+    private boolean cookieSecure;
 
     private String getOrGenerateRequestId(HttpServletRequest request) {
         String reqId = request.getHeader("X-Request-Id");
@@ -134,7 +140,21 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.UNAUTHORIZED);
+        // A rotated/revoked refresh token is no longer recoverable in this browser.
+        // Clear the HttpOnly cookie while preserving the 401 contract so the next
+        // page load starts as an anonymous session instead of retrying forever.
+        if ("/auth/refresh".equals(request.getRequestURI())) {
+            ResponseCookie expiredCookie = ResponseCookie.from("refresh_token", "")
+                    .httpOnly(true)
+                    .secure(cookieSecure)
+                    .path("/")
+                    .sameSite("Strict")
+                    .maxAge(0)
+                    .build();
+            builder.header(HttpHeaders.SET_COOKIE, expiredCookie.toString());
+        }
+        return builder.body(response);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

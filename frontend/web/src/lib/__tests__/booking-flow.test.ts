@@ -1,6 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { bookingService } from '../../services/booking.service.ts';
+import { preparePayment } from '../payment-readiness.ts';
 import { getBookingDossierPath, getConfirmationPresentation, getConfirmationReference } from '../confirmation-state.ts';
 import type {
   BookingConfirmationDto,
@@ -214,6 +215,42 @@ describe('Booking Flow Integration & Lifecycle Tests (Phases 33–38)', () => {
     assert.match(capturedCalls[0].url, /\/bookings\/YUD-A2B3C4D5$/);
     assert.equal(capturedCalls[0].method, 'GET');
     assert.equal(result.status, 'PAID');
+  });
+
+  it('refreshes an expired draft quote from the existing dossier before payment', async () => {
+    globalThis.fetch = async (input, init) => {
+      const url = input.toString();
+      const method = init?.method || 'GET';
+      capturedCalls.push({ url, method });
+      if (url.endsWith('/revalidate')) return createMockResponse({ availabilityStatus: 'AVAILABLE', priceStatus: 'UNCHANGED', canProceedToPricing: true, requiresPriceConfirmation: false });
+      if (url.endsWith('/pricing') && method === 'POST') return createMockResponse({ pricingStatus: 'PRICED', totalAmount: 67.72, currency: 'EUR', canProceedToPayment: true });
+      if (url.endsWith('/pricing')) return createMockResponse({ pricingStatus: 'PRICED', validUntil: '2026-01-01T00:00:00Z', canProceedToPayment: false });
+      return createMockResponse({ bookingReference: 'YUD-A2B3C4D5', status: 'DRAFT', productType: 'HOTEL', offerSnapshot: { snapshotHash: 'trusted' } });
+    };
+
+    const result = await preparePayment('YUD-A2B3C4D5');
+    assert.equal(result.kind, 'ready');
+    assert.deepEqual(capturedCalls.map((call) => `${call.method} ${new URL(call.url).pathname}`), [
+      'GET /bookings/YUD-A2B3C4D5',
+      'GET /bookings/YUD-A2B3C4D5/pricing',
+      'POST /bookings/YUD-A2B3C4D5/revalidate',
+      'POST /bookings/YUD-A2B3C4D5/pricing',
+    ]);
+  });
+
+  it('requires explicit acceptance of a changed price before creating a new quote', async () => {
+    globalThis.fetch = async (input, init) => {
+      const url = input.toString();
+      const method = init?.method || 'GET';
+      capturedCalls.push({ url, method });
+      if (url.endsWith('/revalidate')) return createMockResponse({ availabilityStatus: 'AVAILABLE', priceStatus: 'CHANGED', requiresPriceConfirmation: true, previousProviderAmount: 67.17, currentProviderAmount: 67.72 });
+      if (url.endsWith('/pricing')) return createMockResponse({ message: 'No quote' }, 404);
+      return createMockResponse({ bookingReference: 'YUD-A2B3C4D5', status: 'DRAFT', productType: 'HOTEL', offerSnapshot: { snapshotHash: 'trusted' } });
+    };
+
+    const result = await preparePayment('YUD-A2B3C4D5');
+    assert.equal(result.kind, 'price_changed');
+    assert.equal(capturedCalls.some((call) => call.method === 'POST' && call.url.endsWith('/pricing')), false);
   });
 
   it('loads confirmation only from the read-only backend endpoint and ignores success query values', async () => {

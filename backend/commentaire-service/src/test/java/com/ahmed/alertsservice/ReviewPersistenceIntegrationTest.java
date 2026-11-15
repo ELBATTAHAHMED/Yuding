@@ -36,6 +36,27 @@ class ReviewPersistenceIntegrationTest {
                 """, UUID.class, user, booking, rating, status);
     }
 
+    @Test void moderationHistorySupportsWithdrawalAndRepublication() {
+        UUID operator=UUID.randomUUID();UUID id=insert(UUID.randomUUID(),UUID.randomUUID(),"PENDING_MODERATION",4);
+        reviews.moderate(id,"REJECTED",operator,"SPAM");
+        assertThat(jdbc.queryForObject("SELECT status FROM engagement.reviews WHERE id=?",String.class,id)).isEqualTo("REJECTED");
+        var action=jdbc.queryForMap("SELECT operator_id,decision,rejection_reason FROM engagement.review_moderation_actions WHERE review_id=?",id);
+        assertThat(action.get("operator_id")).isEqualTo(operator);
+        assertThat(action.get("decision")).isEqualTo("REJECTED");
+        assertThat(action.get("rejection_reason")).isEqualTo("SPAM");
+        reviews.moderate(id,"APPROVED",operator,null);
+        assertThat(jdbc.queryForObject("SELECT status FROM engagement.reviews WHERE id=?",String.class,id)).isEqualTo("APPROVED");
+        reviews.moderate(id,"REJECTED",operator,"IRRELEVANT");
+        assertThat(reviews.publicReviews("ACCOMMODATION", "NUITEE", "hotel-test-phase52").reviewCount()).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM engagement.review_moderation_actions WHERE review_id=?",Long.class,id)).isEqualTo(3L);
+    }
+
+    @Test void invalidRejectionReasonDoesNotChangeReview() {
+        UUID id=insert(UUID.randomUUID(),UUID.randomUUID(),"PENDING_MODERATION",4);
+        assertThatThrownBy(()->reviews.moderate(id,"REJECTED",UUID.randomUUID(),"INVENTED")).isInstanceOf(ResponseStatusException.class);
+        assertThat(jdbc.queryForObject("SELECT status FROM engagement.reviews WHERE id=?",String.class,id)).isEqualTo("PENDING_MODERATION");
+    }
+
     @Test void oneBookingCannotCreateTwoReviewsEvenConcurrently() {
         UUID user = UUID.randomUUID();
         UUID booking = UUID.randomUUID();

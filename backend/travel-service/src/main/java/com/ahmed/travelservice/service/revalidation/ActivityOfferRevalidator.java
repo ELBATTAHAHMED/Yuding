@@ -48,6 +48,14 @@ public class ActivityOfferRevalidator implements OfferRevalidator {
         String dateStr = (String) details.get("date");
         String title = (String) details.get("title");
         String categoryStr = (String) details.get("category");
+        Object travelerValue = details.get("travelers");
+        int travelers = travelerValue instanceof Number number ? number.intValue() : 1;
+        if (travelers < 1 || travelers > 50) {
+            return InternalRevalidationResultDto.unavailable(
+                    request.getProductType(), request.getProvider(), request.getProviderOfferId(),
+                    "Invalid traveler count in activity snapshot"
+            );
+        }
 
         LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : null;
         if (destination == null || destination.isBlank() || date == null) {
@@ -68,7 +76,7 @@ public class ActivityOfferRevalidator implements OfferRevalidator {
                 .destination(destination)
                 .date(date)
                 .category(category)
-                .travelers(1)
+                .travelers(travelers)
                 .currency(request.getSnapshotProviderCurrency() != null ? request.getSnapshotProviderCurrency() : "EUR")
                 .build();
 

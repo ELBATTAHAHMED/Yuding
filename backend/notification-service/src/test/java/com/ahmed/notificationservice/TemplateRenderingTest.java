@@ -26,20 +26,22 @@ public class TemplateRenderingTest {
         Map<String, Object> params = new HashMap<>();
         params.put("recipientName", "<script>alert('xss')</script>Alice");
         params.put("verificationLink", "http://localhost:3000/verify-email?token=sec_tok_123");
+        params.put("expiresInLabel", "24 heures");
 
         String subject = templateRenderer.resolveSubject(NotificationEventType.VERIFY_ACCOUNT, params);
         String html = templateRenderer.renderHtml("verify-account", params);
         String text = templateRenderer.renderText("verify-account", params);
 
-        assertThat(subject).isEqualTo("Vérification de votre compte Yuding");
-        assertThat(html).contains("Vérifier mon compte");
+        assertThat(subject).isEqualTo("Confirmez votre adresse e-mail — Yuding");
+        assertThat(html).contains("Vérifier mon adresse e-mail");
+        assertThat(html).contains("cid:yuding-logo");
         assertThat(html).contains("24 heures");
         assertThat(html).contains("http://localhost:3000/verify-email?token=sec_tok_123");
         // Check XSS escaping
         assertThat(html).doesNotContain("<script>alert('xss')</script>");
         assertThat(html).contains("&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;Alice");
 
-        assertThat(text).contains("Vérification de votre compte");
+        assertThat(text).contains("Confirmez votre adresse e-mail");
         assertThat(text).contains("http://localhost:3000/verify-email?token=sec_tok_123");
     }
 

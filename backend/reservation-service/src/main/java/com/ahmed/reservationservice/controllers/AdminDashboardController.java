@@ -2,6 +2,7 @@ package com.ahmed.reservationservice.controllers;
 
 import com.ahmed.reservationservice.DTO.*;
 import com.ahmed.reservationservice.domain.model.Booking;
+import com.ahmed.reservationservice.domain.model.BookingStatus;
 import com.ahmed.reservationservice.domain.model.OfferSnapshot;
 import com.ahmed.reservationservice.domain.model.Payment;
 import com.ahmed.reservationservice.domain.model.PaymentStatus;
@@ -33,6 +34,7 @@ public class AdminDashboardController {
     private final PaymentRepository paymentRepository;
     private final RefundRecordRepository refundRecordRepository;
     private final CancellationRequestRepository cancellationRequestRepository;
+    private final com.ahmed.reservationservice.domain.service.CancellationService cancellationService;
 
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsDto> getStats() {
@@ -89,20 +91,34 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/bookings")
-    public ResponseEntity<List<AdminBookingDto>> getBookings(
-            @RequestParam(defaultValue = "50") int limit,
+    public ResponseEntity<PagedResponse<AdminBookingDto>> getBookings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String productType
+            @RequestParam(required = false) String productType,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String createdFrom,
+            @RequestParam(required = false) String createdTo
     ) {
-        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 100));
         List<Booking> bookings = bookingRepository.findAll();
 
-        // Sort descending by created_at
+        Instant fromInstant = parseInstant(createdFrom);
+        Instant toInstant = parseInstant(createdTo);
+        String queryLower = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
+
         List<Booking> filtered = bookings.stream()
-                .filter(b -> status == null || status.isBlank() || b.getStatus().name().equalsIgnoreCase(status))
-                .filter(b -> productType == null || productType.isBlank() || b.getProductType().name().equalsIgnoreCase(productType))
+                .filter(b -> status == null || status.isBlank() || "ALL".equalsIgnoreCase(status) || b.getStatus().name().equalsIgnoreCase(status))
+                .filter(b -> productType == null || productType.isBlank() || "ALL".equalsIgnoreCase(productType) || b.getProductType().name().equalsIgnoreCase(productType))
+                .filter(b -> fromInstant == null || (b.getCreatedAt() != null && !b.getCreatedAt().isBefore(fromInstant)))
+                .filter(b -> toInstant == null || (b.getCreatedAt() != null && !b.getCreatedAt().isAfter(toInstant)))
+                .filter(b -> {
+                    if (queryLower == null) return true;
+                    return (b.getBookingReference() != null && b.getBookingReference().toLowerCase().contains(queryLower)) ||
+                           (b.getUserId() != null && b.getUserId().toString().toLowerCase().contains(queryLower));
+                })
                 .sorted(Comparator.comparing(Booking::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .limit(safeLimit)
                 .collect(Collectors.toList());
 
         // Preload snapshots for amounts & provider info
@@ -128,25 +144,44 @@ public class AdminDashboardController {
                     .updatedAt(b.getUpdatedAt())
                     .statusChangedAt(b.getStatusChangedAt())
                     .expiresAt(b.getExpiresAt())
+                    .pastDue(b.getStatus() == BookingStatus.PENDING_PAYMENT && b.isExpired(Instant.now()))
                     .selectedDetails(snap != null ? snap.getSelectedDetails() : null)
                     .build();
         }).collect(Collectors.toList());
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(PagedResponse.of(dtos, safePage, safeSize));
     }
 
     @GetMapping("/payments")
-    public ResponseEntity<List<AdminPaymentDto>> getPayments(
-            @RequestParam(defaultValue = "50") int limit,
-            @RequestParam(required = false) String status
+    public ResponseEntity<PagedResponse<AdminPaymentDto>> getPayments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String provider,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String createdFrom,
+            @RequestParam(required = false) String createdTo
     ) {
-        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 100));
         List<Payment> payments = paymentRepository.findAll();
 
+        Instant fromInstant = parseInstant(createdFrom);
+        Instant toInstant = parseInstant(createdTo);
+        String queryLower = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
+
         List<AdminPaymentDto> dtos = payments.stream()
-                .filter(p -> status == null || status.isBlank() || p.getStatus().name().equalsIgnoreCase(status))
+                .filter(p -> status == null || status.isBlank() || "ALL".equalsIgnoreCase(status) || p.getStatus().name().equalsIgnoreCase(status))
+                .filter(p -> provider == null || provider.isBlank() || "ALL".equalsIgnoreCase(provider) || (p.getProviderName() != null && p.getProviderName().equalsIgnoreCase(provider)))
+                .filter(p -> fromInstant == null || (p.getCreatedAt() != null && !p.getCreatedAt().isBefore(fromInstant)))
+                .filter(p -> toInstant == null || (p.getCreatedAt() != null && !p.getCreatedAt().isAfter(toInstant)))
+                .filter(p -> {
+                    if (queryLower == null) return true;
+                    return (p.getPaymentReference() != null && p.getPaymentReference().toLowerCase().contains(queryLower)) ||
+                           (p.getBookingId() != null && p.getBookingId().toString().toLowerCase().contains(queryLower)) ||
+                           (p.getProviderTransactionId() != null && p.getProviderTransactionId().toLowerCase().contains(queryLower));
+                })
                 .sorted(Comparator.comparing(Payment::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .limit(safeLimit)
                 .map(p -> AdminPaymentDto.builder()
                         .id(p.getId())
                         .bookingId(p.getBookingId())
@@ -164,19 +199,28 @@ public class AdminDashboardController {
                         .build())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(PagedResponse.of(dtos, safePage, safeSize));
     }
 
     @GetMapping("/refunds")
-    public ResponseEntity<List<AdminRefundDto>> getRefunds(
-            @RequestParam(defaultValue = "50") int limit
+    public ResponseEntity<PagedResponse<AdminRefundDto>> getRefunds(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
+            @RequestParam(required = false) String q
     ) {
-        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 100));
         List<RefundRecord> refunds = refundRecordRepository.findAll();
+        String queryLower = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
 
         List<AdminRefundDto> dtos = refunds.stream()
+                .filter(r -> {
+                    if (queryLower == null) return true;
+                    return (r.getRefundReference() != null && r.getRefundReference().toLowerCase().contains(queryLower)) ||
+                           (r.getBookingId() != null && r.getBookingId().toString().toLowerCase().contains(queryLower)) ||
+                           (r.getProviderRefundId() != null && r.getProviderRefundId().toLowerCase().contains(queryLower));
+                })
                 .sorted(Comparator.comparing(RefundRecord::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .limit(safeLimit)
                 .map(r -> AdminRefundDto.builder()
                         .id(r.getId())
                         .paymentId(r.getPaymentId())
@@ -193,19 +237,27 @@ public class AdminDashboardController {
                         .build())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(PagedResponse.of(dtos, safePage, safeSize));
     }
 
     @GetMapping("/cancellations")
-    public ResponseEntity<List<AdminCancellationDto>> getCancellations(
-            @RequestParam(defaultValue = "50") int limit
+    public ResponseEntity<PagedResponse<AdminCancellationDto>> getCancellations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
+            @RequestParam(required = false) String q
     ) {
-        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 100));
         List<CancellationRequest> requests = cancellationRequestRepository.findAll();
+        String queryLower = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
 
         List<AdminCancellationDto> dtos = requests.stream()
+                .filter(c -> {
+                    if (queryLower == null) return true;
+                    return (c.getReason() != null && c.getReason().toLowerCase().contains(queryLower)) ||
+                           (c.getBookingId() != null && c.getBookingId().toString().toLowerCase().contains(queryLower));
+                })
                 .sorted(Comparator.comparing(CancellationRequest::getRequestedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .limit(safeLimit)
                 .map(c -> AdminCancellationDto.builder()
                         .id(c.getId())
                         .bookingId(c.getBookingId())
@@ -225,42 +277,23 @@ public class AdminDashboardController {
                         .build())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(PagedResponse.of(dtos, safePage, safeSize));
+    }
+
+    private static Instant parseInstant(String text) {
+        if (text == null || text.isBlank()) return null;
+        try {
+            return Instant.parse(text);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @PostMapping("/cancellations/{id}/retry-refund")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> retryRefund(@PathVariable UUID id) {
-        CancellationRequest request = cancellationRequestRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Demande d'annulation introuvable"));
-
-        if (!"REFUND_FAILED".equalsIgnoreCase(request.getRefundStatus())) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Seuls les remboursements en statut REFUND_FAILED peuvent être relancés."
-            ));
-        }
-
-        Booking booking = bookingRepository.findById(request.getBookingId())
-                .orElseThrow(() -> new IllegalArgumentException("Réservation introuvable"));
-
-        RefundRecord refund = refundRecordRepository.findByBookingId(booking.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Enregistrement de remboursement introuvable"));
-
-        refund.setStatus("SUCCEEDED");
-        refund.setProviderRefundId("MOCK-REFUND-RETRY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        refund.setUpdatedAt(Instant.now());
-        refundRecordRepository.save(refund);
-
-        request.setRefundStatus("REFUNDED");
-        request.setRefundedAt(Instant.now());
-        cancellationRequestRepository.save(request);
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Remboursement sandbox relancé et validé avec succès.",
-                "refundReference", refund.getRefundReference(),
-                "refundStatus", "REFUNDED"
-        ));
+    public ResponseEntity<com.ahmed.reservationservice.domain.dto.CancellationStatusDto> retryRefund(
+            @PathVariable UUID id,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
+        return ResponseEntity.ok(cancellationService.retryRefund(id, UUID.fromString(jwt.getSubject())));
     }
 }

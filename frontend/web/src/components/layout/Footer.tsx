@@ -16,7 +16,8 @@ export function Footer() {
           <div className="yuding-footer__brand">
             <Link href="/" aria-label="Yuding — accueil">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/image/logodark.png" alt="Yuding" />
+              <img className="footer-logo-light" src="/image/yuding-logo-ai-light-green.png" alt="Yuding" />
+              <img className="footer-logo-dark" src="/image/yuding-logo-ai-inverse-green.png" alt="" aria-hidden="true" />
             </Link>
             <p>Des voyages qui vous ressemblent, à votre rythme.</p>
           </div>

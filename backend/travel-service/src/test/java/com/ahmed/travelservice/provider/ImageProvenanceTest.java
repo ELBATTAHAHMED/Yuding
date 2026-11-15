@@ -204,28 +204,4 @@ class ImageProvenanceTest {
         assertThat(o2.getImageAsset().isRepresentsEntity()).isFalse();
     }
 
-    @Test
-    @DisplayName("Curated Yuding activities carry YUDING_CURATED provenance and representsEntity=true")
-    void curatedYudingActivities_provenanceEnforced() {
-        HBXTravelProvider provider = new HBXTravelProvider(hbxActivitiesClient, hbxTransfersClient);
-
-        HBXActivitySearchResponse emptyResp = new HBXActivitySearchResponse();
-        emptyResp.setActivities(List.of());
-        when(hbxActivitiesClient.searchActivities(any())).thenReturn(emptyResp);
-
-        ActivitySearchQuery query = ActivitySearchQuery.builder()
-                .destination("Marrakech")
-                .build();
-
-        List<ActivityOfferDto> offers = provider.searchActivities(query);
-
-        assertThat(offers).hasSize(2);
-        for (ActivityOfferDto offer : offers) {
-            assertThat(offer.getSource()).isEqualTo("YUDING_CUSTOM");
-            assertThat(offer.getImageAsset()).isNotNull();
-            assertThat(offer.getImageAsset().getSourceType()).isEqualTo(ImageSourceType.YUDING_CURATED);
-            assertThat(offer.getImageAsset().getSourceProvider()).isEqualTo("YUDING");
-            assertThat(offer.getImageAsset().isRepresentsEntity()).isTrue();
-        }
-    }
 }

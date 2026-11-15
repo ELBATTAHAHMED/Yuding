@@ -22,8 +22,8 @@
     Service logs are streamed into .dev-logs/<service>.log.
 
 .PARAMETER Build
-    Rebuild all backend JARs and the frontend bundle when port 3000 is free.
-    By default, rebuilds only stale backend JARs and runs Next.js in dev mode.
+    Rebuild all backend JARs. The optimized frontend is built whenever it starts.
+    By default, rebuilds only stale backend JARs and starts the optimized frontend.
 
 .EXAMPLE
     .\scripts\start-dev.ps1
@@ -50,15 +50,71 @@ $runningProjectProcesses = Get-CimInstance Win32_Process | Where-Object {
     $_.CommandLine.Contains((Join-Path $repoRoot 'backend\')) -and
     $_.CommandLine -match '-jar\s'
 }
+$servicePorts = @(9091, 8761, 8081, 8085, 8082, 8084, 8090, 8072, 8888)
+# Some local launches use a relative JAR path (for example when a developer
+# starts a service from its module directory).  A relative command line still
+# belongs to this stack when it is a Java process, listens on the service's
+# expected port, and names that exact service JAR.  Without this check a
+# healthy Yuding service is incorrectly reported as a foreign process.
+$serviceNames = @{
+    9091 = 'config-service'; 8761 = 'discovery-service'; 8081 = 'identity-service'
+    8085 = 'notification-service'; 8082 = 'travel-service'; 8084 = 'reservation-service'
+    8090 = 'commentaire-service'; 8072 = 'ai-service'; 8888 = 'gateway-service'
+}
+foreach ($servicePort in $servicePorts) {
+    $serviceName = $serviceNames[[int]$servicePort]
+    $expectedJar = [regex]::Escape("target/$serviceName-0.0.1-SNAPSHOT.jar") -replace '/', '[\\/]'
+    $listeners = @(Get-NetTCPConnection -State Listen -LocalPort $servicePort -ErrorAction SilentlyContinue)
+    foreach ($listener in $listeners) {
+        $process = Get-CimInstance Win32_Process -Filter "ProcessId = $($listener.OwningProcess)" -ErrorAction SilentlyContinue
+        if ($process -and $process.Name -eq 'java.exe' -and $process.CommandLine -and
+            $process.CommandLine -match "(?i)-jar\s+[`"']?$expectedJar(?:[`"']|\s|$)") {
+            $runningProjectProcesses = @($runningProjectProcesses) + @($process) | Sort-Object ProcessId -Unique
+        }
+    }
+}
+# The PID tracker remains useful for runs whose command line is ambiguous.
+if (Test-Path $pidsFile) {
+    try {
+        $trackerTimestamp = (Get-Item $pidsFile).LastWriteTimeUtc
+        $trackedEntries = Get-Content $pidsFile -Raw | ConvertFrom-Json
+        foreach ($entry in $trackedEntries) {
+            if (-not $entry.Pid -or -not $serviceNames.ContainsKey([int]$entry.Port) -or
+                $entry.Name -ne $serviceNames[[int]$entry.Port]) { continue }
+            $process = Get-CimInstance Win32_Process -Filter "ProcessId = $([int]$entry.Pid)" -ErrorAction SilentlyContinue
+            $expectedJar = [regex]::Escape("target/$($entry.Name)-0.0.1-SNAPSHOT.jar") -replace '/', '[\\/]'
+            $listener = Get-NetTCPConnection -State Listen -LocalPort ([int]$entry.Port) -ErrorAction SilentlyContinue |
+                Where-Object { $_.OwningProcess -eq [int]$entry.Pid }
+            if ($listener -and $process -and $process.Name -eq 'java.exe' -and $process.CommandLine -and
+                $process.CreationDate.ToUniversalTime() -le $trackerTimestamp -and
+                $process.CommandLine -match "(?i)-jar\s+[`"']?$expectedJar(?:[`"']|\s|$)") {
+                $runningProjectProcesses = @($runningProjectProcesses) + @($process) | Sort-Object ProcessId -Unique
+            }
+        }
+    } catch {
+        Write-Warning "Could not inspect tracked processes: $($_.Exception.Message)"
+    }
+}
+# Check for foreign listeners before stopping any existing project services.
+foreach ($servicePort in $servicePorts) {
+    $listeners = @(Get-NetTCPConnection -State Listen -LocalPort $servicePort -ErrorAction SilentlyContinue)
+    foreach ($listener in $listeners) {
+        if ($listener.OwningProcess -notin @($runningProjectProcesses | ForEach-Object { $_.ProcessId })) {
+            $owner = Get-CimInstance Win32_Process -Filter "ProcessId = $($listener.OwningProcess)" -ErrorAction SilentlyContinue
+            $ownerName = if ($owner) { $owner.Name } else { 'unknown' }
+            throw "Port $servicePort is in use by $ownerName (PID $($listener.OwningProcess)). Identify and stop that process before starting Yuding."
+        }
+    }
+}
 foreach ($runningProcess in $runningProjectProcesses) {
     Write-Host "  Restarting existing Yuding process PID $($runningProcess.ProcessId)..." -ForegroundColor DarkYellow
     Stop-Process -Id $runningProcess.ProcessId -Force -ErrorAction Stop
 }
 if ($runningProjectProcesses) { Start-Sleep -Seconds 2 }
-foreach ($servicePort in @(9091, 8761, 8081, 8085, 8082, 8084, 8090, 8072, 8888)) {
+foreach ($servicePort in $servicePorts) {
     $listener = Get-NetTCPConnection -State Listen -LocalPort $servicePort -ErrorAction SilentlyContinue
     if ($listener) {
-        throw "Port $servicePort is already in use by another process. Free it before starting Yuding."
+        throw "Port $servicePort is still in use by PID $($listener[0].OwningProcess). Identify and stop that process before starting Yuding."
     }
 }
 if (Test-Path $pidsFile) { Remove-Item $pidsFile -Force }
@@ -216,18 +272,7 @@ if ($Build) {
         }
     }
 
-    if (-not (Test-PortListening 'localhost' 3000)) {
-        Write-Host "  Building frontend/web ..." -ForegroundColor DarkCyan
-        Push-Location (Join-Path $repoRoot 'frontend\web')
-        try {
-            & cmd.exe /c "npm run build" | Out-Null
-            if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed' }
-        } finally {
-            Pop-Location
-        }
-    } else {
-        Write-Host '  Skipping frontend build while an existing web server uses port 3000.' -ForegroundColor DarkYellow
-    }
+    # The optimized frontend is built once, immediately before it starts below.
 }
 
 # Helper to start Java service
@@ -251,17 +296,27 @@ function Start-BackendService ([string]$serviceName, [int]$port) {
     }
 
     $logPath = Join-Path $logsDir "$serviceName.log"
-    if (Test-Path $logPath) {
-        Clear-Content $logPath -ErrorAction SilentlyContinue
+    $errorLogPath = Join-Path $logsDir "$serviceName.err.log"
+    foreach ($path in @($logPath, $errorLogPath)) {
+        if (Test-Path $path) {
+            Clear-Content $path -ErrorAction SilentlyContinue
+        }
     }
 
     # The shared development profile is for downstream services. Config Server
     # must use its native repository even when SPRING_PROFILES_ACTIVE=dev is set.
-    $profileArg = if ($serviceName -eq 'config-service') { '-Dspring.profiles.active=native ' } else { '' }
+    $javaArgs = @()
+    if ($serviceName -eq 'config-service') {
+        $javaArgs += '-Dspring.profiles.active=native'
+    }
+    $javaArgs += '-jar'
+    $javaArgs += $jarPath
 
-    # Launch java process via cmd /c with stdout and stderr captured into single log file
-    $cmdArg = "/c `"java $profileArg-jar `"$jarPath`" > `"$logPath`" 2>&1`""
-    $proc = Start-Process -FilePath "cmd.exe" -ArgumentList $cmdArg -WorkingDirectory $svcDir -WindowStyle Hidden -PassThru
+    # Start Java itself, not a transient cmd.exe wrapper. This keeps the PID
+    # tracker correct after the shell exits, so gateway and downstream services
+    # remain available throughout a local development session.
+    $proc = Start-Process -FilePath 'java.exe' -ArgumentList $javaArgs -WorkingDirectory $svcDir -WindowStyle Hidden -PassThru `
+        -RedirectStandardOutput $logPath -RedirectStandardError $errorLogPath
 
     Register-TrackedProcess $serviceName $proc.Id $port $logPath
     Write-Host "  [STARTED] $serviceName (PID: $($proc.Id), Port: $port) -> logs: .dev-logs\$serviceName.log" -ForegroundColor Green
@@ -395,17 +450,34 @@ Write-Host "`n[6/6] Starting Web Frontend (frontend/web:3000)..." -ForegroundCol
 $webDir = Join-Path $repoRoot 'frontend\web'
 
 if (Test-PortListening 'localhost' 3000) {
-    Write-Host '  Reusing the existing frontend on port 3000.' -ForegroundColor DarkCyan
-} else {
-    $webLogPath = Join-Path $logsDir 'frontend-web.log'
-    if (Test-Path $webLogPath) {
-        Clear-Content $webLogPath -ErrorAction SilentlyContinue
+    $frontendListener = Get-NetTCPConnection -State Listen -LocalPort 3000 -ErrorAction Stop | Select-Object -First 1
+    $frontendProcess = Get-CimInstance Win32_Process -Filter "ProcessId = $($frontendListener.OwningProcess)" -ErrorAction SilentlyContinue
+    $projectFrontend = $frontendProcess -and $frontendProcess.Name -eq 'node.exe' -and $frontendProcess.CommandLine -and
+        $frontendProcess.CommandLine.Contains((Join-Path $repoRoot 'frontend\web'))
+    if (-not $projectFrontend) {
+        throw "Port 3000 is in use by $($frontendProcess.Name) (PID $($frontendListener.OwningProcess)). Refusing to stop a non-Yuding frontend process."
     }
-    $webCmdArg = "/c `"npm run dev > `"$webLogPath`" 2>&1`""
-    $webProc = Start-Process -FilePath "cmd.exe" -ArgumentList $webCmdArg -WorkingDirectory $webDir -WindowStyle Hidden -PassThru
-    Register-TrackedProcess 'frontend-web' $webProc.Id 3000 $webLogPath
-    Write-Host "  [STARTED] frontend-web (PID: $($webProc.Id), Port: 3000) -> logs: .dev-logs\frontend-web.log" -ForegroundColor Green
+    Write-Host '  Restarting existing Yuding frontend to refresh hashed Next.js chunks...' -ForegroundColor DarkYellow
+    Stop-Process -Id $frontendListener.OwningProcess -Force -ErrorAction Stop
+    Start-Sleep -Milliseconds 800
 }
+
+Write-Host '  Building optimized frontend...' -ForegroundColor DarkCyan
+Push-Location $webDir
+try {
+    & cmd.exe /c "npm run build:local-server"
+    if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed' }
+} finally {
+    Pop-Location
+}
+$webLogPath = Join-Path $logsDir 'frontend-web.log'
+if (Test-Path $webLogPath) {
+    Clear-Content $webLogPath -ErrorAction SilentlyContinue
+}
+$webCmdArg = "/c `"npm run start:local-server > `"$webLogPath`" 2>&1`""
+$webProc = Start-Process -FilePath "cmd.exe" -ArgumentList $webCmdArg -WorkingDirectory $webDir -WindowStyle Hidden -PassThru
+Register-TrackedProcess 'frontend-web' $webProc.Id 3000 $webLogPath
+Write-Host "  [STARTED] frontend-web (PID: $($webProc.Id), Port: 3000) -> logs: .dev-logs\frontend-web.log" -ForegroundColor Green
 
 Write-Host "  Waiting for Next.js on port 3000..." -ForegroundColor DarkGray
 $webOk = Wait-HttpEndpoint 'http://localhost:3000/' 60

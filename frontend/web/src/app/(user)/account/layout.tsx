@@ -21,21 +21,23 @@ export default function UserLayout({ children }: { children: ReactNode }) {
   return (
     <div className="user-account-shell">
       <Header />
-      <ProtectedRoute>
-        <div className="account-surface">
-          <div className="account-content">
-            <nav className="account-nav" aria-label="Navigation du compte">
-              {navItems.map(item => (
-                <Link key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} aria-current={pathname === item.href ? 'page' : undefined}>
-                  <i className={`fas ${item.icon}`} aria-hidden="true" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-            {children}
+      <div className="account-main">
+        <ProtectedRoute>
+          <div className="account-surface">
+            <div className="account-content">
+              <nav className="account-nav" aria-label="Navigation du compte">
+                {navItems.map(item => (
+                  <Link key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} aria-current={pathname === item.href ? 'page' : undefined}>
+                    <i className={`fas ${item.icon}`} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
+              {children}
+            </div>
           </div>
-        </div>
-      </ProtectedRoute>
+        </ProtectedRoute>
+      </div>
       <Footer />
     </div>
   );

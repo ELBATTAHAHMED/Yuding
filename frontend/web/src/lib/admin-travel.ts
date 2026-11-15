@@ -1,5 +1,5 @@
-import { AdminBooking } from '@/types/admin.types';
-
+import type { AdminBooking } from "@/types/admin.types";
+import { formatAdminDay, formatAdminMoment, formatStayDates } from "./admin-date.ts";
 export interface ParsedTravelContext {
   productType: string;
   title: string;
@@ -11,161 +11,189 @@ export interface ParsedTravelContext {
   imageUrl?: string;
   details: { label: string; value: string }[];
 }
-
+export const travelLabels: Record<string, string> = {
+  HOTEL: "Hôtel",
+  FLIGHT: "Vol",
+  ACTIVITY: "Activité",
+  TRANSFER: "Transfert",
+  TRAIN: "Train",
+};
 export function parseTravelContext(booking: AdminBooking): ParsedTravelContext {
-  const type = (booking.productType || 'UNKNOWN').toUpperCase();
   const d = booking.selectedDetails || {};
-
-  switch (type) {
-    case 'HOTEL': {
-      const name = d.hotelName || d.name || `Hôtel (${booking.bookingReference})`;
-      const city = d.city || d.destination || 'Maroc';
-      const checkIn = d.checkIn || '';
-      const checkOut = d.checkOut || '';
-      const dates = checkIn && checkOut ? `${checkIn} → ${checkOut}` : checkIn || 'Dates flexibles';
-      const image = Array.isArray(d.galleryUrls) && d.galleryUrls.length > 0 
-        ? d.galleryUrls[0] 
-        : d.imageUrl || d.heroImageUrl || undefined;
-      const room = d.roomSummary || d.selectedRoom?.roomName || 'Chambre standard';
-
-      return {
-        productType: 'HOTEL',
-        title: name,
-        subtitle: `${city}${d.country ? `, ${d.country}` : ''} • ${room}`,
-        badge: 'Hôtel',
-        badgeColor: '#10B981', // emerald
-        dates,
-        imageUrl: image,
-        details: [
-          { label: 'Établissement', value: name },
-          { label: 'Localisation', value: `${city}${d.country ? ` (${d.country})` : ''}` },
-          { label: 'Arrivée', value: checkIn || '—' },
-          { label: 'Départ', value: checkOut || '—' },
-          { label: 'Hébergement', value: room },
-          { label: 'Formule / Pension', value: d.selectedRoom?.boardType || 'Standard' },
-          { label: 'Étoiles', value: d.starRating ? `${d.starRating} ★` : '—' },
-          { label: 'Note Avis', value: d.reviewScore ? `${d.reviewScore}/10 (${d.reviewCount || 0} avis)` : '—' },
-        ],
-      };
-    }
-
-    case 'FLIGHT': {
-      const origin = d.origin || d.departureAirport || 'CMN';
-      const destination = d.destination || d.arrivalAirport || 'CDG';
-      const airline = d.airlineCode || d.airline || 'Compagnie';
-      const flightNum = d.flightNumber ? `${airline} ${d.flightNumber}` : airline;
-      const depTime = d.departureTime || d.departureDate || '';
-      const arrTime = d.arrivalTime || '';
-      const dates = depTime ? (arrTime ? `${depTime} → ${arrTime}` : depTime) : 'Date à confirmer';
-
-      return {
-        productType: 'FLIGHT',
-        title: `${origin} ✈ ${destination}`,
-        subtitle: `${flightNum} • ${d.cabinClass || 'Économique'} • ${d.stops === 0 ? 'Direct' : d.stops ? `${d.stops} escale(s)` : 'Vol régulier'}`,
-        badge: 'Vol',
-        badgeColor: '#0EA5E9', // sky blue
-        dates,
-        route: `${origin} → ${destination}`,
-        details: [
-          { label: 'Trajet', value: `${origin} ✈ ${destination}` },
-          { label: 'Vol & Compagnie', value: flightNum },
-          { label: 'Départ', value: depTime || '—' },
-          { label: 'Arrivée', value: arrTime || '—' },
-          { label: 'Classe', value: d.cabinClass || 'Économique' },
-          { label: 'Passagers', value: d.passengers ? `${d.passengers} voyageur(s)` : '1 passager' },
-        ],
-      };
-    }
-
-    case 'ACTIVITY': {
-      const title = d.title || d.activityName || 'Activité & Excursion';
-      const dest = d.destination || d.city || 'Maroc';
-      const date = d.date || d.activityDate || 'Date libre';
-      const image = Array.isArray(d.galleryUrls) && d.galleryUrls.length > 0
-        ? d.galleryUrls[0]
-        : d.imageUrl || d.heroImageUrl || undefined;
-
-      return {
-        productType: 'ACTIVITY',
-        title,
-        subtitle: `${dest} • ${d.category || 'Visite culturelle'}`,
-        badge: 'Activité',
-        badgeColor: '#F59E0B', // amber
-        dates: date,
-        imageUrl: image,
-        details: [
-          { label: 'Activité', value: title },
-          { label: 'Destination', value: dest },
-          { label: 'Date', value: date },
-          { label: 'Durée', value: d.durationHours ? `${d.durationHours}h` : '—' },
-          { label: 'Participants', value: d.travelers ? `${d.travelers} participant(s)` : '1 participant' },
-          { label: 'Catégorie', value: d.category || 'Expérience locale' },
-        ],
-      };
-    }
-
-    case 'TRANSFER': {
-      const pickup = d.pickup || 'Point de prise en charge';
-      const dropoff = d.dropoff || 'Destination de dépose';
-      const vehicle = d.vehicleModel || d.vehicleType || 'Berline VTC';
-      const time = d.time ? `${d.date || ''} à ${d.time}` : d.date || 'Sur réservation';
-
-      return {
-        productType: 'TRANSFER',
-        title: `${pickup} ➔ ${dropoff}`,
-        subtitle: `${vehicle} • ${d.transferType || 'Transfert privé'}`,
-        badge: 'Transfert',
-        badgeColor: '#8B5CF6', // purple
-        dates: time,
-        route: `${pickup} → ${dropoff}`,
-        details: [
-          { label: 'Prise en charge', value: pickup },
-          { label: 'Dépose', value: dropoff },
-          { label: 'Date & Heure', value: time },
-          { label: 'Véhicule', value: vehicle },
-          { label: 'Passagers', value: d.passengers ? `${d.passengers} pers.` : '1 pers.' },
-        ],
-      };
-    }
-
-    case 'TRAIN': {
-      const orig = d.originStation || d.origin || 'Gare départ';
-      const dest = d.destinationStation || d.destination || 'Gare arrivée';
-      const train = d.trainNumber ? `Train Al Boraq #${d.trainNumber}` : 'ONCF Al Boraq';
-      const time = d.departureDate ? `${d.departureDate} (${d.departureTime || ''})` : 'Date planifiée';
-
-      return {
-        productType: 'TRAIN',
-        title: `${orig} 🚆 ${dest}`,
-        subtitle: `${train} • ${d.operator || 'ONCF'}`,
-        badge: 'Train',
-        badgeColor: '#EC4899', // pink
-        dates: time,
-        route: `${orig} → ${dest}`,
-        details: [
-          { label: 'Gare départ', value: orig },
-          { label: 'Gare arrivée', value: dest },
-          { label: 'Train', value: train },
-          { label: 'Horaires', value: time },
-          { label: 'Classe', value: d.seatClass || '1ère / 2ème classe' },
-        ],
-      };
-    }
-
-    default: {
-      return {
-        productType: type,
-        title: `Prestation ${type}`,
-        subtitle: `Réf: ${booking.bookingReference}`,
-        badge: type,
-        badgeColor: '#6B7280',
-        dates: booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('fr-FR') : '—',
-        details: [
-          { label: 'Référence', value: booking.bookingReference },
-          { label: 'Type', value: type },
-          { label: 'Fournisseur', value: booking.provider || 'Plateforme' },
-        ],
-      };
-    }
+  const type = booking.productType.toUpperCase();
+  const read = (...keys: string[]) =>
+    keys.map((k) => d[k]).find((v) => v != null && v !== "");
+  const string = (v: unknown) =>
+    v == null || v === ""
+      ? "—"
+      : typeof v === "object"
+        ? "—"
+        : String(v);
+  let title = travelLabels[type] || type;
+  let subtitle = "Informations voyage non renseignées";
+  let dates = "Dates non renseignées";
+  let route: string | undefined;
+  let fields: [string, unknown][] = [];
+  if (type === "HOTEL") {
+    title = string(read("hotelName", "name"));
+    subtitle =
+      [
+        read("city", "destination"),
+        d.selectedRoom?.roomName || read("roomSummary"),
+      ]
+        .filter(Boolean)
+        .join(" · ") || subtitle;
+    dates = formatStayDates(read("checkIn"), read("checkOut"));
+    const a = Date.parse(d.checkIn),
+      b = Date.parse(d.checkOut);
+    const nights =
+      Number.isFinite(a) && Number.isFinite(b) && b > a
+        ? Math.round((b - a) / 86400000)
+        : undefined;
+    fields = [
+      ["Établissement", title],
+      ["Ville", read("city", "destination")],
+      ["Arrivée", d.checkIn],
+      ["Départ", d.checkOut],
+      ["Nuits", nights],
+      ["Chambre", d.selectedRoom?.roomName || d.roomSummary],
+      ["Formule", d.selectedRoom?.boardType],
+      ["Voyageurs", read("guests", "guestCount", "adults")],
+    ];
+  } else if (type === "FLIGHT") {
+    const origin = read("origin", "departureAirport"),
+      destination = read("destination", "arrivalAirport");
+    route = [
+      origin || "Départ non renseigné",
+      destination || "Arrivée non renseignée",
+    ].join(" → ");
+    title = route;
+    subtitle =
+      [
+        read("airlineName", "airlineCode", "airline"),
+        d.flightNumber,
+        d.cabinClass,
+      ]
+        .filter(Boolean)
+        .join(" · ") || subtitle;
+    dates = formatAdminMoment(read("departureTime", "departureDate"));
+    fields = [
+      ["Départ", origin],
+      ["Arrivée", destination],
+      ["Compagnie", read("airlineName", "airlineCode", "airline")],
+      ["Vol", d.flightNumber],
+      ["Décollage", read("departureTime", "departureDate")],
+      ["Atterrissage", d.arrivalTime],
+      ["Passagers", read("passengers", "adults")],
+      ["Classe", d.cabinClass],
+    ];
+  } else if (type === "ACTIVITY") {
+    title = string(read("title", "activityName", "name"));
+    subtitle = string(read("destination", "city"));
+    dates = formatAdminDay(read("date", "activityDate", "selectedDate"));
+    fields = [
+      ["Activité", title],
+      ["Destination", read("destination", "city")],
+      ["Date", read("date", "activityDate", "selectedDate")],
+      ["Horaire", read("time", "startTime")],
+      ["Participants", read("participants", "passengers", "adults")],
+    ];
+  } else if (type === "TRANSFER") {
+    const origin = read("pickup", "pickupLocation", "origin"),
+      dest = read("dropoff", "dropoffLocation", "destination");
+    title = [
+      origin || "Prise en charge non renseignée",
+      dest || "Dépose non renseignée",
+    ].join(" → ");
+    subtitle = string(read("vehicleModel", "vehicleType"));
+    dates =
+      [formatAdminDay(read("date", "pickupDate")), read("time", "pickupTime")]
+        .filter(Boolean)
+        .join(" · ") || dates;
+    fields = [
+      ["Prise en charge", origin],
+      ["Dépose", dest],
+      ["Date", read("date", "pickupDate")],
+      ["Horaire", read("time", "pickupTime")],
+      ["Véhicule", read("vehicleModel", "vehicleType")],
+      ["Voyageurs", read("passengers", "adults")],
+    ];
+  } else if (type === "TRAIN") {
+    const origin = read("originStation", "origin"),
+      dest = read("destinationStation", "destination");
+    title = [
+      origin || "Gare non renseignée",
+      dest || "Gare non renseignée",
+    ].join(" → ");
+    subtitle =
+      [d.operator, d.trainNumber, d.seatClass].filter(Boolean).join(" · ") ||
+      subtitle;
+    dates =
+      [formatAdminDay(d.departureDate), d.departureTime].filter(Boolean).join(" · ") || dates;
+    fields = [
+      ["Gare de départ", origin],
+      ["Gare d’arrivée", dest],
+      ["Date", d.departureDate],
+      ["Horaire", d.departureTime],
+      ["Train", d.trainNumber],
+      ["Opérateur", d.operator],
+      ["Passagers", read("passengers", "adults")],
+    ];
   }
+  if (title === "—") title = Object.keys(d).length ? (travelLabels[type] || "Voyage") : "Offre indisponible";
+  // High-resolution image selection for admin consoles.
+  // Filters out small/glitched thumbnail URLs when full-size provider photos exist,
+  // and auto-upgrades provider thumbnail paths (e.g. Cupid /thumbnail/ paths) to
+  // the canonical full-size photograph, avoiding pixelation at any zoom level.
+  const rawCandidates: unknown[] = [
+    d.heroImageUrl,
+    d.imageUrl,
+    d.image_url,
+    d.thumbnailUrl,
+    d.thumbnail,
+    d.pictureUrl,
+    d.photo,
+    ...(Array.isArray(d.photos) ? d.photos.map((p: any) => (typeof p === 'string' ? p : p?.url || p?.large || p?.medium)) : []),
+    ...(Array.isArray(d.galleryUrls) ? d.galleryUrls : []),
+    ...(Array.isArray(d.images) ? d.images.map((i: any) => (typeof i === 'string' ? i : i?.url)) : []),
+  ];
+
+  const stringCandidates = rawCandidates
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+    .map(url => url.trim());
+
+  const upgradeProviderUrl = (url: string) => {
+    // Cupid/Hotelbeds /thumbnail/ paths point to downscaled 80x80 or 150x150 variants.
+    // The canonical photograph resides at the same URL without the /thumbnail/ segment.
+    if (url.includes('cupid.travel') && url.includes('/thumbnail/')) {
+      return url.replace('/thumbnail/', '/');
+    }
+    return url;
+  };
+
+  const isLowResThumbnail = (url: string) =>
+    /\/thumbnail\//i.test(url) ||
+    /_thumb\./i.test(url) ||
+    /[-_]80x80\./i.test(url) ||
+    /[-_]150x150\./i.test(url) ||
+    /_t\.(?:jpg|png|webp)/i.test(url);
+
+  // Prefer high-res non-thumbnail image first, upgrading provider URLs
+  const bestCandidate =
+    stringCandidates.find(url => !isLowResThumbnail(url)) ||
+    stringCandidates[0];
+
+  const image = bestCandidate ? upgradeProviderUrl(bestCandidate) : undefined;
+
+  return {
+    productType: type,
+    title,
+    subtitle,
+    badge: travelLabels[type] || type,
+    badgeColor: "#087f78",
+    dates,
+    route,
+    imageUrl: image,
+    details: fields.map(([label, value]) => ({ label, value: typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value) ? formatAdminMoment(value) : string(value) })),
+  };
 }

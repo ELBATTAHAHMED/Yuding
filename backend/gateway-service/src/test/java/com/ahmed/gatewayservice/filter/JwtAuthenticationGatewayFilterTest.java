@@ -29,6 +29,39 @@ class JwtAuthenticationGatewayFilterTest {
     }
 
     @Test
+    void signedRolesAreEnforcedForAdminReadsAndWrites() throws Exception {
+        var generator=java.security.KeyPairGenerator.getInstance("RSA");generator.initialize(2048);
+        var pair=generator.generateKeyPair();
+        ReflectionTestUtils.setField(filter,"rsaPublicKey",pair.getPublic());
+        for(String role:java.util.List.of("ROLE_USER","ROLE_CONTENT_MANAGER","ROLE_SUPPORT","ROLE_ADMIN")) {
+            var claims=new com.nimbusds.jwt.JWTClaimsSet.Builder().subject(java.util.UUID.randomUUID().toString())
+                    .expirationTime(new java.util.Date(System.currentTimeMillis()+60000)).claim("roles",java.util.List.of(role)).build();
+            var token=new com.nimbusds.jwt.SignedJWT(new com.nimbusds.jose.JWSHeader(com.nimbusds.jose.JWSAlgorithm.RS256),claims);
+            token.sign(new com.nimbusds.jose.crypto.RSASSASigner(pair.getPrivate()));
+            boolean reader=role.equals("ROLE_ADMIN")||role.equals("ROLE_SUPPORT");
+            for(boolean write:java.util.List.of(false,true)) {
+                var builder=write?MockServerHttpRequest.post("/apir/admin/cancellations/00000000-0000-0000-0000-000000000001/retry-refund"):MockServerHttpRequest.get("/apir/admin/dossiers");
+                var exchange=MockServerWebExchange.from(builder.header("Authorization","Bearer "+token.serialize()).build());
+                var invoked=new java.util.concurrent.atomic.AtomicBoolean(false);
+                filter.filter(exchange,ex->{invoked.set(true);return Mono.empty();}).block();
+                boolean allowed=reader&&(!write||role.equals("ROLE_ADMIN"));
+                assertThat(invoked.get()).as(role+" write="+write).isEqualTo(allowed);
+                if(!allowed)assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            }
+        }
+    }
+
+    @Test
+    void adminRoutesRejectAnonymousRequestsBeforeDownstream() {
+        for(String path:java.util.List.of("/admin/users/page","/apir/admin/dossiers","/apir/admin/ledger","/apic/reviews/moderation/page")) {
+            var exchange=MockServerWebExchange.from(MockServerHttpRequest.get(path).header("X-User-Roles","ROLE_ADMIN").build());
+            var invoked=new java.util.concurrent.atomic.AtomicBoolean(false);
+            filter.filter(exchange,ex->{invoked.set(true);return Mono.empty();}).block();
+            assertThat(invoked).isFalse();assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @Test
     @DisplayName("Filter explicitly strips spoofed client headers (X-User-*) when no Authorization header is present")
     void filter_stripsSpoofedHeaders_whenNoToken() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/apir/reservations/1")

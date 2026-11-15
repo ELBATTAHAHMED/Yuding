@@ -1,14 +1,18 @@
-YUDING - Vérification de votre compte
+YUDING · COMPTE & SÉCURITÉ
+
+Confirmez votre adresse e-mail
 
 Bonjour [(${recipientName != null ? recipientName : 'voyageur'})],
 
-Merci d'avoir créé votre compte sur Yuding.
-Veuillez confirmer votre adresse e-mail en ouvrant le lien suivant :
+Un dernier clic suffit pour activer votre compte et commencer à organiser vos prochains voyages avec Yuding.
+
+Vérifier mon adresse e-mail :
 
 [(${verificationLink})]
 
-Ce lien de vérification expire dans 24 heures.
-Si vous n'avez pas créé de compte sur Yuding, vous pouvez ignorer ce message.
+Lien sécurisé — il expire dans [(${expiresInLabel != null ? expiresInLabel : '24 heures'})].
+Si vous n'avez pas créé de compte Yuding, vous pouvez ignorer ce message.
 
 --
-Yuding V2 - Plateforme de voyage sécurisée
+Yuding · Des voyages qui vous ressemblent, à votre rythme.
+Cet e-mail a été envoyé automatiquement pour protéger votre compte.

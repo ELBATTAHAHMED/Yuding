@@ -35,6 +35,25 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getUserById(id));
     }
 
+    @GetMapping("/{id}/photo")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+    public ResponseEntity<byte[]> getUserPhoto(@PathVariable UUID id) {
+        String key = adminUserService.getUserPhotoKey(id);
+        if (key == null || key.isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            byte[] photoData = adminUserService.getUserPhoto(id);
+            String contentType = key.endsWith(".png") ? "image/png" : key.endsWith(".webp") ? "image/webp" : "image/jpeg";
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .cacheControl(org.springframework.http.CacheControl.maxAge(300, java.util.concurrent.TimeUnit.SECONDS).cachePrivate())
+                    .body(photoData);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PutMapping("/{id}/roles")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdminUserSummaryResponse> updateUserRoles(
@@ -80,4 +99,3 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getAuditLogs(limit));
     }
 }
-

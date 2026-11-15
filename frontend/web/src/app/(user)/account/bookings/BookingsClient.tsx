@@ -309,6 +309,15 @@ export default function BookingsClient() {
                   )}
 
                   <div className="library-item-actions booking-item-actions">
+                    <button
+                      type="button"
+                      onClick={() => setOpenDocument({ reference: booking.bookingReference, view: 'dossier' })}
+                      className="btn-secondary-sm"
+                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                    >
+                      <i className="fas fa-folder-open" /> Dossier
+                    </button>
+
                     {isPendingPayment && (
                       <Link
                         href={`/booking/${booking.bookingReference}/payment`}
@@ -330,21 +339,12 @@ export default function BookingsClient() {
                       </button>
                     )}
 
-                    <button
-                      type="button"
-                      onClick={() => setOpenDocument({ reference: booking.bookingReference, view: 'dossier' })}
-                      className="btn-secondary-sm"
-                      style={{ fontSize: '12px', padding: '6px 12px' }}
-                    >
-                      <i className="fas fa-folder-open" /> Dossier
-                    </button>
-
                     {isConfirmedOrPaid && <BookingReviewAction reference={booking.bookingReference} />}
 
                     {showCancellationAction && <button type="button" className="booking-cancel-action"
                       onClick={() => setOpenCancellation(booking.bookingReference)}
                       aria-label={`Annuler la réservation ${booking.bookingReference}`}>
-                      <i className="fas fa-calendar-xmark" aria-hidden="true" /> Annuler la réservation
+                      <i className="fas fa-calendar-xmark" aria-hidden="true" /> Annuler
                     </button>}
                   </div>
                 </div>
