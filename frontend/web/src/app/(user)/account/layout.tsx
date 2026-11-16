@@ -26,7 +26,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
             <div className="account-content">
               <nav className="account-nav" aria-label="Navigation du compte">
                 {navItems.map(item => (
-                  <Link key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} aria-current={pathname === item.href ? 'page' : undefined}>
+                  <Link prefetch={false} key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} aria-current={pathname === item.href ? 'page' : undefined}>
                     <i className={`fas ${item.icon}`} aria-hidden="true" />
                     <span>{item.label}</span>
                   </Link>

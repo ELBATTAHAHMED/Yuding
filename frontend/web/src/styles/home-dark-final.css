@@ -49,6 +49,27 @@
   gap: .5rem !important;
 }
 
+/* In dark mode the home header uses the same surface as the footer from the
+   first paint, instead of keeping the transparent hero treatment. */
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .header-top,
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .header-top,
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .header-top {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+  border-bottom: 1px solid var(--shell-border) !important;
+  color: var(--shell-header-ink) !important;
+}
+
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before,
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before,
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before {
+  background: var(--shell-header) !important;
+  opacity: 1 !important;
+}
+
 html:is(.dark, [data-theme="dark"]) .home-v3,
 body[data-theme="dark"] .home-v3 {
   --home-night-text: #f1f5f1;
@@ -643,4 +664,63 @@ body[data-theme="dark"] .home-v3 :is(
   display: inline-flex !important;
   align-items: center;
   gap: .5rem !important;
+}
+
+/* Override the legacy hero gradient with the same dark surface as the footer. */
+html.dark body .header.yuding-header.home-header,
+html[data-theme="dark"] body .header.yuding-header.home-header,
+body[data-theme="dark"] .header.yuding-header.home-header {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+}
+
+html[data-theme="dark"] body .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+}
+
+/* All dark-mode headers share the exact footer surface on every route. */
+html.dark .header.yuding-header.subpage-header,
+html[data-theme="dark"] .header.yuding-header.subpage-header,
+body[data-theme="dark"] .header.yuding-header.subpage-header,
+html.dark .header.yuding-header.subpage-header .header-top,
+html[data-theme="dark"] .header.yuding-header.subpage-header .header-top,
+body[data-theme="dark"] .header.yuding-header.subpage-header .header-top {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+  border-bottom-color: var(--shell-border) !important;
+}
+
+/* Final cascade: the home header follows the hero before the first scroll. */
+html.dark .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open),
+html[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open),
+body[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) {
+  background: linear-gradient(180deg, rgba(1, 10, 12, .52), transparent) !important;
+  background-image: linear-gradient(180deg, rgba(1, 10, 12, .52), transparent) !important;
+  border-bottom-color: transparent !important;
+}
+html.dark .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .header-top,
+html[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .header-top,
+body[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .header-top {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+}
+html.dark .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open)::before,
+html[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open)::before,
+body[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open)::before {
+  opacity: 0 !important;
+}
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+  border-bottom-color: var(--shell-border) !important;
+}
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before,
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before,
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before {
+  opacity: 1 !important;
+  background: var(--shell-header) !important;
 }

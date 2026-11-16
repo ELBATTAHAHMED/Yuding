@@ -411,30 +411,45 @@ public class AuthService {
     public MessageResponse forgotPassword(ForgotPasswordRequest request, String ipAddress, String userAgent) {
         String normalizedEmail = request.email().toLowerCase().trim();
         userRepository.findByEmail(normalizedEmail).ifPresent(user -> {
-            String rawToken = tokenHashService.generateSecureToken();
-            String hashedToken = tokenHashService.hashToken(rawToken);
+            String verificationCode = tokenHashService.generateNumericCode(6);
+            String hashedToken = tokenHashService.hashToken(verificationCode);
 
             PasswordResetToken resetToken = PasswordResetToken.builder()
                     .userId(user.getId())
                     .tokenHash(hashedToken)
-                    .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+                    .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
                     .build();
             passwordResetTokenRepository.save(resetToken);
 
             try {
-                notificationPort.sendPasswordReset(user.getEmail(), rawToken);
+                notificationPort.sendPasswordReset(user.getEmail(), verificationCode);
             } catch (Exception e) {
                 log.warn("Failed to dispatch password reset email: {}", e.getMessage());
             }
 
-            auditService.logSecurityEvent("PASSWORD_RESET_REQUESTED", user.getId(), user.getEmail(), ipAddress, userAgent, "Reset token generated", 15);
+            auditService.logSecurityEvent("PASSWORD_RESET_REQUESTED", user.getId(), user.getEmail(), ipAddress, userAgent, "Password reset verification code generated", 15);
         });
 
-        return new MessageResponse("If an account exists for this email, password reset instructions have been sent.");
+        return new MessageResponse("If an account exists for this email, a verification code has been sent.");
     }
 
     public MessageResponse forgotPassword(ForgotPasswordRequest request) {
         return forgotPassword(request, "127.0.0.1", "UNKNOWN");
+    }
+
+    @Transactional(readOnly = true)
+    public MessageResponse verifyPasswordResetCode(VerifyPasswordResetCodeRequest request) {
+        String normalizedEmail = request.email().toLowerCase().trim();
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification code"));
+        PasswordResetToken token = passwordResetTokenRepository.findByTokenHash(tokenHashService.hashToken(request.code()))
+                .filter(candidate -> candidate.getUserId().equals(user.getId()))
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification code"));
+
+        if (token.isUsed() || token.isExpired()) {
+            throw new InvalidTokenException("Invalid or expired verification code");
+        }
+        return new MessageResponse("Verification code accepted. Choose a new password.");
     }
 
     @Transactional

@@ -92,7 +92,7 @@ public class NotificationWorkerConcurrencyTest {
                 .eventType(NotificationEventType.RESET_PASSWORD)
                 .idempotencyKey("RESET_PASSWORD:" + UUID.randomUUID())
                 .recipientEmail("retry@example.com")
-                .parameters(Map.of("resetLink", "http://localhost:3000/reset-password?token=rst"))
+                .parameters(Map.of("verificationCode", "482913", "expiresInLabel", "15 minutes"))
                 .build();
 
         NotificationResponse response = notificationService.recordEvent(request);

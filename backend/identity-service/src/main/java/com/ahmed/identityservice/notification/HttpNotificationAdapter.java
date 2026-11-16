@@ -71,15 +71,20 @@ public class HttpNotificationAdapter implements NotificationPort {
     }
 
     @Override
-    public void sendPasswordReset(String email, String token) {
+    public void sendPasswordReset(String email, String verificationCode) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("eventType", "RESET_PASSWORD");
             payload.put("recipientEmail", email);
-            payload.put("idempotencyKey", "RESET_PASSWORD:" + sha256Hex(token));
+            payload.put("idempotencyKey", "RESET_PASSWORD:" + sha256Hex(verificationCode));
             Map<String, Object> params = new HashMap<>();
-            params.put("resetLink", frontendBaseUrl + "/reset-password?token=" + token);
-            params.put("expiresInMinutes", 30);
+            params.put("verificationCode", verificationCode);
+            params.put("expiresInMinutes", 15);
+            params.put("expiresInLabel", "15 minutes");
+            String publicFrontendBaseUrl = frontendBaseUrl.contains("localhost") || frontendBaseUrl.contains("127.0.0.1")
+                    ? "https://app.yuding.ma"
+                    : frontendBaseUrl;
+            params.put("logoUrl", publicFrontendBaseUrl + "/image/yuding-logo-ai-inverse-green.png");
             payload.put("parameters", params);
 
             restClient.post()

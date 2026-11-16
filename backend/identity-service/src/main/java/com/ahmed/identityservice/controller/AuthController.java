@@ -202,6 +202,12 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/forgot-password/verify-code")
+    public ResponseEntity<MessageResponse> verifyPasswordResetCode(
+            @Valid @RequestBody VerifyPasswordResetCodeRequest request) {
+        return ResponseEntity.ok(authService.verifyPasswordResetCode(request));
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<MessageResponse> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request,

@@ -314,9 +314,10 @@ export default function TrainsPage() {
                   onClick={handleSwap}
                   disabled={!originStation && !destinationStation}
                   title="Inverser les gares"
-                  className="w-10 h-10 rounded-full border border-[#01796F]/40 bg-[#01796F]/10 text-[#01796F] hover:bg-[#01796F]/20 flex items-center justify-center disabled:cursor-not-allowed transition-colors"
+                  aria-label="Inverser les gares"
+                  className="travel-swap-button"
                 >
-                  <i className="fas fa-exchange-alt text-xs" />
+                  <i className="fas fa-exchange-alt text-xs" aria-hidden="true" />
                 </button>
               </div>
 

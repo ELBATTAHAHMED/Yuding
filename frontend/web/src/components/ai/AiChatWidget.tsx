@@ -142,12 +142,10 @@ export const AiChatWidget: React.FC = () => {
   const pathname = usePathname();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
 
-  // Do not render floating chatbot inside the admin operations console to prevent UI overlap
-  if (pathname && pathname.startsWith('/admin')) {
-    return null;
-  }
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const initializedRef = useRef(false);
+  const initializingRef = useRef<Promise<void> | null>(null);
   const [view, setView] = useState<'chat' | 'history'>('chat');
   const [conversationId, setConversationId] = useState('');
   const conversationIdRef = useRef('');
@@ -342,27 +340,16 @@ export const AiChatWidget: React.FC = () => {
     }
   }, [discardStagedAttachments, releasePreviews]);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (isAuthLoading) return;
+  const initializeAssistant = useCallback(async () => {
+    if (isAuthLoading || !isAuthenticated || initializedRef.current) return;
+    if (initializingRef.current) return initializingRef.current;
+
     const sequence = ++loadSequenceRef.current;
-    if (!isAuthenticated) {
-      try { sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
-      setConversationId('');
-      conversationIdRef.current = '';
-      setConversations([]);
-      setMessages([]);
-      setView('chat');
-      setNotice(null);
-      setRetryText(null);
-      discardStagedAttachments();
-      releasePreviews();
-      return;
-    }
-    const initialize = async () => {
+    const initialize = (async () => {
+      setIsLoadingHistory(true);
       try {
         const list = await aiService.getConversations(25);
-        if (cancelled || sequence !== loadSequenceRef.current) return;
+        if (sequence !== loadSequenceRef.current) return;
         setConversations(list);
         let savedId: string | null = null;
         try { savedId = sessionStorage.getItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
@@ -371,20 +358,47 @@ export const AiChatWidget: React.FC = () => {
           await readConversation(target.id);
         } else {
           const created = await aiService.createConversation('Nouvelle conversation');
-          if (cancelled) return;
+          if (sequence !== loadSequenceRef.current) return;
           setConversationId(created.id);
           conversationIdRef.current = created.id;
           setMessages([]);
           setConversations([{ ...created, status: 'ACTIVE' }]);
           try { sessionStorage.setItem(ACTIVE_CONV_STORAGE_KEY, created.id); } catch {}
         }
+        initializedRef.current = true;
       } catch {
-        if (!cancelled) setNotice('Connexion à vos conversations indisponible.');
+        initializedRef.current = false;
+        setNotice('Connexion à vos conversations indisponible.');
+      } finally {
+        setIsLoadingHistory(false);
+        initializingRef.current = null;
       }
-    };
-    void initialize();
-    return () => { cancelled = true; };
-  }, [isAuthenticated, isAuthLoading, readConversation, discardStagedAttachments, releasePreviews]);
+    })();
+    initializingRef.current = initialize;
+    return initialize;
+  }, [isAuthenticated, isAuthLoading, readConversation]);
+
+  useEffect(() => {
+    if (isAuthLoading || isAuthenticated) return;
+    initializedRef.current = false;
+    initializingRef.current = null;
+    try { sessionStorage.removeItem(ACTIVE_CONV_STORAGE_KEY); } catch {}
+    setConversationId('');
+    conversationIdRef.current = '';
+    setConversations([]);
+    setMessages([]);
+    setView('chat');
+    setNotice(null);
+    setRetryText(null);
+    discardStagedAttachments();
+    releasePreviews();
+  }, [isAuthenticated, isAuthLoading, discardStagedAttachments, releasePreviews]);
+
+  // AI history is deliberately loaded only when the user opens the assistant.
+  // Account and travel routes must not wait on an optional service.
+  useEffect(() => {
+    if (isOpen && isAuthenticated) void initializeAssistant();
+  }, [isOpen, isAuthenticated, initializeAssistant]);
 
   const startNewConversation = async () => {
     if (!isAuthenticated || isLoading || isLoadingHistory || isUploading) return;
@@ -708,6 +722,12 @@ export const AiChatWidget: React.FC = () => {
     if (!area) return;
     nearBottomRef.current = area.scrollHeight - area.scrollTop - area.clientHeight < 88;
   };
+
+  // Do not render the floating chatbot inside the admin operations console to prevent UI overlap.
+  // Keep this conditional after all hooks so route transitions never change hook order.
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <div className={styles.root} ref={rootRef}>

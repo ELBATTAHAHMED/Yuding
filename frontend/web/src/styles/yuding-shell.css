@@ -28,7 +28,7 @@ html[data-theme="dark"] {
   --shell-accent: #159a83;
   --shell-action: #159a83;
   --shell-accent-soft: rgba(21, 154, 131, .14);
-  --shell-header: #0f1115;
+  --shell-header: #0b0d11;
   --shell-header-ink: #f2f5f8;
   --shell-footer: #0b0d11;
   --shell-input: #12151a;
@@ -428,6 +428,32 @@ html:not(.dark) .header.yuding-header.subpage-header .yuding-navigation .nav-ite
   color: var(--shell-accent) !important;
 }
 
+/* Auth navigation follows the homepage interaction: the label, icon and
+   underline move together for every hovered or selected service. */
+.header.yuding-header.auth-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active),
+.header.yuding-header.auth-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > i,
+.header.yuding-header.auth-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > span {
+  background: transparent !important;
+  color: var(--shell-accent) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.header.yuding-header.auth-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > span::after {
+  background: currentColor !important;
+  transform: scaleX(1) !important;
+}
+
+/* Keep the label, icon, and underline in sync during hover transitions. */
+.header.yuding-header .yuding-navigation .nav-item > span,
+.header.yuding-header .yuding-navigation .nav-item > i {
+  color: inherit !important;
+  transition: color .2s ease !important;
+}
+.header.yuding-header .yuding-navigation .nav-item > span::after {
+  background: currentColor !important;
+  transition: transform .22s cubic-bezier(.22, 1, .36, 1) !important;
+}
+
 html.dark .yuding-footer--home a.yuding-footer__cta,
 [data-theme="dark"] .yuding-footer--home a.yuding-footer__cta {
   background: var(--shell-action) !important;
@@ -671,7 +697,7 @@ body:has(.home-v3) .yuding-footer--clean {
 html.dark .yuding-footer--clean,
 html[data-theme="dark"] .yuding-footer--clean,
 body[data-theme="dark"] .yuding-footer--clean {
-  --clean-bg: #0f1115;
+  --clean-bg: #0b0d11;
   --clean-ink: #f2f4f7;
   --clean-muted: #a7b1bf;
   --clean-line: #2b313b;

@@ -85,7 +85,7 @@ body[data-theme="dark"] {
   --border: #2b313b;
   --accent: #159a83;
   --accent-strong: #159a83;
-  --header-bg: #0f1115;
+  --header-bg: #0b0d11;
   --input-bg: #12151a;
   --placeholder: #7e8b97;
   --hover-bg: rgba(21, 154, 131, .12);
@@ -113,7 +113,7 @@ body[data-theme="dark"] .header.yuding-header.subpage-header,
 html.dark .header.yuding-header.subpage-header .header-top,
 html[data-theme="dark"] .header.yuding-header.subpage-header .header-top,
 body[data-theme="dark"] .header.yuding-header.subpage-header .header-top {
-  background: #0f1115 !important;
+  background: var(--shell-header) !important;
   border-color: #2b313b !important;
   color: #f2f4f7 !important;
 }
@@ -134,7 +134,7 @@ html.dark .header.yuding-header.home-header.home-header--scrolled,
 html.dark .header.yuding-header.home-header.home-header--menu-open,
 html[data-theme="dark"] .header.yuding-header.home-header.home-header--scrolled,
 html[data-theme="dark"] .header.yuding-header.home-header.home-header--menu-open {
-  background: #0f1115 !important;
+  background: var(--shell-header) !important;
   border-bottom: 1px solid #2b313b !important;
 }
 
@@ -309,4 +309,86 @@ html[data-theme="dark"] .home-v3__mode[aria-pressed="true"],
 body[data-theme="dark"] .home-v3__mode[aria-pressed="true"],
 .dark .home-v3__mode[aria-pressed="true"] {
   background: transparent !important;
+}
+
+/* Date fields stay quiet when focused; avoid the oversized cyan ring. */
+.travel-search-panel input[type="date"]:focus {
+  border-color: var(--travel-line) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.travel-search-panel input[type="date"]::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Keep every search control calm on focus in both themes. */
+.travel-search-panel input:focus,
+.travel-search-panel select:focus,
+.travel-search-panel textarea:focus,
+.travel-search-panel .travel-passenger-trigger:focus,
+.travel-search-panel .travel-passenger-trigger:focus-visible,
+.travel-search-panel .travel-stepper--field:focus-within {
+  border-color: var(--travel-line) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* The home search uses its own field system; keep its focus state equally quiet. */
+.home-v3__fields input:focus,
+.home-v3__fields select:focus,
+.home-v3__geo input:focus {
+  border-color: #a9c0b4 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+html.dark .home-v3__fields input:focus,
+html.dark .home-v3__fields select:focus,
+html.dark .home-v3__geo input:focus,
+html[data-theme="dark"] .home-v3__fields input:focus,
+html[data-theme="dark"] .home-v3__fields select:focus,
+html[data-theme="dark"] .home-v3__geo input:focus,
+body[data-theme="dark"] .home-v3__fields input:focus,
+body[data-theme="dark"] .home-v3__fields select:focus,
+body[data-theme="dark"] .home-v3__geo input:focus {
+  border-color: var(--home-night-border, #2b313b) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.home-v3__fields input[type="date"]::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Home dark header: transparent over the hero, solid after scrolling. */
+html.dark .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open),
+html[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open),
+body[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) {
+  background: linear-gradient(180deg, rgba(1, 10, 12, .52), transparent) !important;
+  background-image: linear-gradient(180deg, rgba(1, 10, 12, .52), transparent) !important;
+  border-bottom-color: transparent !important;
+}
+html.dark .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .header-top,
+html[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .header-top,
+body[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .header-top {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+}
+html.dark .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open)::before,
+html[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open)::before,
+body[data-theme="dark"] .header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open)::before {
+  opacity: 0 !important;
+}
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+  border-bottom-color: var(--shell-border) !important;
+}
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before,
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before,
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open)::before {
+  opacity: 1 !important;
+  background: var(--shell-header) !important;
 }

@@ -13,6 +13,7 @@ import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -55,6 +56,10 @@ public class SmtpEmailProvider implements EmailProvider {
 
             // Multipart alternative: text/plain + text/html
             helper.setText(textBody, htmlBody);
+            ClassPathResource logo = new ClassPathResource("email/yuding-logo.png");
+            if (logo.exists()) {
+                helper.addInline("yuding-logo", logo, "image/png");
+            }
 
             // Let the SMTP provider create the canonical Message-ID. Forging a
             // provider-domain Message-ID locally can reduce deliverability.

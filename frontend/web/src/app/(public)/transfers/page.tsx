@@ -253,16 +253,16 @@ export default function TransfersPage() {
               </div>
 
               {/* Swap Button */}
-              <div className="hidden lg:flex items-center justify-center pb-0.5">
+              <div className="hidden lg:flex h-14 items-center justify-center self-end">
                 <button
                   type="button"
                   onClick={handleSwap}
                   disabled={!pickup && !dropoff}
                   title="Inverser les points de transfert"
                   aria-label="Inverser le départ et l'arrivée"
-                  className="w-10 h-10 rounded-full border border-[#01796F]/40 bg-[#021817] text-[#02E0D5] hover:bg-[#01796F]/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="travel-swap-button"
                 >
-                  <i className="fas fa-exchange-alt text-xs" />
+                  <i className="fas fa-exchange-alt text-xs" aria-hidden="true" />
                 </button>
               </div>
 

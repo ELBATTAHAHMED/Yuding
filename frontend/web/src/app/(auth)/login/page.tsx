@@ -13,6 +13,8 @@ function LoginFormContent() {
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get('redirect') || searchParams.get('returnUrl');
   const initialMode = searchParams.get('mode') === 'signup';
+  const resetEmailParam = searchParams.get('resetEmail') || '';
+  const resetCodeParam = searchParams.get('resetCode') || '';
 
   const { login, register, isAuthenticated, isAdmin, isSupport } = useAuth();
 
@@ -29,8 +31,15 @@ function LoginFormContent() {
   // Forgot password fields
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotCode, setForgotCode] = useState('');
+  const [forgotStep, setForgotStep] = useState<'request' | 'verify' | 'reset'>('request');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotVerifyLoading, setForgotVerifyLoading] = useState(false);
+  const [forgotResetLoading, setForgotResetLoading] = useState(false);
   const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   // Signup form fields
   const [signupFirstName, setSignupFirstName] = useState('');
@@ -53,6 +62,18 @@ function LoginFormContent() {
       document.body.classList.remove('auth-body');
     };
   }, []);
+
+  useEffect(() => {
+    if (!/^\d{6}$/.test(resetCodeParam)) return;
+    setShowForgotPassword(true);
+    setForgotStep('verify');
+    setForgotEmail(resetEmailParam);
+    setForgotCode(resetCodeParam);
+    setForgotMessage('Votre code est prêt à être vérifié.');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(resetCodeParam).catch(() => undefined);
+    }
+  }, [resetCodeParam, resetEmailParam]);
 
   // Safe redirect URL calculation
   const getSafeRedirectUrl = () => {
@@ -97,13 +118,57 @@ function LoginFormContent() {
     if (!forgotEmail.trim()) return;
     setForgotLoading(true);
     setForgotMessage(null);
+    setForgotError(null);
     try {
       await authService.forgotPassword(forgotEmail.trim());
-    } catch {
-      // Anti-enumeration: preserve same response message regardless of user existence
+      setForgotStep('verify');
+      setForgotMessage("Si cette adresse correspond à un compte, le code vient d’être envoyé.");
+    } catch (err: any) {
+      setForgotError(err.message || 'Impossible d’envoyer le code pour le moment. Réessayez.');
     } finally {
       setForgotLoading(false);
-      setForgotMessage("Si un compte est associé à cette adresse e-mail, un lien sécurisé vient de vous être envoyé.");
+    }
+  };
+
+  const handleVerifyForgotCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotVerifyLoading(true);
+    try {
+      await authService.verifyPasswordResetCode(forgotEmail.trim(), forgotCode.trim());
+      setForgotStep('reset');
+      setForgotMessage('Code vérifié. Choisissez votre nouveau mot de passe.');
+    } catch (err: any) {
+      setForgotError(err.message || 'Code invalide ou expiré.');
+    } finally {
+      setForgotVerifyLoading(false);
+    }
+  };
+
+  const handleForgotReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    if (forgotNewPassword.length < 8) {
+      setForgotError('Le mot de passe doit comporter au moins 8 caractères.');
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setForgotResetLoading(true);
+    try {
+      await authService.resetPassword(forgotCode.trim(), forgotNewPassword);
+      setShowForgotPassword(false);
+      setForgotStep('request');
+      setForgotCode('');
+      setForgotNewPassword('');
+      setForgotConfirmPassword('');
+      setSuccessMessage('Votre mot de passe a été mis à jour. Vous pouvez maintenant vous connecter.');
+    } catch (err: any) {
+      setForgotError(err.message || 'Impossible de réinitialiser le mot de passe.');
+    } finally {
+      setForgotResetLoading(false);
     }
   };
 
@@ -141,6 +206,11 @@ function LoginFormContent() {
   };
 
   const isFlipped = mode === 'signup';
+
+  useEffect(() => {
+    const signupForm = document.querySelector<HTMLElement>('.auth-container .signup-form');
+    signupForm?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [mode]);
 
   return (
     <>
@@ -199,61 +269,110 @@ function LoginFormContent() {
             <div className="login-form">
               <div className="title">{showForgotPassword ? 'Réinitialisation' : 'Connexion'}</div>
               {showForgotPassword ? (
-                <form id="forgot-form" method="post" onSubmit={handleForgotPassword}>
-                  <div className="input-boxes">
-                    {forgotMessage && (
-                      <div className="auth-alert auth-alert-success" role="alert">
-                        <i className="fas fa-check-circle"></i>
-                        <span>{forgotMessage}</span>
+                <>
+                  {forgotMessage && (
+                    <div className="auth-alert auth-alert-success" role="alert">
+                      <i className="fas fa-check" aria-hidden="true"></i>
+                      <span>{forgotMessage}</span>
+                    </div>
+                  )}
+                  {forgotError && (
+                    <div className="auth-alert auth-alert-error" role="alert">
+                      <i className="fas fa-exclamation" aria-hidden="true"></i>
+                      <span>{forgotError}</span>
+                    </div>
+                  )}
+                  {forgotStep === 'request' && (
+                    <form id="forgot-form" method="post" onSubmit={handleForgotPassword}>
+                      <div className="input-boxes">
+                        <p className="auth-form-helper">Saisissez votre adresse e-mail pour recevoir un code de vérification.</p>
+                        <div className="input-box">
+                          <i className="fas fa-envelope"></i>
+                          <input
+                            type="email"
+                            id="forgot-email"
+                            name="email"
+                            placeholder="Votre adresse e-mail"
+                            autoComplete="email"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="button input-box">
+                          <input type="submit" value={forgotLoading ? 'Envoi en cours...' : 'Envoyer le code'} className="btn" disabled={forgotLoading} />
+                        </div>
                       </div>
-                    )}
-                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px', lineHeight: '1.4' }}>
-                      Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation sécurisé.
-                    </p>
-                    <div className="input-box">
-                      <i className="fas fa-envelope"></i>
-                      <input
-                        type="email"
-                        id="forgot-email"
-                        name="email"
-                        placeholder="Votre adresse e-mail"
-                        autoComplete="email"
-                        value={forgotEmail}
-                        onChange={(e) => setForgotEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="button input-box">
-                      <input
-                        type="submit"
-                        value={forgotLoading ? 'Envoi en cours...' : 'Envoyer le lien'}
-                        className="btn"
-                        disabled={forgotLoading}
-                      />
-                    </div>
-                    <div className="text sign-up-text">
-                      <button
-                        type="button"
-                        className="auth-switch-link"
-                        onClick={() => setShowForgotPassword(false)}
-                      >
-                        Retour à la connexion
-                      </button>
-                    </div>
+                    </form>
+                  )}
+                  {forgotStep === 'verify' && (
+                    <form id="forgot-code-form" method="post" onSubmit={handleVerifyForgotCode}>
+                      <div className="input-boxes">
+                        <p className="auth-form-helper">Saisissez le code reçu par e-mail pour continuer.</p>
+                        <div className="input-box">
+                          <i className="fas fa-key"></i>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                            placeholder="Code à 6 chiffres"
+                            value={forgotCode}
+                            onChange={(e) => setForgotCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            required
+                          />
+                        </div>
+                        <div className="button input-box">
+                          <input type="submit" value={forgotVerifyLoading ? 'Vérification...' : 'Vérifier le code'} className="btn" disabled={forgotVerifyLoading || forgotCode.length !== 6} />
+                        </div>
+                      </div>
+                    </form>
+                  )}
+                  {forgotStep === 'reset' && (
+                    <form id="forgot-reset-form" method="post" onSubmit={handleForgotReset}>
+                      <div className="input-boxes">
+                        <p className="auth-form-helper">Choisissez votre nouveau mot de passe sécurisé.</p>
+                        <div className="input-box">
+                          <i className="fas fa-lock"></i>
+                          <input type="password" minLength={8} placeholder="Nouveau mot de passe" value={forgotNewPassword} onChange={(e) => setForgotNewPassword(e.target.value)} required />
+                        </div>
+                        <div className="input-box">
+                          <i className="fas fa-lock"></i>
+                          <input type="password" minLength={8} placeholder="Confirmer le mot de passe" value={forgotConfirmPassword} onChange={(e) => setForgotConfirmPassword(e.target.value)} required />
+                        </div>
+                        <div className="button input-box">
+                          <input type="submit" value={forgotResetLoading ? 'Mise à jour...' : 'Enregistrer le mot de passe'} className="btn" disabled={forgotResetLoading} />
+                        </div>
+                      </div>
+                    </form>
+                  )}
+                  <div className="text sign-up-text">
+                    <button
+                      type="button"
+                      className="auth-switch-link"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotStep('request');
+                        setForgotMessage(null);
+                        setForgotError(null);
+                      }}
+                    >
+                      Retour à la connexion
+                    </button>
                   </div>
-                </form>
+                </>
               ) : (
                 <form id="login-form" method="post" onSubmit={handleLogin}>
                   <div className="input-boxes">
                     {errorMessage && !isFlipped && (
                       <div className="auth-alert auth-alert-error" role="alert">
-                        <i className="fas fa-exclamation-circle"></i>
+                        <i className="fas fa-exclamation" aria-hidden="true"></i>
                         <span>{errorMessage}</span>
                       </div>
                     )}
                     {successMessage && !isFlipped && (
                       <div className="auth-alert auth-alert-success" role="alert">
-                        <i className="fas fa-check-circle"></i>
+                        <i className="fas fa-check" aria-hidden="true"></i>
                         <span>{successMessage}</span>
                       </div>
                     )}
@@ -330,13 +449,13 @@ function LoginFormContent() {
                 <div className="input-boxes">
                   {errorMessage && isFlipped && (
                     <div className="auth-alert auth-alert-error" role="alert">
-                      <i className="fas fa-exclamation-circle"></i>
+                      <i className="fas fa-exclamation" aria-hidden="true"></i>
                       <span>{errorMessage}</span>
                     </div>
                   )}
                   {successMessage && isFlipped && (
                     <div className="auth-alert auth-alert-success" role="alert">
-                      <i className="fas fa-check-circle"></i>
+                      <i className="fas fa-check" aria-hidden="true"></i>
                       <span>{successMessage}</span>
                     </div>
                   )}

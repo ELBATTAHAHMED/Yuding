@@ -81,6 +81,7 @@ public class SecurityConfig {
                                 "/auth/refresh",
                                 "/auth/verify-email",
                                 "/auth/forgot-password",
+                                "/auth/forgot-password/verify-code",
                                 "/auth/reset-password",
                                 "/auth/jwks",
                                 "/auth/public-key",

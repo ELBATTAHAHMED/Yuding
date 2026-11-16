@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { libraryService } from '@/services/library.service';
@@ -79,20 +79,29 @@ export default function FavoritesClient() {
     router.replace(`/account/favorites?tab=history&sub=${sub}`);
   };
 
-  const loadAllData = useCallback(async () => {
+  const loadedTabsRef = useRef<Set<ActiveTab>>(new Set());
+
+  const loadTabData = useCallback(async (tab: ActiveTab) => {
+    if (loadedTabsRef.current.has(tab)) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const [favs, trips, searches, views] = await Promise.all([
-        libraryService.getFavorites(),
-        libraryService.getSavedTrips(),
-        libraryService.getRecentSearches(),
-        libraryService.getRecentViews(),
-      ]);
-      setFavorites(favs);
-      setSavedTrips(trips);
-      setRecentSearches(searches);
-      setRecentViews(views);
+      if (tab === 'favorites') {
+        setFavorites(await libraryService.getFavorites());
+      } else if (tab === 'saved-trips') {
+        setSavedTrips(await libraryService.getSavedTrips());
+      } else {
+        const [searches, views] = await Promise.all([
+          libraryService.getRecentSearches(),
+          libraryService.getRecentViews(),
+        ]);
+        setRecentSearches(searches);
+        setRecentViews(views);
+      }
+      loadedTabsRef.current.add(tab);
     } catch {
       setError('Impossible de charger vos données de voyage.');
     } finally {
@@ -101,8 +110,8 @@ export default function FavoritesClient() {
   }, []);
 
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    void loadTabData(activeTab);
+  }, [activeTab, loadTabData]);
 
   // Handlers
   const handleRemoveFavorite = (favRef: string) => {

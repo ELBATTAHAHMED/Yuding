@@ -46,24 +46,29 @@ public class TemplateRenderingTest {
     }
 
     @Test
-    @DisplayName("Should render RESET_PASSWORD template with safe 1-hour expiry notice")
+    @DisplayName("Should render RESET_PASSWORD template with a verification code")
     void shouldRenderResetPasswordTemplate() {
         Map<String, Object> params = new HashMap<>();
         params.put("recipientName", "Bob");
-        params.put("resetLink", "http://localhost:3000/reset-password?token=rst_tok_456");
+        params.put("verificationCode", "482913");
+        params.put("expiresInLabel", "15 minutes");
+        params.put("logoUrl", "http://localhost:3000/image/yuding-logo-ai-inverse-green.png");
 
         String subject = templateRenderer.resolveSubject(NotificationEventType.RESET_PASSWORD, params);
         String html = templateRenderer.renderHtml("reset-password", params);
         String text = templateRenderer.renderText("reset-password", params);
 
         assertThat(subject).isEqualTo("Réinitialisation de votre mot de passe Yuding");
-        assertThat(html).contains("Réinitialiser mon mot de passe");
-        assertThat(html).contains("1 heure");
-        assertThat(html).contains("http://localhost:3000/reset-password?token=rst_tok_456");
+        assertThat(html).contains("Votre code de vérification");
+        assertThat(html).contains("482913");
+        assertThat(html).contains("15 minutes");
+        assertThat(html).contains("cid:yuding-logo");
+        assertThat(html).doesNotContain("Copier le code");
         assertThat(html).doesNotContain("password="); // No plaintext password
 
-        assertThat(text).contains("Réinitialisation de votre mot de passe");
-        assertThat(text).contains("1 heure");
+        assertThat(text).contains("Votre code de vérification");
+        assertThat(text).contains("482913");
+        assertThat(text).contains("15 minutes");
     }
 
     @Test

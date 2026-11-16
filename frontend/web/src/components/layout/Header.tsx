@@ -40,7 +40,7 @@ export const Header: React.FC<{ hideLogin?: boolean; onThemeChange?: (dark: bool
   ];
 
   return (
-    <header className={`header yuding-header${hydrated ? ' header--hydrated' : ''} ${isHome ? `home-header${homeScrolled ? ' home-header--scrolled' : ''}${menuOpen ? ' home-header--menu-open' : ''}` : 'subpage-header'}`}>
+    <header className={`header yuding-header${hydrated ? ' header--hydrated' : ''} ${hideLogin ? 'auth-header' : ''} ${isHome ? `home-header${homeScrolled ? ' home-header--scrolled' : ''}${menuOpen ? ' home-header--menu-open' : ''}` : 'subpage-header'}`}>
       <div className="header-top">
         <div className="container1 header-inner">
           <Link href="/" className="logo">
@@ -52,17 +52,22 @@ export const Header: React.FC<{ hideLogin?: boolean; onThemeChange?: (dark: bool
           </Link>
 
           <nav className={`header-nav yuding-navigation ${menuOpen ? 'is-open' : ''}`} aria-label="Navigation principale">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                className={`nav-item ${pathname.startsWith(item.href) ? 'active' : ''}`}
-              >
-                <i className={item.icon} aria-hidden="true" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`nav-item ${isActive ? 'active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <i className={item.icon} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="header-btns">

@@ -20,6 +20,15 @@ public class TokenHashService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    public String generateNumericCode(int digits) {
+        if (digits < 4 || digits > 9) {
+            throw new IllegalArgumentException("Verification code length must be between 4 and 9 digits");
+        }
+        int lowerBound = (int) Math.pow(10, digits - 1);
+        int upperBound = (int) Math.pow(10, digits);
+        return String.valueOf(lowerBound + secureRandom.nextInt(upperBound - lowerBound));
+    }
+
     public String hashToken(String token) {
         if (token == null) {
             return null;

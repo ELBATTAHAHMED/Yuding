@@ -1588,12 +1588,6 @@ html.dark .auth-shell :is(a, button, input, select):focus-visible,
     outline-offset: 3px !important;
 }
 
-html.dark .input-box:not(.button),
-[data-theme="dark"] .input-box:not(.button) {
-    animation: none !important;
-    opacity: 1 !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
     html.dark .auth-shell *,
     [data-theme="dark"] .auth-shell * {
@@ -2143,5 +2137,293 @@ html.dark .header.auth-header .dark-mode-toggle,
     background: linear-gradient(135deg, #18a98b 0%, #32c3a5 100%) !important;
     border-color: #18a98b !important;
     box-shadow: 0 12px 24px rgba(19, 138, 115, .28) !important;
+}
+
+/* Final auth state cleanup: neutral fields, stable dark surfaces and clean flips. */
+.auth-container .login-form,
+.auth-container .signup-form {
+    transition: opacity .22s ease, transform .22s ease, visibility 0s linear .22s !important;
+}
+
+.auth-container.login-mode .login-form,
+.auth-container.signup-mode .signup-form {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition-delay: .12s, .12s, 0s !important;
+}
+
+.auth-container.login-mode .signup-form,
+.auth-container.signup-mode .login-form {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transform: translateY(8px) !important;
+    pointer-events: none !important;
+    transition-delay: 0s, 0s, .22s !important;
+}
+
+.auth-container .input-box:not(.button) {
+    animation: slideInUp .6s ease forwards !important;
+}
+
+.auth-container .input-box:not(.button),
+.auth-container .input-box:not(.button):hover {
+    transform: none !important;
+    border-color: rgba(148, 163, 184, .25) !important;
+    background: var(--input-bg) !important;
+}
+
+.auth-container .input-box:focus-within {
+    border-color: #8b9aa5 !important;
+    background: var(--input-bg) !important;
+    box-shadow: 0 0 0 2px rgba(139, 154, 165, .18) !important;
+}
+
+.auth-container .input-box input:focus,
+.auth-container .input-box input:valid,
+.auth-container .input-box input:valid:focus {
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-shell {
+    --auth-page: #0b0f12;
+    --auth-panel: #181d22;
+    --auth-ink: #eff2f4;
+    --auth-line: #39464e;
+    --input-bg: #101419;
+    background: var(--auth-page) !important;
+    color: var(--auth-ink) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-bg-media,
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-layout-root {
+    background: var(--auth-page) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container {
+    background: var(--auth-panel) !important;
+    border-color: var(--auth-line) !important;
+    box-shadow: 0 28px 64px rgba(0, 0, 0, .42) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form, .signup-form) {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title {
+    color: var(--auth-ink) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title::before {
+    background: #aeb9c1 !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box:not(.button),
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box:not(.button):hover {
+    background: #101419 !important;
+    border-color: #39464e !important;
+    transform: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box:focus-within {
+    background: #12171c !important;
+    border-color: #8d98a2 !important;
+    box-shadow: 0 0 0 2px rgba(141, 152, 162, .18) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box i {
+    color: #aeb9c1 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box input,
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box select {
+    color: var(--auth-ink) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box input::placeholder {
+    color: #8d98a2 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-container .input-box:not(.button) {
+        animation: none !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Keep desktop auth geometry identical in light and dark themes. */
+@media (min-width: 761px) {
+    .auth-container {
+        left: 0 !important;
+        right: auto !important;
+        margin-inline: auto !important;
+    }
+
+    .auth-container > .forms,
+    .auth-container > .forms > .form-content {
+        width: 100% !important;
+    }
+
+    .auth-container > .forms > .form-content {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        column-gap: 44px !important;
+        align-items: center !important;
+    }
+
+    .auth-container > .forms > .form-content > .login-form,
+    .auth-container > .forms > .form-content > .signup-form {
+        width: auto !important;
+        min-width: 0 !important;
+        margin-inline: 0 !important;
+    }
+
+    .auth-container > .cover {
+        left: 50% !important;
+        width: 50% !important;
+        right: auto !important;
+    }
+}
+
+/* Submit labels must be centered inside the full-width input element. */
+.auth-container .button.input-box input[type="submit"] {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    text-indent: 0 !important;
+}
+
+.auth-form-helper {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-form-helper {
+    color: #9aa5ad !important;
+}
+
+/* Never recolor text fields green on hover or while they are focused. */
+.auth-container .input-box:not(.button):hover,
+.auth-container .input-box:not(.button):focus-within,
+.auth-container .input-box:not(.button):has(input:focus) {
+    border-color: #8b9aa5 !important;
+    background: var(--input-bg) !important;
+    box-shadow: 0 0 0 2px rgba(139, 154, 165, .18) !important;
+    transform: none !important;
+}
+
+.auth-container .input-box:not(.button) input:focus {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box:not(.button):hover,
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box:not(.button):focus-within,
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .input-box:not(.button):has(input:focus) {
+    border-color: #8d98a2 !important;
+    background: #12171c !important;
+    box-shadow: 0 0 0 2px rgba(141, 152, 162, .18) !important;
+}
+
+/* Shared status box for login, signup, and password-reset feedback. */
+.auth-container .auth-alert {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 0 18px !important;
+    padding: 12px 14px !important;
+    border: 1px solid #bfd0dc !important;
+    border-radius: 12px !important;
+    background: #edf3f7 !important;
+    box-shadow: none !important;
+    color: #405a6b !important;
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+    font-weight: 600 !important;
+}
+
+.auth-container .auth-alert i {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    display: inline-grid;
+    place-items: center;
+    margin-top: 1px;
+    border: 0;
+    border-radius: 50%;
+    background: #56798d !important;
+    color: #ffffff !important;
+    font-size: 9px;
+}
+
+.auth-container .auth-alert-success {
+    border-color: #bfd0dc !important;
+    background: #edf3f7 !important;
+    color: #405a6b !important;
+}
+
+.auth-container .auth-alert-error {
+    border-color: #e0c4c4 !important;
+    background: #fbf1f0 !important;
+    color: #8c4d4d !important;
+}
+
+.auth-container .auth-alert-error i {
+    background: #a96262 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .auth-alert {
+    border-color: #3b5362 !important;
+    background: #1b2730 !important;
+    color: #d1dee5 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .auth-alert i {
+    background: #8da9b7 !important;
+    color: #182126 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .auth-alert-error {
+    border-color: #624548 !important;
+    background: #302326 !important;
+    color: #e6c5c7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container .auth-alert-error i {
+    background: #d08b95 !important;
+    color: #241a1d !important;
+}
+
+/* Keep login navigation hover identical to the public travel pages. */
+html body.auth-body .header.yuding-header.subpage-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) {
+    background: transparent !important;
+    color: var(--shell-accent) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+html body.auth-body .header.yuding-header.subpage-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > i {
+    color: var(--shell-accent) !important;
+}
+
+html body.auth-body .header.yuding-header.subpage-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > span::after {
+    background: currentColor;
+    transform: scaleX(1);
+}
+
+html.dark body.auth-body .header.yuding-header.subpage-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active),
+html[data-theme="dark"] body.auth-body .header.yuding-header.subpage-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) {
+    color: var(--shell-accent) !important;
 }
 

@@ -16,7 +16,7 @@ public class LoggingNotificationAdapter implements NotificationPort {
     }
 
     @Override
-    public void sendPasswordReset(String email, String token) {
+    public void sendPasswordReset(String email, String verificationCode) {
         log.info("[NotificationPort] Password reset dispatched for email={}", email);
         // Do not log raw token in production logs; safe notification abstraction
     }

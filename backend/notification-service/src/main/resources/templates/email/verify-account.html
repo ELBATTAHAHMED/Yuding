@@ -20,7 +20,7 @@
       <td class="email-header" style="padding:30px 56px; background:#0a7469; border-bottom:4px solid #d2ab63;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
           <tr>
-            <td valign="middle" style="color:#ffffff; font-size:23px; line-height:28px; font-weight:700; letter-spacing:0.2px;">Yuding</td>
+            <td valign="middle"><img src="cid:yuding-logo" alt="YUDING" width="154" style="display:block; width:154px; max-width:100%; height:auto; border:0;"></td>
             <td align="right" valign="middle" style="color:#d8ebe6; font-size:13px; line-height:18px;">Compte &amp; sécurité</td>
           </tr>
         </table>
@@ -35,10 +35,10 @@
               <h1 class="email-heading" style="margin:0 0 22px; color:#163e37; font-size:36px; line-height:43px; font-weight:700; letter-spacing:-0.55px;">Bienvenue chez Yuding.</h1>
               <p style="margin:0 0 16px; color:#3e625a; font-size:17px; line-height:27px;">Bonjour <strong th:text="${recipientName != null ? recipientName : 'voyageur'}">voyageur</strong>,</p>
               <p style="max-width:680px; margin:0; color:#3e625a; font-size:17px; line-height:27px;">Il ne reste qu’une étape pour activer votre compte&nbsp;: confirmez que cette adresse e-mail vous appartient.</p>
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:34px 0 30px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:34px 0 30px;">
                 <tr>
-                  <td align="center" bgcolor="#0a7469" style="border-radius:7px;">
-                    <a class="email-button" th:href="${verificationLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:15px 24px; border-radius:7px; color:#ffffff; background:#0a7469; font-size:16px; line-height:20px; font-weight:700; text-decoration:none;">Confirmer mon adresse e-mail</a>
+                  <td align="center">
+                    <a class="email-button" th:href="${verificationLink}" style="display:inline-block; padding:15px 24px; border-radius:7px; color:#ffffff; background:#0a7469; font-size:16px; line-height:20px; font-weight:700; text-decoration:none;">Vérifier mon adresse e-mail</a>
                   </td>
                 </tr>
               </table>

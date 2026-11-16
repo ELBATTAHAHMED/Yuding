@@ -97,6 +97,10 @@ export const authService = {
     return apiClient.post<MessageResponse>('/auth/forgot-password', { email });
   },
 
+  async verifyPasswordResetCode(email: string, code: string): Promise<MessageResponse> {
+    return apiClient.post<MessageResponse>('/auth/forgot-password/verify-code', { email, code });
+  },
+
   async verifyEmail(token: string): Promise<MessageResponse> {
     return apiClient.post<MessageResponse>('/auth/verify-email', { token });
   },

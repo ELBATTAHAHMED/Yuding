@@ -147,6 +147,12 @@ export default function FlightsPage() {
   const totalPassengers = adults + children + infants;
   const passengerSummary = `${adults} ad.${children > 0 ? `, ${children} enf.` : ''}${infants > 0 ? `, ${infants} nourr.` : ''}`;
 
+  const handleSwap = useCallback(() => {
+    setSelectedOrigin(selectedDestination);
+    setSelectedDestination(selectedOrigin);
+    setValidationError(null);
+  }, [selectedDestination, selectedOrigin]);
+
   // ── Active chips ─────────────────────────────────────────────────────────
   const activeChips = useMemo(() => buildActiveFilterChips([
     {
@@ -293,7 +299,7 @@ export default function FlightsPage() {
             onSubmit={handleSearch}
             className="bg-[#062523] p-3.5 md:p-4 rounded-xl shadow-lg border border-[#01796F]/30 text-white"
           >
-            <div className="grid grid-cols-1 items-start gap-2.5 md:grid-cols-2 lg:grid-cols-[1.4fr_1.4fr_1fr_1.3fr_auto]">
+            <div className="grid grid-cols-1 items-start gap-2.5 md:grid-cols-2 lg:grid-cols-[1.35fr_auto_1.35fr_1fr_1.3fr_auto]">
               {/* Origin Airport Selector */}
               <div className="min-w-0">
                 <AirportSelector
@@ -309,6 +315,20 @@ export default function FlightsPage() {
                   }}
                   error={originError}
                 />
+              </div>
+
+              {/* Swap Button */}
+              <div className="hidden h-14 items-center justify-center self-end lg:flex">
+                <button
+                  type="button"
+                  onClick={handleSwap}
+                  disabled={!selectedOrigin && !selectedDestination}
+                  title="Inverser les aéroports"
+                  aria-label="Inverser les aéroports"
+                  className="travel-swap-button"
+                >
+                  <i className="fas fa-exchange-alt text-xs" aria-hidden="true" />
+                </button>
               </div>
 
               {/* Destination Airport Selector */}
