@@ -32,7 +32,6 @@ if (typeof mod._resolveFilename === 'function') {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   // Keep common routes compiled while moving between travel sections in next dev.
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,
