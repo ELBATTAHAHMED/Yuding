@@ -634,3 +634,13 @@ body[data-theme="dark"] .home-v3 :is(
   border-color: rgba(255, 255, 255, .58) !important;
   color: #fff !important;
 }
+
+/* Keep the icon and label readable in the primary navigation. */
+.header.yuding-header .yuding-navigation {
+  gap: clamp(.65rem, 1vw, 1rem) !important;
+}
+.header.yuding-header .yuding-navigation .nav-item {
+  display: inline-flex !important;
+  align-items: center;
+  gap: .5rem !important;
+}
