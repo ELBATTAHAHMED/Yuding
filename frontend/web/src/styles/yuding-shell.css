@@ -11,29 +11,30 @@
   --shell-accent-soft: #e8f3ed;
   --shell-header: #f9f8f4;
   --shell-header-ink: #283c39;
-  --shell-footer: #f3f2ed;
+  --shell-footer: var(--shell-header);
   --shell-input: #fff;
   --shell-error: #b3413c;
   --shell-warning: #966827;
   --shell-success: #087d70;
 }
-html.dark {
-  --shell-page: #0e131a;
-  --shell-surface: #151c25;
-  --shell-elevated: #1b2530;
+html.dark,
+html[data-theme="dark"] {
+  --shell-page: #0f1115;
+  --shell-surface: #171a20;
+  --shell-elevated: #20242c;
   --shell-text: #f2f5f8;
   --shell-muted: #a7b1bf;
-  --shell-border: #2d3947;
-  --shell-accent: #2dc6ae;
-  --shell-action: #0f8f7d;
-  --shell-accent-soft: #193d3a;
-  --shell-header: #111821;
+  --shell-border: #2b313b;
+  --shell-accent: #159a83;
+  --shell-action: #159a83;
+  --shell-accent-soft: rgba(21, 154, 131, .14);
+  --shell-header: #0f1115;
   --shell-header-ink: #f2f5f8;
-  --shell-footer: #0b1016;
-  --shell-input: #18212b;
-  --shell-error: #ffaaa8;
+  --shell-footer: #0b0d11;
+  --shell-input: #12151a;
+  --shell-error: #f2b3b7;
   --shell-warning: #f0c675;
-  --shell-success: #5ed5bf;
+  --shell-success: #b5e6c6;
 }
 
 .yuding-route-loading {
@@ -83,16 +84,16 @@ html.dark {
 }
 html.dark .yuding-favorite-control,
 [data-theme="dark"] .yuding-favorite-control {
-  border-color: #2d3947 !important;
-  background: #20242b !important;
+  border-color: #2b313b !important;
+  background: #171a20 !important;
   color: #a7b1bf !important;
   box-shadow: none !important;
 }
 html.dark .yuding-favorite-control:not([aria-pressed="true"]):is(:hover, :focus-visible),
 [data-theme="dark"] .yuding-favorite-control:not([aria-pressed="true"]):is(:hover, :focus-visible) {
-  border-color: #3c6d68 !important;
-  background: rgba(45, 198, 174, .12) !important;
-  color: #f6a0b7 !important;
+  border-color: rgba(21, 154, 131, .48) !important;
+  background: rgba(21, 154, 131, .12) !important;
+  color: #d5e5ed !important;
 }
 html.dark .yuding-favorite-control[aria-pressed="true"],
 [data-theme="dark"] .yuding-favorite-control[aria-pressed="true"] {
@@ -102,8 +103,8 @@ html.dark .yuding-favorite-control[aria-pressed="true"],
 }
 html.dark .yuding-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible),
 [data-theme="dark"] .yuding-favorite-control[aria-pressed="true"]:is(:hover, :focus-visible) {
-  border-color: #3c6d68 !important;
-  background: rgba(45, 198, 174, .12) !important;
+  border-color: rgba(21, 154, 131, .48) !important;
+  background: rgba(21, 154, 131, .12) !important;
   color: #fda4af !important;
 }
 
@@ -229,7 +230,7 @@ html.dark .header.yuding-header.subpage-header .logo img.home-logo-dark,
 .header.yuding-header .nav-item:is(:hover,:focus-visible,.active) > span::after { transform:scaleX(1); }
 .header.yuding-header.home-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#a8e8ca !important; }
 .dark .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .nav-item:is(:hover,:focus-visible,.active),
-.dark .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#9bd7bf !important; }
+.dark .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#86d9c7 !important; }
 html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled,.home-header--menu-open) .nav-item:is(:hover,:focus-visible,.active),
 html:not(.dark) .header.yuding-header.subpage-header .nav-item:is(:hover,:focus-visible,.active) { background:transparent !important; color:#087d70 !important; }
 html:not(.dark) .header.yuding-header.home-header.home-header--scrolled .nav-item.active { color:#087d70 !important; }
@@ -250,6 +251,35 @@ html:not(.dark) .header.yuding-header.home-header.home-header--scrolled .nav-ite
 }
 .header.yuding-header.subpage-header .btn-connexion:hover { transform:translateY(-2px) !important; background:var(--shell-accent-soft) !important; }
 .dark .header.yuding-header.subpage-header .btn-connexion { color:#fff !important; border-color:rgba(255,255,255,.7) !important; background:rgba(255,255,255,.08) !important; }
+
+/* Keep every header nav item on the same text + underline treatment. */
+.header.yuding-header .nav-item:is(:hover, :focus-visible, .active) {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--shell-accent) !important;
+}
+.header.yuding-header .nav-item::before { display: none !important; }
+
+/* Public subpage header matches the Operations topbar height and rhythm. */
+.header.yuding-header.subpage-header,
+.header.yuding-header.subpage-header .header-top,
+.header.yuding-header.subpage-header .header-top > .container1 {
+  min-height: 72px !important;
+}
+.header.yuding-header.subpage-header .header-top {
+  padding-inline: 40px 32px !important;
+}
+.header.yuding-header.subpage-header .logo {
+  width: 150px !important;
+  min-width: 150px !important;
+  height: 48px !important;
+}
+.header.yuding-header.subpage-header .logo img {
+  width: 150px !important;
+  height: auto !important;
+  max-height: 48px !important;
+}
 .header.yuding-header.subpage-header .dark-mode-toggle {
   display: grid !important; place-items: center !important;
   flex: 0 0 44px; width: 44px !important; min-width: 44px !important; height: 44px !important;
@@ -284,7 +314,7 @@ html:not(.dark) .header.yuding-header.home-header.home-header--scrolled .nav-ite
 .photo-frame .profile-photo .yuding-user-avatar { width:100%; height:100%; border-radius:50%; font-size:1.8rem; }
 .photo-frame .profile-photo .yuding-user-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
 
-.yuding-footer--home { padding: 54px clamp(20px,4vw,72px) 26px; background: var(--shell-footer) !important; border-top: 1px solid var(--shell-border) !important; color: var(--shell-text) !important; }
+.yuding-footer--home { padding: 54px clamp(20px,4vw,72px) 26px; background: var(--shell-header) !important; border-top: 1px solid var(--shell-border) !important; color: var(--shell-text) !important; }
 .yuding-footer--home .yuding-footer__grid { gap: clamp(24px,4vw,65px); margin-bottom: 45px; }
 .yuding-footer--home h4 { color: var(--shell-text) !important; }
 .yuding-footer--home :is(p,ul) { color: var(--shell-muted) !important; }
@@ -335,8 +365,8 @@ html.dark .user-account-shell .yuding-footer--home .yuding-footer__bottom--home,
   .header.yuding-header.subpage-header .header-top > .container1 { min-height: 72px !important; }
   .header.yuding-header.subpage-header .header-top { padding-inline: 18px !important; }
   .header.yuding-header.subpage-header .header-top > .container1 { display:flex !important; align-items:center; justify-content:space-between; gap:10px; }
-  .header.yuding-header.subpage-header .logo { flex-basis: 112px !important; width: 112px !important; height: 48px !important; }
-  .header.yuding-header.subpage-header .logo img { width: 112px !important; max-height: 48px !important; }
+  .header.yuding-header.subpage-header .logo { flex-basis: 112px !important; width: 112px !important; min-width: 112px !important; height: 48px !important; }
+  .header.yuding-header.subpage-header .logo img { width: 112px !important; height: auto !important; max-height: 48px !important; }
   .header.yuding-header.subpage-header .header-btns { margin-left: auto !important; }
   .header.yuding-header.subpage-header .yuding-navigation { position: absolute !important; top: 72px !important; left: 0 !important; right: 0 !important; width: 100% !important; display: none !important; flex-direction: column !important; align-items: stretch !important; padding: 12px 18px 20px !important; background: var(--shell-header) !important; border-bottom: 1px solid var(--shell-border) !important; box-shadow: 0 15px 24px rgba(0,0,0,.12) !important; }
   .header.yuding-header.subpage-header .yuding-navigation.is-open { display: flex !important; }
@@ -345,7 +375,7 @@ html.dark .user-account-shell .yuding-footer--home .yuding-footer__bottom--home,
 }
 @media (max-width: 360px) {
   .header.yuding-header.subpage-header .header-top { padding-inline: 12px !important; }
-  .header.yuding-header.subpage-header .logo { flex-basis: 84px !important; width: 84px !important; }
+  .header.yuding-header.subpage-header .logo { flex-basis: 84px !important; width: 84px !important; min-width: 84px !important; }
   .header.yuding-header.subpage-header .logo img { width: 84px !important; }
   .header.yuding-header.subpage-header .header-btns { gap: 4px !important; }
   .header.yuding-header.subpage-header .btn-connexion span { display: none; }
@@ -360,3 +390,717 @@ html.dark .user-account-shell .yuding-footer--home .yuding-footer__bottom--home,
   .user-account-shell .yuding-footer--home :is(.yuding-footer__brand,.yuding-footer__discover) { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) { .yuding-footer--home a,.header.yuding-header :is(a,button) { transition: none !important; } }
+
+/* Navigation hover stays editorial: color + underline only, never a filled tile. */
+.header.yuding-header .yuding-navigation .nav-item,
+.header.yuding-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active) {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.header.yuding-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active) {
+  color: var(--shell-accent) !important;
+}
+.header.yuding-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active) > i {
+  color: var(--shell-accent) !important;
+}
+.header.yuding-header .yuding-navigation .nav-item::before {
+  display: none !important;
+}
+html.dark .header.yuding-header.subpage-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active),
+html[data-theme="dark"] .header.yuding-header.subpage-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active),
+body[data-theme="dark"] .header.yuding-header.subpage-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active),
+html:not(.dark) .header.yuding-header.subpage-header .yuding-navigation .nav-item:is(:hover, :focus-visible, .active) {
+  color: var(--shell-accent) !important;
+}
+
+/* Final cascade guard: header navigation stays text-only on every route. */
+.header.yuding-header .yuding-navigation .nav-item.nav-item,
+.header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active),
+.header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > i {
+  color: var(--shell-accent) !important;
+}
+
+html.dark .yuding-footer--home a.yuding-footer__cta,
+[data-theme="dark"] .yuding-footer--home a.yuding-footer__cta {
+  background: var(--shell-action) !important;
+  color: #12161b !important;
+}
+
+/* Clean footer: a quiet, editorial close for the travel platform. */
+.yuding-footer--clean {
+  --clean-bg: var(--shell-header, #f3f2ed);
+  --clean-ink: var(--shell-text, #193630);
+  --clean-muted: var(--shell-muted, #61776d);
+  --clean-line: var(--shell-border, #d6e2da);
+  --clean-accent: var(--shell-accent, #087d70);
+  --clean-card: color-mix(in srgb, var(--clean-bg) 86%, var(--clean-accent) 14%);
+  --clean-card-soft: color-mix(in srgb, var(--clean-bg) 93%, var(--clean-accent) 7%);
+  position: relative;
+  width: 100vw;
+  max-width: 100vw;
+  margin-top: 0;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow-x: clip;
+  padding: clamp(34px, 4.4vw, 56px) clamp(22px, 2.8vw, 48px) 18px;
+  background: var(--clean-bg) !important;
+  border-top: 1px solid var(--clean-line) !important;
+  color: var(--clean-ink) !important;
+}
+body:has(.home-v3) .yuding-footer--clean {
+  background: var(--clean-bg) !important;
+  border-top: 1px solid var(--clean-line) !important;
+  color: var(--clean-ink) !important;
+}
+.yuding-footer--clean::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: clamp(22px, 2.8vw, 48px);
+  width: 58px;
+  height: 2px;
+  background: var(--clean-accent);
+}
+.yuding-footer--clean .yuding-footer__clean-inner {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.yuding-footer--clean .yuding-footer__clean-intro {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(30px, 5.5vw, 96px);
+  padding-bottom: clamp(25px, 3vw, 34px);
+  border-bottom: 1px solid var(--clean-line);
+}
+.yuding-footer--clean .yuding-footer__clean-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+}
+.yuding-footer--clean .yuding-footer__clean-brand a {
+  display: inline-flex;
+  min-height: 33px;
+}
+.yuding-footer--clean .yuding-footer__clean-brand img {
+  width: 252px;
+  height: auto;
+  max-height: 78px;
+  object-fit: contain;
+  object-position: left center;
+}
+.yuding-footer--clean .yuding-footer__clean-brand .footer-logo-light { display: block !important; }
+.yuding-footer--clean .yuding-footer__clean-brand .footer-logo-dark { display: none !important; }
+.yuding-footer--clean .yuding-footer__clean-brand > span {
+  color: var(--clean-muted);
+  font-size: .76rem;
+  line-height: 1.45;
+}
+.yuding-footer--clean .yuding-footer__clean-lead h2 {
+  max-width: 16ch;
+  margin: 0;
+  color: var(--clean-ink) !important;
+  font: 500 clamp(2.15rem, 3.5vw, 3.4rem)/.96 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: -.035em;
+  text-align: left;
+}
+.yuding-footer--clean .yuding-footer__clean-lead p {
+  max-width: 42ch;
+  margin: 10px 0 0;
+  color: var(--clean-muted);
+  font-size: .8rem;
+  line-height: 1.55;
+}
+.yuding-footer--clean .yuding-footer__clean-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid var(--clean-accent);
+  border-radius: 5px;
+  background: var(--clean-accent) !important;
+  color: #fff !important;
+  font-size: .73rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+}
+.yuding-footer--clean .yuding-footer__clean-cta:is(:hover, :focus-visible) {
+  border-color: var(--clean-ink);
+  background: var(--clean-ink) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+.yuding-footer--clean .yuding-footer__clean-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 2.2vw, 34px);
+  align-items: stretch;
+  padding: 25px 0 29px;
+  border-bottom: 1px solid var(--clean-line);
+}
+.yuding-footer--clean .yuding-footer__clean-nav:first-child,
+.yuding-footer--clean .yuding-footer__clean-nav:nth-child(2) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  min-height: 0;
+  background: transparent;
+}
+.yuding-footer--clean .yuding-footer__clean-nav:first-child {
+  background: transparent;
+}
+.yuding-footer--clean .yuding-footer__clean-nav > span,
+.yuding-footer--clean .yuding-footer__clean-note > span {
+  display: block;
+  color: var(--clean-accent);
+  font-size: .61rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.yuding-footer--clean .yuding-footer__clean-nav > span { margin-bottom: 10px; }
+.yuding-footer--clean .yuding-footer__clean-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 25px;
+  row-gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.yuding-footer--clean .yuding-footer__clean-nav li { margin: 0 !important; }
+.yuding-footer--clean .yuding-footer__clean-nav:nth-child(2) ul {
+  column-gap: 22px;
+}
+.yuding-footer--clean .yuding-footer__clean-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  min-height: 26px;
+  color: var(--clean-muted);
+  font-size: .76rem;
+  transition: color .18s ease;
+}
+.yuding-footer--clean .yuding-footer__clean-nav a::before {
+  display: none;
+}
+.yuding-footer--clean .yuding-footer__clean-nav a:is(:hover, :focus-visible) {
+  color: var(--clean-accent);
+}
+.yuding-footer--clean .yuding-footer__clean-nav a:is(:hover, :focus-visible)::before {
+  opacity: 1;
+  transform: scale(1.35);
+}
+.yuding-footer--clean .yuding-footer__clean-note {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+.yuding-footer--clean .yuding-footer__clean-note::after {
+  display: none;
+}
+.yuding-footer--clean .yuding-footer__clean-note > span { padding-top: 0; }
+.yuding-footer--clean .yuding-footer__clean-note p {
+  max-width: 29ch;
+  margin: 12px 0 0;
+  color: var(--clean-ink);
+  font: 500 clamp(1.25rem, 1.9vw, 1.62rem)/1.12 'Cormorant Garamond', Georgia, serif;
+}
+.yuding-footer--clean .yuding-footer__clean-bottom {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 29px;
+  padding-top: 12px;
+  color: var(--clean-muted);
+  font-size: .64rem;
+}
+.yuding-footer--clean .yuding-footer__clean-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.yuding-footer--clean .yuding-footer__clean-status i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--clean-accent);
+}
+.yuding-footer--clean .yuding-footer__clean-legal {
+  display: inline-flex;
+  gap: 15px;
+  margin-left: auto;
+}
+.yuding-footer--clean .yuding-footer__clean-legal a {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color .18s ease, text-decoration-color .18s ease;
+}
+.yuding-footer--clean .yuding-footer__clean-legal a:is(:hover, :focus-visible) {
+  color: var(--clean-accent);
+  text-decoration-color: currentColor;
+}
+.yuding-footer--clean :is(a, button):focus-visible {
+  outline: 2px solid var(--clean-accent) !important;
+  outline-offset: 3px !important;
+}
+html.dark .yuding-footer--clean,
+html[data-theme="dark"] .yuding-footer--clean,
+body[data-theme="dark"] .yuding-footer--clean {
+  --clean-bg: #0f1115;
+  --clean-ink: #f2f4f7;
+  --clean-muted: #a7b1bf;
+  --clean-line: #2b313b;
+  --clean-accent: #159a83;
+  --clean-card: #171a20;
+  --clean-card-soft: #20242c;
+}
+html.dark body:has(.home-v3) .yuding-footer--clean,
+html[data-theme="dark"] body:has(.home-v3) .yuding-footer--clean,
+body[data-theme="dark"]:has(.home-v3) .yuding-footer--clean {
+  background: var(--clean-bg) !important;
+  border-top-color: var(--clean-line) !important;
+}
+html.dark .yuding-footer--clean .yuding-footer__clean-brand .footer-logo-light,
+html[data-theme="dark"] .yuding-footer--clean .yuding-footer__clean-brand .footer-logo-light,
+body[data-theme="dark"] .yuding-footer--clean .yuding-footer__clean-brand .footer-logo-light { display: none !important; }
+html.dark .yuding-footer--clean .yuding-footer__clean-brand .footer-logo-dark,
+html[data-theme="dark"] .yuding-footer--clean .yuding-footer__clean-brand .footer-logo-dark,
+body[data-theme="dark"] .yuding-footer--clean .yuding-footer__clean-brand .footer-logo-dark { display: block !important; }
+html.dark .yuding-footer--clean .yuding-footer__clean-cta,
+html[data-theme="dark"] .yuding-footer--clean .yuding-footer__clean-cta,
+body[data-theme="dark"] .yuding-footer--clean .yuding-footer__clean-cta { color: #10201d !important; }
+body:has(.home-v3) .yuding-footer--clean :is(.yuding-footer__clean-lead p, .yuding-footer__clean-note p, .yuding-footer__clean-nav ul) {
+  color: var(--clean-muted) !important;
+}
+@media (max-width: 900px) {
+  .yuding-footer--clean .yuding-footer__clean-brand img {
+    width: 190px;
+    max-height: 59px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-intro {
+    grid-template-columns: minmax(210px, .8fr) minmax(0, 1.5fr);
+    gap: 22px 34px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-cta {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .yuding-footer--clean .yuding-footer__clean-links {
+    grid-template-columns: minmax(0, 1.25fr) minmax(170px, .75fr);
+    gap: 27px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-nav:nth-child(2) ul {
+    grid-template-columns: 1fr;
+  }
+  .yuding-footer--clean .yuding-footer__clean-note {
+    grid-column: 1 / -1;
+    max-width: 420px;
+  }
+}
+@media (max-width: 600px) {
+  .yuding-footer--clean { padding: 30px 20px 16px; }
+  .yuding-footer--clean::before { left: 20px; }
+  .yuding-footer--clean .yuding-footer__clean-intro,
+  .yuding-footer--clean .yuding-footer__clean-links {
+    grid-template-columns: 1fr;
+  }
+  .yuding-footer--clean .yuding-footer__clean-intro { gap: 22px; }
+  .yuding-footer--clean .yuding-footer__clean-links { gap: 24px; }
+  .yuding-footer--clean .yuding-footer__clean-nav ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .yuding-footer--clean .yuding-footer__clean-nav:nth-child(2) ul { grid-template-columns: 1fr; }
+  .yuding-footer--clean .yuding-footer__clean-cta,
+  .yuding-footer--clean .yuding-footer__clean-note { grid-column: auto; }
+  .yuding-footer--clean .yuding-footer__clean-bottom {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 7px 14px;
+    line-height: 1.4;
+  }
+  .yuding-footer--clean .yuding-footer__clean-legal { width: 100%; margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yuding-footer--clean :is(a, button) { transition: none !important; }
+}
+
+/* Footer refinement: a tighter close with a clearer reading order. */
+.yuding-footer--clean {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding: clamp(30px, 4vw, 48px) clamp(24px, 5vw, 72px) 20px;
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--clean-accent) 10%, transparent), transparent 28%),
+    var(--clean-bg) !important;
+}
+.yuding-footer--clean::before {
+  left: clamp(24px, 5vw, 72px);
+  width: 76px;
+  height: 3px;
+}
+.yuding-footer--clean .yuding-footer__clean-inner {
+  width: min(100%, 1480px);
+  margin-inline: auto;
+}
+.yuding-footer--clean .yuding-footer__clean-intro {
+  grid-template-columns: minmax(300px, .72fr) minmax(300px, 1.55fr) auto;
+  gap: clamp(28px, 6vw, 112px);
+  align-items: end;
+  padding: 8px 0 34px;
+}
+.yuding-footer--clean .yuding-footer__clean-brand {
+  gap: 10px;
+  align-self: start;
+  padding-top: 5px;
+}
+.yuding-footer--clean .yuding-footer__clean-brand a {
+  min-height: 30px;
+}
+.yuding-footer--clean .yuding-footer__clean-brand img {
+  width: 300px !important;
+  max-width: none !important;
+  max-height: 76px;
+}
+.yuding-footer--clean .yuding-footer__clean-brand > span {
+  color: var(--clean-muted);
+  font-size: .7rem;
+  letter-spacing: .02em;
+}
+.yuding-footer--clean .yuding-footer__clean-lead {
+  max-width: 620px;
+}
+.yuding-footer--clean .yuding-footer__clean-lead::before {
+  content: 'Préparez la suite';
+  display: block;
+  margin-bottom: 12px;
+  color: var(--clean-accent);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.yuding-footer--clean .yuding-footer__clean-lead h2 {
+  max-width: 18ch;
+  font-size: clamp(2.45rem, 4vw, 4.25rem);
+  line-height: .93;
+  letter-spacing: -.04em;
+}
+.yuding-footer--clean .yuding-footer__clean-lead p {
+  max-width: 48ch;
+  margin-top: 15px;
+  color: var(--clean-muted);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+.yuding-footer--clean .yuding-footer__clean-cta {
+  min-height: 46px;
+  padding-inline: 18px;
+  border-radius: 7px;
+  font-size: .74rem;
+  letter-spacing: .01em;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--clean-accent) 20%, transparent);
+}
+.yuding-footer--clean .yuding-footer__clean-cta i {
+  font-size: .7rem;
+  transition: transform .18s ease;
+}
+.yuding-footer--clean .yuding-footer__clean-cta:is(:hover, :focus-visible) i {
+  transform: translate(2px, -2px);
+}
+.yuding-footer--clean .yuding-footer__clean-links {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr) minmax(230px, .82fr);
+  gap: clamp(28px, 5vw, 92px);
+  padding: 27px 0 25px;
+  border-bottom: 1px solid var(--clean-line);
+}
+.yuding-footer--clean .yuding-footer__clean-nav > span,
+.yuding-footer--clean .yuding-footer__clean-note > span {
+  font-size: .62rem;
+  letter-spacing: .17em;
+}
+.yuding-footer--clean .yuding-footer__clean-nav > span {
+  margin-bottom: 12px;
+}
+.yuding-footer--clean .yuding-footer__clean-nav ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px 18px;
+}
+.yuding-footer--clean .yuding-footer__clean-nav:nth-child(2) ul {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px 16px;
+}
+.yuding-footer--clean .yuding-footer__clean-nav a {
+  min-height: 29px;
+  color: var(--clean-muted);
+  font-size: .75rem;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  transition: color .18s ease, text-decoration-color .18s ease;
+}
+.yuding-footer--clean .yuding-footer__clean-nav a:is(:hover, :focus-visible) {
+  color: var(--clean-ink);
+  text-decoration-color: var(--clean-accent);
+}
+.yuding-footer--clean .yuding-footer__clean-note {
+  justify-content: flex-start;
+  min-height: 100%;
+  padding-left: 24px;
+  border-left: 1px solid color-mix(in srgb, var(--clean-accent) 60%, var(--clean-line));
+}
+.yuding-footer--clean .yuding-footer__clean-note p {
+  max-width: 20ch;
+  margin-top: 13px;
+  color: var(--clean-ink);
+  font-size: clamp(1.45rem, 2.1vw, 2rem);
+  line-height: 1.02;
+  letter-spacing: -.02em;
+}
+.yuding-footer--clean .yuding-footer__clean-bottom {
+  min-height: 28px;
+  padding-top: 14px;
+  font-size: .66rem;
+}
+.yuding-footer--clean .yuding-footer__clean-status i {
+  width: 5px;
+  height: 5px;
+}
+@media (max-width: 900px) {
+  .yuding-footer--clean .yuding-footer__clean-intro {
+    grid-template-columns: minmax(150px, .65fr) minmax(0, 1.35fr);
+    gap: 24px 34px;
+    align-items: end;
+  }
+  .yuding-footer--clean .yuding-footer__clean-cta {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .yuding-footer--clean .yuding-footer__clean-links {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    gap: 28px 36px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-note {
+    grid-column: 1 / -1;
+    min-height: auto;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--clean-line);
+    border-left: 0;
+  }
+  .yuding-footer--clean .yuding-footer__clean-note p {
+    max-width: 24ch;
+  }
+  .yuding-footer--clean .yuding-footer__clean-brand img {
+    width: 240px !important;
+    max-width: 100% !important;
+    max-height: 60px;
+  }
+}
+@media (max-width: 600px) {
+  .yuding-footer--clean {
+    padding: 28px 20px 16px;
+  }
+  .yuding-footer--clean::before {
+    left: 20px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-intro {
+    grid-template-columns: 1fr;
+    gap: 25px;
+    padding-top: 5px;
+    padding-bottom: 28px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-brand {
+    padding-top: 0;
+  }
+  .yuding-footer--clean .yuding-footer__clean-lead h2 {
+    max-width: 13ch;
+    font-size: clamp(2.55rem, 12vw, 3.65rem);
+  }
+  .yuding-footer--clean .yuding-footer__clean-lead p {
+    max-width: 37ch;
+  }
+  .yuding-footer--clean .yuding-footer__clean-cta {
+    grid-column: auto;
+    justify-self: start;
+  }
+  .yuding-footer--clean .yuding-footer__clean-links {
+    grid-template-columns: 1fr;
+    gap: 25px;
+    padding-block: 24px 22px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-nav ul,
+  .yuding-footer--clean .yuding-footer__clean-nav:nth-child(2) ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 16px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-note {
+    grid-column: auto;
+    padding-top: 20px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-bottom {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+  .yuding-footer--clean .yuding-footer__clean-legal {
+    width: 100%;
+    margin-left: 0;
+  }
+  .yuding-footer--clean .yuding-footer__clean-brand img {
+    width: 220px !important;
+    max-width: 100% !important;
+    max-height: 56px;
+  }
+}
+
+/* Every route uses the same footer surface and semantic shell palette. */
+.yuding-footer--clean {
+  background: var(--shell-header) !important;
+  border-top-color: var(--shell-border) !important;
+  color: var(--shell-text) !important;
+}
+
+/* Auth pages use the same public header rhythm; only the home hero gets a
+   transparent pre-scroll treatment. */
+body:has(.auth-shell) .yuding-footer {
+  display: none !important;
+}
+.auth-shell .header.yuding-header.subpage-header {
+  position: fixed !important;
+  inset: 0 0 auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding: 0 !important;
+  background: var(--shell-header) !important;
+  border-bottom: 1px solid var(--shell-border) !important;
+  box-shadow: 0 10px 28px rgba(1, 22, 20, .1) !important;
+  color: var(--shell-header-ink) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.auth-shell .header.yuding-header.subpage-header .header-top {
+  display: block !important;
+  width: 100% !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  padding-inline: 40px 32px !important;
+  background: transparent !important;
+}
+.auth-shell .header.yuding-header.subpage-header .header-top > .container1 {
+  display: grid !important;
+  grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr) !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 72px !important;
+  padding: 0 !important;
+}
+.auth-shell .header.yuding-header.subpage-header .logo {
+  width: 150px !important;
+  min-width: 150px !important;
+  height: 48px !important;
+}
+.auth-shell .header.yuding-header.subpage-header .logo img {
+  width: 150px !important;
+  height: auto !important;
+  max-height: 48px !important;
+  object-fit: contain !important;
+}
+.auth-shell .header.yuding-header.subpage-header .nav-item {
+  min-height: 42px !important;
+  padding: .7rem .65rem !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--shell-header-ink) !important;
+  font-size: .81rem !important;
+  font-weight: 600 !important;
+}
+.auth-shell .header.yuding-header.subpage-header .nav-item:is(:hover, :focus-visible, .active) {
+  background: transparent !important;
+  color: var(--shell-accent) !important;
+}
+.auth-shell .header.yuding-header.subpage-header .header-btns {
+  justify-self: end;
+}
+.auth-shell .header.yuding-header.subpage-header .dark-mode-toggle {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  border: 1px solid #b8cfc0 !important;
+  border-radius: 50% !important;
+  background: #e9f2e9 !important;
+  color: #0e655b !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+html.dark .auth-shell .header.yuding-header.subpage-header .dark-mode-toggle,
+html[data-theme="dark"] .auth-shell .header.yuding-header.subpage-header .dark-mode-toggle,
+body[data-theme="dark"] .auth-shell .header.yuding-header.subpage-header .dark-mode-toggle {
+  border-color: rgba(255, 255, 255, .27) !important;
+  background: rgba(255, 255, 255, .12) !important;
+  color: #fff !important;
+}
+@media (max-width: 900px) {
+  .auth-shell .header.yuding-header.subpage-header .header-top {
+    padding-inline: 18px !important;
+  }
+  .auth-shell .header.yuding-header.subpage-header .header-top > .container1 {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+  .auth-shell .header.yuding-header.subpage-header .logo {
+    flex: 0 0 112px !important;
+    width: 112px !important;
+    min-width: 112px !important;
+    height: 48px !important;
+  }
+  .auth-shell .header.yuding-header.subpage-header .logo img {
+    width: 112px !important;
+    max-height: 48px !important;
+  }
+  .auth-shell .header.yuding-header.subpage-header .header-btns {
+    margin-left: auto !important;
+  }
+}
+
+/* One exact header box across public and auth routes. */
+.header.yuding-header.subpage-header,
+.header.yuding-header.subpage-header .header-top,
+.header.yuding-header.subpage-header .header-top > .container1 {
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+}

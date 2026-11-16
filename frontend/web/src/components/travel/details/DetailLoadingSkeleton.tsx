@@ -2,37 +2,31 @@ import React from 'react';
 
 export const DetailLoadingSkeleton: React.FC = () => {
   return (
-    <div style={{ maxWidth: '1150px', margin: '2rem auto', padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Back button placeholder */}
-      <div className="animate-pulse" style={{ width: '140px', height: '36px', background: '#e2e8f0', borderRadius: '6px' }} />
+    <div className="travel-details-shell travel-details-loading min-h-screen">
+      <div className="travel-details-shell__inner mx-auto flex flex-col gap-8">
+        <div className="travel-details-loading__back animate-pulse" />
 
-      {/* Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-        {/* Main Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Header Skeleton */}
-          <div className="animate-pulse" style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', border: '1px solid #e2e8f0', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: '#e2e8f0', flexShrink: 0 }} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ height: '22px', background: '#e2e8f0', borderRadius: '4px', width: '70%' }} />
-              <div style={{ height: '14px', background: '#e2e8f0', borderRadius: '4px', width: '40%' }} />
+        <div className="travel-details-shell__grid grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+          <div className="flex flex-col gap-6">
+            <div className="travel-details-loading__card animate-pulse">
+              <div className="travel-details-loading__icon" />
+              <div className="travel-details-loading__copy">
+                <div className="travel-details-loading__line travel-details-loading__line--title" />
+                <div className="travel-details-loading__line travel-details-loading__line--subtitle" />
+              </div>
+            </div>
+
+            <div className="travel-details-loading__card travel-details-loading__body animate-pulse">
+              <div className="travel-details-loading__line travel-details-loading__line--heading" />
+              <div className="travel-details-loading__block" />
+              <div className="travel-details-loading__block" />
             </div>
           </div>
 
-          {/* Timeline / Body Skeleton */}
-          <div className="animate-pulse" style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ height: '20px', background: '#e2e8f0', borderRadius: '4px', width: '30%' }} />
-            <div style={{ height: '100px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-            <div style={{ height: '100px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-          </div>
-        </div>
-
-        {/* Sidebar Skeleton */}
-        <div>
-          <div className="animate-pulse" style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ height: '20px', background: '#e2e8f0', borderRadius: '4px', width: '50%' }} />
-            <div style={{ height: '36px', background: '#e2e8f0', borderRadius: '6px', width: '65%' }} />
-            <div style={{ height: '44px', background: '#e2e8f0', borderRadius: '8px', width: '100%', marginTop: '0.5rem' }} />
+          <div className="travel-details-loading__card travel-details-loading__sidebar animate-pulse">
+            <div className="travel-details-loading__line travel-details-loading__line--heading" />
+            <div className="travel-details-loading__line travel-details-loading__line--price" />
+            <div className="travel-details-loading__block travel-details-loading__block--cta" />
           </div>
         </div>
       </div>

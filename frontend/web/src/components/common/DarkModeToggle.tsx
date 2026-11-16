@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+
+const useThemeEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export const DarkModeToggle: React.FC<{ onThemeChange?: (dark: boolean) => void }> = ({ onThemeChange }) => {
   const [isDark, setIsDark] = useState<boolean>(false);
 
-  useEffect(() => {
-    const savedTheme = document.documentElement.dataset.theme || localStorage.getItem('theme');
+  useThemeEffect(() => {
+    const savedTheme = localStorage.getItem('yuding_theme') || localStorage.getItem('theme') || document.documentElement.dataset.theme;
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
 
@@ -31,7 +33,9 @@ export const DarkModeToggle: React.FC<{ onThemeChange?: (dark: boolean) => void 
     const nextDark = !isDark;
     setIsDark(nextDark);
     applyTheme(nextDark);
-    localStorage.setItem('theme', nextDark ? 'dark' : 'light');
+    const nextTheme = nextDark ? 'dark' : 'light';
+    localStorage.setItem('yuding_theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
     document.cookie = `yuding_theme=${nextDark ? 'dark' : 'light'}; Path=/; Max-Age=31536000; SameSite=Lax`;
     onThemeChange?.(nextDark);
   };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { NearbyPlace } from '@/types/geo.types';
 import styles from './NearbyPoiPanel.module.css';
 
@@ -53,6 +53,13 @@ export const NearbyPoiPanel: React.FC<NearbyPoiPanelProps> = ({
     [pois, activeCategory],
   );
 
+  useEffect(() => {
+    if (!selectedPoi) return;
+    const card = Array.from(document.querySelectorAll<HTMLElement>('[data-poi-id]'))
+      .find((element) => element.dataset.poiId === selectedPoi.id);
+    card?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedPoi?.id]);
+
   return (
     <div className={`${styles.panel} ${!isLoading && filteredPois.length > 0 ? styles.panelFilled : ''}`}>
       <div className={styles.heading}>
@@ -85,6 +92,7 @@ export const NearbyPoiPanel: React.FC<NearbyPoiPanelProps> = ({
             return (
               <button
                 key={poi.id}
+                data-poi-id={poi.id}
                 type="button"
                 onClick={() => onSelectPoi?.(poi)}
                 className={`${styles.poiCard} ${selectedPoi?.id === poi.id ? styles.poiSelected : ''}`}

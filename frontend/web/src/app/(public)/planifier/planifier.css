@@ -707,3 +707,43 @@
   .travel-page--planifier .planner-transport-row__price { grid-column: 2; }
   .travel-page--planifier .planner-transport { padding: 0 18px; }
 }
+
+/* Planner dark mode follows the shared graphite shell instead of the legacy
+   emerald surface palette used by the older form utilities. */
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier {
+  --planner-line: #2b313b;
+  --planner-muted: #a7b1bf;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-form {
+  background: #171a20 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-form__primary,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-form__secondary {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-form :is(input, select) {
+  background: #12151a !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-form :is(input, select)::placeholder {
+  color: #7e8b97 !important;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-form input[type="date"] {
+  color-scheme: dark;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-interest,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-trip-tab {
+  background: #171a20;
+  border-color: #2b313b;
+  color: #f2f4f7;
+}
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-interest:is(:hover, .is-selected),
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page--planifier .planner-trip-tab:is(:hover, :focus-visible) {
+  background: rgba(21, 154, 131, .14);
+  border-color: #159a83;
+  color: #8fd7bf;
+}

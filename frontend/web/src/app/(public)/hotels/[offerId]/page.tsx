@@ -286,25 +286,14 @@ export default function HotelDetailsPage() {
         />
       }
       mobileAction={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="travel-details-mobile-action__inner flex items-center justify-between gap-3">
           <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>À partir de / nuit</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#01796F' }}>
+            <div className="travel-details-mobile-action__label text-xs">À partir de / nuit</div>
+            <div className="travel-details-mobile-action__price text-xl font-extrabold">
               {activePrice} {activeCurrency}
             </div>
           </div>
-          <a
-            href={bookingUrl}
-            style={{
-              padding: '0.65rem 1.25rem',
-              borderRadius: '6px',
-              background: '#01796F',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              textDecoration: 'none',
-            }}
-          >
+          <a href={bookingUrl} className="travel-details-mobile-action__link rounded-lg px-5 py-2.5 text-sm font-bold">
             Réserver
           </a>
         </div>
@@ -333,16 +322,8 @@ export default function HotelDetailsPage() {
       />
 
       {/* Hotel Image (Authoritative Provider Image or SafeEntityImage fallback) */}
-      <div
-        style={{
-          background: 'var(--card, #ffffff)',
-          borderRadius: '12px',
-          overflow: 'hidden',
-          border: '1px solid rgba(0, 0, 0, 0.06)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-        }}
-      >
-        <div style={{ height: '320px', position: 'relative', width: '100%', background: '#e2e8f0' }}>
+      <div className="travel-details-media">
+        <div className="travel-details-media__frame relative h-[320px] w-full">
           <SafeEntityImage
             src={hotel.imageUrl}
             alt={hotelDisplayName}
@@ -359,78 +340,62 @@ export default function HotelDetailsPage() {
       </div>
 
       {hotel.description && (
-        <div className="border-t border-slate-200 pt-5 text-sm leading-7 text-slate-700 dark:border-[#01796F]/30 dark:text-slate-200">
-          <h2 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">À propos de l’établissement</h2>
+        <div className="travel-details-description text-sm leading-7">
+          <h2 className="mb-2 text-lg font-bold">À propos de l’établissement</h2>
           <p>{hotel.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}</p>
         </div>
       )}
 
       {/* Available Room Options */}
       {hotel.roomOffers && hotel.roomOffers.length > 0 && (
-        <div
-          style={{
-            paddingTop: '1.25rem',
-            borderTop: '1px solid var(--border, #d9e7e3)',
-          }}
-        >
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 1rem 0', color: 'var(--text, #0f172a)' }}>
+        <div className="travel-hotel-rooms">
+          <h3 className="travel-hotel-rooms__title text-lg font-bold mb-4">
             Chambres et tarifs disponibles ({hotel.roomOffers.length})
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex flex-col gap-4">
             {hotel.roomOffers.slice(0, visibleRoomCount).map((room) => {
               const isSelected = selectedRoomOfferId === room.offerId;
               return (
                 <div
                   key={room.offerId}
                   onClick={() => setSelectedRoomOfferId(room.offerId)}
-                  style={{
-                    borderBottom: '1px solid var(--border, #d9e7e3)',
-                    padding: '0.9rem 0.5rem',
-                    background: isSelected ? 'rgba(1, 121, 111, 0.04)' : 'transparent',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '1rem',
-                    transition: 'border-color 0.2s ease, background 0.2s ease',
-                  }}
+                  className={`travel-hotel-room ${isSelected ? 'travel-hotel-room--selected' : ''} flex items-center justify-between gap-4 flex-wrap px-2 py-3.5 cursor-pointer transition-colors`}
                 >
-                  <div style={{ flex: 1, minWidth: '220px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <div className="travel-hotel-room__content flex-1 min-w-[220px]">
+                    <div className="travel-hotel-room__heading flex items-center gap-2 mb-1">
                       <input
                         type="radio"
                         checked={isSelected}
                         onChange={() => setSelectedRoomOfferId(room.offerId)}
-                        style={{ accentColor: '#01796F', cursor: 'pointer' }}
+                        className="cursor-pointer"
                       />
-                      <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
+                      <span className="travel-hotel-room__name font-bold text-base">
                         {room.roomName}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.85rem', color: '#64748b', marginLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <div className="travel-hotel-room__meta ml-6 flex flex-col gap-1 text-sm">
                       {room.boardName && <span>{room.boardName}</span>}
                       {room.bedType && <span>Lit: {room.bedType}</span>}
                       {room.refundable === true ? (
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>
-                          <i className="fas fa-check" style={{ marginRight: '0.3rem' }} />
+                        <span className="travel-hotel-room__refundable font-semibold">
+                          <i className="fas fa-check mr-1" />
                           Annulation gratuite
                         </span>
                       ) : room.refundable === false ? (
-                        <span style={{ color: '#d97706' }}>Non remboursable</span>
+                        <span className="travel-hotel-room__nonrefundable">Non remboursable</span>
                       ) : (
                         <span>Conditions d’annulation selon le fournisseur</span>
                       )}
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#01796F' }}>
+                  <div className="travel-hotel-room__price-wrap text-right">
+                    <div className="travel-hotel-room__price text-xl font-extrabold">
                       <PriceDisplay conversion={room.priceConversion} amount={room.price} currency={room.currency} />
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    <div className="travel-hotel-room__night text-xs">
                       séjour complet{room.pricePerNight ? ` · ${room.pricePerNight} ${room.currency}/nuit fournisseur` : ''}
                     </div>
                   </div>

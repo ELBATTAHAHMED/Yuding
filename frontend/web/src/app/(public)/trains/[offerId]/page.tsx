@@ -174,26 +174,12 @@ export default function TrainDetailsPage() {
           />
 
           {train.officialScheduleUrl && (
-            <div style={{ marginTop: '1rem' }}>
+            <div className="mt-4">
               <a
                 href={train.officialScheduleUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  background: '#f8fafc',
-                  border: '1.5px solid #cbd5e1',
-                  color: '#1e293b',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  textDecoration: 'none',
-                  textAlign: 'center',
-                }}
+                className="travel-details-official-link"
               >
                 <span>Consulter sur le portail officiel</span>
                 <i className="fas fa-external-link-alt" style={{ fontSize: '0.8rem' }} />

@@ -5,8 +5,8 @@ export default function AccountBookingsPage() {
   return (
     <Suspense
       fallback={
-        <main className="account-empty-page" style={{ textAlign: 'center', padding: '60px 0' }}>
-          <i className="fas fa-spinner fa-spin fa-2x" style={{ color: '#087d70' }} aria-hidden="true" />
+        <main className="account-empty-page account-route-fallback" style={{ textAlign: 'center', padding: '60px 0' }}>
+          <i className="fas fa-spinner fa-spin account-loading-icon" aria-hidden="true" />
         </main>
       }
     >

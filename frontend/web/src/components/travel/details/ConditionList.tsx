@@ -20,40 +20,27 @@ export const ConditionList: React.FC<ConditionListProps> = ({
 
   if (visibleItems.length === 0) return null;
 
-  const getStatusColors = (status?: ConditionItem['status']) => {
-    switch (status) {
-      case 'success':
-        return { iconColor: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' };
-      case 'warning':
-        return { iconColor: '#d97706', bg: '#fffbeb', border: '#fde68a' };
-      case 'error':
-        return { iconColor: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
-      default:
-        return { iconColor: '#01796F', bg: '#f8fafc', border: '#e2e8f0' };
-    }
-  };
-
   return (
-    <div className="bg-white dark:bg-[#062523] rounded-xl p-6 border border-slate-200 dark:border-white/10 shadow-sm">
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+    <div className="travel-details-card travel-condition-list">
+      <h3 className="travel-details-card__title text-lg font-bold mb-4">
         {title}
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="travel-condition-list__grid grid grid-cols-1 md:grid-cols-2 gap-4">
         {visibleItems.map((item, idx) => {
           return (
             <div
               key={idx}
-              className="bg-slate-50 dark:bg-[#021817] border border-slate-200 dark:border-white/10 rounded-lg p-4 flex items-start gap-3"
+              className={`travel-condition-item travel-condition-item--${item.status || 'neutral'} rounded-lg p-4 flex items-start gap-3`}
             >
-              <div className="text-[#01796F] dark:text-[#02E0D5] text-lg mt-0.5 shrink-0">
+              <div className="travel-condition-item__icon text-lg mt-0.5 shrink-0">
                 <i className={item.icon || 'fas fa-info-circle'} />
               </div>
               <div>
-                <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">
+                <div className="travel-condition-item__title font-bold text-sm mb-1">
                   {item.title}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div className="travel-condition-item__description text-xs leading-relaxed">
                   {item.description}
                 </div>
               </div>

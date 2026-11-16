@@ -6,19 +6,24 @@
   --checkout-surface: #fff;
   --checkout-bg: #f7faf9;
   color: var(--checkout-ink);
+  background-color: var(--checkout-bg);
 }
 
 [data-theme="dark"] .checkout-shell,
 .dark .checkout-shell {
-  --checkout-ink: #e7f1ee;
-  --checkout-muted: #a9beb7;
-  --checkout-teal: #78d5c4;
-  --checkout-line: #36504a;
-  --checkout-surface: #202e2a;
-  --checkout-bg: #16231f;
+  --checkout-ink: #f2f4f7;
+  --checkout-muted: #a7afbb;
+  --checkout-teal: #159a83;
+  --checkout-line: #2b313b;
+  --checkout-surface: #171a20;
+  --checkout-bg: #0f1115;
 }
 
-.checkout-shell__main { min-height: calc(100vh - 210px); background: var(--checkout-bg); }
+.checkout-shell__main {
+  min-height: calc(100vh - 210px);
+  background-color: var(--checkout-bg);
+  color: var(--checkout-ink);
+}
 .checkout-page { width: 100%; margin-inline: auto; padding: 30px clamp(24px, 3.5vw, 60px) 72px; }
 .checkout-page section { min-height: 0; height: auto; padding: 0; }
 .checkout-page h1, .checkout-page h2, .checkout-page h3, .checkout-page p { margin-top: 0; }
@@ -48,6 +53,9 @@
 .checkout-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, .8fr); align-items: start; gap: clamp(32px, 5vw, 76px); }
 .checkout-primary, .checkout-aside { min-width: 0; }
 .checkout-section { padding: 0 0 30px !important; margin-bottom: 30px; border-bottom: 1px solid var(--checkout-line); }
+.checkout-shell .checkout-section {
+  background: var(--checkout-bg);
+}
 .checkout-section__heading { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
 .checkout-section__heading > span { flex: 0 0 auto; display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--checkout-line); border-radius: 50%; color: var(--checkout-teal); font-size: 11px; font-weight: 800; }
 .checkout-section__heading h2, .checkout-summary h2 { margin: 0; font-size: 22px; font-weight: 750; letter-spacing: -.025em; }
@@ -111,6 +119,12 @@
 .checkout-grid--payment .checkout-aside { align-self: stretch; }
 .checkout-payment__aside-content { position: sticky; top: 124px; }
 .checkout-grid--payment .checkout-summary { position: static; }
+.checkout-payment {
+  padding: 28px !important;
+  border: 1px solid var(--checkout-line);
+  border-radius: 12px;
+  background: var(--checkout-surface);
+}
 .checkout-payment__methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 30px; }
 .checkout-payment__methods button { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 13px 14px; border: 1px solid var(--checkout-line); border-radius: 9px; background: var(--checkout-surface); color: var(--checkout-ink); text-align: left; cursor: pointer; transition: border-color .17s ease, background .17s ease, box-shadow .17s ease; }
 .checkout-payment__method--visa { --payment-brand: #1434cb; --payment-tint: #eef2ff; }
@@ -163,7 +177,13 @@
 .checkout-confirmation__hero .checkout-kicker { margin-bottom: 4px; color: var(--confirmation-accent); }
 .checkout-confirmation__hero h2 { margin: 0 0 5px; font-size: clamp(19px, 2vw, 25px); line-height: 1.25; }
 .checkout-confirmation__hero p:last-child { max-width: 760px; margin: 0; color: var(--checkout-muted); font-size: 14px; line-height: 1.5; }
-.checkout-confirmation__block { padding: 0 0 24px !important; margin-bottom: 26px; border-bottom: 1px solid var(--checkout-line); }
+.checkout-confirmation__block {
+  padding: 24px !important;
+  margin-bottom: 18px;
+  border: 1px solid var(--checkout-line);
+  border-radius: 12px;
+  background: var(--checkout-surface);
+}
 .checkout-confirmation__block-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 13px; }
 .checkout-confirmation__block-heading h2 { margin: 0; font-size: 20px; }
 .checkout-confirmation__block-heading span { color: var(--checkout-teal); font-size: 12px; font-weight: 750; }
@@ -177,6 +197,15 @@
 .checkout-confirmation__summary-grid dd { text-align: left; line-height: 1.4; }
 .checkout-confirmation__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--checkout-line); }
 .checkout-confirmation__actions .checkout-button { min-height: 46px; font-size: 14px; }
+
+/* Keep the recap card in the reading flow before the desktop two-column
+   layout becomes too tight for smaller laptop viewports. */
+@media (max-width: 1280px) {
+  .checkout-page { padding-inline: clamp(18px, 3vw, 44px); }
+  .checkout-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .checkout-summary { position: static; }
+  .checkout-payment__aside-content { position: static; }
+}
 
 @media (max-width: 900px) {
   .checkout-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
@@ -196,6 +225,7 @@
   .checkout-steps__number { flex: 0 0 23px; width: 23px; height: 23px; }
   .checkout-fields--two { grid-template-columns: minmax(0, 1fr); }
   .checkout-payment__methods { grid-template-columns: minmax(0, 1fr); }
+  .checkout-payment, .checkout-confirmation__block { padding: 19px !important; }
   .checkout-confirmation__hero { padding: 18px; gap: 13px; }
   .checkout-confirmation__summary-grid { column-gap: 12px; }
   .checkout-actions { align-items: stretch; }
@@ -208,4 +238,57 @@
 
 @media (prefers-reduced-motion: reduce) {
   .checkout-shell .checkout-payment__methods button { transition-duration: 0.01ms; }
+}
+
+html.dark .checkout-shell .checkout-button,
+[data-theme="dark"] .checkout-shell .checkout-button {
+  border-color: var(--checkout-teal) !important;
+  background: var(--checkout-teal) !important;
+  color: #12161b !important;
+}
+html.dark .checkout-shell .checkout-button:hover,
+[data-theme="dark"] .checkout-shell .checkout-button:hover {
+  border-color: #25b89a !important;
+  background: #25b89a !important;
+}
+html.dark .checkout-shell .checkout-button--secondary,
+[data-theme="dark"] .checkout-shell .checkout-button--secondary {
+  border-color: var(--checkout-line) !important;
+  background: transparent !important;
+  color: var(--checkout-teal) !important;
+}
+
+/* Checkout owns the page canvas, including the shared footer. Keeping the
+   body gap and footer on the same token prevents a second dark surface from
+   appearing after the reservation form. */
+body:has(.checkout-shell) {
+  background: #f7faf9;
+}
+body:has(.checkout-shell) :is(.yuding-footer, .yuding-footer--clean, .yuding-footer--balanced) {
+  background: var(--shell-header) !important;
+  border-top-color: var(--shell-border) !important;
+}
+body:has(.checkout-shell) .yuding-footer--clean {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+html.dark body:has(.checkout-shell),
+html[data-theme="dark"] body:has(.checkout-shell),
+body[data-theme="dark"]:has(.checkout-shell) {
+  background: #0f1115 !important;
+}
+html.dark body:has(.checkout-shell) :is(.yuding-footer, .yuding-footer--clean, .yuding-footer--balanced),
+html[data-theme="dark"] body:has(.checkout-shell) :is(.yuding-footer, .yuding-footer--clean, .yuding-footer--balanced),
+body[data-theme="dark"]:has(.checkout-shell) :is(.yuding-footer, .yuding-footer--clean, .yuding-footer--balanced) {
+  background: var(--shell-footer) !important;
+  border-top-color: var(--shell-border) !important;
+}
+
+/* The two reservation sections sit directly on the checkout canvas. */
+html.dark .checkout-shell .checkout-section,
+html[data-theme="dark"] .checkout-shell .checkout-section,
+body[data-theme="dark"] .checkout-shell .checkout-section {
+  background: var(--checkout-bg) !important;
 }

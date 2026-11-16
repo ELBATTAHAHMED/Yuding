@@ -107,6 +107,28 @@ export class ApiClient {
     return this.baseUrl;
   }
 
+  /**
+   * Build a Gateway URL without duplicating the same-origin `/api` prefix.
+   *
+   * Local production builds use `/api` as the client base URL, while service
+   * methods keep their canonical `/api/...` endpoint paths.  Normalize that
+   * combination here so both `/api` and a direct Gateway origin work.
+   */
+  private buildUrl(endpoint: string): string {
+    if (endpoint.startsWith('http')) {
+      return endpoint;
+    }
+
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const baseIsApiPrefix = this.baseUrl.toLowerCase().endsWith('/api');
+    const endpointAlreadyHasApiPrefix = normalizedEndpoint === '/api' || normalizedEndpoint.startsWith('/api/');
+    const requestPath = baseIsApiPrefix && endpointAlreadyHasApiPrefix
+      ? normalizedEndpoint.slice(4) || '/'
+      : normalizedEndpoint;
+
+    return `${this.baseUrl}${requestPath}`;
+  }
+
   public setAccessToken(token: string | null) {
     this.accessToken = token;
   }
@@ -228,7 +250,7 @@ export class ApiClient {
     options: RequestOptions,
     requiresAuth: boolean
   ): Promise<T> {
-    const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const timeoutMs = options.timeoutMs ?? this.defaultTimeoutMs;
 
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
@@ -457,7 +479,7 @@ export class ApiClient {
   }
 
   public async head(endpoint: string, requiresAuth = false, options: RequestOptions = {}): Promise<Headers> {
-    const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    const url = this.buildUrl(endpoint);
     const headers: Record<string, string> = {
       ...((options.headers as Record<string, string>) || {}),
     };

@@ -43,6 +43,15 @@ public class TripPlannerService {
 
     @Transactional
     public TripPlanDto planTrip(TripPlanRequest request, UUID userId) {
+        return planTrip(request, userId, null);
+    }
+
+    /**
+     * Rebuilds a plan, optionally reusing the existing entity when a user
+     * refreshes a saved trip. Reusing the entity keeps its public reference
+     * stable so identity-service saved-trip links do not become stale.
+     */
+    private TripPlanDto planTrip(TripPlanRequest request, UUID userId, TripPlanEntity existingPlan) {
         validateRequest(request);
 
         log.info("Starting Trip Planner orchestration for user {}: {} -> {}, dates: {} to {}, budget: {} {}",
@@ -134,33 +143,39 @@ public class TripPlannerService {
         }
 
         // 4. Persist Trip Plan to DB
-        String publicRef = ReferenceGenerator.generateTripReference();
+        boolean refreshing = existingPlan != null;
+        String publicRef = refreshing ? existingPlan.getPublicReference() : ReferenceGenerator.generateTripReference();
         String title = "Voyage " + request.getDestination() + " — " + numberOfDays + " jours";
         String summary = String.format("Itinéraire personnalisé pour %d voyageur(s) de %s à %s du %s au %s (Budget: %s %s).",
                 request.getTravelers(), request.getOrigin(), request.getDestination(),
                 request.getStartDate(), request.getEndDate(), budget.toPlainString(), budgetCurrency);
 
-        TripPlanEntity planEntity = TripPlanEntity.builder()
-                .publicReference(publicRef)
-                .userId(userId)
-                .origin(request.getOrigin())
-                .destination(request.getDestination())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .travelers(request.getTravelers())
-                .budget(budget)
-                .budgetCurrency(budgetCurrency)
-                .pricedTotal(pricedTotal)
-                .remainingBudget(remainingBudget)
-                .unpricedItemsCount(unpricedCount)
-                .budgetStatus(budgetStatus)
-                .title(title)
-                .summary(summary)
-                .preferences(request.getPreferences() != null ? String.join(", ", request.getPreferences()) : "")
-                .weatherSummary(weatherInfo)
-                .dataFreshness("FRESH")
-                .version(1)
-                .build();
+        TripPlanEntity planEntity = refreshing
+                ? existingPlan
+                : TripPlanEntity.builder()
+                        .publicReference(publicRef)
+                        .userId(userId)
+                        .build();
+        planEntity.setPublicReference(publicRef);
+        planEntity.setUserId(userId);
+        planEntity.setOrigin(request.getOrigin());
+        planEntity.setDestination(request.getDestination());
+        planEntity.setStartDate(request.getStartDate());
+        planEntity.setEndDate(request.getEndDate());
+        planEntity.setTravelers(request.getTravelers());
+        planEntity.setBudget(budget);
+        planEntity.setBudgetCurrency(budgetCurrency);
+        planEntity.setPricedTotal(pricedTotal);
+        planEntity.setRemainingBudget(remainingBudget);
+        planEntity.setUnpricedItemsCount(unpricedCount);
+        planEntity.setBudgetStatus(budgetStatus);
+        planEntity.setTitle(title);
+        planEntity.setSummary(summary);
+        planEntity.setPreferences(request.getPreferences() != null ? String.join(", ", request.getPreferences()) : "");
+        planEntity.setWeatherSummary(weatherInfo);
+        planEntity.setDataFreshness(refreshing ? "REFRESHED" : "FRESH");
+        planEntity.setVersion(refreshing ? planEntity.getVersion() + 1 : 1);
+        planEntity.setUpdatedAt(Instant.now());
 
         TripPlanEntity savedPlan = tripPlanRepository.save(planEntity);
 
@@ -198,8 +213,8 @@ public class TripPlannerService {
             }
         }
 
-        log.info("Trip Plan persisted: ref={}, status={}, pricedTotal={} {}, unpricedCount={}",
-                publicRef, budgetStatus, pricedTotal, budgetCurrency, unpricedCount);
+        log.info("Trip Plan persisted: ref={}, status={}, pricedTotal={} {}, unpricedCount={}, refreshed={}",
+                publicRef, budgetStatus, pricedTotal, budgetCurrency, unpricedCount, refreshing);
 
         return toDto(savedPlan, dayEntities, itemEntities, knowledgeSources, warnings);
     }
@@ -237,8 +252,12 @@ public class TripPlannerService {
         // Delete old child items & days
         tripPlanDayRepository.deleteAll(tripPlanDayRepository.findByTripPlanIdOrderByDayNumberAsc(existing.getId()));
         tripPlanItemRepository.deleteAll(tripPlanItemRepository.findByTripPlanId(existing.getId()));
+        // The refreshed plan keeps the same parent id, so make the deletes
+        // visible before inserting replacement rows with the same day/item keys.
+        tripPlanDayRepository.flush();
+        tripPlanItemRepository.flush();
 
-        TripPlanDto freshDto = planTrip(req, userId);
+        TripPlanDto freshDto = planTrip(req, userId, existing);
         return freshDto;
     }
 

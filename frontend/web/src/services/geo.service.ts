@@ -121,4 +121,13 @@ export const geoService = {
     const baseUrl = apiClient.getBaseUrl();
     return `${baseUrl}/travel/geo/map/static?${query.toString()}`;
   },
+
+  /**
+   * Constructs a TomTom raster tile URL through the Gateway.
+   * The TomTom key remains server-side in travel-service.
+   */
+  getTomTomTileUrl(zoom: number, x: number, y: number): string {
+    const baseUrl = apiClient.getBaseUrl();
+    return `${baseUrl}/travel/geo/map/tile/${zoom}/${x}/${y}.png?v=tomtom-1`;
+  },
 };

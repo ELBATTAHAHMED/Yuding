@@ -68,11 +68,24 @@ export const DestinationWeather: React.FC<DestinationWeatherProps> = ({
   const current = data.current;
 
   return (
-    <div role="region" aria-label={`Météo à ${destinationName}`} className={styles.panel}>
+    <div
+      role="region"
+      aria-label={`Météo à ${destinationName}`}
+      className={styles.panel}
+      style={{
+        boxSizing: 'border-box',
+        width: '100%',
+        padding: '18px 18px 12px',
+        border: '1px solid var(--travel-border, #dce8e4)',
+        borderRadius: 18,
+        background: 'var(--travel-surface, #ffffff)',
+        boxShadow: '0 10px 24px rgba(7, 13, 12, .06)',
+      }}
+    >
       <div className={styles.topRow}>
         <div>
-          <h3 className={styles.title}>
-            <i className="fas fa-cloud-sun" aria-hidden="true" />Météo à {destinationName}
+          <h3 className={styles.title} style={{ color: '#263c39' }}>
+            <i className="fas fa-cloud-sun" aria-hidden="true" style={{ color: '#cc870d' }} />Météo à {destinationName}
           </h3>
           {data.timezone && <p className={styles.timezone}>Heures locales · {data.timezone}</p>}
         </div>

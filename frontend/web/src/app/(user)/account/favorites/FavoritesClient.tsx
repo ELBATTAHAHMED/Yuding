@@ -184,7 +184,7 @@ export default function FavoritesClient() {
   const totalHistoryCount = recentSearches.length + recentViews.length;
 
   return (
-    <main className="account-empty-page">
+    <main className="account-empty-page favorites-page">
       {/* Header */}
       <header className="account-page-header">
         <div>
@@ -235,15 +235,15 @@ export default function FavoritesClient() {
 
       {/* Loading state */}
       {loading && (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: '#64748b' }}>
-          <i className="fas fa-spinner fa-spin fa-2x" aria-hidden="true" />
+        <div className="account-loading-state" style={{ padding: '60px 0', textAlign: 'center' }}>
+          <i className="fas fa-spinner fa-spin fa-2x account-loading-icon" aria-hidden="true" />
           <p style={{ marginTop: '12px', fontSize: '15px' }}>Chargement de vos données...</p>
         </div>
       )}
 
       {/* Error state */}
       {error && !loading && (
-        <div style={{ padding: '24px', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '12px', color: '#991b1b', marginBottom: '24px' }}>
+        <div className="account-error-state" style={{ padding: '24px', borderRadius: '12px', marginBottom: '24px' }}>
           <i className="fas fa-exclamation-triangle" style={{ marginRight: '8px' }} />
           {error}
         </div>
@@ -265,13 +265,13 @@ export default function FavoritesClient() {
                 const trainCount = favorites.filter(f => f.resourceType === 'TRAIN').length;
                 const destinationCount = favorites.filter(f => f.resourceType === 'DESTINATION').length;
                 return (
-                  <div className="library-subfilters">
+                  <div className="library-subfilters favorites-filter-rail">
                     <button
                       type="button"
                       className={`library-subfilter-btn ${favoriteFilter === 'ALL' ? 'active' : ''}`}
                       onClick={() => setFavoriteFilter('ALL')}
                     >
-                      Tous {favorites.length > 0 && <span className="library-tab-count">{favorites.length}</span>}
+                        <span>Tous</span> {favorites.length > 0 && <span className="library-tab-count">{favorites.length}</span>}
                     </button>
                     {hotelCount > 0 && (
                       <button
@@ -279,7 +279,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'HOTEL' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('HOTEL')}
                       >
-                        Hôtels <span className="library-tab-count">{hotelCount}</span>
+                        <span>Hôtels</span> <span className="library-tab-count">{hotelCount}</span>
                       </button>
                     )}
                     {activityCount > 0 && (
@@ -288,7 +288,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'ACTIVITY' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('ACTIVITY')}
                       >
-                        Activités <span className="library-tab-count">{activityCount}</span>
+                        <span>Activités</span> <span className="library-tab-count">{activityCount}</span>
                       </button>
                     )}
                     {flightCount > 0 && (
@@ -297,7 +297,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'FLIGHT' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('FLIGHT')}
                       >
-                        Vols <span className="library-tab-count">{flightCount}</span>
+                        <span>Vols</span> <span className="library-tab-count">{flightCount}</span>
                       </button>
                     )}
                     {transferCount > 0 && (
@@ -306,7 +306,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'TRANSFER' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('TRANSFER')}
                       >
-                        Transferts <span className="library-tab-count">{transferCount}</span>
+                        <span>Transferts</span> <span className="library-tab-count">{transferCount}</span>
                       </button>
                     )}
                     {trainCount > 0 && (
@@ -315,7 +315,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'TRAIN' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('TRAIN')}
                       >
-                        Trains <span className="library-tab-count">{trainCount}</span>
+                        <span>Trains</span> <span className="library-tab-count">{trainCount}</span>
                       </button>
                     )}
                     {destinationCount > 0 && (
@@ -324,7 +324,7 @@ export default function FavoritesClient() {
                         className={`library-subfilter-btn ${favoriteFilter === 'DESTINATION' ? 'active' : ''}`}
                         onClick={() => setFavoriteFilter('DESTINATION')}
                       >
-                        Destinations <span className="library-tab-count">{destinationCount}</span>
+                        <span>Destinations</span> <span className="library-tab-count">{destinationCount}</span>
                       </button>
                     )}
                   </div>
@@ -449,7 +449,7 @@ export default function FavoritesClient() {
                             <i className="fas fa-map-marker-alt" aria-hidden="true" />
                             <span>{fav.destination || 'Maroc'}</span>
                             {fav.providerLabel && (
-                              <span style={{ marginLeft: '6px', fontSize: '11px', color: '#94a3b8' }}>
+                              <span className="library-item-reference" style={{ marginLeft: '6px', fontSize: '11px' }}>
                                 · {fav.providerLabel}
                               </span>
                             )}
@@ -495,7 +495,7 @@ export default function FavoritesClient() {
 
               {savedTrips.length === 0 ? (
                 <section className="account-empty-panel">
-                  <div className="account-empty-icon favorite" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                  <div className="account-empty-icon saved-trips">
                     <i className="fas fa-suitcase-rolling" aria-hidden="true" />
                   </div>
                   <div className="account-empty-copy">
@@ -514,17 +514,17 @@ export default function FavoritesClient() {
                     <article key={trip.publicReference} className="library-card">
                       <div className="library-card-body">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#f0fdf4', color: '#166534', border: '1px solid #dcfce7' }}>
+                          <span className="library-status-badge saved">
                             ENREGISTRÉ
                           </span>
-                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{trip.tripPlanReference}</span>
+                          <span className="library-item-reference" style={{ fontSize: '12px' }}>{trip.tripPlanReference}</span>
                         </div>
 
                         <h3 className="library-card-title" style={{ fontSize: '18px', marginTop: '4px' }}>
                           {trip.title || `${trip.originCity || 'Origine'} → ${trip.destinationCity || 'Destination'}`}
                         </h3>
 
-                        <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '6px', margin: '14px 0' }}>
+                        <div className="library-card-meta" style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '14px 0' }}>
                           {trip.startDate && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <i className="far fa-calendar-alt" aria-hidden="true" />
@@ -581,7 +581,7 @@ export default function FavoritesClient() {
             <section aria-labelledby="tab-history-heading">
               {/* Segmented controls for History sub-tabs */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-                <div className="library-subfilters" style={{ marginBottom: 0 }} role="tablist" aria-label="Sous-sections de l'historique">
+                <div className="library-subfilters favorites-filter-rail history-filter-rail" style={{ marginBottom: 0 }} role="tablist" aria-label="Sous-sections de l'historique">
                   <button
                     type="button"
                     role="tab"
@@ -642,7 +642,7 @@ export default function FavoritesClient() {
 
                   {recentSearches.length === 0 ? (
                     <section className="account-empty-panel">
-                      <div className="account-empty-icon favorite" style={{ background: '#fef3c7', color: '#d97706' }}>
+                      <div className="account-empty-icon search-history">
                         <i className="fas fa-search" aria-hidden="true" />
                       </div>
                       <div className="account-empty-copy">
@@ -672,7 +672,7 @@ export default function FavoritesClient() {
                           <div key={item.publicReference} className="library-list-item">
                             <div className="library-item-content">
                               <div className="library-item-main">
-                                <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
+                                <span className="library-type-badge">
                                   {item.searchType}
                                 </span>
                                 <span className="library-item-title">{searchTitle}</span>
@@ -723,7 +723,7 @@ export default function FavoritesClient() {
 
                   {recentViews.length === 0 ? (
                     <section className="account-empty-panel">
-                      <div className="account-empty-icon favorite" style={{ background: '#f3e8ff', color: '#9333ea' }}>
+                      <div className="account-empty-icon recent-views">
                         <i className="fas fa-eye" aria-hidden="true" />
                       </div>
                       <div className="account-empty-copy">
@@ -761,7 +761,7 @@ export default function FavoritesClient() {
 
                               <div className="library-item-content">
                                 <div className="library-item-main">
-                                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
+                                  <span className="library-type-badge">
                                     {view.resourceType === 'HOTEL' ? 'Hôtel' : view.resourceType === 'ACTIVITY' ? 'Activité' : 'Destination'}
                                   </span>
                                   <span className="library-item-title">{view.title}</span>

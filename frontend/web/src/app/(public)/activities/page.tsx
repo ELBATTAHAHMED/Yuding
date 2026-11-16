@@ -352,7 +352,7 @@ export default function ActivitiesPage() {
 
           {/* Destination Guide & Map (Phase 26) */}
           {selectedGeoPlace && Boolean(selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide) && (
-            <div className="mb-9 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-[#01796F]/30 dark:bg-[#062523]">
+            <div className="travel-destination-guide mb-9">
               <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="mb-1 text-[11px] font-bold uppercase tracking-[.16em] text-[#01796F] dark:text-[#02E0D5]">Guide de destination</p>
@@ -373,37 +373,43 @@ export default function ActivitiesPage() {
                 </button>
               </div>
 
-              <div className="mb-4">
-                <DestinationImageGallery
-                  city={selectedGeoPlace.city || selectedGeoPlace.name}
-                  country={selectedGeoPlace.country}
-                  countryCode={selectedGeoPlace.countryCode}
-                />
-              </div>
-              <div className="mb-4">
-                <DestinationWeather
-                  latitude={selectedGeoPlace.latitude}
-                  longitude={selectedGeoPlace.longitude}
-                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
-                />
-              </div>
-              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
-                <GeoMap
-                  latitude={selectedGeoPlace.latitude}
-                  longitude={selectedGeoPlace.longitude}
-                  placeName={selectedGeoPlace.city || selectedGeoPlace.name}
-                  pois={destinationPois}
-                  selectedPoi={selectedPoi}
-                  onSelectPoi={(poi) => setSelectedPoi(poi)}
-                  height={360}
-                />
-                <NearbyPoiPanel
-                  pois={destinationPois}
-                  isLoading={isLoadingPois}
-                  selectedPoi={selectedPoi}
-                  onSelectPoi={(poi) => setSelectedPoi(poi)}
-                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
-                />
+              <div className="travel-guide-layout">
+                <div className="travel-guide-overview">
+                  <div className="travel-guide-gallery">
+                    <DestinationImageGallery
+                      city={selectedGeoPlace.city || selectedGeoPlace.name}
+                      country={selectedGeoPlace.country}
+                      countryCode={selectedGeoPlace.countryCode}
+                    />
+                  </div>
+                  <div className="travel-guide-weather">
+                    <DestinationWeather
+                      latitude={selectedGeoPlace.latitude}
+                      longitude={selectedGeoPlace.longitude}
+                      destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                    />
+                  </div>
+                </div>
+                <div className="travel-guide-main">
+                  <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
+                    <GeoMap
+                      latitude={selectedGeoPlace.latitude}
+                      longitude={selectedGeoPlace.longitude}
+                      placeName={selectedGeoPlace.city || selectedGeoPlace.name}
+                      pois={destinationPois}
+                      selectedPoi={selectedPoi}
+                      onSelectPoi={(poi) => setSelectedPoi(poi)}
+                      height={360}
+                    />
+                    <NearbyPoiPanel
+                      pois={destinationPois}
+                      isLoading={isLoadingPois}
+                      selectedPoi={selectedPoi}
+                      onSelectPoi={(poi) => setSelectedPoi(poi)}
+                      destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}

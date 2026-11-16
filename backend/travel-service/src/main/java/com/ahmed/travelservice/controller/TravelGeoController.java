@@ -1,6 +1,7 @@
 package com.ahmed.travelservice.controller;
 
 import com.ahmed.travelservice.dto.geo.*;
+import com.ahmed.travelservice.provider.impl.tomtom.TomTomMapClient;
 import com.ahmed.travelservice.service.TravelGeoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.List;
 public class TravelGeoController {
 
     private final TravelGeoService geoService;
+    private final TomTomMapClient tomTomMapClient;
 
     /**
      * Autocomplete city and place names.
@@ -140,5 +142,22 @@ public class TravelGeoController {
                 .contentType(MediaType.IMAGE_PNG)
                 .cacheControl(CacheControl.maxAge(Duration.ofHours(24)).cachePublic())
                 .body(imageBytes);
+    }
+
+    /**
+     * Proxied TomTom raster tile for the interactive map renderer.
+     * The TomTom API key stays server-side.
+     */
+    @GetMapping(value = "/map/tile/{zoom}/{x}/{y}.png", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getTomTomTile(
+            @PathVariable int zoom,
+            @PathVariable int x,
+            @PathVariable int y) {
+
+        byte[] tile = tomTomMapClient.getRasterTile(zoom, x, y);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(7)).cachePublic())
+                .body(tile);
     }
 }

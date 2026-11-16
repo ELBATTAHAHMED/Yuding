@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
 import { authService } from '@/services/auth.service';
+import { ApiError } from '@/lib/api-client';
 import { Header } from '@/components/layout/Header';
 
 function LoginFormContent() {
@@ -42,7 +43,7 @@ function LoginFormContent() {
   // The shared header owns theme changes; this state only selects the form artwork.
   useEffect(() => {
     document.body.classList.add('auth-body');
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = localStorage.getItem('yuding_theme') || localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const darkActive = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
 
@@ -79,7 +80,13 @@ function LoginFormContent() {
     try {
       await login({ email: loginEmail.trim(), password: loginPassword });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Identifiants invalides. Veuillez vérifier votre email et mot de passe.');
+      if (err instanceof ApiError && err.status === 401) {
+        setErrorMessage('Email ou mot de passe incorrect. Vérifiez vos identifiants puis réessayez.');
+      } else if (err instanceof ApiError && err.status === 423) {
+        setErrorMessage('Ce compte est temporairement verrouillé. Réessayez plus tard.');
+      } else {
+        setErrorMessage(err.message || 'Impossible de vous connecter pour le moment. Veuillez réessayer.');
+      }
     } finally {
       setLoading(false);
     }

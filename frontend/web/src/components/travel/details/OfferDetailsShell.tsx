@@ -22,13 +22,13 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
   mobileAction,
 }) => {
   return (
-    <div className="travel-details-shell bg-slate-50 dark:bg-[#021817] min-h-screen py-8 px-4 pb-24 text-slate-900 dark:text-slate-100">
-      <div className="max-w-6xl mx-auto">
+    <div className="travel-details-shell min-h-screen px-4 pb-24 text-slate-900 dark:text-slate-100">
+      <div className="travel-details-shell__inner max-w-6xl mx-auto">
         {/* Breadcrumb / Back Link */}
-        <div className="mb-6">
+        <div className="travel-details-shell__back mb-6">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#01796F] dark:text-[#02E0D5] bg-[#01796F]/10 dark:bg-[#01796F]/20 hover:bg-[#01796F]/20 dark:hover:bg-[#01796F]/30 px-3.5 py-2 rounded-lg transition-colors"
+            className="travel-details-back inline-flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-lg transition-colors"
           >
             <i className="fas fa-arrow-left text-xs" />
             <span>{backLabel}</span>
@@ -43,7 +43,7 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
           </main>
 
           {/* Sticky Sidebar Column (Desktop) */}
-          <aside className="sticky top-6 flex flex-col gap-5">
+          <aside className="travel-details-sidebar sticky top-6 flex flex-col gap-5">
             {sidebar}
           </aside>
         </div>
@@ -51,7 +51,7 @@ export const OfferDetailsShell: React.FC<OfferDetailsShellProps> = ({
 
       {/* Mobile Sticky Bottom Action Bar (if provided) */}
       {mobileAction && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-[#062523] border-t border-slate-200 dark:border-[#01796F]/30 p-3 z-40 shadow-2xl">
+        <div className="travel-details-mobile-action md:hidden fixed bottom-0 left-0 right-0 border-t p-3 z-40 shadow-2xl">
           {mobileAction}
         </div>
       )}

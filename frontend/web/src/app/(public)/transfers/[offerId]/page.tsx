@@ -150,25 +150,14 @@ export default function TransferDetailsPage() {
         />
       }
       mobileAction={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="travel-details-mobile-action__inner flex items-center justify-between gap-3">
           <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tarif par trajet</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#01796F' }}>
+            <div className="travel-details-mobile-action__label text-xs">Tarif par trajet</div>
+            <div className="travel-details-mobile-action__price text-xl font-extrabold">
               {transfer.price} {transfer.currency}
             </div>
           </div>
-          <a
-            href={bookingUrl}
-            style={{
-              padding: '0.65rem 1.25rem',
-              borderRadius: '6px',
-              background: '#01796F',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              textDecoration: 'none',
-            }}
-          >
+          <a href={bookingUrl} className="travel-details-mobile-action__link rounded-lg px-5 py-2.5 text-sm font-bold">
             Sélectionner
           </a>
         </div>

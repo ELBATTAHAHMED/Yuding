@@ -156,7 +156,7 @@ export default function BookingsClient() {
       {/* Loading State */}
       {loading && (
         <div style={{ padding: '40px 0', textAlign: 'center' }}>
-          <i className="fas fa-spinner fa-spin text-2xl text-teal-700" style={{ fontSize: '24px', color: '#087d70' }} />
+          <i className="fas fa-spinner fa-spin account-loading-icon" style={{ fontSize: '24px' }} />
           <p style={{ marginTop: '12px', color: 'var(--account-muted)', fontSize: '13.5px' }}>
             Chargement de vos réservations...
           </p>
@@ -166,12 +166,10 @@ export default function BookingsClient() {
       {/* Error State */}
       {!loading && error && (
         <div
+          className="account-error-state"
           style={{
             padding: '20px',
             borderRadius: '10px',
-            background: '#fef2f2',
-            border: '1px solid #fee2e2',
-            color: '#b91c1c',
             margin: '20px 0',
             display: 'flex',
             alignItems: 'center',
@@ -186,8 +184,7 @@ export default function BookingsClient() {
           </div>
           <button
             onClick={() => bookingsQuery.refetch()}
-            className="btn-secondary-sm"
-            style={{ borderColor: '#fca5a5', color: '#b91c1c' }}
+            className="btn-secondary-sm account-error-action"
           >
             <i className="fas fa-redo" /> Réessayer
           </button>

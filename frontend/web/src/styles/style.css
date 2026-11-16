@@ -18,38 +18,38 @@
 
 /* Mode sombre - Identité verte Yuding */
 .dark {
-    --bg: #021817;
-    --text: #e9f5f4;
-    --card: #062523;
-    --card-surface: #0a302d;
-    --border: rgba(2, 224, 213, 0.2);
-    --accent: #02E0D5;
-    --accent-strong: #01796F;
-    --header-bg: rgba(2, 24, 23, 0.98);
+    --bg: #0f1115;
+    --text: #f2f4f7;
+    --card: #171a20;
+    --card-surface: #20242c;
+    --border: #2b313b;
+    --accent: #159a83;
+    --accent-strong: #159a83;
+    --header-bg: rgba(15, 17, 21, 0.98);
     --shadow: rgba(0, 0, 0, 0.4);
-    --input-bg: #031c1b;
-    --placeholder: rgba(233, 245, 244, 0.5);
-    --hover-bg: rgba(2, 224, 213, 0.12);
-    --focus-ring: rgba(2, 224, 213, 0.4);
+    --input-bg: #12151a;
+    --placeholder: rgba(242, 244, 247, 0.52);
+    --hover-bg: rgba(21, 154, 131, 0.12);
+    --focus-ring: rgba(21, 154, 131, 0.32);
     
     /* Variables de compatibilité */
-    --glass-bg: rgba(6, 37, 35, 0.95);
-    --border-color: rgba(2, 224, 213, 0.2);
-    --primary-color: #02E0D5;
-    --accent-color: #01796F;
+    --glass-bg: rgba(23, 26, 32, 0.95);
+    --border-color: #2b313b;
+    --primary-color: #159a83;
+    --accent-color: #159a83;
     --text-white: #ffffff;
-    --text-primary: #e9f5f4;
-    --text-secondary: rgba(233, 245, 244, 0.7);
+    --text-primary: #f2f4f7;
+    --text-secondary: rgba(242, 244, 247, 0.7);
     --overlay-light: rgba(255, 255, 255, 0.08);
     --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.4);
     --shadow-medium: 0 10px 25px rgba(0, 0, 0, 0.25);
-    --bg-primary: #021817;
-    --bg-secondary: #062523;
-    --bg-tertiary: #0a302d;
-    --bg-accent: #01796F;
-    --card-bg: #062523;
-    --accent-glow: rgba(2, 224, 213, 0.25);
-    --shadow-glow: 0 0 20px rgba(2, 224, 213, 0.25);
+    --bg-primary: #0f1115;
+    --bg-secondary: #171a20;
+    --bg-tertiary: #20242c;
+    --bg-accent: #159a83;
+    --card-bg: #171a20;
+    --accent-glow: rgba(21, 154, 131, 0.18);
+    --shadow-glow: 0 0 20px rgba(21, 154, 131, 0.14);
     --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -67,10 +67,10 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
-        radial-gradient(circle at 20% 80%, rgba(2, 224, 213, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(34, 179, 171, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(1, 121, 111, 0.08) 0%, transparent 50%);
+    background:
+        radial-gradient(circle at 20% 80%, rgba(21, 154, 131, .06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(120, 145, 162, .05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, .025) 0%, transparent 50%);
     pointer-events: none;
     z-index: -1;
 }

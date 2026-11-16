@@ -8,7 +8,7 @@ import { DarkModeToggle } from '@/components/common/DarkModeToggle';
 import { AccountMenu } from './AccountMenu';
 
 export const Header: React.FC<{ hideLogin?: boolean; onThemeChange?: (dark: boolean) => void }> = ({ hideLogin = false, onThemeChange }) => {
-  const { isAuthenticated, isAdmin, isSupport } = useAuth();
+  const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,10 +70,6 @@ export const Header: React.FC<{ hideLogin?: boolean; onThemeChange?: (dark: bool
               {isAuthenticated ? (
                 <div className="header-account-actions">
                   <AccountMenu />
-
-                  {(isAdmin || isSupport) && (
-                    <Link href="/admin" className="btn-connexion" style={{ background: '#e11d48', padding: '8px 14px', fontSize: '13px' }}>Admin</Link>
-                  )}
                 </div>
               ) : !hideLogin ? (
                 <Link

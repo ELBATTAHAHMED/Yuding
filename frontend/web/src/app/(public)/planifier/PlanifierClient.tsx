@@ -53,6 +53,7 @@ export function PlanifierClient() {
   const [loading,    setLoading]    = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [savingTrip, setSavingTrip] = useState(false);
+  const [savedTripsLoading, setSavedTripsLoading] = useState(true);
   const [saveError,  setSaveError]  = useState<string | null>(null);
   const [error,      setError]      = useState<string | null>(null);
   const [view,       setView]       = useState<'form' | 'plan'>('form');
@@ -75,12 +76,20 @@ export function PlanifierClient() {
   useEffect(() => { if (user?.preferredCurrency) setCurrency(user.preferredCurrency); }, [user?.preferredCurrency]);
 
   const loadMeta = useCallback(async () => {
-    if (!isAuthenticated) return;
-    const [plans, trips] = await Promise.all([
-      aiService.getUserTripPlans().catch(() => [] as TripPlanDto[]),
-      libraryService.getSavedTrips().catch(() => [] as SavedTripItem[]),
-    ]);
-    setAllPlans(plans); setSavedTrips(trips);
+    if (!isAuthenticated) {
+      setSavedTripsLoading(false);
+      return;
+    }
+    setSavedTripsLoading(true);
+    try {
+      const [plans, trips] = await Promise.all([
+        aiService.getUserTripPlans().catch(() => [] as TripPlanDto[]),
+        libraryService.getSavedTrips().catch(() => [] as SavedTripItem[]),
+      ]);
+      setAllPlans(plans); setSavedTrips(trips);
+    } finally {
+      setSavedTripsLoading(false);
+    }
   }, [isAuthenticated]);
 
   useEffect(() => { loadMeta(); }, [loadMeta]);
@@ -132,7 +141,7 @@ export function PlanifierClient() {
   };
 
   const handleToggleSave = async () => {
-    if (!plan || !isAuthenticated) return;
+    if (!plan || !isAuthenticated || savedTripsLoading) return;
     setSavingTrip(true); setSaveError(null);
     try {
       if (isSaved && savedRef) { await libraryService.unsaveTrip(savedRef.publicReference); setSavedTrips(p => p.filter(s => s.publicReference !== savedRef.publicReference)); }
@@ -345,10 +354,10 @@ export function PlanifierClient() {
 
                   <div className="planner-overview__actions">
                     {isAuthenticated && (
-                      <button type="button" disabled={savingTrip} onClick={handleToggleSave}
+                      <button type="button" disabled={savingTrip || savedTripsLoading} onClick={handleToggleSave}
                         className={isSaved ? 'is-saved' : ''}>
-                        <i className={isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'} aria-hidden="true" />
-                        {isSaved ? 'Enregistré' : 'Enregistrer'}
+                        <i className={savedTripsLoading ? 'fas fa-spinner fa-spin' : isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'} aria-hidden="true" />
+                        {savedTripsLoading ? 'Chargement…' : isSaved ? 'Enregistré' : 'Enregistrer'}
                       </button>
                     )}
                     <button type="button" disabled={refreshing} onClick={handleRefresh}>

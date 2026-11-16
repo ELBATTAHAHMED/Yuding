@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
@@ -36,6 +36,17 @@ function BookingContent() {
   const [phone, setPhone] = useState(user?.phoneNumber || '');
   const [notes, setNotes] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Auth restores the session asynchronously. Keep the fields controlled, but
+  // hydrate them once the profile arrives without overwriting edits already
+  // made by the traveler.
+  useEffect(() => {
+    if (!user) return;
+    setFirstName((current) => current || user.firstName || '');
+    setLastName((current) => current || user.lastName || '');
+    setEmail((current) => current || user.email || '');
+    setPhone((current) => current || user.phoneNumber || '');
+  }, [user]);
 
   const {
     isProcessing, statusMessage, error: flowError, isRetryable, revalidationData, pricingData,

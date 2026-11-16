@@ -22,8 +22,8 @@
     Service logs are streamed into .dev-logs/<service>.log.
 
 .PARAMETER Build
-    Rebuild all backend JARs. The optimized frontend is built whenever it starts.
-    By default, rebuilds only stale backend JARs and starts the optimized frontend.
+    Rebuild backend JARs. The frontend runs Next.js in dev mode with hot reload.
+    By default, rebuilds only stale backend JARs and starts the dev frontend.
 
 .EXAMPLE
     .\scripts\start-dev.ps1
@@ -45,10 +45,17 @@ $pidsFile = Join-Path $repoRoot '.dev-pids.json'
 # A previous launch can leave live Java processes behind after its shell
 # exits. Restart only backend processes whose command line points into this checkout.
 # A foreign process on a Yuding port is reported below instead of being killed.
-$runningProjectProcesses = Get-CimInstance Win32_Process | Where-Object {
-    $_.Name -eq 'java.exe' -and $_.CommandLine -and
-    $_.CommandLine.Contains((Join-Path $repoRoot 'backend\')) -and
-    $_.CommandLine -match '-jar\s'
+$runningProjectProcesses = @()
+try {
+    $runningProjectProcesses = @(Get-CimInstance Win32_Process -ErrorAction Stop | Where-Object {
+        $_.Name -eq 'java.exe' -and $_.CommandLine -and
+        $_.CommandLine.Contains((Join-Path $repoRoot 'backend\')) -and
+        $_.CommandLine -match '-jar\s'
+    })
+} catch {
+    # Some managed Windows environments deny CIM enumeration. Port checks below
+    # still protect the stack from duplicate service launches.
+    Write-Warning "CIM process inspection unavailable; continuing with port-based checks."
 }
 $servicePorts = @(9091, 8761, 8081, 8085, 8082, 8084, 8090, 8072, 8888)
 # Some local launches use a relative JAR path (for example when a developer
@@ -152,9 +159,8 @@ Import-EnvironmentFile (Join-Path $repoRoot '.env')
 # in .env.local are actually passed to notification-service.
 Import-EnvironmentFile (Join-Path $repoRoot '.env.local') -Override
 
-# `next build` uses NODE_ENV=production even for the local stack. The browser
-# must use Next's same-origin /api rewrite; a root .env localhost URL is rejected
-# by the frontend's production security guard.
+# The browser must use Next's same-origin /api rewrite; a root .env localhost
+# URL is rejected by the frontend's production security guard.
 [Environment]::SetEnvironmentVariable('NEXT_PUBLIC_API_BASE_URL', '/api', 'Process')
 
 Write-Host @"
@@ -272,7 +278,6 @@ if ($Build) {
         }
     }
 
-    # The optimized frontend is built once, immediately before it starts below.
 }
 
 # Helper to start Java service
@@ -462,20 +467,16 @@ if (Test-PortListening 'localhost' 3000) {
     Start-Sleep -Milliseconds 800
 }
 
-Write-Host '  Building optimized frontend...' -ForegroundColor DarkCyan
-Push-Location $webDir
-try {
-    & cmd.exe /c "npm run build:local-server"
-    if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed' }
-} finally {
-    Pop-Location
-}
 $webLogPath = Join-Path $logsDir 'frontend-web.log'
-if (Test-Path $webLogPath) {
-    Clear-Content $webLogPath -ErrorAction SilentlyContinue
+$webErrorLogPath = Join-Path $logsDir 'frontend-web.err.log'
+foreach ($path in @($webLogPath, $webErrorLogPath)) {
+    if (Test-Path $path) {
+        Clear-Content $path -ErrorAction SilentlyContinue
+    }
 }
-$webCmdArg = "/c `"npm run start:local-server > `"$webLogPath`" 2>&1`""
-$webProc = Start-Process -FilePath "cmd.exe" -ArgumentList $webCmdArg -WorkingDirectory $webDir -WindowStyle Hidden -PassThru
+Write-Host '  Starting Next.js dev server with hot reload...' -ForegroundColor DarkCyan
+$webProc = Start-Process -FilePath 'node.exe' -ArgumentList @('scripts/next-dev-direct.cjs', '-p', '3000') -WorkingDirectory $webDir -WindowStyle Hidden -PassThru `
+    -RedirectStandardOutput $webLogPath -RedirectStandardError $webErrorLogPath
 Register-TrackedProcess 'frontend-web' $webProc.Id 3000 $webLogPath
 Write-Host "  [STARTED] frontend-web (PID: $($webProc.Id), Port: 3000) -> logs: .dev-logs\frontend-web.log" -ForegroundColor Green
 

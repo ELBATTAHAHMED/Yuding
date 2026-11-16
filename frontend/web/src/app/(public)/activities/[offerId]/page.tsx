@@ -166,25 +166,14 @@ export default function ActivityDetailsPage() {
         />
       }
       mobileAction={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="travel-details-mobile-action__inner flex items-center justify-between gap-3">
           <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tarif par personne</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#01796F' }}>
+            <div className="travel-details-mobile-action__label text-xs">Tarif par personne</div>
+            <div className="travel-details-mobile-action__price text-xl font-extrabold">
               {activity.price} {activity.currency}
             </div>
           </div>
-          <a
-            href={bookingUrl}
-            style={{
-              padding: '0.65rem 1.25rem',
-              borderRadius: '6px',
-              background: '#01796F',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              textDecoration: 'none',
-            }}
-          >
+          <a href={bookingUrl} className="travel-details-mobile-action__link rounded-lg px-5 py-2.5 text-sm font-bold">
             Sélectionner
           </a>
         </div>
@@ -200,23 +189,15 @@ export default function ActivityDetailsPage() {
       />
 
       {/* Activity Image (Authoritative Provider or Curated Asset) */}
-      <div
-        style={{
-          background: 'var(--card, #ffffff)',
-          borderRadius: '12px',
-          overflow: 'hidden',
-          border: '1px solid rgba(0, 0, 0, 0.06)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-        }}
-      >
-        <div style={{ height: '320px', position: 'relative', width: '100%', background: '#e2e8f0' }}>
+      <div className="travel-details-media">
+        <div className="travel-details-media__frame relative h-[320px] w-full">
           <SafeEntityImage
             src={activity.imageUrl}
             alt={activity.title}
             entityType="ACTIVITY"
             className="w-full h-full object-cover"
           />
-          <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, background: 'rgba(255, 255, 255, 0.9)', borderRadius: '50%', padding: '6px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}>
+          <div className="travel-details-media__favorite">
             <FavoriteButton
               resourceType="ACTIVITY"
               resourceReference={activity.id || offerId}
@@ -235,19 +216,11 @@ export default function ActivityDetailsPage() {
 
       {/* Description Section */}
       {activity.description && (
-        <div
-          style={{
-            background: 'var(--card, #ffffff)',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            border: '1px solid rgba(0, 0, 0, 0.06)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-          }}
-        >
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.85rem 0', color: 'var(--text, #0f172a)' }}>
+        <div className="travel-details-description">
+          <h3 className="mb-3 text-lg font-bold">
             Description de l&apos;expérience
           </h3>
-          <p style={{ margin: 0, color: '#475569', fontSize: '0.95rem', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+          <p className="m-0 text-base leading-7 whitespace-pre-line">
             {stripHtml(activity.description)}
           </p>
         </div>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { reviewService, type FeaturedReview } from '@/services/review.service';
 import { env } from '@/lib/env';
 
@@ -14,6 +15,8 @@ const labels: Record<FeaturedReview['entityType'], string> = {
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase() || 'Y';
 // Placeholder only: replace with verified review statistics before removing the example label.
 const REVIEW_SUMMARY_PLACEHOLDER = 'Exemple : 4,8/5 · 2 000 avis';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 function ReviewAvatar({ userId, name, index }: { userId?: string; name: string; index: number }) {
   const [imgFailed, setImgFailed] = useState(false);
@@ -76,9 +79,28 @@ export function HomeReviews() {
   }, [reviews.length, inView, paused, manualUntil]);
 
   useGSAP(() => {
-    if (!root.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    gsap.fromTo('.home-stories__active', { opacity: .35, y: 13 }, { opacity: 1, y: 0, duration: .55, ease: 'power2.out' });
+    if (!root.current || !reviews.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const active = root.current.querySelector<HTMLElement>('.home-stories__active');
+    if (!active) return;
+    gsap.fromTo(active, { opacity: .35, y: 13 }, { opacity: 1, y: 0, duration: .55, ease: 'power2.out' });
   }, { scope: root, dependencies: [index], revertOnUpdate: true });
+
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      const targets = Array.from(root.current?.querySelectorAll<HTMLElement>('.home-stories__intro, .home-stories__stage') ?? []);
+      if (!targets.length) return;
+      gsap.from(targets, {
+        y: 24,
+        autoAlpha: 0,
+        duration: .75,
+        ease: 'power2.out',
+        stagger: .12,
+        scrollTrigger: { trigger: root.current, start: 'top 78%', once: true },
+      });
+    });
+    return () => mm.revert();
+  }, { scope: root });
 
   const change = (next: number) => { if (!reviews.length) return; setManualUntil(Date.now() + 12000); setIndex((next + reviews.length) % reviews.length); };
   const active = reviews[index];
@@ -94,7 +116,7 @@ export function HomeReviews() {
         <h2 id="home-reviews-title">Ils sont partis.<br /><em>Ils racontent.</em></h2>
         <p>Des expériences partagées après le retour, publiées par de vrais voyageurs.</p>
         <p className="home-stories__summary">{REVIEW_SUMMARY_PLACEHOLDER}</p>
-        <Link href="/account/reviews">Votre expérience à raconter ? <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+        <Link prefetch={false} href="/account/reviews">Votre expérience à raconter ? <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
       </header>
       <div className="home-stories__stage">
         {active ? <>

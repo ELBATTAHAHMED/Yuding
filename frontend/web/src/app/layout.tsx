@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import './globals.css';
 import '@/styles/reviews.css';
 import '@/styles/yuding-shell.css';
+import '@/styles/travel-details.css';
 import '@/styles/home-stories-refresh.css';
+import '@/styles/home-dark-final.css';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AiChatWidget } from '@/components/ai/AiChatWidget';
+import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
   title: 'Yuding — Réservation de Voyages, Hébergements, Vols & Activités',
@@ -38,6 +41,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             {children}
+            <Footer />
             <AiChatWidget />
           </AuthProvider>
         </QueryProvider>

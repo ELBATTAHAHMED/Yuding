@@ -29,17 +29,17 @@
 }
 html.dark .admin-shell,
 [data-theme="dark"] .admin-shell {
-  /* Base picked from the product dark-mode reference: #16181D. */
-  --admin-canvas: #16181d;
-  --admin-surface: #1c1f25;
-  --admin-surface-muted: #20242b;
+  /* Shared graphite palette keeps Operations aligned with the public shell. */
+  --admin-canvas: #0f1115;
+  --admin-surface: #171a20;
+  --admin-surface-muted: #20242c;
   --admin-text-primary: #f1f3f7;
   --admin-text-secondary: #9aa1ad;
   --admin-text-muted: #6b7280;
-  --admin-border: #2b3038;
-  --admin-accent: #14b8a6;
-  --admin-accent-soft: rgba(20, 184, 166, 0.12);
-  --admin-sidebar-bg: #14161b;
+  --admin-border: #2b313b;
+  --admin-accent: #159a83;
+  --admin-accent-soft: rgba(21, 154, 131, .14);
+  --admin-sidebar-bg: #0f1115;
   --ops-danger: #f87171;
   --ops-warning: #fbbf24;
   --ops-success: #34d399;
@@ -1345,7 +1345,7 @@ html.dark .ops-logo-light,
   text-align: left;
 }
 .admin-shell .dark-mode-toggle {
-  background: var(--admin-surface) !important;
+  background: transparent !important;
   border-color: var(--admin-border) !important;
   color: var(--admin-text-primary) !important;
   backdrop-filter: none;
@@ -1366,7 +1366,43 @@ html.dark .ops-logo-light,
 .admin-shell .dark-mode-toggle:hover {
   box-shadow: none;
   transform: none;
-  background: var(--admin-surface-muted) !important;
+  background: transparent !important;
+}
+
+/* Keep the console theme control aligned with the shared Yuding shell. */
+.admin-shell .dark-mode-toggle {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border: 1px solid var(--admin-border) !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--admin-text-primary) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
+  backdrop-filter: none !important;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease !important;
+}
+.admin-shell .dark-mode-toggle::before,
+.admin-shell .dark-mode-toggle::after {
+  display: none !important;
+  content: none !important;
+}
+.admin-shell .dark-mode-toggle i {
+  color: inherit !important;
+  font-size: .9rem !important;
+  text-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+.admin-shell .dark-mode-toggle:hover {
+  background: transparent !important;
+  border-color: var(--admin-accent) !important;
+  color: var(--admin-accent) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .admin-shell .ops-topbar-brand {

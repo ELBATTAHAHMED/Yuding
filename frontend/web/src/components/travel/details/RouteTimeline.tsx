@@ -29,8 +29,8 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({
   if (!segments || segments.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
-      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-5">
+    <div className="travel-details-card travel-route-timeline">
+      <h3 className="travel-details-card__title text-base font-bold mb-5">
         {title}
       </h3>
 
@@ -38,21 +38,21 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({
         {segments.map((seg, idx) => (
           <div key={idx} className="flex flex-col gap-3">
             {/* Segment Card */}
-            <div className="bg-slate-50 dark:bg-[#021817] rounded-xl p-4 md:p-5 border border-slate-200 dark:border-[#01796F]/20">
+            <div className="travel-route-segment rounded-xl p-4 md:p-5">
               {/* Carrier & Mode Bar */}
               {(seg.carrierName || seg.flightOrTrainNumber || seg.mode) && (
-                <div className="flex justify-between items-center mb-3.5 flex-wrap gap-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#01796F] dark:text-[#02E0D5]">
+                <div className="travel-route-segment__meta flex justify-between items-center mb-3.5 flex-wrap gap-2">
+                  <div className="travel-route-segment__carrier flex items-center gap-2 text-xs font-bold">
                     <i className="fas fa-route" />
                     <span>{seg.carrierName || seg.mode || 'Trajet'}</span>
                     {seg.flightOrTrainNumber && (
-                      <span className="text-slate-500 dark:text-slate-400 font-semibold">• N° {seg.flightOrTrainNumber}</span>
+                    <span className="travel-route-segment__number font-semibold">• N° {seg.flightOrTrainNumber}</span>
                     )}
                   </div>
 
                   {seg.durationLabel && (
-                    <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold bg-white dark:bg-[#062523] px-2 py-0.5 rounded border border-slate-200 dark:border-[#01796F]/30 flex items-center gap-1">
-                      <i className="fas fa-clock text-slate-400" />
+                    <span className="travel-route-segment__duration text-xs font-semibold px-2 py-0.5 rounded flex items-center gap-1">
+                      <i className="fas fa-clock" />
                       {seg.durationLabel}
                     </span>
                   )}
@@ -63,18 +63,18 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({
               <div className="flex flex-col gap-4 relative">
                 {/* Departure node */}
                 <div className="flex items-start gap-3.5">
-                  <div className="w-3 h-3 rounded-full bg-[#01796F] dark:bg-[#02E0D5] mt-1 shrink-0" />
+                  <div className="travel-route-point__node w-3 h-3 rounded-full mt-1 shrink-0" />
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2.5">
-                      <span className="font-extrabold text-base text-slate-900 dark:text-white">
+                      <span className="travel-route-point__time font-extrabold text-base">
                         {seg.departureTime || '—'}
                       </span>
-                      <span className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                      <span className="travel-route-point__name font-bold text-sm">
                         {seg.origin}
                       </span>
                     </div>
                     {seg.originDetail && (
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="travel-route-point__detail text-xs mt-0.5">
                         {seg.originDetail}
                       </div>
                     )}
@@ -82,22 +82,22 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({
                 </div>
 
                 {/* Vertical connecting line */}
-                <div className="absolute top-4 bottom-4 left-[5px] w-0.5 bg-slate-300 dark:bg-[#01796F]/40" />
+                <div className="travel-route-point-line absolute top-4 bottom-4 left-[5px] w-0.5" />
 
                 {/* Arrival node */}
                 <div className="flex items-start gap-3.5">
-                  <div className="w-3 h-3 rounded-full bg-[#01796F] dark:bg-[#02E0D5] mt-1 shrink-0" />
+                  <div className="travel-route-point__node w-3 h-3 rounded-full mt-1 shrink-0" />
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2.5">
-                      <span className="font-extrabold text-base text-slate-900 dark:text-white">
+                      <span className="travel-route-point__time font-extrabold text-base">
                         {seg.arrivalTime || '—'}
                       </span>
-                      <span className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                      <span className="travel-route-point__name font-bold text-sm">
                         {seg.destination}
                       </span>
                     </div>
                     {seg.destinationDetail && (
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="travel-route-point__detail text-xs mt-0.5">
                         {seg.destinationDetail}
                       </div>
                     )}
@@ -107,8 +107,8 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({
 
               {/* Intermediate stops list if present */}
               {seg.intermediateStops && seg.intermediateStops.length > 0 && (
-                <div className="mt-3.5 pt-3 border-t border-dashed border-slate-200 dark:border-[#01796F]/20 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">Arrêts intermédiaires ({seg.intermediateStops.length}) : </span>
+                <div className="travel-route-stops mt-3.5 pt-3 text-xs">
+                  <span className="font-semibold">Arrêts intermédiaires ({seg.intermediateStops.length}) : </span>
                   {seg.intermediateStops.map((st, sIdx) => (
                     <span key={sIdx}>
                       {st.stationName}{st.departureTime ? ` (${st.departureTime})` : ''}
@@ -121,8 +121,8 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({
 
             {/* Layover / Connection Banner (between segments) */}
             {seg.layoverAfter && (
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-lg p-3 flex items-center gap-2 text-xs font-semibold text-amber-800 dark:text-amber-200">
-                <i className="fas fa-hourglass-half text-amber-500" />
+              <div className="travel-route-layover rounded-lg p-3 flex items-center gap-2 text-xs font-semibold">
+                <i className="fas fa-hourglass-half" />
                 <span>{seg.layoverAfter}</span>
               </div>
             )}

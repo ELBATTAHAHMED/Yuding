@@ -50,6 +50,31 @@ function providerLabel(provider?: string | null): string | null {
   return provider;
 }
 
+function offerImageUrl(details?: Record<string, any> | null): string | null {
+  if (!details) return null;
+  const candidates: unknown[] = [
+    details.heroImageUrl,
+    details.imageUrl,
+    details.image_url,
+    details.thumbnailUrl,
+    details.thumbnail,
+    details.pictureUrl,
+    details.photo,
+    ...(Array.isArray(details.photos)
+      ? details.photos.map((photo: unknown) => typeof photo === 'string' ? photo : (photo as { url?: string; large?: string; medium?: string } | null)?.url || (photo as { large?: string } | null)?.large || (photo as { medium?: string } | null)?.medium)
+      : []),
+    ...(Array.isArray(details.galleryUrls) ? details.galleryUrls : []),
+    ...(Array.isArray(details.images)
+      ? details.images.map((image: unknown) => typeof image === 'string' ? image : (image as { url?: string } | null)?.url)
+      : []),
+  ];
+  const valid = candidates
+    .filter((value): value is string => typeof value === 'string' && /^(https?:\/\/|\/[^/])/.test(value.trim()))
+    .map((value) => value.trim());
+  const preferred = valid.find((value) => !/\/thumbnail\/|[-_]?(?:80x80|150x150)\.|_thumb\./i.test(value)) || valid[0];
+  return preferred ? preferred.replace('cupid.travel/thumbnail/', 'cupid.travel/') : null;
+}
+
 export function BookingDetailsDialog({ reference, view, onClose }: {
   reference: string;
   view: DialogView;
@@ -59,6 +84,7 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
   const [booking, setBooking] = useState<BookingResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -68,6 +94,7 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
     setError(null);
     setConfirmation(null);
     setBooking(null);
+    setImageFailed(false);
     Promise.all([
       bookingService.getConfirmation(reference),
       view === 'dossier' ? bookingService.getBookingByReference(reference) : Promise.resolve(null),
@@ -122,6 +149,7 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
     .filter(([key]) => !['title', 'name', 'hotelName', 'provider'].includes(key))
     .slice(0, 4) : [];
   const snapshot = booking?.offerSnapshot;
+  const offerImage = offerImageUrl(snapshot?.selectedDetails);
   const serviceName = detailValue(snapshot?.selectedDetails?.title)
     || detailValue(snapshot?.selectedDetails?.hotelName)
     || detailValue(snapshot?.selectedDetails?.name)
@@ -131,7 +159,7 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
   const isReceipt = view === 'receipt';
 
   return createPortal(
-    <div className="booking-dialog-backdrop" onMouseDown={(event) => {
+    <div className={`booking-dialog-backdrop booking-dialog-backdrop--${view}`} onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
     }}>
       <div ref={dialogRef} className={`booking-dialog booking-dialog--${view}`} role="dialog" aria-modal="true"
@@ -174,6 +202,14 @@ export function BookingDetailsDialog({ reference, view, onClose }: {
               <span>{productLabels[confirmation.productType]}</span>
               <h3>{serviceName}</h3>
             </div>
+            {offerImage && !imageFailed && <img
+              className="booking-dossier-image"
+              src={offerImage}
+              alt=""
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setImageFailed(true)}
+            />}
             <div className="booking-document-status" data-tone={presentation.tone}>
               <i className={`fas ${presentation.icon}`} aria-hidden="true" />
               <div><strong>{presentation.title}</strong><p>{presentation.description}</p></div>

@@ -48,8 +48,8 @@
   flex: 0 0 auto;
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
   background: transparent;
   color: var(--account-muted);
   font-size: 14px;
@@ -57,15 +57,38 @@
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+  transition: color .2s ease;
 }
 
-.account-nav a:hover,
-.account-nav a:focus-visible,
-.account-nav a.active {
-  border-color: color-mix(in srgb, var(--account-green) 20%, transparent);
-  background: color-mix(in srgb, var(--account-green) 10%, transparent);
+.account-nav a > span {
+  position: relative;
+  display: inline-block;
+}
+
+.account-nav a > span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .2s cubic-bezier(.22, 1, .36, 1);
+}
+
+.account-nav a:is(:hover, :focus-visible, .active) {
+  border: 0;
+  background: transparent;
   color: var(--account-green);
+  box-shadow: none;
+  transform: none;
+}
+
+.account-nav a:is(:hover, :focus-visible, .active) > span::after {
+  transform: scaleX(1);
 }
 
 .account-nav i {
@@ -487,8 +510,8 @@
   flex: 0 0 auto;
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
   background: transparent;
   color: var(--account-muted);
   font-family: inherit;
@@ -496,7 +519,7 @@
   font-weight: 700;
   line-height: 1.2;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color .2s ease;
   white-space: nowrap;
   text-decoration: none;
 }
@@ -504,14 +527,32 @@
   font-size: 12px;
 }
 
-.account-content button.library-tab-btn:hover,
-.account-content button.library-tab-btn:focus-visible,
-.account-content button.library-tab-btn.active {
-  border-color: color-mix(in srgb, var(--account-green) 20%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--account-green) 20%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--account-green) 10%, transparent);
+.library-tab-btn > span:first-of-type {
+  position: relative;
+  display: inline-block;
+}
+.library-tab-btn > span:first-of-type::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .2s cubic-bezier(.22, 1, .36, 1);
+}
+
+.library-tab-btn:is(:hover, :focus-visible, .active) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--account-green);
+}
+.library-tab-btn:is(:hover, :focus-visible, .active) > span:first-of-type::after {
+  transform: scaleX(1);
 }
 
 .library-tab-count {
@@ -521,14 +562,14 @@
   padding: 1px 5px;
   min-width: 16px;
   text-align: center;
-  border-radius: 9999px;
-  background: rgba(8, 125, 112, 0.12);
+  border-radius: 0;
+  background: transparent;
   color: var(--account-green);
 }
 
 .library-tab-btn.active .library-tab-count {
-  background: var(--account-green);
-  color: #ffffff;
+  background: transparent;
+  color: var(--account-green);
 }
 
 /* Booking documents use the same quiet typography and teal accents as the account page. */
@@ -612,6 +653,7 @@
 .booking-dossier-hero > span { display: block; margin-bottom: 8px; color: var(--document-teal); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .booking-dossier-hero h3 { margin: 0; color: var(--document-ink); font-size: 25px; line-height: 1.25; text-align: left; }
 .booking-dossier-hero + .booking-document-status { margin-top: 23px; }
+.booking-dossier-image { display: block; width: 100%; max-height: 230px; margin: 14px 0 8px; border-radius: 10px; object-fit: cover; }
 .booking-dossier-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; margin-top: 31px; }
 .booking-dossier-columns--single { grid-template-columns: 1fr; }
 .booking-dialog .booking-dossier-columns > section { width: auto; min-width: 0; min-height: 0; padding: 0; }
@@ -990,6 +1032,42 @@
   font-size: 44px;
 }
 
+.account-loading-icon { color: var(--account-green); }
+.account-route-fallback { color: var(--account-muted); }
+.account-error-state {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #991b1b;
+}
+.account-error-action { border-color: #fca5a5 !important; color: #b91c1c !important; }
+.library-item-reference { color: #94a3b8; }
+.library-card-meta { color: #64748b; }
+.library-type-badge,
+.library-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.library-type-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+}
+.library-status-badge.saved {
+  padding: 3px 8px;
+  border: 1px solid #dcfce7;
+  border-radius: 6px;
+  background: #f0fdf4;
+  color: #166534;
+}
+.account-empty-icon.saved-trips { background: #e0f2fe; color: #0284c7; }
+.account-empty-icon.search-history { background: #fef3c7; color: #d97706; }
+.account-empty-icon.recent-views { background: #f3e8ff; color: #9333ea; }
+
 /* ==========================================================================
    Bookings List & Status Badges
    ========================================================================== */
@@ -1271,27 +1349,27 @@
 html.dark .user-account-shell,
 html[data-theme="dark"] .user-account-shell,
 [data-theme="dark"] .user-account-shell {
-  --account-page: #111b1a;
-  --account-card: #172825;
-  --account-card-bg: #172825;
-  --account-bg-subtle: #1e3531;
-  --account-text: #edf7f3;
-  --account-ink: #edf7f3;
-  --account-muted: #a6beb6;
-  --account-line: #35504a;
-  --account-border: #35504a;
-  --account-green: #61d7be;
-  --account-selection-bg: rgba(97, 215, 190, .16);
-  --account-selection-border: rgba(97, 215, 190, .42);
-  --account-selection-ink: #e9fff8;
-  --account-selection-shadow: rgba(97, 215, 190, .12);
-  --account-hover-bg: rgba(97, 215, 190, .10);
-  --account-hover-border: rgba(97, 215, 190, .28);
-  --account-hover-ink: #e9fff8;
-  --document-ink: #edf7f3;
-  --document-muted: #a6beb6;
-  --document-line: #35504a;
-  --document-teal: #61d7be;
+  --account-page: #0f1115;
+  --account-card: #171a20;
+  --account-card-bg: #171a20;
+  --account-bg-subtle: #20242c;
+  --account-text: #f2f4f7;
+  --account-ink: #f2f4f7;
+  --account-muted: #a7afbb;
+  --account-line: #2b313b;
+  --account-border: #2b313b;
+  --account-green: #159a83;
+  --account-selection-bg: rgba(21, 154, 131, .16);
+  --account-selection-border: rgba(21, 154, 131, .42);
+  --account-selection-ink: #edf4f8;
+  --account-selection-shadow: rgba(21, 154, 131, .14);
+  --account-hover-bg: rgba(21, 154, 131, .10);
+  --account-hover-border: rgba(21, 154, 131, .30);
+  --account-hover-ink: #edf4f8;
+  --document-ink: #f2f4f7;
+  --document-muted: #a7afbb;
+  --document-line: #2b313b;
+  --document-teal: #159a83;
   color-scheme: dark;
   background-color: var(--account-page) !important;
   color: var(--account-ink) !important;
@@ -1300,8 +1378,8 @@ html[data-theme="dark"] .user-account-shell,
 html.dark body:has(.user-account-shell),
 html[data-theme="dark"] body:has(.user-account-shell),
 body[data-theme="dark"]:has(.user-account-shell) {
-  background-color: #111b1a !important;
-  color: #edf7f3 !important;
+  background-color: #0f1115 !important;
+  color: #f2f4f7 !important;
 }
 
 html.dark .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .account-empty-page, .account-reviews-page),
@@ -1386,7 +1464,7 @@ html[data-theme="dark"] .user-account-shell :is(.account-header-mark, .account-e
 html.dark .user-account-shell .library-card-icon-placeholder,
 html[data-theme="dark"] .user-account-shell .library-card-icon-placeholder,
 [data-theme="dark"] .user-account-shell .library-card-icon-placeholder {
-  background: linear-gradient(135deg, rgba(97, 215, 190, .08), rgba(97, 215, 190, .20)) !important;
+  background: linear-gradient(135deg, rgba(21, 154, 131, .08), rgba(21, 154, 131, .18)) !important;
 }
 html.dark .user-account-shell :is(.account-header-mark.favorite, .account-empty-icon.favorite),
 html[data-theme="dark"] .user-account-shell :is(.account-header-mark.favorite, .account-empty-icon.favorite),
@@ -1423,10 +1501,66 @@ html[data-theme="dark"] .user-account-shell :is(.photo-menu-item.danger, .row-ac
   color: #f0a6a6 !important;
 }
 
+/* Booking row actions use the same quiet graphite controls as the admin dossier. */
+html.dark .user-account-shell .booking-item-actions > .btn-secondary-sm,
+html[data-theme="dark"] .user-account-shell .booking-item-actions > .btn-secondary-sm,
+[data-theme="dark"] .user-account-shell .booking-item-actions > .btn-secondary-sm {
+  border-color: var(--account-line) !important;
+  background: var(--account-card) !important;
+  color: #86d9c7 !important;
+}
+html.dark .user-account-shell .booking-item-actions > .btn-secondary-sm:is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell .booking-item-actions > .btn-secondary-sm:is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell .booking-item-actions > .btn-secondary-sm:is(:hover, :focus-visible) {
+  border-color: rgba(21, 154, 131, .46) !important;
+  background: var(--account-hover-bg) !important;
+  color: #a5e4d5 !important;
+}
+html.dark .user-account-shell .booking-review-action,
+html[data-theme="dark"] .user-account-shell .booking-review-action,
+[data-theme="dark"] .user-account-shell .booking-review-action {
+  border-color: rgba(242, 200, 107, .34) !important;
+  background: var(--account-card) !important;
+  color: #f2c86b !important;
+}
+html.dark .user-account-shell .booking-review-action:is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell .booking-review-action:is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell .booking-review-action:is(:hover, :focus-visible) {
+  border-color: rgba(242, 200, 107, .58) !important;
+  background: rgba(242, 200, 107, .12) !important;
+  color: #f7d98a !important;
+}
+html.dark .user-account-shell .booking-review-action:focus-visible,
+html[data-theme="dark"] .user-account-shell .booking-review-action:focus-visible,
+[data-theme="dark"] .user-account-shell .booking-review-action:focus-visible {
+  outline: 2px solid #f2c86b !important;
+  outline-offset: 2px;
+}
+html.dark .user-account-shell .booking-cancel-action,
+html[data-theme="dark"] .user-account-shell .booking-cancel-action,
+[data-theme="dark"] .user-account-shell .booking-cancel-action {
+  border-color: rgba(240, 166, 166, .34) !important;
+  background: var(--account-card) !important;
+  color: #f0a6a6 !important;
+}
+html.dark .user-account-shell .booking-cancel-action:is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell .booking-cancel-action:is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell .booking-cancel-action:is(:hover, :focus-visible) {
+  border-color: rgba(240, 166, 166, .56) !important;
+  background: rgba(240, 166, 166, .12) !important;
+  color: #f6bcbc !important;
+}
+html.dark .user-account-shell .booking-cancel-action:focus-visible,
+html[data-theme="dark"] .user-account-shell .booking-cancel-action:focus-visible,
+[data-theme="dark"] .user-account-shell .booking-cancel-action:focus-visible {
+  outline: 2px solid #f0a6a6 !important;
+  outline-offset: 2px;
+}
+
 html.dark .user-account-shell :is(input, select, textarea, .rdlg-textarea),
 html[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea),
 [data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea) {
-  background-color: #142421 !important;
+  background-color: #12151a !important;
   border-color: var(--account-line) !important;
   color: var(--account-ink) !important;
   caret-color: var(--account-green);
@@ -1434,7 +1568,7 @@ html[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-t
 html.dark .user-account-shell :is(input, select, textarea, .rdlg-textarea)::placeholder,
 html[data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea)::placeholder,
 [data-theme="dark"] .user-account-shell :is(input, select, textarea, .rdlg-textarea)::placeholder {
-  color: #7f9c93 !important;
+  color: #7e8b97 !important;
 }
 
 html.dark .user-account-shell :is(.outline-button, .subtle-button, .btn-secondary-sm, .cancellation-back, .booking-dialog-footer button, .rdlg-later),
@@ -1456,22 +1590,22 @@ html[data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm
 [data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish) {
   background-color: var(--account-green) !important;
   border-color: var(--account-green) !important;
-  color: #10211e !important;
+  color: #12161b !important;
 }
 html.dark .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish):is(:hover, :focus-visible),
 html[data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish):is(:hover, :focus-visible),
 [data-theme="dark"] .user-account-shell :is(.primary-button, .btn-primary-sm, .account-primary-action, .cancellation-done, .rdlg-publish):is(:hover, :focus-visible) {
-  background-color: #7ce8d0 !important;
-  border-color: #7ce8d0 !important;
-  color: #10211e !important;
+  background-color: #25b89a !important;
+  border-color: #25b89a !important;
+  color: #12161b !important;
 }
 
 html.dark .user-account-shell :is(.badge.verified, .booking-status-badge.confirmed, .booking-status-badge.paid, .booking-ref-badge),
 html[data-theme="dark"] .user-account-shell :is(.badge.verified, .booking-status-badge.confirmed, .booking-status-badge.paid, .booking-ref-badge),
 [data-theme="dark"] .user-account-shell :is(.badge.verified, .booking-status-badge.confirmed, .booking-status-badge.paid, .booking-ref-badge) {
-  background-color: rgba(97, 215, 190, .14) !important;
-  border-color: rgba(97, 215, 190, .38) !important;
-  color: #8eecd7 !important;
+  background-color: rgba(21, 154, 131, .14) !important;
+  border-color: rgba(21, 154, 131, .38) !important;
+  color: #86d9c7 !important;
 }
 html.dark .user-account-shell :is(.badge.pending, .booking-status-badge.pending),
 html[data-theme="dark"] .user-account-shell :is(.badge.pending, .booking-status-badge.pending),
@@ -1506,13 +1640,6 @@ html.dark .user-account-shell :is(.library-card-img-wrap, .library-card-fav-btn)
 html[data-theme="dark"] .user-account-shell :is(.library-card-img-wrap, .library-card-fav-btn),
 [data-theme="dark"] .user-account-shell :is(.library-card-img-wrap, .library-card-fav-btn) {
   background-color: var(--account-bg-subtle) !important;
-}
-html.dark .user-account-shell :is(.library-card-body > div[style], .library-item-main > span[style]),
-html[data-theme="dark"] .user-account-shell :is(.library-card-body > div[style], .library-item-main > span[style]),
-[data-theme="dark"] .user-account-shell :is(.library-card-body > div[style], .library-item-main > span[style]) {
-  background-color: var(--account-bg-subtle) !important;
-  border-color: var(--account-line) !important;
-  color: var(--account-muted) !important;
 }
 html.dark .user-account-shell .library-badge-expired,
 html[data-theme="dark"] .user-account-shell .library-badge-expired,
@@ -1551,7 +1678,7 @@ html[data-theme="dark"] .user-account-shell .rdlg-modal,
 html.dark .user-account-shell :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop),
 html[data-theme="dark"] .user-account-shell :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop),
 [data-theme="dark"] .user-account-shell :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop) {
-  background-color: rgba(5, 12, 11, .70) !important;
+  background-color: rgba(5, 7, 10, .76) !important;
 }
 html.dark .user-account-shell :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer),
 html[data-theme="dark"] .user-account-shell :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer),
@@ -1581,8 +1708,8 @@ html[data-theme="dark"] .user-account-shell :is(.booking-dialog-error, .rdlg-err
 html.dark .user-account-shell .rdlg-status,
 html[data-theme="dark"] .user-account-shell .rdlg-status,
 [data-theme="dark"] .user-account-shell .rdlg-status {
-  background-color: rgba(97, 215, 190, .13) !important;
-  color: #8eecd7 !important;
+  background-color: rgba(21, 154, 131, .14) !important;
+  color: #86d9c7 !important;
 }
 html.dark .user-account-shell .rdlg-author-avatar,
 html[data-theme="dark"] .user-account-shell .rdlg-author-avatar,
@@ -1631,7 +1758,7 @@ html[data-theme="dark"] .user-account-shell :is(.cancellation-refund-card strong
 html.dark .user-account-shell :is(.cancellation-reason textarea, .cancellation-back, .rdlg-textarea),
 html[data-theme="dark"] .user-account-shell :is(.cancellation-reason textarea, .cancellation-back, .rdlg-textarea),
 [data-theme="dark"] .user-account-shell :is(.cancellation-reason textarea, .cancellation-back, .rdlg-textarea) {
-  background-color: #142421 !important;
+  background-color: #12151a !important;
   border-color: var(--account-line) !important;
   color: var(--account-ink) !important;
 }
@@ -1645,4 +1772,831 @@ html[data-theme="dark"] .user-account-shell .rdlg-close:hover,
 [data-theme="dark"] .user-account-shell .rdlg-close:hover {
   background-color: var(--account-hover-bg) !important;
   color: var(--account-ink) !important;
+}
+
+/* Neutralize shared shell accents on account surfaces. */
+html.dark .user-account-shell :is(.header.yuding-header .nav-item, .header.yuding-header .yuding-account-trigger, .header.yuding-header .btn-connexion),
+html[data-theme="dark"] .user-account-shell :is(.header.yuding-header .nav-item, .header.yuding-header .yuding-account-trigger, .header.yuding-header .btn-connexion),
+[data-theme="dark"] .user-account-shell :is(.header.yuding-header .nav-item, .header.yuding-header .yuding-account-trigger, .header.yuding-header .btn-connexion) {
+  color: var(--account-ink) !important;
+  border-color: var(--account-line) !important;
+}
+
+html.dark .user-account-shell :is(.header.yuding-header .nav-item:is(:hover, :focus-visible, .active), .header.yuding-header .yuding-account-trigger:is(:hover, :focus-visible), .header.yuding-header .btn-connexion:is(:hover, :focus-visible)),
+html[data-theme="dark"] .user-account-shell :is(.header.yuding-header .nav-item:is(:hover, :focus-visible, .active), .header.yuding-header .yuding-account-trigger:is(:hover, :focus-visible), .header.yuding-header .btn-connexion:is(:hover, :focus-visible)),
+[data-theme="dark"] .user-account-shell :is(.header.yuding-header .nav-item:is(:hover, :focus-visible, .active), .header.yuding-header .yuding-account-trigger:is(:hover, :focus-visible), .header.yuding-header .btn-connexion:is(:hover, :focus-visible)) {
+  background-color: var(--account-hover-bg) !important;
+  border-color: var(--account-hover-border) !important;
+  color: var(--account-hover-ink) !important;
+}
+
+html.dark .user-account-shell .profile-page input:focus,
+html.dark .user-account-shell .profile-page select:focus,
+html[data-theme="dark"] .user-account-shell .profile-page input:focus,
+html[data-theme="dark"] .user-account-shell .profile-page select:focus,
+[data-theme="dark"] .user-account-shell .profile-page input:focus,
+[data-theme="dark"] .user-account-shell .profile-page select:focus {
+  outline-color: var(--account-green) !important;
+  box-shadow: 0 0 0 3px rgba(21, 154, 131, .16) !important;
+}
+
+html.dark .user-account-shell .profile-page .feedback.success,
+html[data-theme="dark"] .user-account-shell .profile-page .feedback.success,
+[data-theme="dark"] .user-account-shell .profile-page .feedback.success {
+  background: rgba(133, 198, 164, .13) !important;
+  border: 1px solid rgba(133, 198, 164, .30);
+  color: #b5e6c6 !important;
+}
+
+html.dark .user-account-shell .profile-page .feedback.error,
+html[data-theme="dark"] .user-account-shell .profile-page .feedback.error,
+[data-theme="dark"] .user-account-shell .profile-page .feedback.error {
+  background: rgba(230, 139, 145, .13) !important;
+  border: 1px solid rgba(230, 139, 145, .30);
+  color: #f2b3b7 !important;
+}
+
+html.dark .user-account-shell :is(.yuding-footer--home a, .yuding-footer--home p, .yuding-footer--home li),
+html[data-theme="dark"] .user-account-shell :is(.yuding-footer--home a, .yuding-footer--home p, .yuding-footer--home li),
+[data-theme="dark"] .user-account-shell :is(.yuding-footer--home a, .yuding-footer--home p, .yuding-footer--home li) {
+  color: var(--account-muted) !important;
+}
+
+html.dark .user-account-shell .yuding-footer--home a:is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell .yuding-footer--home a:is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell .yuding-footer--home a:is(:hover, :focus-visible) {
+  color: var(--account-green) !important;
+}
+
+html.dark .user-account-shell .account-loading-icon,
+html[data-theme="dark"] .user-account-shell .account-loading-icon,
+[data-theme="dark"] .user-account-shell .account-loading-icon {
+  color: var(--account-green) !important;
+}
+
+html.dark .user-account-shell .account-route-fallback,
+html[data-theme="dark"] .user-account-shell .account-route-fallback,
+[data-theme="dark"] .user-account-shell .account-route-fallback {
+  background-color: var(--account-page) !important;
+  color: var(--account-muted) !important;
+}
+
+html.dark .user-account-shell .account-error-state,
+html[data-theme="dark"] .user-account-shell .account-error-state,
+[data-theme="dark"] .user-account-shell .account-error-state {
+  background: rgba(230, 139, 145, .12) !important;
+  border-color: rgba(230, 139, 145, .30) !important;
+  color: #f2b3b7 !important;
+}
+
+html.dark .user-account-shell .account-error-action,
+html[data-theme="dark"] .user-account-shell .account-error-action,
+[data-theme="dark"] .user-account-shell .account-error-action {
+  border-color: rgba(230, 139, 145, .46) !important;
+  color: #f2b3b7 !important;
+}
+
+html.dark .user-account-shell .library-item-reference,
+html[data-theme="dark"] .user-account-shell .library-item-reference,
+[data-theme="dark"] .user-account-shell .library-item-reference {
+  color: var(--account-muted) !important;
+}
+
+html.dark .user-account-shell .library-card-meta,
+html[data-theme="dark"] .user-account-shell .library-card-meta,
+[data-theme="dark"] .user-account-shell .library-card-meta {
+  color: var(--account-muted) !important;
+}
+
+html.dark .user-account-shell .library-type-badge,
+html[data-theme="dark"] .user-account-shell .library-type-badge,
+[data-theme="dark"] .user-account-shell .library-type-badge {
+  background: var(--account-bg-subtle) !important;
+  border: 1px solid var(--account-line);
+  color: var(--account-muted) !important;
+}
+
+html.dark .user-account-shell .library-status-badge.saved,
+html[data-theme="dark"] .user-account-shell .library-status-badge.saved,
+[data-theme="dark"] .user-account-shell .library-status-badge.saved {
+  background: rgba(133, 198, 164, .13) !important;
+  border-color: rgba(133, 198, 164, .34) !important;
+  color: #b5e6c6 !important;
+}
+
+html.dark .user-account-shell .account-empty-icon.saved-trips,
+html[data-theme="dark"] .user-account-shell .account-empty-icon.saved-trips,
+[data-theme="dark"] .user-account-shell .account-empty-icon.saved-trips {
+  background: rgba(142, 196, 226, .14) !important;
+  color: #a8d5ec !important;
+}
+
+html.dark .user-account-shell .account-empty-icon.search-history,
+html[data-theme="dark"] .user-account-shell .account-empty-icon.search-history,
+[data-theme="dark"] .user-account-shell .account-empty-icon.search-history {
+  background: rgba(231, 198, 127, .14) !important;
+  color: #e7c67f !important;
+}
+
+html.dark .user-account-shell .account-empty-icon.recent-views,
+html[data-theme="dark"] .user-account-shell .account-empty-icon.recent-views,
+[data-theme="dark"] .user-account-shell .account-empty-icon.recent-views {
+  background: rgba(199, 179, 230, .14) !important;
+  color: #c7b3e6 !important;
+}
+
+/* Keep the profile interior on the same graphite surface as the account bar.
+   Forms and library cards still use the raised card token for hierarchy. */
+html.dark .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .profile-hero, .identity-strip, .profile-flow .profile-section),
+html[data-theme="dark"] .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .profile-hero, .identity-strip, .profile-flow .profile-section),
+[data-theme="dark"] .user-account-shell :is(.account-main, .account-surface, .account-content, .profile-page, .profile-hero, .identity-strip, .profile-flow .profile-section) {
+  background-color: var(--account-page) !important;
+}
+
+html.dark .user-account-shell .profile-flow .profile-section,
+html[data-theme="dark"] .user-account-shell .profile-flow .profile-section,
+[data-theme="dark"] .user-account-shell .profile-flow .profile-section {
+  box-shadow: none !important;
+}
+
+/* Match the main header in both themes: underline the label, never the icon. */
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn) {
+  min-height: 42px !important;
+  padding: .7rem .65rem !important;
+  gap: .45rem !important;
+  font-size: .81rem !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn) > span:first-of-type {
+  position: relative;
+  display: inline-block;
+}
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn) > span:first-of-type::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .2s cubic-bezier(.22, 1, .36, 1);
+}
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn):is(:hover, :focus-visible, .active) {
+  background: transparent !important;
+  color: var(--account-green) !important;
+}
+.user-account-shell :is(.account-nav a, .library-tabs-nav .library-tab-btn, .library-subfilters .library-subfilter-btn):is(:hover, :focus-visible, .active) > span:first-of-type::after {
+  transform: scaleX(1);
+}
+.user-account-shell .library-subfilters {
+  gap: 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.user-account-shell :is(.library-tab-btn, .library-subfilter-btn) .library-tab-count {
+  background: transparent !important;
+  color: var(--account-green) !important;
+}
+
+/* Higher-specificity reset for legacy selected-state rules. */
+.user-account-shell .account-nav a.active,
+.user-account-shell .library-tabs-nav .library-tab-btn.active,
+.user-account-shell .library-subfilters .library-subfilter-btn.active {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+.user-account-shell .account-nav a.active > span::after,
+.user-account-shell .library-tabs-nav .library-tab-btn.active > span:first-of-type::after,
+.user-account-shell .library-subfilters .library-subfilter-btn.active > span:first-of-type::after {
+  transform: scaleX(1) !important;
+}
+.user-account-shell .account-nav a:hover,
+.user-account-shell .account-nav a:focus-visible,
+.user-account-shell .library-tabs-nav .library-tab-btn:hover,
+.user-account-shell .library-tabs-nav .library-tab-btn:focus-visible,
+.user-account-shell .library-subfilters .library-subfilter-btn:hover,
+.user-account-shell .library-subfilters .library-subfilter-btn:focus-visible {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+
+/* Account links win over the shared library-tab selection tokens. */
+.user-account-shell .account-nav a:not(.library-tab-btn):is(:hover, :focus-visible, .active) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+html.dark .user-account-shell .account-nav a:not(.library-tab-btn):is(:hover, :focus-visible, .active),
+html[data-theme="dark"] .user-account-shell .account-nav a:not(.library-tab-btn):is(:hover, :focus-visible, .active),
+[data-theme="dark"] .user-account-shell .account-nav a:not(.library-tab-btn):is(:hover, :focus-visible, .active) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+
+/* Library tabs use the same text-only interaction as account navigation. */
+.user-account-shell .library-tabs-nav .library-tab-btn:is(:hover, :focus-visible, .active),
+.user-account-shell .library-tabs-nav .library-tab-btn:not(.active):is(:hover, :focus-visible) {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+html.dark .user-account-shell .library-tabs-nav .library-tab-btn:is(:hover, :focus-visible, .active),
+html[data-theme="dark"] .user-account-shell .library-tabs-nav .library-tab-btn:is(:hover, :focus-visible, .active),
+[data-theme="dark"] .user-account-shell .library-tabs-nav .library-tab-btn:is(:hover, :focus-visible, .active),
+html.dark .user-account-shell .library-tabs-nav .library-tab-btn:not(.active):is(:hover, :focus-visible),
+html[data-theme="dark"] .user-account-shell .library-tabs-nav .library-tab-btn:not(.active):is(:hover, :focus-visible),
+[data-theme="dark"] .user-account-shell .library-tabs-nav .library-tab-btn:not(.active):is(:hover, :focus-visible) {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+.user-account-shell .library-tabs-nav .library-tab-btn .library-tab-count,
+.user-account-shell .library-tabs-nav .library-tab-btn.active .library-tab-count {
+  background: transparent !important;
+  color: var(--account-green) !important;
+}
+.user-account-shell .account-page-header,
+.user-account-shell .profile-hero {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep every account page header as a compact, flat section like the admin topbar. */
+html.dark .user-account-shell .account-page-header,
+html[data-theme="dark"] .user-account-shell .account-page-header,
+[data-theme="dark"] .user-account-shell .account-page-header,
+.user-account-shell .account-page-header {
+  min-height: 0 !important;
+  padding: 0 0 16px !important;
+  margin-bottom: 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--account-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html.dark .user-account-shell .account-page-header h1,
+html[data-theme="dark"] .user-account-shell .account-page-header h1,
+[data-theme="dark"] .user-account-shell .account-page-header h1,
+.user-account-shell .account-page-header h1 {
+  font-size: clamp(26px, 2.4vw, 32px) !important;
+  line-height: 1.15 !important;
+}
+html.dark .user-account-shell .account-page-header > div > p:last-child,
+html[data-theme="dark"] .user-account-shell .account-page-header > div > p:last-child,
+[data-theme="dark"] .user-account-shell .account-page-header > div > p:last-child,
+.user-account-shell .account-page-header > div > p:last-child {
+  margin-top: 7px !important;
+  font-size: 13px !important;
+}
+html.dark .user-account-shell .profile-hero,
+html[data-theme="dark"] .user-account-shell .profile-hero,
+[data-theme="dark"] .user-account-shell .profile-hero,
+.user-account-shell .profile-hero {
+  min-height: 0 !important;
+  padding: 0 0 16px !important;
+  margin-bottom: 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--account-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html.dark .user-account-shell .profile-hero h1,
+html[data-theme="dark"] .user-account-shell .profile-hero h1,
+[data-theme="dark"] .user-account-shell .profile-hero h1,
+.user-account-shell .profile-hero h1 {
+  font-size: clamp(26px, 2.4vw, 32px) !important;
+  line-height: 1.15 !important;
+}
+
+/* Reviews: section bands share the page surface; only individual review rows stay cards. */
+html.dark .user-account-shell .account-reviews-page .account-review-pending,
+html.dark .user-account-shell .account-reviews-page .account-review-history,
+html[data-theme="dark"] .user-account-shell .account-reviews-page .account-review-pending,
+html[data-theme="dark"] .user-account-shell .account-reviews-page .account-review-history,
+[data-theme="dark"] .user-account-shell .account-reviews-page .account-review-pending,
+[data-theme="dark"] .user-account-shell .account-reviews-page .account-review-history,
+.user-account-shell .account-reviews-page .account-review-pending,
+.user-account-shell .account-reviews-page .account-review-history {
+  background: var(--account-page) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+html.dark .user-account-shell .account-reviews-page .account-review-section-head,
+html[data-theme="dark"] .user-account-shell .account-reviews-page .account-review-section-head,
+[data-theme="dark"] .user-account-shell .account-reviews-page .account-review-section-head,
+.user-account-shell .account-reviews-page .account-review-section-head {
+  background: transparent !important;
+  border-bottom: 1px solid var(--account-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.user-account-shell .account-reviews-page .account-review-list {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Dialogs are portaled under body, so account-shell selectors cannot style them. */
+html.dark :is(.booking-dialog, .cancellation-dialog, .rdlg-modal),
+html[data-theme="dark"] :is(.booking-dialog, .cancellation-dialog, .rdlg-modal),
+[data-theme="dark"] :is(.booking-dialog, .cancellation-dialog, .rdlg-modal) {
+  background: #171a20 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .48) !important;
+}
+html.dark :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop),
+html[data-theme="dark"] :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop),
+[data-theme="dark"] :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop) {
+  background: rgba(5, 7, 10, .78) !important;
+}
+html.dark :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer),
+html[data-theme="dark"] :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer),
+[data-theme="dark"] :is(.booking-dialog-header, .booking-dialog-footer, .cancellation-dialog-head, .cancellation-dialog-actions, .cancellation-policy-card, .rdlg-header, .rdlg-footer) {
+  border-color: #2b313b !important;
+}
+html.dark :is(.booking-dialog h2, .booking-dialog h3, .booking-dialog h4, .cancellation-dialog h2, .cancellation-dialog h3, .rdlg-title, .rdlg-field-label, .rdlg-textarea-label),
+html[data-theme="dark"] :is(.booking-dialog h2, .booking-dialog h3, .booking-dialog h4, .cancellation-dialog h2, .cancellation-dialog h3, .rdlg-title, .rdlg-field-label, .rdlg-textarea-label),
+[data-theme="dark"] :is(.booking-dialog h2, .booking-dialog h3, .booking-dialog h4, .cancellation-dialog h2, .cancellation-dialog h3, .rdlg-title, .rdlg-field-label, .rdlg-textarea-label) {
+  color: #f2f4f7 !important;
+}
+html.dark :is(.booking-dialog p, .booking-dialog dt, .booking-dialog dd, .cancellation-dialog p, .rdlg-subtitle, .rdlg-helper, .rdlg-author-name, .rdlg-char-count),
+html[data-theme="dark"] :is(.booking-dialog p, .booking-dialog dt, .booking-dialog dd, .cancellation-dialog p, .rdlg-subtitle, .rdlg-helper, .rdlg-author-name, .rdlg-char-count),
+[data-theme="dark"] :is(.booking-dialog p, .booking-dialog dt, .booking-dialog dd, .cancellation-dialog p, .rdlg-subtitle, .rdlg-helper, .rdlg-author-name, .rdlg-char-count) {
+  color: #a7afbb !important;
+}
+html.dark :is(.booking-dialog input, .booking-dialog textarea, .booking-dialog select, .cancellation-dialog input, .cancellation-dialog textarea, .cancellation-dialog select, .rdlg-textarea),
+html[data-theme="dark"] :is(.booking-dialog input, .booking-dialog textarea, .booking-dialog select, .cancellation-dialog input, .cancellation-dialog textarea, .cancellation-dialog select, .rdlg-textarea),
+[data-theme="dark"] :is(.booking-dialog input, .booking-dialog textarea, .booking-dialog select, .cancellation-dialog input, .cancellation-dialog textarea, .cancellation-dialog select, .rdlg-textarea) {
+  background: #12151a !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+html.dark :is(.booking-dialog-close, .cancellation-close, .rdlg-close),
+html[data-theme="dark"] :is(.booking-dialog-close, .cancellation-close, .rdlg-close),
+[data-theme="dark"] :is(.booking-dialog-close, .cancellation-close, .rdlg-close) {
+  color: #a7afbb !important;
+}
+html.dark :is(.booking-dialog-close:hover, .booking-dialog-close:focus-visible, .cancellation-close:hover, .cancellation-close:focus-visible, .rdlg-close:hover, .rdlg-close:focus-visible),
+html[data-theme="dark"] :is(.booking-dialog-close:hover, .booking-dialog-close:focus-visible, .cancellation-close:hover, .cancellation-close:focus-visible, .rdlg-close:hover, .rdlg-close:focus-visible),
+[data-theme="dark"] :is(.booking-dialog-close:hover, .booking-dialog-close:focus-visible, .cancellation-close:hover, .cancellation-close:focus-visible, .rdlg-close:hover, .rdlg-close:focus-visible) {
+  background: rgba(21, 154, 131, .14) !important;
+  color: #86d9c7 !important;
+}
+html.dark :is(.booking-dialog-footer button, .cancellation-back, .rdlg-later),
+html[data-theme="dark"] :is(.booking-dialog-footer button, .cancellation-back, .rdlg-later),
+[data-theme="dark"] :is(.booking-dialog-footer button, .cancellation-back, .rdlg-later) {
+  border-color: #2b313b !important;
+  background: transparent !important;
+  color: #86d9c7 !important;
+}
+html.dark :is(.cancellation-done, .rdlg-publish),
+html[data-theme="dark"] :is(.cancellation-done, .rdlg-publish),
+[data-theme="dark"] :is(.cancellation-done, .rdlg-publish) {
+  border-color: #159a83 !important;
+  background: #159a83 !important;
+  color: #12161b !important;
+}
+
+/* Account pages inherit the shell, but their header navigation stays flat. */
+.user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item,
+.user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active),
+.user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) > i {
+  color: var(--account-green) !important;
+}
+html.dark .user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active),
+html[data-theme="dark"] .user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active),
+[data-theme="dark"] .user-account-shell .header.yuding-header .yuding-navigation .nav-item.nav-item:is(:hover, :focus-visible, .active) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--account-green) !important;
+  transform: none !important;
+}
+
+/* Dossier dialog parity: use the same Admin graphite tokens and browser chrome. */
+html.dark .booking-dialog,
+html[data-theme="dark"] .booking-dialog,
+[data-theme="dark"] .booking-dialog {
+  --document-ink: #f1f3f7;
+  --document-muted: #9aa1ad;
+  --document-line: #2b313b;
+  --document-teal: #159a83;
+  background: #171a20 !important;
+  border-color: #2b313b !important;
+}
+html.dark .booking-dialog :is(.booking-dialog-header h2, .booking-dialog-header p strong, .booking-dossier-hero h3, .booking-dossier-columns h4, .booking-document-status strong),
+html[data-theme="dark"] .booking-dialog :is(.booking-dialog-header h2, .booking-dialog-header p strong, .booking-dossier-hero h3, .booking-dossier-columns h4, .booking-document-status strong),
+[data-theme="dark"] .booking-dialog :is(.booking-dialog-header h2, .booking-dialog-header p strong, .booking-dossier-hero h3, .booking-dossier-columns h4, .booking-document-status strong) {
+  color: var(--document-ink) !important;
+}
+html.dark .booking-dialog :is(.booking-dialog-header p, .booking-document-list dt, .booking-document-list dd, .booking-document-status p),
+html[data-theme="dark"] .booking-dialog :is(.booking-dialog-header p, .booking-document-list dt, .booking-document-list dd, .booking-document-status p),
+[data-theme="dark"] .booking-dialog :is(.booking-dialog-header p, .booking-document-list dt, .booking-document-list dd, .booking-document-status p) {
+  color: var(--document-muted) !important;
+}
+html.dark .booking-dialog .booking-document-list dd,
+html[data-theme="dark"] .booking-dialog .booking-document-list dd,
+[data-theme="dark"] .booking-dialog .booking-document-list dd {
+  color: var(--document-ink) !important;
+}
+html.dark .booking-dialog .booking-dialog-kicker span,
+html[data-theme="dark"] .booking-dialog .booking-dialog-kicker span,
+[data-theme="dark"] .booking-dialog .booking-dialog-kicker span,
+html.dark .booking-dialog .booking-dialog-close:not(:hover):not(:focus-visible),
+html[data-theme="dark"] .booking-dialog .booking-dialog-close:not(:hover):not(:focus-visible),
+[data-theme="dark"] .booking-dialog .booking-dialog-close:not(:hover):not(:focus-visible) {
+  color: var(--document-muted) !important;
+}
+html.dark .booking-dialog-body,
+html[data-theme="dark"] .booking-dialog-body,
+[data-theme="dark"] .booking-dialog-body {
+  scrollbar-color: var(--document-line) transparent;
+}
+html.dark .booking-dialog-body::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .booking-dialog-body::-webkit-scrollbar-thumb,
+[data-theme="dark"] .booking-dialog-body::-webkit-scrollbar-thumb {
+  background: var(--document-line);
+}
+
+/* Dossier inspector: mirror the Admin side panel on the right edge. */
+.booking-dialog-backdrop--dossier {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 24px;
+}
+.booking-dialog-backdrop--dossier .booking-dialog--dossier {
+  width: min(620px, calc(100vw - 48px));
+  display: flex !important;
+  flex-direction: column !important;
+  height: fit-content !important;
+  max-height: calc(100dvh - 48px);
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: -18px 0 52px rgba(10, 28, 33, .18);
+  animation: booking-dossier-enter 220ms cubic-bezier(.22, 1, .36, 1) both;
+}
+.booking-dialog-backdrop--dossier .booking-dialog-header {
+  position: static;
+  min-height: 78px;
+  padding: 18px 24px;
+  flex: 0 0 auto;
+  background: #fff;
+}
+.booking-dialog-backdrop--dossier .booking-dialog-header h2 {
+  font-size: 18px;
+  letter-spacing: -.015em;
+}
+.booking-dialog-backdrop--dossier .booking-dialog-body {
+  display: block;
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 2px 24px 16px;
+}
+.booking-dialog-backdrop--dossier .booking-dossier-hero {
+  padding-top: 24px;
+}
+.booking-dialog-backdrop--dossier .booking-dossier-image {
+  margin: 14px 0 8px;
+}
+.booking-dialog-backdrop--dossier .booking-dossier-columns {
+  gap: 28px;
+  margin-top: 26px;
+}
+.booking-dialog-backdrop--dossier .booking-dialog-footer {
+  position: static;
+  flex: 0 0 auto;
+  padding: 13px 24px;
+  background: #fff;
+}
+@keyframes booking-dossier-enter {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+html.dark .booking-dialog-backdrop--dossier .booking-dialog,
+html[data-theme="dark"] .booking-dialog-backdrop--dossier .booking-dialog,
+[data-theme="dark"] .booking-dialog-backdrop--dossier .booking-dialog {
+  box-shadow: -18px 0 52px rgba(0, 0, 0, .48) !important;
+}
+html.dark .booking-dialog-backdrop--dossier .booking-dialog-header,
+html.dark .booking-dialog-backdrop--dossier .booking-dialog-footer,
+html[data-theme="dark"] .booking-dialog-backdrop--dossier .booking-dialog-header,
+html[data-theme="dark"] .booking-dialog-backdrop--dossier .booking-dialog-footer,
+[data-theme="dark"] .booking-dialog-backdrop--dossier .booking-dialog-header,
+[data-theme="dark"] .booking-dialog-backdrop--dossier .booking-dialog-footer {
+  background: #171a20 !important;
+}
+@media (max-width: 720px) {
+  .booking-dialog-backdrop--dossier {
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+  .booking-dialog-backdrop--dossier .booking-dialog--dossier {
+    width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 20px);
+    border-radius: 14px;
+    animation: booking-dialog-enter 220ms cubic-bezier(.22, 1, .36, 1) both;
+  }
+  .booking-dialog-backdrop--dossier .booking-dialog-header {
+    min-height: 0;
+    padding: 20px;
+  }
+  .booking-dialog-backdrop--dossier .booking-dialog-body {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 24px 20px 30px;
+  }
+  .booking-dialog-backdrop--dossier .booking-dialog-footer {
+    padding: 12px 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-dialog-backdrop--dossier,
+  .booking-dialog-backdrop--dossier .booking-dialog--dossier {
+    animation: none;
+  }
+}
+
+/* All account dialogs share one dimmed, lightly blurred backdrop. */
+:is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop, .review-modal-backdrop) {
+  background: rgba(0, 0, 0, .4) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.dark :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop, .review-modal-backdrop),
+html[data-theme="dark"] :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop, .review-modal-backdrop),
+[data-theme="dark"] :is(.booking-dialog-backdrop, .cancellation-overlay, .rdlg-backdrop, .review-modal-backdrop) {
+  background: rgba(0, 0, 0, .4) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Favorites filter rail: match the compact graphite tab treatment. */
+.user-account-shell .favorites-page .favorites-filter-rail {
+  --favorites-rail-track: #eef4f2;
+  --favorites-rail-active: #d6ebe6;
+  --favorites-rail-hover: #e5f1ee;
+  --favorites-rail-ink: #4e6963;
+  --favorites-rail-active-ink: #153b35;
+  --favorites-rail-count: #087d70;
+  display: inline-flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  width: max-content;
+  max-width: 100%;
+  min-height: 44px;
+  margin-bottom: 20px;
+  padding: 3px !important;
+  overflow-x: auto;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--favorites-rail-track) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  scrollbar-width: none;
+}
+
+html.dark .user-account-shell .favorites-page .favorites-filter-rail,
+html[data-theme="dark"] .user-account-shell .favorites-page .favorites-filter-rail,
+[data-theme="dark"] .user-account-shell .favorites-page .favorites-filter-rail {
+  --favorites-rail-track: #20242c;
+  --favorites-rail-active: #1d3d41;
+  --favorites-rail-hover: #29484b;
+  --favorites-rail-ink: #aeb8c4;
+  --favorites-rail-active-ink: #f2f4f7;
+  --favorites-rail-count: #159a83;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail::-webkit-scrollbar { display: none; }
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  min-width: 0;
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: var(--favorites-rail-ink) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1;
+  transform: none !important;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn > span:first-child {
+  position: relative;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-tab-count {
+  min-width: 0 !important;
+  padding: 2px 6px !important;
+  border-radius: 999px !important;
+  background: rgba(21, 154, 131, .14) !important;
+  color: var(--favorites-rail-count) !important;
+  font-size: 10px !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700 !important;
+  line-height: 1;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn:is(:hover, :focus-visible) {
+  background: var(--favorites-rail-hover) !important;
+  color: var(--favorites-rail-active-ink) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn.active {
+  background: var(--favorites-rail-active) !important;
+  color: var(--favorites-rail-active-ink) !important;
+  box-shadow: none !important;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn.active > span:first-child::after {
+  content: none !important;
+  display: none !important;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn > span:first-child::after {
+  content: none !important;
+  display: none !important;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn.active .library-tab-count {
+  background: var(--favorites-rail-count) !important;
+  color: #ffffff !important;
+}
+
+.user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn:focus-visible {
+  outline: 2px solid #6ad5c2;
+  outline-offset: -3px;
+}
+
+@media (max-width: 640px) {
+  .user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn {
+    padding-inline: 10px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user-account-shell .favorites-page .favorites-filter-rail .library-subfilter-btn {
+    transition: none;
+  }
+}
+
+/* Account navigation stays text-first: hover and selection use only the label rule. */
+.user-account-shell .account-nav a {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  outline: 0;
+}
+
+.user-account-shell .account-nav a:is(:hover, :focus-visible, .active) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--account-green) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.user-account-shell .account-nav a:is(:hover, :focus-visible, .active) > i {
+  color: var(--account-green) !important;
+}
+
+/* Account links override the shared selection tokens without changing the rail controls. */
+.user-account-shell :is(.account-nav a).active,
+.user-account-shell :is(.account-nav a):not(.active):is(:hover, :focus-visible),
+.user-account-shell :is(.account-nav a).active:hover {
+  border: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.user-account-shell .account-nav.account-nav a.active,
+.user-account-shell .account-nav.account-nav a.active:hover,
+.user-account-shell .account-nav.account-nav a:not(.active):is(:hover, :focus-visible) {
+  border: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* History uses the same compact selected tile as the Favorites rail. */
+.user-account-shell .favorites-page .history-filter-rail .library-subfilter-btn.active {
+  background: var(--favorites-rail-active) !important;
+  color: var(--favorites-rail-active-ink) !important;
+  box-shadow: none !important;
+}
+
+.user-account-shell .favorites-page .history-filter-rail .library-subfilter-btn:is(:hover, :focus-visible) {
+  background: var(--favorites-rail-hover) !important;
+  color: var(--favorites-rail-active-ink) !important;
+}
+
+.user-account-shell .favorites-page .history-filter-rail .library-subfilter-btn.active > span:first-child::after {
+  content: none !important;
+  display: none !important;
+}
+
+.user-account-shell .favorites-page .history-filter-rail .library-subfilter-btn.active .library-tab-count {
+  background: var(--favorites-rail-count) !important;
+  color: #ffffff !important;
+}
+
+html body .user-account-shell .favorites-page .history-filter-rail .library-subfilter-btn > span:first-of-type::after {
+  content: none !important;
+  display: none !important;
+  transform: none !important;
+}
+
+.user-account-shell .account-nav a > span::after {
+  content: '' !important;
+  transform: scaleX(0) !important;
+}
+
+.user-account-shell .account-nav a:is(:hover, :focus-visible, .active) > span::after {
+  transform: scaleX(1) !important;
+}
+
+/* Portaled booking dialogs sit outside .account-content, so reset the legacy
+   global section sizing here instead of letting sections fill the viewport. */
+.booking-dialog section {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0;
+}
+
+.booking-dialog .booking-cancellation-history {
+  padding: 16px 0 44px;
 }

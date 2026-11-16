@@ -15,10 +15,12 @@
 .accept { border: 1px solid #087d70; background: #087d70; color: #fff; }
 .accept:hover { background: #066c61; }
 .cancel:disabled, .accept:disabled { opacity: .6; cursor: wait; }
-:global(.dark) .prices, :global([data-theme="dark"]) .prices { border-color: #3b544d; background: #233a32; }
-:global(.dark) .prices span, :global([data-theme="dark"]) .prices span, :global(.dark) .prices .previous, :global([data-theme="dark"]) .prices .previous { color: #aec4bc; }
-:global(.dark) .prices .current, :global([data-theme="dark"]) .prices .current, :global(.dark) .decrease, :global([data-theme="dark"]) .decrease { color: #7bd8c5; }
+:global(.dark) .prices, :global([data-theme="dark"]) .prices { border-color: #2b313b; background: #20242c; }
+:global(.dark) .prices span, :global([data-theme="dark"]) .prices span, :global(.dark) .prices .previous, :global([data-theme="dark"]) .prices .previous { color: #aeb8c4; }
+:global(.dark) .prices strong, :global([data-theme="dark"]) .prices strong { color: #f2f4f7; }
+:global(.dark) .prices .current, :global([data-theme="dark"]) .prices .current, :global(.dark) .decrease, :global([data-theme="dark"]) .decrease { color: #61d7be; }
 :global(.dark) .increase, :global([data-theme="dark"]) .increase { color: #f0a59c; }
-:global(.dark) .cancel, :global([data-theme="dark"]) .cancel { border-color: #4d7468; color: #e7f1ee; }
-:global(.dark) .cancel:hover, :global([data-theme="dark"]) .cancel:hover { background: #28443a; }
+:global(.dark) .prices > i, :global([data-theme="dark"]) .prices > i { color: #7e8b97; }
+:global(.dark) .cancel, :global([data-theme="dark"]) .cancel { border-color: #4a5563; color: #f2f4f7; }
+:global(.dark) .cancel:hover, :global([data-theme="dark"]) .cancel:hover { background: #2a303a; }
 @media (max-width: 420px) { .prices { gap: 10px; padding: 15px 12px; } .prices strong { font-size: 15px; } }

@@ -3,6 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
@@ -24,6 +27,8 @@ interface FeaturedDestination {
 const safeImage = (url?: string | null) => url && !url.includes('\\') && (/^https?:\/\//i.test(url) || /^\/(?!\/)/.test(url)) ? url : undefined;
 const safeDestination = (url: string) => /^\/(?!\/)/.test(url) && !url.includes('\\') ? url : '/hotels';
 const cityName = (city: string) => city === 'Lisbon' ? 'Lisbonne' : city;
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function HomeDestinations() {
   const section = useRef<HTMLElement>(null);
@@ -77,6 +82,25 @@ export function HomeDestinations() {
     const images = photos[index]?.data?.images;
     return safeImage(chapter.imageUrl) || safeImage(images?.find(image => chapter.imageId && (image.sourceAssetId === chapter.imageId || image.id.includes(chapter.imageId)))?.url) || safeImage(images?.[0]?.url);
   };
+  const photoKey = chapters.map((chapter, index) => imageFor(chapter, index) ?? '').join('|');
+
+  useGSAP(() => {
+    if (!chapters.length) return;
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      // Destination data can arrive after the section has entered the viewport;
+      // keep this reveal positional so late initialization never hides content.
+      gsap.from('.home-journey__heading, .home-journey__chapter', {
+        y: 22,
+        duration: .7,
+        ease: 'power2.out',
+        stagger: .08,
+        scrollTrigger: { trigger: section.current, start: 'top 74%', once: true },
+      });
+    });
+    return () => mm.revert();
+  }, { scope: section, dependencies: [chapterKey, photoKey], revertOnUpdate: true });
+
   const indexLabel = (index: number) => String(index + 1).padStart(2, '0');
 
   return <section ref={section} className="home-v3__destinations home-journey" aria-labelledby="destinations-title">
@@ -94,7 +118,7 @@ export function HomeDestinations() {
           <div className="home-journey__mobile-photo">{imageFor(chapter, index) && <Image src={imageFor(chapter, index)!} alt={`${cityName(chapter.city)}, ${chapter.countryLabel}`} fill sizes="100vw" />}</div>
           <span className="home-journey__eyebrow">{indexLabel(index)} / {cityName(chapter.city).toUpperCase()} · {chapter.countryLabel.toUpperCase()}</span>
           <h3>{displayFeaturedText(chapter.line)}</h3><p>{displayFeaturedText(chapter.detail)}</p>
-          <Link href={safeDestination(chapter.targetUrl)}>Découvrir {cityName(chapter.city)} <i className="fas fa-arrow-up-right" aria-hidden="true" /></Link>
+          <Link prefetch={false} href={safeDestination(chapter.targetUrl)}>Découvrir {cityName(chapter.city)} <i className="fas fa-arrow-up-right" aria-hidden="true" /></Link>
         </article>)}
       </div>
     </div>}

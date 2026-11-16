@@ -17,12 +17,47 @@
 .logout { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-top: 1px solid #e6efed; padding: 11px 16px; background: transparent; color: #a73535; font-size: 12px; font-weight: 650; text-align: left; cursor: pointer; }
 .logoutIcon { border-color: #f3dcdc; color: #a73535; }
 .logout:hover { background: #fff5f5; }
-:global(.dark) .panel { border-color: var(--shell-border); background: var(--shell-surface); color: var(--shell-text); }
-:global(.dark) .identity, :global(.dark) .logout { border-color: var(--shell-border); }
-:global(.dark) .identityText small { color: #b3c3c9; }
-:global(.dark) .identityAvatar { background: var(--shell-accent-soft); }
-:global(.dark) .links a:hover { background: var(--shell-accent-soft); color: var(--shell-text); }
-:global(.dark) .linkIcon { border-color: #3b6367; color: #7de3d4; }
-:global(.dark) .logoutIcon { border-color: #705052; color: #ef9999; }
-:global(.dark) .logout:hover { background: #3c3036; color: #ffc4c4; }
+
+/* Keep the account surface in the same graphite system as the page. The
+   toggle writes both a class and a data attribute, so either path must carry
+   the complete dark treatment. */
+:global(html.dark) .panel,
+:global(html[data-theme="dark"]) .panel,
+:global(body[data-theme="dark"]) .panel {
+  border-color: #2b313b;
+  background: #171a20;
+  color: #f2f4f7;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .46);
+}
+:global(html.dark) .identity,
+:global(html[data-theme="dark"]) .identity,
+:global(body[data-theme="dark"]) .identity,
+:global(html.dark) .logout,
+:global(html[data-theme="dark"]) .logout,
+:global(body[data-theme="dark"]) .logout { border-color: #2b313b; }
+:global(html.dark) .identityText small,
+:global(html[data-theme="dark"]) .identityText small,
+:global(body[data-theme="dark"]) .identityText small { color: #a7b1bf; }
+:global(html.dark) .identityAvatar,
+:global(html[data-theme="dark"]) .identityAvatar,
+:global(body[data-theme="dark"]) .identityAvatar { background: rgba(21, 154, 131, .14); }
+:global(html.dark) .links a:hover,
+:global(html[data-theme="dark"]) .links a:hover,
+:global(body[data-theme="dark"]) .links a:hover { background: rgba(21, 154, 131, .14); color: #f2f4f7; }
+:global(html.dark) .linkIcon,
+:global(html[data-theme="dark"]) .linkIcon,
+:global(body[data-theme="dark"]) .linkIcon { border-color: #3b6367; color: #7de3d4; }
+:global(html.dark) .chevron,
+:global(html[data-theme="dark"]) .chevron,
+:global(body[data-theme="dark"]) .chevron { color: #a7b1bf; }
+:global(html.dark) .logout,
+:global(html[data-theme="dark"]) .logout,
+:global(body[data-theme="dark"]) .logout { color: #f5969d; }
+:global(html.dark) .logoutIcon,
+:global(html[data-theme="dark"]) .logoutIcon,
+:global(body[data-theme="dark"]) .logoutIcon { border-color: #705052; color: #ef9999; }
+:global(html.dark) .logout:hover,
+:global(html[data-theme="dark"]) .logout:hover,
+:global(body[data-theme="dark"]) .logout:hover { background: #3c3036; color: #ffc4c4; }
+
 @media (max-width: 480px) { .panel { position: fixed; top: 82px; right: 12px; width: min(264px,calc(100vw - 24px)); } }

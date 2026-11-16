@@ -775,6 +775,31 @@ body:has(.home-v3) .yuding-footer--home { border-top:0 !important; background:#f
 .dark .home-v3__review-verified { color:#a4d4c2; }
 .dark .home-v3__review-arrows button { color:#e0e6e2; border-color:#758682; }
 .dark .home-v3__mode[aria-pressed="true"] { color:#b8e2d1; }
+
+/* Final mode-tab reset: no filled hover/selected tile, only the green cue. */
+.home-v3__mode:hover,
+.home-v3__mode:focus-visible,
+.home-v3__mode[aria-pressed="true"],
+.dark .home-v3__mode:hover,
+.dark .home-v3__mode:focus-visible,
+.dark .home-v3__mode[aria-pressed="true"] {
+  background: transparent !important;
+  color: #159a83 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.home-v3__mode:hover i,
+.home-v3__mode:focus-visible i,
+.home-v3__mode[aria-pressed="true"] i,
+.dark .home-v3__mode:hover i,
+.dark .home-v3__mode:focus-visible i,
+.dark .home-v3__mode[aria-pressed="true"] i {
+  color: #159a83 !important;
+}
+.home-v3__mode::after,
+.home-v3__mode[aria-pressed="true"]::after {
+  background: #159a83 !important;
+}
 .dark .home-v3__fields :is(input,select),.dark .home-v3__geo input { border-color:#586b68 !important; }
 .dark body:has(.home-v3) .yuding-footer--home :is(p,ul,.yuding-footer__signature strong) { color:#bfc9c7 !important; }
 .dark body:has(.home-v3) .yuding-footer--home h4 { color:#f2f1eb !important; }

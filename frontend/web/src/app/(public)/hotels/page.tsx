@@ -96,6 +96,7 @@ export default function HotelsPage() {
     const params = new URLSearchParams(window.location.search);
     const destination = params.get('destination')?.trim();
     if (!destination) return;
+    let cancelled = false;
     const country = params.get('country') || '';
     const countryCode = params.get('countryCode') || '';
     setDestinationInput(destination);
@@ -128,9 +129,42 @@ export default function HotelsPage() {
     if (parsedOccupancies) setOccupancies(parsedOccupancies);
     else if (Number.isInteger(adults) && adults >= 1 && adults <= 4) setOccupancies([{ adults, childrenAges: [] }]);
     if (params.get('guestNationality')) setGuestNationality(params.get('guestNationality')!);
+
+    // Home-page links carry the destination name but may not carry coordinates.
+    // Resolve it here so the destination guide is visible immediately instead
+    // of waiting for a second manual selection.
+    void (async () => {
+      const places = await geoService.geocode({
+        text: destination,
+        country: countryCode || undefined,
+        language: 'fr',
+        limit: 1,
+      });
+      const resolved = places.find((place) => Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
+      if (cancelled || !resolved) return;
+
+      setSelectedGeoPlace(resolved);
+      setSelectedCity(resolved.city || resolved.name || destination);
+      setSelectedCountryCode(resolved.countryCode || countryCode || 'MA');
+      setShowDestinationGuide(true);
+      setIsLoadingPois(true);
+      const pois = await geoService.getNearbyPlaces({
+        lat: resolved.latitude,
+        lon: resolved.longitude,
+        radius: 5000,
+        limit: 20,
+        language: 'fr',
+      });
+      if (!cancelled) {
+        setDestinationPois(pois);
+        setIsLoadingPois(false);
+      }
+    })();
     if (params.get('rerun') === '1' && arrival && departure) {
       rerunRef.current = { destination, checkIn: arrival, checkOut: departure };
     }
+
+    return () => { cancelled = true; };
   }, []);
 
   useSearchSession('HOTEL', {
@@ -303,6 +337,38 @@ export default function HotelsPage() {
     setFilterType('ALL');
 
     try {
+      // A destination carried from a home-page link may only have a name.
+      // Resolve it during search so the guide (weather, gallery and map) is
+      // guaranteed to open with real coordinates.
+      if (!selectedGeoPlace?.latitude || !selectedGeoPlace?.longitude) {
+        const places = await geoService.geocode({
+          text: destinationInput.trim(),
+          country: selectedCountryCode || undefined,
+          language: 'fr',
+          limit: 1,
+        });
+        const resolved = places.find((place) => Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
+        if (resolved && requestId === searchRequestIdRef.current) {
+          setSelectedGeoPlace(resolved);
+          setSelectedCity(resolved.city || resolved.name);
+          setSelectedCountryCode(resolved.countryCode || selectedCountryCode || 'MA');
+          setShowDestinationGuide(true);
+          setIsLoadingPois(true);
+          void geoService.getNearbyPlaces({
+            lat: resolved.latitude,
+            lon: resolved.longitude,
+            radius: 5000,
+            limit: 20,
+            language: 'fr',
+          }).then((pois) => {
+            if (requestId === searchRequestIdRef.current) {
+              setDestinationPois(pois);
+              setIsLoadingPois(false);
+            }
+          });
+        }
+      }
+
       const effectiveCountryCode = inferCountryCode(destinationInput.trim(), selectedCountryCode);
       const data = await travelService.searchHotels({
         destination: destinationInput.trim(),
@@ -667,15 +733,16 @@ export default function HotelsPage() {
 
       {/* ==================== DESTINATION GUIDE & MAP (PHASE 26) ==================== */}
       {selectedGeoPlace && Boolean(selectedGeoPlace.latitude && selectedGeoPlace.longitude && showDestinationGuide) && (
-        <section className="py-6 px-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+        <section className="travel-destination-guide py-4 px-4 bg-transparent border-0">
           <div className="max-w-6xl mx-auto">
             <div
+              className="travel-destination-shell"
               style={{
-                background: 'var(--card, #fff)',
-                borderRadius: '16px',
-                border: '1px solid var(--border, #e2e8f0)',
-                padding: '1.5rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                background: 'transparent',
+                borderRadius: 0,
+                border: 0,
+                padding: 0,
+                boxShadow: 'none',
                 marginBottom: '1rem',
               }}
             >
@@ -706,38 +773,43 @@ export default function HotelsPage() {
                 </button>
               </div>
 
-              <div style={{ marginBottom: '1.25rem' }}>
-                <DestinationWeather
-                  latitude={selectedGeoPlace.latitude}
-                  longitude={selectedGeoPlace.longitude}
-                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1.25rem' }}>
-                <DestinationImageGallery
-                  city={selectedGeoPlace.city || selectedGeoPlace.name}
-                  country={selectedGeoPlace.country}
-                  countryCode={selectedGeoPlace.countryCode}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-                <GeoMap
-                  latitude={selectedGeoPlace.latitude}
-                  longitude={selectedGeoPlace.longitude}
-                  placeName={selectedGeoPlace.city || selectedGeoPlace.name}
-                  pois={destinationPois}
-                  selectedPoi={selectedPoi}
-                  onSelectPoi={(poi) => setSelectedPoi(poi)}
-                  height={360}
-                />
-                <NearbyPoiPanel
-                  pois={destinationPois}
-                  isLoading={isLoadingPois}
-                  selectedPoi={selectedPoi}
-                  onSelectPoi={(poi) => setSelectedPoi(poi)}
-                  destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
-                />
+              <div className="travel-guide-layout">
+                <div className="travel-guide-overview">
+                  <div className="travel-guide-gallery">
+                    <DestinationImageGallery
+                      city={selectedGeoPlace.city || selectedGeoPlace.name}
+                      country={selectedGeoPlace.country}
+                      countryCode={selectedGeoPlace.countryCode}
+                    />
+                  </div>
+                  <div className="travel-guide-weather">
+                    <DestinationWeather
+                      latitude={selectedGeoPlace.latitude}
+                      longitude={selectedGeoPlace.longitude}
+                      destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                    />
+                  </div>
+                </div>
+                <div className="travel-guide-main">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+                    <GeoMap
+                      latitude={selectedGeoPlace.latitude}
+                      longitude={selectedGeoPlace.longitude}
+                      placeName={selectedGeoPlace.city || selectedGeoPlace.name}
+                      pois={destinationPois}
+                      selectedPoi={selectedPoi}
+                      onSelectPoi={(poi) => setSelectedPoi(poi)}
+                      height={360}
+                    />
+                    <NearbyPoiPanel
+                      pois={destinationPois}
+                      isLoading={isLoadingPois}
+                      selectedPoi={selectedPoi}
+                      onSelectPoi={(poi) => setSelectedPoi(poi)}
+                      destinationName={selectedGeoPlace.city || selectedGeoPlace.name}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -750,7 +822,7 @@ export default function HotelsPage() {
           {/* Filter Categories */}
           {hasSearched && allHotels.length > 0 && (
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#062523] border border-slate-200 dark:border-slate-800 rounded-xl flex-wrap justify-center">
+            <div className="travel-hotel-filter-tabs inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#062523] border border-slate-200 dark:border-slate-800 rounded-xl flex-wrap justify-center">
               {[
                 { label: 'Tous les hébergements', value: 'ALL' as const },
                 { label: 'Hôtels & Riads', value: 'HOTEL_RIAD' as const },
@@ -826,14 +898,14 @@ export default function HotelsPage() {
                 }}
               />
 
-              <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {hotelPages.pageItems.map((item) => {
                   const hotelId = item.hotelId || item.id || item.offerId;
                   const isExpanded = expandedHotelId === hotelId;
                   const roomOffers = item.roomOffers || [];
 
                   return (
-                    <div key={hotelId} className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] hover:border-[#01796F]/40 hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523]">
+                    <div key={hotelId} className="travel-hotel-result-card flex min-w-0 self-start flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-[#01796F]/30 dark:bg-[#062523]">
                       {/* Image & Badges */}
                       <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-[#0a302d]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -987,13 +1059,13 @@ export default function HotelsPage() {
 
                         {/* Expanded Room Offers List */}
                         {isExpanded && roomOffers.length > 0 && (
-                          <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-[#01796F]/30">
+                          <div className="travel-hotel-room-offers mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-[#01796F]/30">
                             <h4 className="m-0 text-sm font-bold text-slate-800 dark:text-slate-100">
                               Chambres et tarifs disponibles :
                             </h4>
 
                             {roomOffers.map((offer: HotelRoomOffer) => (
-                              <div key={offer.offerId} className="flex flex-col gap-3 rounded-xl border border-[#01796F]/15 bg-slate-50 p-3.5 dark:bg-[#0a302d]/50">
+                              <div key={offer.offerId} className="travel-hotel-room-offer flex flex-col gap-3 rounded-xl border border-[#01796F]/15 bg-slate-50 p-3.5 dark:bg-[#0a302d]/50">
                                 <div className="min-w-0">
                                   <div className="text-sm font-bold text-slate-900 dark:text-white">
                                     {offer.roomName}

@@ -1,0 +1,636 @@
+/* Homepage finishing layer. Imported last so the public shell cannot flatten
+   the chapter palette or change the transparent hero header. */
+
+.header.yuding-header.home-header {
+  padding-inline: 0 !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+}
+.header.yuding-header.home-header .header-top {
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding-inline: 40px 32px !important;
+}
+.header.yuding-header.home-header .header-top > .container1 {
+  display: grid !important;
+  grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr) !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding: 0 !important;
+}
+.header.yuding-header.home-header .logo {
+  justify-self: start;
+  width: 150px !important;
+  min-width: 150px !important;
+  height: 48px !important;
+}
+.header.yuding-header.home-header .logo img {
+  width: 150px !important;
+  height: auto !important;
+  max-height: 48px !important;
+}
+.header.yuding-header.home-header .yuding-navigation {
+  justify-self: center;
+  gap: .2rem !important;
+}
+.header.yuding-header.home-header .nav-item {
+  min-height: 42px !important;
+  padding: .7rem .65rem !important;
+  font-size: .81rem !important;
+}
+.header.yuding-header.home-header .header-btns {
+  justify-self: end;
+  gap: .5rem !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3,
+body[data-theme="dark"] .home-v3 {
+  --home-night-text: #f1f5f1;
+  --home-night-muted: #b7c5bf;
+  --home-night-accent: #79d9bc;
+  --home-night-action: #19aa91;
+  --home-night-border: #3d4d55;
+  color: var(--home-night-text) !important;
+  background: #0f1317 !important;
+}
+
+/* Each chapter keeps its own surface, as in light mode. */
+html:is(.dark, [data-theme="dark"]) .home-v3 .home-v3__search,
+body[data-theme="dark"] .home-v3 .home-v3__search {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(79, 185, 164, .18), transparent 34%),
+    linear-gradient(125deg, #121c25 0%, #172a2d 56%, #202521 100%) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 .home-v3__planner-main,
+body[data-theme="dark"] .home-v3 .home-v3__planner-main {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(82, 207, 159, .2), transparent 38%),
+    linear-gradient(135deg, #0c211e 0%, #0f3b32 58%, #10282f 100%) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 .home-v3__destinations,
+body[data-theme="dark"] .home-v3 .home-v3__destinations {
+  background:
+    radial-gradient(circle at 84% 8%, rgba(120, 147, 198, .16), transparent 36%),
+    linear-gradient(135deg, #171c29 0%, #202a36 52%, #25252f 100%) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 .home-v3__reviews,
+body[data-theme="dark"] .home-v3 .home-v3__reviews {
+  background:
+    radial-gradient(circle at 18% 10%, rgba(206, 169, 108, .13), transparent 34%),
+    linear-gradient(120deg, #20252a 0%, #30302d 50%, #252b2d 100%) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 .home-v3__routes,
+body[data-theme="dark"] .home-v3 .home-v3__routes {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(111, 201, 177, .14), transparent 32%),
+    linear-gradient(135deg, #15231f 0%, #223733 58%, #192b30 100%) !important;
+}
+html:is(.dark, [data-theme="dark"]) body:has(.home-v3) .yuding-footer--home,
+body[data-theme="dark"]:has(.home-v3) .yuding-footer--home {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(54, 173, 147, .14), transparent 34%),
+    linear-gradient(135deg, #091216 0%, #0d211e 58%, #101b26 100%) !important;
+}
+
+/* Search and review surfaces stay distinct from their chapter backgrounds. */
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-v3__search-shell, .home-v3__search-panel),
+body[data-theme="dark"] .home-v3 :is(.home-v3__search-shell, .home-v3__search-panel) {
+  background: linear-gradient(115deg, rgba(35, 49, 57, .95) 0%, rgba(23, 38, 43, .97) 100%) !important;
+  border-color: var(--home-night-border) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-stories__active, .home-stories__next),
+body[data-theme="dark"] .home-v3 :is(.home-stories__active, .home-stories__next) {
+  background: linear-gradient(135deg, #242d31 0%, #343632 100%) !important;
+  border-color: var(--home-night-border) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__fields input,
+  .home-v3__fields select,
+  .home-v3__geo input,
+  [role="combobox"]
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__fields input,
+  .home-v3__fields select,
+  .home-v3__geo input,
+  [role="combobox"]
+) {
+  background: #12181d !important;
+  border-color: #40515a !important;
+  color: var(--home-night-text) !important;
+  caret-color: var(--home-night-accent) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search h2,
+  .home-v3__planner h2,
+  .home-journey__heading h2,
+  .home-journey__chapter h3,
+  .home-stories__intro h2,
+  .home-stories__active blockquote
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search h2,
+  .home-v3__planner h2,
+  .home-journey__heading h2,
+  .home-journey__chapter h3,
+  .home-stories__intro h2,
+  .home-stories__active blockquote
+) {
+  color: var(--home-night-text) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search-top > p,
+  .home-v3__search-prompt,
+  .home-v3__search-foot,
+  .home-v3__planner p,
+  .home-journey__heading p,
+  .home-journey__chapter p,
+  .home-stories__intro p,
+  .home-stories__person small
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search-top > p,
+  .home-v3__search-prompt,
+  .home-v3__search-foot,
+  .home-v3__planner p,
+  .home-journey__heading p,
+  .home-journey__chapter p,
+  .home-stories__intro p,
+  .home-stories__person small
+) {
+  color: var(--home-night-muted) !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__kicker,
+  .home-v3__chapter,
+  .home-journey__eyebrow,
+  .home-stories__kind,
+  .home-stories__controls,
+  .home-v3__planner-trace
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__kicker,
+  .home-v3__chapter,
+  .home-journey__eyebrow,
+  .home-stories__kind,
+  .home-stories__controls,
+  .home-v3__planner-trace
+) {
+  color: var(--home-night-accent) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-v3__submit, .home-v3__planner-cta),
+body[data-theme="dark"] .home-v3 :is(.home-v3__submit, .home-v3__planner-cta) {
+  background: var(--home-night-action) !important;
+  border-color: var(--home-night-action) !important;
+  color: #071512 !important;
+}
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-v3__submit, .home-v3__planner-cta):hover,
+body[data-theme="dark"] .home-v3 :is(.home-v3__submit, .home-v3__planner-cta):hover {
+  background: #36c3a6 !important;
+  border-color: #36c3a6 !important;
+  color: #071512 !important;
+}
+
+@media (max-width: 768px) {
+  .header.yuding-header.home-header,
+  .header.yuding-header.home-header .header-top,
+  .header.yuding-header.home-header .header-top > .container1 {
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+  }
+  .header.yuding-header.home-header .header-top {
+    padding-inline: 18px !important;
+  }
+  .header.yuding-header.home-header .header-top > .container1 {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+  .header.yuding-header.home-header .logo {
+    flex: 0 0 112px !important;
+    width: 112px !important;
+    min-width: 112px !important;
+    height: 48px !important;
+  }
+  .header.yuding-header.home-header .logo img {
+    width: 112px !important;
+    height: auto !important;
+    max-height: 48px !important;
+  }
+  .header.yuding-header.home-header .header-btns {
+    margin-left: auto !important;
+    gap: .35rem !important;
+  }
+}
+
+@media (max-width: 900px) and (min-width: 769px) {
+  .header.yuding-header.home-header .header-top {
+    padding-inline: 18px !important;
+  }
+  .header.yuding-header.home-header .header-top > .container1 {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+  .header.yuding-header.home-header .logo {
+    flex: 0 0 112px !important;
+    width: 112px !important;
+    min-width: 112px !important;
+    height: 48px !important;
+  }
+  .header.yuding-header.home-header .logo img {
+    width: 112px !important;
+    height: auto !important;
+    max-height: 48px !important;
+  }
+  .header.yuding-header.home-header .header-btns {
+    margin-left: auto !important;
+  }
+}
+
+/* Home keeps the hero-first transparent header until the visitor scrolls;
+   after that it settles into the same public header surface as every route. */
+.header.yuding-header.home-header.home-header--scrolled,
+.header.yuding-header.home-header.home-header--menu-open {
+  background: var(--shell-header) !important;
+  border-bottom: 1px solid var(--shell-border) !important;
+  box-shadow: 0 10px 28px rgba(1, 22, 20, .1) !important;
+  color: var(--shell-header-ink) !important;
+}
+.header.yuding-header.home-header.home-header--scrolled::before,
+.header.yuding-header.home-header.home-header--menu-open::before {
+  background: var(--shell-header) !important;
+  opacity: 1 !important;
+}
+.header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item {
+  color: var(--shell-header-ink) !important;
+}
+.header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item:is(:hover, :focus-visible, .active) {
+  color: var(--shell-accent) !important;
+}
+.header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .btn-connexion {
+  border-color: #abc5bb !important;
+  background: #fff !important;
+  color: #153f39 !important;
+}
+html.dark .header.yuding-header.home-header.home-header--scrolled,
+html.dark .header.yuding-header.home-header.home-header--menu-open,
+html[data-theme="dark"] .header.yuding-header.home-header.home-header--scrolled,
+html[data-theme="dark"] .header.yuding-header.home-header.home-header--menu-open,
+body[data-theme="dark"] .header.yuding-header.home-header.home-header--scrolled,
+body[data-theme="dark"] .header.yuding-header.home-header.home-header--menu-open {
+  background: var(--shell-header) !important;
+  border-bottom-color: var(--shell-border) !important;
+  color: var(--shell-header-ink) !important;
+}
+html.dark .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .btn-connexion,
+html[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .btn-connexion,
+body[data-theme="dark"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .btn-connexion {
+  border-color: rgba(255, 255, 255, .7) !important;
+  background: rgba(255, 255, 255, .08) !important;
+  color: #fff !important;
+}
+
+/* The light theme needs the same settled surface after the hero is left. */
+html:not(.dark) .header.yuding-header.home-header.home-header--scrolled,
+html:not(.dark) .header.yuding-header.home-header.home-header--menu-open,
+html[data-theme="light"] .header.yuding-header.home-header.home-header--scrolled,
+html[data-theme="light"] .header.yuding-header.home-header.home-header--menu-open,
+body[data-theme="light"] .header.yuding-header.home-header.home-header--scrolled,
+body[data-theme="light"] .header.yuding-header.home-header.home-header--menu-open {
+  background: var(--shell-header) !important;
+  border-bottom-color: var(--shell-border) !important;
+  color: var(--shell-header-ink) !important;
+}
+html:not(.dark) .header.yuding-header.home-header.home-header--scrolled::before,
+html:not(.dark) .header.yuding-header.home-header.home-header--menu-open::before,
+html[data-theme="light"] .header.yuding-header.home-header.home-header--scrolled::before,
+html[data-theme="light"] .header.yuding-header.home-header.home-header--menu-open::before,
+body[data-theme="light"] .header.yuding-header.home-header.home-header--scrolled::before,
+body[data-theme="light"] .header.yuding-header.home-header.home-header--menu-open::before {
+  background: var(--shell-header) !important;
+  opacity: 1 !important;
+}
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item,
+html[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item,
+body[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item {
+  color: var(--shell-header-ink) !important;
+}
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item:is(:hover, :focus-visible, .active),
+html[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item:is(:hover, :focus-visible, .active),
+body[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .nav-item:is(:hover, :focus-visible, .active) {
+  color: var(--shell-accent) !important;
+}
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .dark-mode-toggle,
+html[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .dark-mode-toggle,
+body[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .dark-mode-toggle {
+  background: #e9f2e9 !important;
+  border-color: #b8cfc0 !important;
+  color: #0e655b !important;
+}
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .home-logo-light,
+html[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .home-logo-light,
+body[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .home-logo-light {
+  opacity: 1 !important;
+}
+html:not(.dark) .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .home-logo-dark,
+html[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .home-logo-dark,
+body[data-theme="light"] .header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .home-logo-dark {
+  opacity: 0 !important;
+}
+
+/* Keep the Home dark theme aligned with the shared dark surfaces used by the
+   travel pages: one near-black canvas, one elevated surface, and one teal
+   action color. Light mode keeps its existing paper-and-jade palette. */
+html:is(.dark, [data-theme="dark"]) .home-v3,
+body[data-theme="dark"] .home-v3 {
+  --home-night-bg: #0f1115;
+  --home-night-surface: #171a20;
+  --home-night-elevated: #20242c;
+  --home-night-field: #12151a;
+  --home-night-text: #f2f4f7;
+  --home-night-muted: #a7b1bf;
+  --home-night-border: #2b313b;
+  --home-night-accent: #159a83;
+  --home-night-action: #159a83;
+  color: var(--home-night-text) !important;
+  background: var(--home-night-bg) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search,
+  .home-v3__destinations,
+  .home-v3__routes
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search,
+  .home-v3__destinations,
+  .home-v3__routes
+) {
+  background: var(--home-night-bg) !important;
+  color: var(--home-night-text) !important;
+  border-color: var(--home-night-border) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-v3__planner-main, .home-v3__reviews),
+body[data-theme="dark"] .home-v3 :is(.home-v3__planner-main, .home-v3__reviews) {
+  background: var(--home-night-surface) !important;
+  color: var(--home-night-text) !important;
+  border-color: var(--home-night-border) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3__end,
+body[data-theme="dark"] .home-v3__end {
+  background: #0b302a !important;
+  border-color: var(--home-night-border) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search-shell,
+  .home-v3__search-panel,
+  .home-v3__mode-list,
+  .home-v3__reviews-feature,
+  .home-v3__reviews-feed
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search-shell,
+  .home-v3__search-panel,
+  .home-v3__mode-list,
+  .home-v3__reviews-feature,
+  .home-v3__reviews-feed
+) {
+  background: var(--home-night-surface) !important;
+  border-color: var(--home-night-border) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__fields input,
+  .home-v3__fields select,
+  .home-v3__geo input,
+  [role="combobox"]
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__fields input,
+  .home-v3__fields select,
+  .home-v3__geo input,
+  [role="combobox"]
+) {
+  background: var(--home-night-field) !important;
+  border-color: var(--home-night-border) !important;
+  color: var(--home-night-text) !important;
+  caret-color: var(--home-night-accent) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search h2,
+  .home-v3__planner h2,
+  .home-v3__destinations h2,
+  .home-v3__routes h2,
+  .home-v3__reviews h2,
+  .home-v3__reviews blockquote
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search h2,
+  .home-v3__planner h2,
+  .home-v3__destinations h2,
+  .home-v3__routes h2,
+  .home-v3__reviews h2,
+  .home-v3__reviews blockquote
+) {
+  color: var(--home-night-text) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search-top > p,
+  .home-v3__search-prompt,
+  .home-v3__search-foot,
+  .home-v3__planner p,
+  .home-v3__destinations p,
+  .home-v3__routes p,
+  .home-v3__reviews p,
+  .home-v3__reviews small
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search-top > p,
+  .home-v3__search-prompt,
+  .home-v3__search-foot,
+  .home-v3__planner p,
+  .home-v3__destinations p,
+  .home-v3__routes p,
+  .home-v3__reviews p,
+  .home-v3__reviews small
+) {
+  color: var(--home-night-muted) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__kicker,
+  .home-v3__chapter,
+  .home-v3__mode[aria-pressed="true"],
+  .home-v3__planner-trace,
+  .home-v3__reviews-meta,
+  .home-v3__reviews-kind
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__kicker,
+  .home-v3__chapter,
+  .home-v3__mode[aria-pressed="true"],
+  .home-v3__planner-trace,
+  .home-v3__reviews-meta,
+  .home-v3__reviews-kind
+) {
+  color: var(--home-night-accent) !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-v3__submit, .home-v3__planner-cta),
+body[data-theme="dark"] .home-v3 :is(.home-v3__submit, .home-v3__planner-cta) {
+  background: var(--home-night-action) !important;
+  border-color: var(--home-night-action) !important;
+  color: #071512 !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(.home-v3__submit, .home-v3__planner-cta):hover,
+body[data-theme="dark"] .home-v3 :is(.home-v3__submit, .home-v3__planner-cta):hover {
+  background: #36c3a6 !important;
+  border-color: #36c3a6 !important;
+}
+
+/* Theme parity: the search and reviews chapters keep one continuous surface
+   in both modes. Controls and story separators provide the structure. */
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search-shell,
+  .home-v3__search-panel,
+  .home-v3__mode-list,
+  .home-v3__mode,
+  .home-v3__fields,
+  .home-v3__reviews-feature,
+  .home-v3__reviews-story,
+  .home-stories__active,
+  .home-stories__next
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search-shell,
+  .home-v3__search-panel,
+  .home-v3__mode-list,
+  .home-v3__mode,
+  .home-v3__fields,
+  .home-v3__reviews-feature,
+  .home-v3__reviews-story,
+  .home-stories__active,
+  .home-stories__next
+) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__fields input,
+  .home-v3__fields select,
+  .home-v3__geo input,
+  [role="combobox"]
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__fields input,
+  .home-v3__fields select,
+  .home-v3__geo input,
+  [role="combobox"]
+) {
+  background: transparent !important;
+}
+
+html:is(.dark, [data-theme="dark"]) .home-v3 :is(
+  .home-v3__search-shell,
+  .home-v3__mode-list,
+  .home-v3__reviews-feature,
+  .home-v3__reviews-feed,
+  .home-v3__reviews-navigation
+),
+body[data-theme="dark"] .home-v3 :is(
+  .home-v3__search-shell,
+  .home-v3__mode-list,
+  .home-v3__reviews-feature,
+  .home-v3__reviews-feed,
+  .home-v3__reviews-navigation
+) {
+  border-color: var(--home-night-border) !important;
+}
+
+/* The settled Home header must use the exact same surface as every subpage.
+   These declarations intentionally come last so older hero gradients cannot
+   tint the header after the visitor starts scrolling. */
+.header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open),
+.header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .header-top,
+.header.yuding-header.home-header:is(.home-header--scrolled, .home-header--menu-open) .yuding-navigation {
+  background: var(--shell-header) !important;
+  background-image: none !important;
+}
+
+/* Shared theme control: quiet, tactile, and consistent across every shell. */
+.header.yuding-header.home-header .dark-mode-toggle,
+.header.yuding-header.subpage-header .dark-mode-toggle,
+.auth-shell .header.yuding-header .dark-mode-toggle {
+  display: grid !important;
+  place-items: center !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border: 1px solid var(--shell-border) !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--shell-header-ink) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease !important;
+}
+.header.yuding-header.home-header .dark-mode-toggle::before,
+.header.yuding-header.home-header .dark-mode-toggle::after,
+.header.yuding-header.subpage-header .dark-mode-toggle::before,
+.header.yuding-header.subpage-header .dark-mode-toggle::after,
+.auth-shell .header.yuding-header .dark-mode-toggle::before,
+.auth-shell .header.yuding-header .dark-mode-toggle::after {
+  display: none !important;
+  content: none !important;
+}
+.header.yuding-header.home-header .dark-mode-toggle i,
+.header.yuding-header.subpage-header .dark-mode-toggle i,
+.auth-shell .header.yuding-header .dark-mode-toggle i {
+  color: inherit !important;
+  font-size: .9rem !important;
+  text-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
+  transition: color .18s ease !important;
+}
+.header.yuding-header.home-header .dark-mode-toggle:hover,
+.header.yuding-header.subpage-header .dark-mode-toggle:hover,
+.auth-shell .header.yuding-header .dark-mode-toggle:hover {
+  background: transparent !important;
+  border-color: var(--shell-accent) !important;
+  color: var(--shell-accent) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .dark-mode-toggle {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, .34) !important;
+  color: #fff !important;
+}
+.header.yuding-header.home-header:not(.home-header--scrolled):not(.home-header--menu-open) .dark-mode-toggle:hover {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, .58) !important;
+  color: #fff !important;
+}

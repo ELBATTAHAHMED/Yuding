@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ProtectedRoute } from '@/components/common/ProtectedRoute';
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import './account.css';
 
 const navItems = [
@@ -38,7 +37,6 @@ export default function UserLayout({ children }: { children: ReactNode }) {
           </div>
         </ProtectedRoute>
       </div>
-      <Footer />
     </div>
   );
 }

@@ -39,6 +39,9 @@ const nextConfig = {
     pagesBufferLength: 30,
   },
   experimental: {
+    // The managed Windows runtime blocks Next's child-process build workers.
+    // Keep type checking and static generation in worker threads instead.
+    workerThreads: true,
     optimizePackageImports: [
       '@tanstack/react-query',
       'gsap',
@@ -46,6 +49,18 @@ const nextConfig = {
       'lucide-react',
       'date-fns',
     ],
+  },
+  // A custom webpack hook keeps Next from spawning its separate webpack build
+  // worker; compilation still uses the same Next webpack configuration.
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /maplibre-gl-worker\.mjs$/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+    ];
+    return config;
   },
   images: {
     unoptimized: true,

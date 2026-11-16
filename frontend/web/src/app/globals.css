@@ -67,3 +67,246 @@ button {
 .stat-card:hover {
   transform: translateY(-4px);
 }
+
+/* -------------------------------------------------------------------------
+   Shared graphite dark theme
+
+   The application has several route-specific style systems. These final
+   tokens keep their surfaces neutral while controls and focus states share
+   one consistent Yuding green accent across every route.
+   ------------------------------------------------------------------------- */
+html.dark,
+html[data-theme="dark"],
+body[data-theme="dark"] {
+  --bg: #0f1115;
+  --text: #f2f4f7;
+  --card: #171a20;
+  --card-surface: #20242c;
+  --border: #2b313b;
+  --accent: #159a83;
+  --accent-strong: #159a83;
+  --header-bg: #0f1115;
+  --input-bg: #12151a;
+  --placeholder: #7e8b97;
+  --hover-bg: rgba(21, 154, 131, .12);
+  --focus-ring: rgba(21, 154, 131, .30);
+  color-scheme: dark;
+}
+
+html.dark body,
+html[data-theme="dark"] body,
+body[data-theme="dark"] {
+  background: #0f1115 !important;
+  color: #f2f4f7 !important;
+}
+
+html.dark ::selection,
+html[data-theme="dark"] ::selection,
+body[data-theme="dark"] ::selection {
+  background: rgba(21, 154, 131, .32);
+  color: #fff;
+}
+
+html.dark .header.yuding-header.subpage-header,
+html[data-theme="dark"] .header.yuding-header.subpage-header,
+body[data-theme="dark"] .header.yuding-header.subpage-header,
+html.dark .header.yuding-header.subpage-header .header-top,
+html[data-theme="dark"] .header.yuding-header.subpage-header .header-top,
+body[data-theme="dark"] .header.yuding-header.subpage-header .header-top {
+  background: #0f1115 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+
+html.dark .header.yuding-header.subpage-header .nav-item,
+html[data-theme="dark"] .header.yuding-header.subpage-header .nav-item,
+body[data-theme="dark"] .header.yuding-header.subpage-header .nav-item {
+  color: #c4ced7 !important;
+}
+
+html.dark .header.yuding-header.subpage-header .nav-item:is(:hover, :focus-visible, .active),
+html[data-theme="dark"] .header.yuding-header.subpage-header .nav-item:is(:hover, :focus-visible, .active),
+body[data-theme="dark"] .header.yuding-header.subpage-header .nav-item:is(:hover, :focus-visible, .active) {
+  color: #d5e5ed !important;
+}
+
+html.dark .header.yuding-header.home-header.home-header--scrolled,
+html.dark .header.yuding-header.home-header.home-header--menu-open,
+html[data-theme="dark"] .header.yuding-header.home-header.home-header--scrolled,
+html[data-theme="dark"] .header.yuding-header.home-header.home-header--menu-open {
+  background: #0f1115 !important;
+  border-bottom: 1px solid #2b313b !important;
+}
+
+html.dark :is(.travel-page, .travel-details-shell, .checkout-shell, .checkout-shell__main, .auth-shell, .admin-shell),
+html[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .checkout-shell__main, .auth-shell, .admin-shell),
+body[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .checkout-shell__main, .auth-shell, .admin-shell) {
+  background-color: #0f1115 !important;
+  color: #f2f4f7 !important;
+}
+
+html.dark :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell, .admin-shell) :is(h1, h2, h3, h4, h5, h6),
+html[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell, .admin-shell) :is(h1, h2, h3, h4, h5, h6),
+body[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell, .admin-shell) :is(h1, h2, h3, h4, h5, h6) {
+  color: #f2f4f7 !important;
+}
+
+html.dark :is(.travel-search-panel form, .travel-details-header, .checkout-section, .checkout-summary, .checkout-notice, .checkout-state, .checkout-payment__methods button),
+html[data-theme="dark"] :is(.travel-search-panel form, .travel-details-header, .checkout-section, .checkout-summary, .checkout-notice, .checkout-state, .checkout-payment__methods button),
+body[data-theme="dark"] :is(.travel-search-panel form, .travel-details-header, .checkout-section, .checkout-summary, .checkout-notice, .checkout-state, .checkout-payment__methods button) {
+  border-color: #2b313b !important;
+  background-color: #171a20 !important;
+  color: #f2f4f7 !important;
+}
+
+html.dark :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell) :is(input, select, textarea),
+html[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell) :is(input, select, textarea),
+body[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell) :is(input, select, textarea) {
+  background-color: #12151a !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+  caret-color: #159a83 !important;
+}
+
+html.dark :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell) :is(input, select, textarea)::placeholder,
+html[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell) :is(input, select, textarea)::placeholder,
+body[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell, .auth-shell) :is(input, select, textarea)::placeholder {
+  color: #7e8b97 !important;
+}
+
+html.dark :is(.travel-page, .travel-details-shell, .checkout-shell) :is(button[type="submit"], .checkout-button, .travel-passenger-popover__apply),
+html[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell) :is(button[type="submit"], .checkout-button, .travel-passenger-popover__apply),
+body[data-theme="dark"] :is(.travel-page, .travel-details-shell, .checkout-shell) :is(button[type="submit"], .checkout-button, .travel-passenger-popover__apply) {
+  border-color: #159a83 !important;
+  background: #159a83 !important;
+  color: #12161b !important;
+}
+
+html.dark :is([class*="dark:bg-[#021817]"], [class*="dark:bg-[#062523]"], [class*="dark:bg-slate-800"], [class*="dark:bg-\\[#021817\\]"], [class*="dark:bg-\\[#062523\\]"]),
+html[data-theme="dark"] :is([class*="dark:bg-[#021817]"], [class*="dark:bg-[#062523]"], [class*="dark:bg-slate-800"], [class*="dark:bg-\\[#021817\\]"], [class*="dark:bg-\\[#062523\\]"]) {
+  background-color: #171a20 !important;
+}
+
+html.dark :is([class*="dark:border-[#01796F]"], [class*="dark:border-\\[#01796F\\]"]),
+html[data-theme="dark"] :is([class*="dark:border-[#01796F]"], [class*="dark:border-\\[#01796F\\]"]) {
+  border-color: #2b313b !important;
+}
+
+/* Home sections keep their imagery, while all non-image surfaces use graphite. */
+html.dark :is(.home-v3, .home-v2),
+html[data-theme="dark"] :is(.home-v3, .home-v2) {
+  background: #0f1115 !important;
+  color: #f2f4f7 !important;
+}
+html.dark :is(.home-v3__search, .home-v3__planner-main, .home-v3__destinations, .home-v3__routes, .home-v3__reviews, .home-v2 .quick-search, .home-v2 .atlas, .home-v2 .route-preview, .home-v2__closing),
+html[data-theme="dark"] :is(.home-v3__search, .home-v3__planner-main, .home-v3__destinations, .home-v3__routes, .home-v3__reviews, .home-v2 .quick-search, .home-v2 .atlas, .home-v2 .route-preview, .home-v2__closing) {
+  background: #171a20 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+html.dark :is(.home-v3__mode, .home-v3__mode-list, .home-v3__search-shell, .home-v3__fields input, .home-v3__fields select, .home-v3__geo input, .home-stories__active, .home-stories__next),
+html[data-theme="dark"] :is(.home-v3__mode, .home-v3__mode-list, .home-v3__search-shell, .home-v3__fields input, .home-v3__fields select, .home-v3__geo input, .home-stories__active, .home-stories__next) {
+  background: #20242c !important;
+  border-color: #2b313b !important;
+  color: #d5e5ed !important;
+}
+html.dark :is(.home-v3__chapter, .home-v3__kicker, .home-v3__mode[aria-pressed="true"], .home-v3__planner-cta, .home-stories__kind, .home-stories__controls),
+html[data-theme="dark"] :is(.home-v3__chapter, .home-v3__kicker, .home-v3__mode[aria-pressed="true"], .home-v3__planner-cta, .home-stories__kind, .home-stories__controls) {
+  color: #159a83 !important;
+}
+html.dark :is(.home-v3__submit, .home-v3__planner-cta),
+html[data-theme="dark"] :is(.home-v3__submit, .home-v3__planner-cta) {
+  background: #159a83 !important;
+  border-color: #159a83 !important;
+  color: #12161b !important;
+}
+
+/* Legacy travel result surfaces still appear on a few service routes. */
+html.dark :is(.destination, .gallery, .room, .contact, .search-results, .hebergement-result, .accommodation-result-card, .activity-result-card, .transport-result-card),
+html[data-theme="dark"] :is(.destination, .gallery, .room, .contact, .search-results, .hebergement-result, .accommodation-result-card, .activity-result-card, .transport-result-card) {
+  background-color: #171a20 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+
+html.dark :is(.btn-booking, .activity-booking-btn, .transport-booking-btn, .accommodation-booking-btn, .btn-submit, .contact .form .btn-submit),
+html[data-theme="dark"] :is(.btn-booking, .activity-booking-btn, .transport-booking-btn, .accommodation-booking-btn, .btn-submit, .contact .form .btn-submit) {
+  background: #159a83 !important;
+  border-color: #159a83 !important;
+  color: #12161b !important;
+}
+
+html.dark :is(.btn-booking, .activity-booking-btn, .transport-booking-btn, .accommodation-booking-btn, .btn-submit):hover,
+html[data-theme="dark"] :is(.btn-booking, .activity-booking-btn, .transport-booking-btn, .accommodation-booking-btn, .btn-submit):hover {
+  background: #25b89a !important;
+  border-color: #25b89a !important;
+}
+
+html.dark .yuding-footer,
+html[data-theme="dark"] .yuding-footer,
+body[data-theme="dark"] .yuding-footer,
+html.dark .yuding-footer--home,
+html[data-theme="dark"] .yuding-footer--home,
+body[data-theme="dark"] .yuding-footer--home {
+  background: #0b0d11 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+
+html.dark .yuding-footer :is(h4, a, p, ul, li, .yuding-footer__bottom--home),
+html[data-theme="dark"] .yuding-footer :is(h4, a, p, ul, li, .yuding-footer__bottom--home),
+body[data-theme="dark"] .yuding-footer :is(h4, a, p, ul, li, .yuding-footer__bottom--home) {
+  color: #a7afbb !important;
+}
+
+html.dark .yuding-footer h4,
+html.dark .yuding-footer a.yuding-footer__contact,
+html[data-theme="dark"] .yuding-footer h4,
+html[data-theme="dark"] .yuding-footer a.yuding-footer__contact {
+  color: #f2f4f7 !important;
+}
+
+html.dark .yuding-footer a.yuding-footer__cta,
+html[data-theme="dark"] .yuding-footer a.yuding-footer__cta {
+  background: #159a83 !important;
+  color: #12161b !important;
+}
+
+/* Travel mode tabs: keep the selected/hovered Vols state editorial instead of
+   filling the whole tab with a green tile. */
+.home-v3__mode,
+.home-v3__mode:hover,
+.home-v3__mode:focus-visible,
+.home-v3__mode[aria-pressed="true"] {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.home-v3__mode:hover,
+.home-v3__mode:focus-visible,
+.home-v3__mode[aria-pressed="true"] {
+  color: #159a83 !important;
+}
+.home-v3__mode:hover i,
+.home-v3__mode:focus-visible i,
+.home-v3__mode[aria-pressed="true"] i {
+  color: #159a83 !important;
+}
+.home-v3__mode::after,
+.home-v3__mode[aria-pressed="true"]::after {
+  background: #159a83 !important;
+}
+html.dark .home-v3__mode,
+html[data-theme="dark"] .home-v3__mode,
+body[data-theme="dark"] .home-v3__mode,
+.dark .home-v3__mode,
+html.dark .home-v3__mode:hover,
+html[data-theme="dark"] .home-v3__mode:hover,
+body[data-theme="dark"] .home-v3__mode:hover,
+.dark .home-v3__mode:hover,
+html.dark .home-v3__mode[aria-pressed="true"],
+html[data-theme="dark"] .home-v3__mode[aria-pressed="true"],
+body[data-theme="dark"] .home-v3__mode[aria-pressed="true"],
+.dark .home-v3__mode[aria-pressed="true"] {
+  background: transparent !important;
+}

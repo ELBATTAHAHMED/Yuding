@@ -173,38 +173,23 @@ export default function FlightDetailsPage() {
         />
       }
       mobileAction={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="travel-details-mobile-action__inner flex items-center justify-between gap-3">
           <div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tarif par passager</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#01796F' }}>
+            <div className="travel-details-mobile-action__label text-xs">Tarif par passager</div>
+            <div className="travel-details-mobile-action__price text-xl font-extrabold">
               {isPriced ? `${flight.price} ${flight.currency}` : 'Tarif indisponible'}
             </div>
           </div>
           {isPriced ? (
             <a
               href={bookingUrl}
-              style={{
-                padding: '0.65rem 1.25rem',
-                borderRadius: '6px',
-                background: '#01796F',
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                textDecoration: 'none',
-              }}
+              className="travel-details-mobile-action__link rounded-lg px-5 py-2.5 text-sm font-bold"
             >
               Sélectionner
             </a>
           ) : (
             <span
-              style={{
-                padding: '0.65rem 1.25rem',
-                borderRadius: '6px',
-                background: '#e2e8f0',
-                color: '#64748b',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-              }}
+              className="travel-details-mobile-action__link travel-details-mobile-action__link--disabled rounded-lg px-5 py-2.5 text-sm font-semibold"
             >
               Indisponible
             </span>

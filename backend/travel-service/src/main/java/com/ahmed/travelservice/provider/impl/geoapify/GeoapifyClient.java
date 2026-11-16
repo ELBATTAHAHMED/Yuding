@@ -79,7 +79,7 @@ public class GeoapifyClient {
             return new FeatureCollection();
         }
 
-        String language = (lang != null && !lang.isBlank()) ? lang.trim() : properties.getDefaultLanguage();
+        String language = normalizeLanguage(lang);
         int resultLimit = (limit != null && limit > 0) ? Math.min(limit, 20) : properties.getAutocompleteLimit();
 
         try {
@@ -130,7 +130,7 @@ public class GeoapifyClient {
             return new FeatureCollection();
         }
 
-        String language = (lang != null && !lang.isBlank()) ? lang.trim() : properties.getDefaultLanguage();
+        String language = normalizeLanguage(lang);
         int resultLimit = (limit != null && limit > 0) ? Math.min(limit, 20) : 5;
 
         try {
@@ -174,7 +174,7 @@ public class GeoapifyClient {
             return new FeatureCollection();
         }
 
-        String language = (lang != null && !lang.isBlank()) ? lang.trim() : properties.getDefaultLanguage();
+        String language = normalizeLanguage(lang);
 
         try {
             return restClient.get()
@@ -207,7 +207,7 @@ public class GeoapifyClient {
             return new FeatureCollection();
         }
 
-        String language = (lang != null && !lang.isBlank()) ? lang.trim() : properties.getDefaultLanguage();
+        String language = normalizeLanguage(lang);
         int radius = (radiusMeters != null && radiusMeters > 0) ? Math.min(radiusMeters, 50000) : 5000;
         int resultLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : properties.getPlacesLimit();
         String cats = (categories != null && !categories.isBlank()) ? categories.trim() : "tourism.sights,catering.restaurant,catering.cafe,entertainment.museum";
@@ -302,5 +302,18 @@ public class GeoapifyClient {
             log.warn("GeoapifyClient: Unexpected HTTP error from provider (HTTP {})", code);
             throw TravelProviderException.unavailable(PROVIDER_CODE, "Geoapify request failed with HTTP " + code);
         }
+    }
+
+    /**
+     * Geoapify accepts ISO-639-1 language codes, while frontend clients often
+     * send regional BCP-47 tags such as fr-FR or en-US.
+     */
+    private String normalizeLanguage(String language) {
+        String configured = (language != null && !language.isBlank())
+                ? language.trim()
+                : properties.getDefaultLanguage();
+        int separator = configured.indexOf('-');
+        if (separator < 0) separator = configured.indexOf('_');
+        return separator > 0 ? configured.substring(0, separator) : configured;
     }
 }

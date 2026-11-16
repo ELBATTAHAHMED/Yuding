@@ -27,19 +27,19 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
   action,
 }) => {
   return (
-    <div className="travel-details-header bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-1 min-w-[240px]">
-          <div className="w-12 h-12 rounded-xl bg-[#01796F]/10 dark:bg-[#01796F]/20 text-[#01796F] dark:text-[#02E0D5] flex items-center justify-center text-xl shrink-0">
+    <div className="travel-details-header">
+      <div className="travel-details-header__layout flex items-start justify-between gap-4 flex-wrap">
+        <div className="travel-details-header__identity flex items-center gap-4 flex-1 min-w-[240px]">
+          <div className="travel-details-header__icon w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0">
             <i className={icon} />
           </div>
 
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-1 leading-snug">
+          <div className="travel-details-header__copy">
+            <h1 className="text-xl md:text-2xl font-bold mb-1 leading-snug">
               {title}
             </h1>
             {subtitle && (
-              <p className="m-0 text-xs md:text-sm text-slate-500 dark:text-slate-300 font-medium">
+              <p className="m-0 text-xs md:text-sm font-medium">
                 {subtitle}
               </p>
             )}
@@ -47,9 +47,9 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
         </div>
 
         {/* Provider, Badges & Action */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="travel-details-header__badges flex items-center gap-2 flex-wrap">
           {provider && (
-            <span className="text-[11px] font-bold text-[#01796F] dark:text-[#02E0D5] bg-[#01796F]/10 dark:bg-[#01796F]/20 border border-[#01796F]/30 px-2.5 py-1 rounded-md uppercase tracking-wider">
+            <span className="travel-details-provider text-[11px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
               {sourceLabel ? `${sourceLabel}: ${provider}` : `Fournisseur : ${provider}`}
             </span>
           )}
@@ -57,13 +57,13 @@ export const OfferDetailsHeader: React.FC<OfferDetailsHeaderProps> = ({
           {badges.map((b, idx) => (
             <span
               key={idx}
-              className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#0a302d] border border-slate-200 dark:border-[#01796F]/20 px-2.5 py-1 rounded-md"
+              className="travel-details-badge text-[11px] font-semibold px-2.5 py-1 rounded-md"
             >
               {b}
             </span>
           ))}
 
-          {action && <div className="ml-1">{action}</div>}
+          {action && <div className="travel-details-header__action ml-1">{action}</div>}
         </div>
       </div>
     </div>

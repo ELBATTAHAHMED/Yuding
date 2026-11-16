@@ -24,20 +24,23 @@
 
 .dark,
 [data-theme="dark"] {
-  --travel-bg: #0d1110;
-  --travel-surface: #151c1b;
-  --travel-surface-elevated: #1b2422;
-  --travel-border: #2d3937;
-  --travel-text: #edf5f3;
-  --travel-text-muted: #aab9b6;
-  --travel-primary: #21bcae;
-  --travel-primary-hover: #45d2c5;
-  --travel-input-bg: #111817;
-  --travel-input-text: #edf5f3;
-  --travel-input-placeholder: #9eadaa;
-  --travel-input-icon-filter: invert(1) brightness(1.6);
+  --travel-bg: #0f1115;
+  --travel-surface: #171a20;
+  --travel-surface-elevated: #20242c;
+  --travel-border: #2b313b;
+  --travel-text: #f2f4f7;
+  --travel-text-muted: #a7afbb;
+  --travel-primary: #159a83;
+  --travel-primary-hover: #25b89a;
+  --travel-input-bg: #12151a;
+  --travel-input-text: #f2f4f7;
+  --travel-input-placeholder: #7e8b97;
+  /* Chromium's dark date control already renders its native icon light. */
+  --travel-input-icon-filter: none;
   --travel-ink: var(--travel-text);
   --travel-forest: var(--travel-primary);
+  --travel-deep: #0f1115;
+  --travel-teal: #159a83;
   --travel-mist: var(--travel-bg);
   --travel-line: var(--travel-border);
   --bg: var(--travel-bg);
@@ -64,6 +67,17 @@
   background: linear-gradient(125deg, #142b29, #174d47 53%, #25635a);
   transition: min-height .24s ease;
 }
+
+html.dark .travel-hero,
+[data-theme="dark"] .travel-hero {
+  background: linear-gradient(125deg, #11151b, #1a232b 53%, #263640);
+}
+
+html.dark .travel-hero__eyebrow,
+[data-theme="dark"] .travel-hero__eyebrow { color: #86d9c7; }
+
+html.dark .travel-hero__context,
+[data-theme="dark"] .travel-hero__context { color: #b8dcd2; }
 
 .travel-hero--compact { min-height: clamp(410px, 30vw, 455px); }
 
@@ -137,7 +151,6 @@
 }
 .travel-search-panel input::placeholder,
 .travel-search-panel textarea::placeholder { color: var(--travel-input-placeholder) !important; opacity: 1 !important; }
-.travel-search-panel input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: var(--travel-input-icon-filter); opacity: .8; }
 html.dark .travel-search-panel input,
 html.dark .travel-search-panel select,
 html.dark .travel-search-panel textarea,
@@ -317,4 +330,323 @@ html[data-theme="dark"] .travel-search-panel .travel-stepper--field { background
   .travel-hero h1 { font-size: 2rem; }
   .travel-hero__subtitle { font-size: .9rem; }
   .yuding-footer__grid { grid-template-columns: 1fr; }
+}
+
+/* One search-control palette across Hotels, Flights, Activities, Transfers and Trains. */
+.travel-search-panel form {
+  background: var(--travel-surface) !important;
+  border-color: var(--travel-line) !important;
+  color: var(--travel-text) !important;
+}
+.travel-search-panel form label,
+.travel-search-panel form label i,
+.travel-search-panel .airport-selector-wrapper > label,
+.travel-search-panel .relative > label {
+  color: var(--travel-primary) !important;
+}
+html.dark .travel-search-panel form label,
+html.dark .travel-search-panel form label i,
+html[data-theme="dark"] .travel-search-panel form label,
+html[data-theme="dark"] .travel-search-panel form label i,
+[data-theme="dark"] .travel-search-panel form label,
+[data-theme="dark"] .travel-search-panel form label i {
+  color: var(--travel-primary) !important;
+}
+.travel-search-panel input,
+.travel-search-panel select,
+.travel-search-panel textarea,
+.travel-search-panel .travel-passenger-trigger,
+.travel-search-panel .travel-stepper--field {
+  background: var(--travel-input-bg) !important;
+  border-color: var(--travel-line) !important;
+  color: var(--travel-input-text) !important;
+}
+.travel-search-panel input::placeholder,
+.travel-search-panel textarea::placeholder {
+  color: var(--travel-input-placeholder) !important;
+  opacity: 1 !important;
+}
+.travel-search-panel input:focus,
+.travel-search-panel select:focus,
+.travel-search-panel textarea:focus,
+.travel-search-panel .travel-passenger-trigger:focus-visible,
+.travel-search-panel .travel-stepper--field:focus-within {
+  border-color: var(--travel-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--travel-primary) 20%, transparent) !important;
+  outline: none !important;
+}
+.travel-search-panel button[type="submit"] {
+  background: var(--travel-primary) !important;
+  border-color: var(--travel-primary) !important;
+  color: #fff !important;
+}
+.travel-search-panel button[type="submit"]:hover:not(:disabled) {
+  background: var(--travel-primary-hover) !important;
+  border-color: var(--travel-primary-hover) !important;
+}
+.travel-search-panel button[aria-label^="Effacer"],
+.travel-search-panel .fa-spinner,
+.travel-search-panel .fa-chevron-down,
+.travel-search-panel .fa-chevron-up {
+  color: var(--travel-primary) !important;
+}
+.travel-search-panel .travel-passenger-popover,
+.travel-search-panel [role="listbox"],
+.travel-search-panel [role="dialog"] {
+  background: var(--travel-surface-elevated) !important;
+  border-color: var(--travel-line) !important;
+  color: var(--travel-text) !important;
+}
+.travel-search-panel .travel-passenger-popover label,
+.travel-search-panel .travel-passenger-popover__label {
+  color: var(--travel-text-muted) !important;
+}
+.travel-search-panel [role="option"] {
+  color: var(--travel-text) !important;
+}
+.travel-search-panel [role="option"][aria-selected="true"] {
+  background: color-mix(in srgb, var(--travel-primary) 14%, var(--travel-surface-elevated)) !important;
+  color: var(--travel-primary) !important;
+}
+.travel-search-panel [role="option"]:hover {
+  background: color-mix(in srgb, var(--travel-primary) 10%, var(--travel-surface-elevated)) !important;
+}
+.travel-search-panel .travel-passenger-popover__select,
+.travel-search-panel .travel-stepper__button {
+  background: var(--travel-input-bg) !important;
+  border-color: var(--travel-line) !important;
+  color: var(--travel-input-text) !important;
+}
+.travel-search-panel .travel-passenger-popover__apply {
+  background: var(--travel-primary) !important;
+  color: #fff !important;
+}
+.travel-search-panel .travel-passenger-popover__apply:hover {
+  background: var(--travel-primary-hover) !important;
+}
+
+/* Native date controls: keep the browser control intact and only tune its color. */
+.travel-search-panel input[type="date"] { color-scheme: light; }
+html.dark .travel-search-panel input[type="date"],
+html[data-theme="dark"] .travel-search-panel input[type="date"],
+[data-theme="dark"] .travel-search-panel input[type="date"] { color-scheme: dark; }
+.travel-search-panel input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: none !important;
+  opacity: .82 !important;
+}
+html.dark .travel-search-panel input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] .travel-search-panel input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] .travel-search-panel input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Graphite dark surfaces: keep teal for actions and status, not for whole cards. */
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-[#062523]"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-[#0a302d]"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-teal-900"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-teal-950"] {
+  background-color: #171a20 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-[#021817]"] {
+  background-color: #12151a !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-[#0a3531]"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:bg-[#0a302d]"] {
+  background-color: #20242c !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:border-[#01796F]"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:border-[#327a73]"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) :is(.travel-page, .travel-details-shell) [class*="dark:border-[#35625b]"] {
+  border-color: #2b313b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-destination-shell,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-result-card,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-filter-tabs,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-room-offer {
+  background: #171a20 !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+
+/* Destination guide stays part of the page canvas; only media and controls
+   get surfaces. This keeps the dark theme from creating a nested panel. */
+.travel-page .travel-destination-guide {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  margin-top: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+.travel-page .travel-destination-shell {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.travel-guide-layout {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+.travel-guide-overview {
+  display: grid;
+  grid-template-columns: minmax(300px, .75fr) minmax(0, 1.25fr);
+  grid-template-areas: "weather gallery";
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.travel-guide-main,
+.travel-guide-gallery,
+.travel-guide-weather { min-width: 0; }
+
+.travel-guide-gallery,
+.travel-guide-weather { height: 100%; }
+
+.travel-guide-weather,
+.travel-guide-weather > [role="region"] {
+  min-height: clamp(320px, 28vw, 390px);
+}
+
+.travel-guide-weather > div {
+  min-height: clamp(320px, 28vw, 390px) !important;
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.travel-guide-gallery { grid-area: gallery; }
+.travel-guide-weather { grid-area: weather; }
+
+.travel-guide-weather { display: flex; }
+
+.travel-guide-weather > [role="region"] {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 18px 18px 12px;
+  border: 1px solid var(--travel-border);
+  border-radius: 18px;
+  background: var(--travel-surface);
+  box-shadow: 0 10px 24px rgba(7, 13, 12, .06);
+}
+
+.travel-guide-weather > [role="region"] > div:nth-child(2) {
+  flex: 1;
+  min-height: clamp(220px, 20vw, 300px) !important;
+  align-content: center;
+}
+
+.travel-guide-weather > div > div:nth-child(2) {
+  flex: 1 1 auto;
+  min-height: clamp(220px, 20vw, 300px) !important;
+}
+
+.travel-guide-weather > [role="region"] > div:nth-child(2) > article {
+  min-height: clamp(180px, 16vw, 250px);
+  align-content: center;
+}
+
+/* Weather is a compact information strip, not a stretched panel. */
+.travel-guide-weather,
+.travel-guide-weather > [role="region"],
+.travel-guide-weather > div {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+.travel-guide-weather > [role="region"] > div:nth-child(2),
+.travel-guide-weather > div > div:nth-child(2),
+.travel-guide-weather > [role="region"] > div:nth-child(2) > article {
+  min-height: 0 !important;
+}
+
+@media (max-width: 980px) {
+  .travel-guide-overview {
+    grid-template-columns: 1fr;
+    grid-template-areas: "gallery" "weather";
+  }
+
+  .travel-guide-weather,
+  .travel-guide-weather > [role="region"],
+  .travel-guide-weather > div { min-height: 0 !important; height: auto !important; }
+
+  .travel-guide-weather > [role="region"] > div:nth-child(2),
+  .travel-guide-weather > div > div:nth-child(2),
+  .travel-guide-weather > [role="region"] > div:nth-child(2) > article { min-height: 96px !important; }
+}
+
+@media (max-width: 680px) {
+  .travel-guide-overview { gap: 1.5rem; }
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-filter-tabs button {
+  color: #a7afbb !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-filter-tabs button:hover,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-filter-tabs button:focus-visible {
+  background: #20242c !important;
+  color: #f2f4f7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-hotel-filter-tabs button:first-child {
+  background: #20242c !important;
+  color: #86d9c7 !important;
+  box-shadow: inset 0 0 0 1px #159a83 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-destination-shell [style*="background: var(--card"],
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map {
+  background-color: #171a20 !important;
+  border-color: #2b313b !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .28) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-destination-shell {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .travel-guide-weather > [role="region"] {
+  border-color: #2b313b;
+  background: #171a20;
+  box-shadow: none;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-search,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-search-results,
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-zoom-button {
+  background: #20242c !important;
+  border-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-search-results button {
+  background: #20242c !important;
+  border-bottom-color: #2b313b !important;
+  color: #f2f4f7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-hint {
+  background: rgba(23, 26, 32, .92) !important;
+  color: #c4ced7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-error {
+  background: #171a20 !important;
+  color: #a7afbb !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body[data-theme="dark"]) .travel-page .geo-map-selected-marker {
+  color: #86d9c7 !important;
 }

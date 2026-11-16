@@ -83,21 +83,28 @@ export default function HomePage() {
   useGSAP(() => {
     const mm = gsap.matchMedia();
     mm.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.from('.home-v3__hero-word', { y: 52, duration: 1, ease: 'power3.out', stagger: 0.12, delay: 0.1 });
-      gsap.from('.home-v3__hero-deck, .home-v3__hero-index', { y: 18, duration: 0.8, ease: 'power2.out', stagger: 0.1, delay: 0.55 });
-      gsap.from('.home-v3__planner-photo img', {
+      const query = (selector: string) => Array.from(rootRef.current?.querySelectorAll<HTMLElement>(selector) ?? []);
+      const heroWords = query('.home-v3__hero-word');
+      const heroMeta = query('.home-v3__hero-deck, .home-v3__hero-index');
+      const plannerImage = query('.home-v3__planner-photo img')[0];
+      const journeyStage = query('.home-journey__stage')[0];
+      const endHeading = query('.home-v3__end-content h2')[0];
+
+      if (heroWords.length) gsap.from(heroWords, { y: 52, duration: 1, ease: 'power3.out', stagger: 0.12, delay: 0.1 });
+      if (heroMeta.length) gsap.from(heroMeta, { y: 18, duration: 0.8, ease: 'power2.out', stagger: 0.1, delay: 0.55 });
+      if (plannerImage) gsap.from(plannerImage, {
         scale: 1.12, duration: 1.5, ease: 'power2.out',
-        scrollTrigger: { trigger: '.home-v3__planner', start: 'top 75%', once: true },
+        scrollTrigger: { trigger: rootRef.current?.querySelector('.home-v3__planner'), start: 'top 75%', once: true },
       });
-      gsap.from('.home-journey__stage', {
+      if (journeyStage) gsap.from(journeyStage, {
         y: 24, opacity: 0, duration: .85, ease: 'power2.out',
-        scrollTrigger: { trigger: '.home-v3__destinations', start: 'top 78%', once: true },
+        scrollTrigger: { trigger: rootRef.current?.querySelector('.home-v3__destinations'), start: 'top 78%', once: true },
       });
-      gsap.from('.home-v3__end-content h2', {
+      if (endHeading) gsap.from(endHeading, {
         y: 42, duration: 1.05, ease: 'power3.out',
-        scrollTrigger: { trigger: '.home-v3__end', start: 'top 78%', once: true },
+        scrollTrigger: { trigger: rootRef.current?.querySelector('.home-v3__end'), start: 'top 78%', once: true },
       });
-      gsap.utils.toArray<HTMLElement>('.home-v3__reveal').forEach((element) => {
+      query('.home-v3__reveal').forEach((element) => {
         gsap.from(element, {
           y: 34, duration: 0.8, ease: 'power2.out',
           scrollTrigger: { trigger: element, start: 'top 88%', once: true },
@@ -210,7 +217,7 @@ const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
       </section>
 
       <section className="home-v3__planner" aria-labelledby="planner-title">
-        <div className="home-v3__planner-side"><div className="home-v3__planner-photo"><Image src="/image/galerie2.jpg" alt="Voyageuse sur le quai d’une gare" fill sizes="(max-width: 900px) 100vw, 52vw" /></div><span className="home-v3__planner-aside">L&apos;ART DE COMPOSER SON VOYAGE</span></div>
+        <div className="home-v3__planner-side"><div className="home-v3__planner-photo"><Image src="/image/galerie2-home-1600.jpg" alt="Voyageuse sur le quai d’une gare" fill sizes="(max-width: 900px) 100vw, 52vw" /></div><span className="home-v3__planner-aside">L&apos;ART DE COMPOSER SON VOYAGE</span></div>
         <div className="home-v3__planner-main"><span className="home-v3__chapter">02 / L&apos;IDÉE DEVIENT UN ITINÉRAIRE</span><div className="home-v3__reveal"><h2 id="planner-title">Vous avez une envie.<br /><em>On trace la route.</em></h2><p>Quelques mots suffisent pour commencer. Le Smart Trip Planner transforme vos envies en un parcours que vous pouvez explorer et ajuster.</p><Link className="home-v3__planner-cta" href="/planifier">Imaginer mon voyage <i className="fas fa-arrow-right" aria-hidden="true" /></Link></div><div className="home-v3__planner-trace" aria-hidden="true"><span>IMAGINER</span><span>COMPOSER</span><span>PARTIR</span></div></div>
       </section>
 

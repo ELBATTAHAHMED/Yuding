@@ -50,6 +50,20 @@ describe('ApiClient Unit Tests', () => {
     assert.deepEqual(res, { data: 'success' });
   });
 
+  it('normalizes a duplicated same-origin /api prefix', async () => {
+    const sameOriginClient = new ApiClient('/api');
+    let capturedUrl = '';
+
+    globalThis.fetch = async (input) => {
+      capturedUrl = input.toString();
+      return createMockResponse({ favorites: [] });
+    };
+
+    await sameOriginClient.get('/api/account/favorites', true);
+
+    assert.equal(capturedUrl, '/api/account/favorites');
+  });
+
   it('2. Normal successful POST request with body serialization', async () => {
     let capturedInit: RequestInit | undefined;
 

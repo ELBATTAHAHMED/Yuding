@@ -204,4 +204,48 @@ class TripPlannerServiceTest {
                 .isInstanceOf(AiProviderException.class)
                 .hasMessageContaining("introuvable ou non autorisé");
     }
+
+    @Test
+    @DisplayName("refreshTripPlan keeps the public reference used by saved trips")
+    void refreshTripPlan_keepsSavedTripReference() {
+        UUID userId = UUID.randomUUID();
+        UUID planId = UUID.randomUUID();
+        String ref = "TRP-ABCDEF12";
+        LocalDate start = LocalDate.now().plusDays(5);
+        LocalDate end = start.plusDays(2);
+        TripPlanEntity existing = TripPlanEntity.builder()
+                .id(planId)
+                .publicReference(ref)
+                .userId(userId)
+                .origin("Casablanca")
+                .destination("Paris")
+                .startDate(start)
+                .endDate(end)
+                .travelers(2)
+                .budget(new BigDecimal("3000.00"))
+                .budgetCurrency("EUR")
+                .pricedTotal(BigDecimal.ZERO)
+                .remainingBudget(new BigDecimal("3000.00"))
+                .unpricedItemsCount(0)
+                .budgetStatus("WITHIN_BUDGET")
+                .title("Voyage Paris — 3 jours")
+                .build();
+
+        when(tripPlanRepository.findByPublicReferenceAndUserId(ref, userId)).thenReturn(Optional.of(existing));
+        when(tripPlanDayRepository.findByTripPlanIdOrderByDayNumberAsc(planId)).thenReturn(List.of());
+        when(tripPlanItemRepository.findByTripPlanId(planId)).thenReturn(List.of());
+        when(tripPlanRepository.save(any(TripPlanEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(travelClient.searchFlights(any())).thenReturn(objectMapper.createArrayNode());
+        when(travelClient.searchHotels(any())).thenReturn(objectMapper.createArrayNode());
+        when(travelClient.searchActivities(any())).thenReturn(objectMapper.createArrayNode());
+        when(travelClient.searchTransfers(any())).thenReturn(objectMapper.createArrayNode());
+        when(knowledgeRetrievalService.retrieve(anyString(), anyString(), anyInt())).thenReturn(List.of());
+
+        TripPlanDto refreshed = tripPlannerService.refreshTripPlan(ref, userId);
+
+        assertThat(refreshed.getReference()).isEqualTo(ref);
+        assertThat(refreshed.getDataFreshness()).isEqualTo("REFRESHED");
+        assertThat(refreshed.getVersion()).isEqualTo(2);
+        verify(tripPlanRepository).save(same(existing));
+    }
 }

@@ -1397,14 +1397,14 @@ html.dark body.auth-body,
 
 html.dark .auth-shell,
 [data-theme="dark"] .auth-shell {
-    --auth-page: #16181d;
-    --auth-panel: #1c1f25;
-    --auth-panel-muted: #20242b;
+    --auth-page: #0f1115;
+    --auth-panel: #171a20;
+    --auth-panel-muted: #20242c;
     --auth-ink: #f1f3f7;
     --auth-muted: #9aa1ad;
     --auth-line: #2b3038;
-    --auth-accent: #14b8a6;
-    --auth-accent-soft: rgba(20, 184, 166, .12);
+    --auth-accent: #159a83;
+    --auth-accent-soft: rgba(21, 154, 131, .14);
     background: var(--auth-page) !important;
     color: var(--auth-ink) !important;
     color-scheme: dark;
@@ -1412,7 +1412,7 @@ html.dark .auth-shell,
 
 html.dark .auth-bg-media,
 [data-theme="dark"] .auth-bg-media {
-    background: #16181d !important;
+    background: #0f1115 !important;
 }
 
 html.dark .auth-layout-root::before,
@@ -1425,7 +1425,7 @@ html.dark .header.auth-header,
 html.dark .header.auth-header.subpage-header,
 [data-theme="dark"] .header.auth-header,
 [data-theme="dark"] .header.auth-header.subpage-header {
-    background: #1c1f25 !important;
+    background: #0f1115 !important;
     border-bottom-color: #2b3038 !important;
     box-shadow: none !important;
 }
@@ -1440,7 +1440,7 @@ html.dark .header.auth-header .dark-mode-toggle,
 
 html.dark .auth-container,
 [data-theme="dark"] .auth-container {
-    background: #1c1f25 !important;
+    background: #171a20 !important;
     border-color: #2b3038 !important;
     box-shadow: 0 24px 56px rgba(0, 0, 0, .24) !important;
 }
@@ -1458,13 +1458,13 @@ html.dark .title,
 
 html.dark .title::before,
 [data-theme="dark"] .title::before {
-    background: #14b8a6 !important;
+    background: #159a83 !important;
     box-shadow: none !important;
 }
 
 html.dark .input-box,
 [data-theme="dark"] .input-box {
-    background: #20242b !important;
+    background: #20242c !important;
     border-color: #2b3038 !important;
     box-shadow: none !important;
     transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease !important;
@@ -1478,8 +1478,8 @@ html.dark .input-box:hover,
 
 html.dark .input-box:focus-within,
 [data-theme="dark"] .input-box:focus-within {
-    border-color: #14b8a6 !important;
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, .16) !important;
+    border-color: #159a83 !important;
+    box-shadow: 0 0 0 3px rgba(21, 154, 131, .16) !important;
 }
 
 html.dark .input-box input,
@@ -1497,7 +1497,7 @@ html.dark .input-box input::placeholder,
 
 html.dark .input-box i,
 [data-theme="dark"] .input-box i {
-    color: #14b8a6 !important;
+    color: #159a83 !important;
 }
 
 html.dark .input-box input[type="date"],
@@ -1508,15 +1508,16 @@ html.dark .input-box input[type="date"],
 html.dark .input-box select option,
 [data-theme="dark"] .input-box select option {
     color: #f1f3f7 !important;
-    background: #20242b !important;
+    background: #20242c !important;
 }
 
 html.dark .login-form .button.input-box,
 html.dark .signup-form .button.input-box,
 [data-theme="dark"] .login-form .button.input-box,
 [data-theme="dark"] .signup-form .button.input-box {
-    background: #14b8a6 !important;
-    border-color: #14b8a6 !important;
+    background: #159a83 !important;
+    border-color: #159a83 !important;
+    color: #12161b !important;
     box-shadow: none !important;
 }
 
@@ -1524,8 +1525,9 @@ html.dark .login-form .button.input-box:hover,
 html.dark .signup-form .button.input-box:hover,
 [data-theme="dark"] .login-form .button.input-box:hover,
 [data-theme="dark"] .signup-form .button.input-box:hover {
-    background: #0fa18f !important;
-    border-color: #0fa18f !important;
+    background: #25b89a !important;
+    border-color: #25b89a !important;
+    color: #12161b !important;
     box-shadow: none !important;
     transform: translateY(-1px) !important;
 }
@@ -1546,12 +1548,12 @@ html.dark .sign-up-text,
 
 html.dark .auth-switch-link,
 [data-theme="dark"] .auth-switch-link {
-    color: #14b8a6 !important;
+    color: #159a83 !important;
 }
 
 html.dark .auth-switch-link:hover,
 [data-theme="dark"] .auth-switch-link:hover {
-    color: #5eead4 !important;
+    color: #25b89a !important;
 }
 
 html.dark .cover img,
@@ -1575,14 +1577,14 @@ html.dark .auth-alert-error,
 
 html.dark .auth-alert-success,
 [data-theme="dark"] .auth-alert-success {
-    background: rgba(20, 184, 166, .12) !important;
-    border-color: rgba(20, 184, 166, .42) !important;
-    color: #5eead4 !important;
+    background: rgba(133, 198, 164, .13) !important;
+    border-color: rgba(133, 198, 164, .34) !important;
+    color: #b5e6c6 !important;
 }
 
 html.dark .auth-shell :is(a, button, input, select):focus-visible,
 [data-theme="dark"] .auth-shell :is(a, button, input, select):focus-visible {
-    outline: 2px solid #14b8a6 !important;
+    outline: 2px solid #159a83 !important;
     outline-offset: 3px !important;
 }
 
@@ -1600,3 +1602,546 @@ html.dark .input-box:not(.button),
         transition-duration: .001ms !important;
     }
 }
+
+/* -------------------------------------------------------------------------
+   Dark mode refinement
+
+   Keep the travel image as the expressive half of the page and give the
+   form a quieter, layered night surface. The old form border reused the
+   container line colour, which made the two edges merge at a glance.
+   ------------------------------------------------------------------------- */
+html.dark body:has(.auth-shell),
+[data-theme="dark"] body:has(.auth-shell),
+html.dark body.auth-body,
+[data-theme="dark"] body.auth-body {
+    background: #0b0f12 !important;
+}
+
+html.dark .auth-shell,
+[data-theme="dark"] .auth-shell {
+    --auth-page: #0b0f12;
+    --auth-panel: #161d21;
+    --auth-form: #1a2327;
+    --auth-field: #0f171a;
+    --auth-line: #3b4b52;
+    --auth-field-line: #3e5058;
+    --auth-ink: #f3f7f6;
+    --auth-muted: #aab7bb;
+    --auth-accent: #2ec7a8;
+    --auth-accent-bright: #49dfbd;
+    background: var(--auth-page) !important;
+    color: var(--auth-ink) !important;
+}
+
+html.dark .auth-bg-media,
+[data-theme="dark"] .auth-bg-media {
+    background:
+        radial-gradient(34rem 24rem at 8% 88%, rgba(46, 199, 168, .12), transparent 70%),
+        radial-gradient(30rem 20rem at 92% 12%, rgba(93, 117, 128, .10), transparent 72%),
+        #0b0f12 !important;
+}
+
+html.dark .auth-container,
+[data-theme="dark"] .auth-container {
+    overflow: hidden;
+    background: var(--auth-panel) !important;
+    border: 1px solid var(--auth-line) !important;
+    box-shadow:
+        0 30px 76px rgba(0, 0, 0, .48),
+        inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+}
+
+html.dark :is(.login-form, .signup-form),
+[data-theme="dark"] :is(.login-form, .signup-form) {
+    background: linear-gradient(160deg, rgba(31, 43, 47, .92), rgba(23, 31, 35, .98)) !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045) !important;
+}
+
+html.dark .title,
+[data-theme="dark"] .title {
+    color: var(--auth-ink) !important;
+}
+
+html.dark .title::before,
+[data-theme="dark"] .title::before {
+    width: 42px;
+    background: linear-gradient(90deg, #e7b45c, var(--auth-accent)) !important;
+}
+
+html.dark .input-box,
+[data-theme="dark"] .input-box {
+    background: var(--auth-field) !important;
+    border: 1px solid var(--auth-field-line) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .16) !important;
+}
+
+html.dark .input-box:hover,
+[data-theme="dark"] .input-box:hover {
+    border-color: #60747b !important;
+    background: #111c20 !important;
+}
+
+html.dark .input-box:focus-within,
+[data-theme="dark"] .input-box:focus-within {
+    background: #121d20 !important;
+    border-color: var(--auth-accent) !important;
+    box-shadow:
+        0 0 0 3px rgba(46, 199, 168, .16),
+        0 10px 22px rgba(0, 0, 0, .20) !important;
+}
+
+html.dark .input-box i,
+[data-theme="dark"] .input-box i {
+    left: 12px;
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+    background: rgba(46, 199, 168, .12);
+    color: var(--auth-accent-bright) !important;
+    font-size: 13px;
+}
+
+html.dark .input-box input,
+html.dark .input-box select,
+[data-theme="dark"] .input-box input,
+[data-theme="dark"] .input-box select {
+    padding-left: 52px;
+}
+
+html.dark .input-box input::placeholder,
+[data-theme="dark"] .input-box input::placeholder {
+    color: #9baab0 !important;
+}
+
+html.dark .login-form .button.input-box,
+html.dark .signup-form .button.input-box,
+[data-theme="dark"] .login-form .button.input-box,
+[data-theme="dark"] .signup-form .button.input-box {
+    min-height: 54px;
+    background: linear-gradient(135deg, #159f86 0%, var(--auth-accent) 100%) !important;
+    border: 0 !important;
+    box-shadow: 0 14px 24px rgba(23, 171, 142, .22) !important;
+}
+
+html.dark .login-form .button.input-box:hover,
+html.dark .signup-form .button.input-box:hover,
+[data-theme="dark"] .login-form .button.input-box:hover,
+[data-theme="dark"] .signup-form .button.input-box:hover {
+    background: linear-gradient(135deg, #20b597 0%, var(--auth-accent-bright) 100%) !important;
+    box-shadow: 0 16px 28px rgba(23, 171, 142, .30) !important;
+}
+
+html.dark .auth-switch-link,
+[data-theme="dark"] .auth-switch-link {
+    color: var(--auth-accent-bright) !important;
+}
+
+html.dark .auth-switch-link:hover,
+[data-theme="dark"] .auth-switch-link:hover {
+    color: #8aefda !important;
+}
+
+html.dark .header.auth-header .dark-mode-toggle,
+[data-theme="dark"] .header.auth-header .dark-mode-toggle {
+    background: #182227 !important;
+    border-color: #44565e !important;
+}
+
+@media (max-width: 760px) {
+    .auth-layout-root {
+        align-items: stretch;
+        padding: 94px 14px 24px;
+    }
+
+    .auth-container {
+        min-height: 0;
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .cover { display: none; }
+
+    .forms,
+    .form-content {
+        height: auto;
+        min-height: 0;
+    }
+
+    .form-content { display: block; }
+
+    .login-form,
+    .signup-form {
+        width: 100%;
+        padding: 22px 18px;
+    }
+
+    .container.login-mode .signup-form { display: none; }
+    .container.signup-mode .login-form { display: none; }
+    .container.signup-mode .signup-form { display: block; }
+}
+
+/* Theme-class compatibility: some cached shells expose only `.dark`. */
+:is(html.dark, body.dark, .dark) .auth-shell {
+    --auth-page: #0b0f12;
+    --auth-panel: #161d21;
+    --auth-field: #0f171a;
+    --auth-line: #3b4b52;
+    --auth-field-line: #3e5058;
+    --auth-ink: #f3f7f6;
+    --auth-accent: #2ec7a8;
+    --auth-accent-bright: #49dfbd;
+    background: var(--auth-page) !important;
+    color: var(--auth-ink) !important;
+}
+
+:is(html.dark, body.dark, .dark) .auth-bg-media {
+    background:
+        radial-gradient(34rem 24rem at 8% 88%, rgba(46, 199, 168, .12), transparent 70%),
+        radial-gradient(30rem 20rem at 92% 12%, rgba(93, 117, 128, .10), transparent 72%),
+        #0b0f12 !important;
+}
+
+:is(html.dark, body.dark, .dark) .auth-container {
+    overflow: hidden;
+    background: #161d21 !important;
+    border: 1px solid #3b4b52 !important;
+    box-shadow:
+        0 30px 76px rgba(0, 0, 0, .48),
+        inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+}
+
+:is(html.dark, body.dark, .dark) :is(.login-form, .signup-form) {
+    background: linear-gradient(160deg, rgba(31, 43, 47, .92), rgba(23, 31, 35, .98)) !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045) !important;
+}
+
+:is(html.dark, body.dark, .dark) .input-box {
+    background: #0f171a !important;
+    border: 1px solid #3e5058 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .16) !important;
+}
+
+:is(html.dark, body.dark, .dark) .input-box:focus-within {
+    background: #121d20 !important;
+    border-color: #2ec7a8 !important;
+    box-shadow:
+        0 0 0 3px rgba(46, 199, 168, .16),
+        0 10px 22px rgba(0, 0, 0, .20) !important;
+}
+
+:is(html.dark, body.dark, .dark) .input-box i {
+    left: 12px;
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+    background: rgba(46, 199, 168, .12);
+    color: #49dfbd !important;
+    font-size: 13px;
+}
+
+:is(html.dark, body.dark, .dark) .input-box input,
+:is(html.dark, body.dark, .dark) .input-box select {
+    padding-left: 52px;
+    color: #f3f7f6 !important;
+}
+
+:is(html.dark, body.dark, .dark) .input-box input::placeholder {
+    color: #9baab0 !important;
+}
+
+:is(html.dark, body.dark, .dark) .login-form .button.input-box,
+:is(html.dark, body.dark, .dark) .signup-form .button.input-box {
+    min-height: 54px;
+    background: linear-gradient(135deg, #159f86 0%, #2ec7a8 100%) !important;
+    border: 0 !important;
+    box-shadow: 0 14px 24px rgba(23, 171, 142, .22) !important;
+}
+
+/* Final dark auth surface: quiet graphite layers, no decorative glow. */
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) body:has(.auth-shell),
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) body.auth-body {
+    background: #0f1115 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-shell {
+    --auth-page: #0f1115;
+    --auth-panel: #202932;
+    --auth-form: #2a343e;
+    --auth-field: #151d24;
+    --auth-line: #465663;
+    --auth-field-line: #4b5c68;
+    --auth-ink: #f2f4f7;
+    --auth-muted: #a7b1bf;
+    --auth-accent: #159a83;
+    --auth-accent-bright: #24b59a;
+    background: #0f1115 !important;
+    color: #f2f4f7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-bg-media {
+    background: #0f1115 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container {
+    background: #202932 !important;
+    border: 1px solid #465663 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 28px 64px rgba(0, 0, 0, .38) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form, .signup-form) {
+    background: #2a343e !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title {
+    color: #f2f4f7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title::before {
+    width: 36px;
+    height: 3px;
+    background: #159a83 !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box {
+    background: #151d24 !important;
+    border: 1px solid #4b5c68 !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box:hover {
+    background: #19232b !important;
+    border-color: #62727e !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box:focus-within {
+    background: #12191e !important;
+    border-color: #159a83 !important;
+    box-shadow: 0 0 0 2px rgba(21, 154, 131, .18) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box i {
+    left: 16px;
+    width: auto;
+    height: auto;
+    display: block;
+    border-radius: 0;
+    background: transparent !important;
+    color: #159a83 !important;
+    font-size: 16px;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box input,
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box select {
+    padding-left: 52px;
+    color: #f2f4f7 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box input::placeholder {
+    color: #8d99a6 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box, .signup-form .button.input-box) {
+    min-height: 54px;
+    background: linear-gradient(135deg, #128b75 0%, #27b79a 100%) !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box:hover, .signup-form .button.input-box:hover) {
+    background: linear-gradient(135deg, #18a98b 0%, #36c5a7 100%) !important;
+    box-shadow: none !important;
+    transform: translateY(-1px) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-switch-link {
+    color: #24b59a !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .header.auth-header .dark-mode-toggle {
+    background: #1b2229 !important;
+    border: 1px solid #35404a !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+/* Cohesive dark-only auth palette. The shared header stays untouched. */
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-shell {
+    --auth-page: #111418;
+    --auth-panel: #191d21;
+    --auth-form: #232a2d;
+    --auth-field: #111619;
+    --auth-line: #394649;
+    --auth-field-line: #3b4b4e;
+    --auth-ink: #f1f3f0;
+    --auth-muted: #a4aeae;
+    --auth-accent: #1f9f88;
+    --auth-accent-bright: #2bb89d;
+    background: #111418 !important;
+    color: #f1f3f0 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-bg-media {
+    background: #111418 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container {
+    background: #191d21 !important;
+    border: 1px solid #394649 !important;
+    box-shadow: 0 26px 58px rgba(0, 0, 0, .40) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form, .signup-form) {
+    background: #232a2d !important;
+    border: 0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title {
+    color: #f1f3f0 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title::before {
+    background: #1f9f88 !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box {
+    background: #111619 !important;
+    border-color: #3b4b4e !important;
+    box-shadow: none !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box:hover {
+    background: #151b1d !important;
+    border-color: #596a6c !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box:focus-within {
+    background: #121a1c !important;
+    border-color: #1f9f88 !important;
+    box-shadow: 0 0 0 2px rgba(31, 159, 136, .18) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box i {
+    color: #25b39a !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box input::placeholder {
+    color: #8f9a9b !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box, .signup-form .button.input-box) {
+    background: linear-gradient(135deg, #147f6d 0%, #24ad93 100%) !important;
+    box-shadow: 0 10px 22px rgba(20, 127, 109, .20) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box:hover, .signup-form .button.input-box:hover) {
+    background: linear-gradient(135deg, #19947e 0%, #35c1a5 100%) !important;
+    box-shadow: 0 12px 24px rgba(20, 127, 109, .27) !important;
+}
+
+/* True dark mode: neutral graphite surfaces, with no green wash. */
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-shell {
+    --auth-page: #0b0f12;
+    --auth-panel: #181d22;
+    --auth-form: #20262b;
+    --auth-field: #101419;
+    --auth-line: #343d46;
+    --auth-field-line: #303943;
+    --auth-ink: #eff2f4;
+    --auth-muted: #929ca5;
+    --auth-accent: #aeb9c1;
+    --auth-accent-bright: #e1e7ea;
+    background: #0b0f12 !important;
+    color: #eff2f4 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-bg-media {
+    background: #0b0f12 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-container {
+    background: #181d22 !important;
+    border-color: #3a464f !important;
+    box-shadow: 0 28px 64px rgba(0, 0, 0, .48) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form, .signup-form) {
+    background: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding-inline: 18px !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title {
+    color: #eff2f4 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .title::before {
+    background: #aeb9c1 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box {
+    background: #101419 !important;
+    border-color: #303943 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box:hover {
+    background: #14191e !important;
+    border-color: #4b5660 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box:focus-within {
+    background: #12171c !important;
+    border-color: #aeb9c1 !important;
+    box-shadow: 0 0 0 2px rgba(174, 185, 193, .16) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box i {
+    color: #aeb9c1 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .input-box input::placeholder {
+    color: #8d98a2 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) .auth-switch-link {
+    color: #c1cbd1 !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box, .signup-form .button.input-box) {
+    background: linear-gradient(135deg, #138a73 0%, #22ae92 100%) !important;
+    background-image: linear-gradient(135deg, #138a73 0%, #22ae92 100%) !important;
+    border-color: #138a73 !important;
+    box-shadow: 0 10px 22px rgba(19, 138, 115, .22) !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box input, .signup-form .button.input-box input) {
+    color: #ffffff !important;
+}
+
+:is(html.dark, html[data-theme="dark"], body.dark, body[data-theme="dark"], .dark) :is(.login-form .button.input-box:hover, .signup-form .button.input-box:hover) {
+    background: linear-gradient(135deg, #18a98b 0%, #32c3a5 100%) !important;
+    border-color: #18a98b !important;
+    box-shadow: 0 12px 24px rgba(19, 138, 115, .28) !important;
+}
+

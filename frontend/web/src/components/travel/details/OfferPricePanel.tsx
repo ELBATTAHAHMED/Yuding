@@ -35,45 +35,45 @@ export const OfferPricePanel: React.FC<OfferPricePanelProps> = ({
   fareUnavailableMessage = 'Tarif non disponible via cette source de données',
 }) => {
   return (
-    <div className="bg-white dark:bg-[#062523] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-[#01796F]/30 shadow-md">
-      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+    <div className="travel-details-card travel-price-panel">
+      <h3 className="travel-details-card__title text-base font-bold mb-4">
         Récapitulatif du Tarif
       </h3>
 
       {isFareUnavailable || amount == null ? (
-        <div className="p-4 bg-slate-50 dark:bg-[#021817] rounded-lg border border-dashed border-slate-300 dark:border-[#01796F]/30 text-slate-500 dark:text-slate-400 text-xs text-center mb-4">
+        <div className="travel-price-panel__unavailable p-4 rounded-lg border border-dashed text-xs text-center mb-4">
           <i className="fas fa-info-circle mr-1.5 text-slate-400" />
           <span>{fareUnavailableMessage}</span>
         </div>
       ) : (
-        <div className="mb-5">
+        <div className="travel-price-panel__amount mb-5">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xl md:text-3xl font-extrabold text-[#01796F] dark:text-[#02E0D5]">
-              <PriceDisplay conversion={conversion} amount={amount} currency={currency} />
+            <span className="travel-price-panel__value text-2xl md:text-3xl font-extrabold">
+              <PriceDisplay className="travel-price-display" conversion={conversion} amount={amount} currency={currency} />
             </span>
             {unitLabel && (
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="travel-price-panel__unit text-xs font-medium">
                 {unitLabel}
               </span>
             )}
           </div>
 
           {priceType === 'round_trip_starting' && (
-            <div className="text-[11px] text-slate-400 mt-1">
+            <div className="travel-price-panel__from text-[11px] mt-1">
               Tarif à partir de (Aller / Retour)
             </div>
           )}
 
           {/* Genuine breakdown if provider supplied real breakdown items */}
           {breakdown && breakdown.length > 0 && (
-            <div className="mt-4 border-t border-slate-100 dark:border-[#01796F]/20 pt-3">
-              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+            <div className="travel-price-panel__breakdown mt-4 pt-3">
+              <div className="travel-price-panel__breakdown-title text-xs font-bold mb-1.5">
                 Détail du prix fournisseur :
               </div>
               {breakdown.map((item, idx) => (
-                <div key={idx} className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <div key={idx} className="travel-price-panel__breakdown-row flex justify-between text-xs mb-1">
                   <span>{item.label}</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">{item.amount.toFixed(2)} {item.currency}</span>
+                  <span className="font-semibold">{item.amount.toFixed(2)} {item.currency}</span>
                 </div>
               ))}
             </div>
@@ -85,7 +85,7 @@ export const OfferPricePanel: React.FC<OfferPricePanelProps> = ({
       {bookingHref && (
         <Link
           href={bookingHref}
-          className="btn-booking flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg bg-[#01796F] hover:bg-[#015f57] text-white font-bold text-sm text-center shadow-md transition-colors"
+          className="travel-details-cta btn-booking flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg font-bold text-sm text-center shadow-md transition-colors"
         >
           <i className="fas fa-check-circle" />
           <span>{bookingLabel}</span>
@@ -93,7 +93,7 @@ export const OfferPricePanel: React.FC<OfferPricePanelProps> = ({
       )}
 
       {/* Transparency Note */}
-      <p className="mt-4 text-[11px] text-slate-400 dark:text-slate-500 leading-tight text-center">
+      <p className="travel-price-panel__note mt-4 text-[11px] leading-tight text-center">
         <i className="fas fa-shield-alt mr-1" />
         Données d&apos;offre de recherche. Tarifs et disponibilités vérifiés en temps réel lors de la finalisation.
       </p>
