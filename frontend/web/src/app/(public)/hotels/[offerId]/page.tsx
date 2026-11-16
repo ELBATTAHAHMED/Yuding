@@ -40,14 +40,14 @@ export default function HotelDetailsPage() {
   const initialLoadKey = useRef('');
 
   const loadAvailability = async (city: string, arrival: string, departure: string,
-    rooms: RoomOccupancy[], country: string, nationality: string) => {
+    rooms: RoomOccupancy[], country: string, nationality: string, preserveCurrent = false) => {
     if (!city.trim() || !arrival || !departure || arrival < new Date().toISOString().split('T')[0] || departure <= arrival) {
       setRefreshError('Indiquez une destination et des dates futures valides pour actualiser les offres.');
       return;
     }
-    setLoading(true);
+    if (!preserveCurrent) setLoading(true);
     setRefreshError(null);
-    setHotel(null);
+    if (!preserveCurrent) setHotel(null);
     try {
       const data = await travelService.searchHotels({
         destination: city.trim(), city: city.trim(), countryCode: country,
@@ -82,7 +82,7 @@ export default function HotelDetailsPage() {
     } catch {
       setRefreshError('Impossible d’actualiser les offres pour le moment. Veuillez réessayer.');
     } finally {
-      setLoading(false);
+      if (!preserveCurrent) setLoading(false);
     }
   };
 
@@ -90,7 +90,12 @@ export default function HotelDetailsPage() {
     if (!offerId) return;
     const params = new URLSearchParams(window.location.search);
     const cached = getOfferDetail<HotelOffer>('HOTEL', offerId);
-    if (cached) setMetadata({ title: cached.name || cached.hotelName || 'Hôtel', imageUrl: cached.imageUrl });
+    if (cached) {
+      setHotel(cached);
+      setMetadata({ title: cached.name || cached.hotelName || 'Hôtel', imageUrl: cached.imageUrl });
+      setSelectedRoomOfferId(cached.roomOffers?.[0]?.offerId || null);
+      setLoading(false);
+    }
     const city = params.get('destination') || cached?.city || '';
     const arrival = params.get('checkIn') || cached?.checkIn || '';
     const departure = params.get('checkOut') || cached?.checkOut || '';
@@ -112,7 +117,10 @@ export default function HotelDetailsPage() {
       const key = `${offerId}:${city}:${arrival}:${departure}:${JSON.stringify(rooms)}`;
       if (initialLoadKey.current !== key) {
         initialLoadKey.current = key;
-        void loadAvailability(city, arrival, departure, rooms, country, nationality);
+        // Render the cached search result immediately, then refresh provider
+        // availability in the background without replacing the visible page
+        // with a full-screen skeleton.
+        void loadAvailability(city, arrival, departure, rooms, country, nationality, Boolean(cached));
       }
     } else {
       setLoading(false);

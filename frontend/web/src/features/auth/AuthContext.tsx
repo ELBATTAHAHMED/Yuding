@@ -52,12 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
     async function restoreSession() {
       try {
-        const token = await authService.refresh();
-        if (token && isMounted) {
-          setAccessToken(token);
-          const profile = await authService.getMe();
-          if (isMounted) {
-            setUser(profile);
+        const response = await authService.refresh();
+        if (response?.accessToken && isMounted) {
+          setAccessToken(response.accessToken);
+          if (response.user) {
+            setUser(response.user);
           }
         }
       } catch {

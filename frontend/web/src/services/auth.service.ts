@@ -49,12 +49,12 @@ export const authService = {
   async updateTraveler(reference: string, input: Omit<SavedTraveler, 'reference'>): Promise<SavedTraveler> { return apiClient.put<SavedTraveler>(`/api/account/travelers/${encodeURIComponent(reference)}`, input, true); },
   async deleteTraveler(reference: string): Promise<void> { return apiClient.delete<void>(`/api/account/travelers/${encodeURIComponent(reference)}`, true); },
 
-  async refresh(): Promise<string | null> {
-    const token = await apiClient.refreshToken();
-    if (token) {
-      apiClient.setAccessToken(token);
+  async refresh(): Promise<AuthResponse | null> {
+    const response = await apiClient.refreshSession<AuthResponse>();
+    if (response?.accessToken) {
+      apiClient.setAccessToken(response.accessToken);
     }
-    return token;
+    return response;
   },
 
   async logout(): Promise<MessageResponse> {

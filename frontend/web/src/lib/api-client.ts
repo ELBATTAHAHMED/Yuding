@@ -18,6 +18,10 @@
 
 export const SESSION_EXPIRED_EVENT = 'yuding:session-expired';
 
+export interface RefreshSessionResponse {
+  accessToken?: string;
+}
+
 export interface ApiErrorDetails {
   message: string;
   status: number;
@@ -91,7 +95,7 @@ const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 export class ApiClient {
   private baseUrl: string;
   private accessToken: string | null = null;
-  private refreshPromise: Promise<string | null> | null = null;
+  private refreshPromise: Promise<RefreshSessionResponse | null> | null = null;
   private defaultTimeoutMs: number = 15000;
   private defaultRetryDelayMs: number = 300;
 
@@ -141,12 +145,12 @@ export class ApiClient {
    * Single-flight token refresh.
    * If a refresh is already in progress, all subsequent callers receive the same Promise.
    */
-  public async refreshToken(): Promise<string | null> {
+  public async refreshSession<T extends RefreshSessionResponse = RefreshSessionResponse>(): Promise<T | null> {
     if (this.refreshPromise) {
-      return this.refreshPromise;
+      return this.refreshPromise as Promise<T | null>;
     }
 
-    const rotate = async (): Promise<string | null> => {
+    const rotate = async (): Promise<RefreshSessionResponse | null> => {
       try {
         const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
         const timer = controller ? setTimeout(() => controller.abort(), 4000) : null;
@@ -177,10 +181,9 @@ export class ApiClient {
           return null;
         }
 
-        const data = await res.json();
-        const newToken = data.accessToken || null;
-        this.setAccessToken(newToken);
-        return newToken;
+        const data = await res.json() as RefreshSessionResponse;
+        this.setAccessToken(data.accessToken || null);
+        return data;
       } catch {
         this.setAccessToken(null);
         return null;
@@ -191,14 +194,19 @@ export class ApiClient {
     // submit it while the first tab is rotating it, or reuse detection will
     // revoke the session. Keep the existing per-tab single-flight promise too.
     const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
-    const coordinatedRefresh = async (): Promise<string | null> => locks
-      ? locks.request<Promise<string | null>>('yuding-refresh-token', { mode: 'exclusive' }, rotate)
+    const coordinatedRefresh = async (): Promise<RefreshSessionResponse | null> => locks
+      ? locks.request<Promise<RefreshSessionResponse | null>>('yuding-refresh-token', { mode: 'exclusive' }, rotate)
       : rotate();
     this.refreshPromise = coordinatedRefresh().finally(() => {
       this.refreshPromise = null;
     });
 
-    return this.refreshPromise;
+    return this.refreshPromise as Promise<T | null>;
+  }
+
+  public async refreshToken(): Promise<string | null> {
+    const response = await this.refreshSession();
+    return response?.accessToken || null;
   }
 
   /**

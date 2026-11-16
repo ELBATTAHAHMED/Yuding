@@ -31,7 +31,9 @@ export default function ReviewsClient() {
     queryKey: ['reviews', 'platform-mine'], queryFn: reviewService.platformMine,
     retry: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
   });
-  const bookings = useMyBookings({ enabled: reviews.isSuccess });
+  // Fetch the booking list in parallel with reviews so the page does not
+  // wait on a review response before it can render eligible reservations.
+  const bookings = useMyBookings();
   const [selected, setSelected] = useState<MyReview | { reference: string; entityName: string } | 'platform' | null>(null);
   const visibleReviews = useMemo(
     () => reviews.data?.filter(review => review.status !== 'DELETED' && review.entityType !== 'PLATFORM') || [],
